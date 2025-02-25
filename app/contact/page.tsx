@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react'
 import { FaLinkedin, FaGithub, FaCopy, FaCheck } from 'react-icons/fa'
-import { MdEmail, MdLocationOn, MdArrowForward } from 'react-icons/md'
+import { MdEmail, MdArrowForward } from 'react-icons/md'
 import '../css/animations.css'
 import '../css/magical-button.css'
 import '../css/page.css'
@@ -10,7 +10,6 @@ import PageLayout from '../components/PageLayout'
 
 export default function ContactPage() {
   const [copiedEmail, setCopiedEmail] = useState(false);
-  const [copiedLocation, setCopiedLocation] = useState(false);
 
   const copyToClipboard = (text: string, type: 'email' | 'location') => {
     navigator.clipboard.writeText(text).then(() => {
@@ -18,8 +17,8 @@ export default function ContactPage() {
         setCopiedEmail(true);
         setTimeout(() => setCopiedEmail(false), 2000);
       } else {
-        setCopiedLocation(true);
-        setTimeout(() => setCopiedLocation(false), 2000);
+        // Handle other types if needed in the future
+        setTimeout(() => {}, 2000);
       }
     });
   };
