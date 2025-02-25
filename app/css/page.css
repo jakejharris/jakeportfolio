@@ -1,0 +1,57 @@
+:root {
+  --page-border-color: hsl(var(--border));
+  --page-border-background-color: hsl(var(--accent));
+  --page-hover-transform: scale(1.01);
+}
+
+.dark {
+  --page-border-color: hsl(var(--border));
+  --page-border-background-color: hsl(var(--accent));
+  --page-hover-transform: scale(1.01);
+}
+
+.pageLinkContainer {
+    border: 1px solid var(--page-border-color);
+    border-radius: 2px;
+    padding: 10px;
+    margin-bottom: 10px;
+    transition: all 0.2s ease;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.pageLinkContainer:hover {
+    background-color: var(--page-border-background-color);
+    transform: var(--page-hover-transform);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+}
+
+.pageLinkContainer:hover .text-primary {
+    color: hsl(var(--primary) / 0.9);
+    font-weight: 500;
+}
+
+.pageLinkContainer:active {
+    transform: scale(0.99); /* Slight scale down when pressed */
+    box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.1); /* Inner shadow when pressed */
+}
+
+/* Adding a subtle line animation for list items */
+.pageLinkContainer::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background-color: hsl(var(--primary));
+    transform: scaleX(0);
+    transform-origin: bottom right;
+    transition: transform 0.3s ease;
+}
+
+.pageLinkContainer:hover::after {
+    transform: scaleX(1);
+    transform-origin: bottom left;
+}
