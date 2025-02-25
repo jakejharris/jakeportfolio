@@ -1,0 +1,19 @@
+/* Navbar animations and transitions */
+.navbar-sticky {
+  transform: translateY(0);
+  transition: transform 0.3s ease, 
+              background-color 0.3s ease, 
+              box-shadow 0.3s ease,
+              border-bottom 0.3s ease;
+  will-change: transform;
+}
+
+/* Using transform instead of display:none for smoother transitions */
+.navbar-sticky.translate-y-\[-100\%\] {
+  transform: translateY(-100%);
+}
+
+.navbar-sticky.scrolled {
+  background-color: hsl(var(--background) / 95%);
+  backdrop-filter: blur(10px);
+} 

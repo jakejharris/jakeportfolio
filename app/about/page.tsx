@@ -1,0 +1,147 @@
+import PageLayout from '../components/PageLayout';
+import Link from 'next/link';
+import Image from 'next/image';
+import { FaDownload } from 'react-icons/fa';
+import '../css/page.css';
+import '../css/animations.css';
+
+export const metadata = {
+  title: "About - Jake Harris",
+  description: "Learn more about Jake Harris - Developer and Designer",
+};
+
+export default function AboutPage() {
+  return (
+    <PageLayout>
+      <div className="max-w-none">
+        <h2 className="mb-4 text-xl md:text-2xl font-bold">About</h2>
+        
+        {/* Mobile layout - image first, then text */}
+        <div className="md:hidden mb-8">
+          <div className="flex justify-center mb-6 bg-secondary rounded-sm">
+            <div className="relative w-[150px] aspect-square">
+              <div className="group relative w-full h-full">
+                <Image 
+                  src="/images/4.png" 
+                  alt="Jake Harris headshot" 
+                  width={150} 
+                  height={150} 
+                  className="object-cover w-full h-full rounded-full transition-all duration-500 filter grayscale group-hover:grayscale-0"
+                  priority
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-full"></div>
+              </div>
+            </div>
+          </div>
+          
+          <div className="prose dark:prose-invert font-medium text-lg">
+            <p className="mb-4">
+              I'm Jake Harris, a Frontend Developer and Designer with a passion for creating intuitive, 
+              user-friendly web experiences. With several years of experience in the industry, I've developed
+              a keen eye for design and a deep understanding of modern web technologies.
+            </p>
+            
+            <p className="mb-4">
+              My journey in web development began with a curiosity about how digital experiences are crafted.
+              That curiosity evolved into a career focused on building responsive, accessible, and visually
+              appealing applications that solve real problems for users.
+            </p>
+            
+            <p className="mb-4">
+              I specialize in React, Next.js, TypeScript, and modern frontend frameworks, always staying
+              current with the latest web standards and best practices. My approach combines technical
+              expertise with design sensibility, ensuring that the applications I build are not only
+              functional but also aesthetically pleasing.
+            </p>
+            
+            <p className="mb-4">
+              When I'm not coding, I enjoy exploring new design trends, contributing to open-source
+              projects, and continuously expanding my skillset through learning and experimentation.
+              I believe that great digital products come from a balance of technical excellence,
+              thoughtful design, and a deep understanding of user needs.
+            </p>
+            
+            <p>
+              I'm always open to new opportunities and collaborations. Feel free to reach out if you'd
+              like to discuss a project or just connect!
+            </p>
+          </div>
+        </div>
+        
+        {/* Desktop layout - text wraps around image */}
+        <div className="hidden md:block relative mb-8">
+          <div className="float-right ml-6 mb-4 relative w-full max-w-[250px] aspect-square">
+            <div className="group relative w-full h-full">
+              <Image 
+                src="/images/4.png" 
+                alt="Jake Harris headshot" 
+                width={250} 
+                height={250} 
+                className="object-cover w-full h-full rounded-full transition-all duration-500 filter grayscale group-hover:grayscale-0"
+                priority
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-full"></div>
+            </div>
+          </div>
+          
+          <div className="prose dark:prose-invert font-medium text-lg">
+            <p className="mb-4">
+              I'm Jake Harris, a Frontend Developer and Designer with a passion for creating intuitive, 
+              user-friendly web experiences. With several years of experience in the industry, I've developed
+              a keen eye for design and a deep understanding of modern web technologies.
+            </p>
+            
+            <p className="mb-4">
+              My journey in web development began with a curiosity about how digital experiences are crafted.
+              That curiosity evolved into a career focused on building responsive, accessible, and visually
+              appealing applications that solve real problems for users.
+            </p>
+            
+            <p className="mb-4">
+              I specialize in React, Next.js, TypeScript, and modern frontend frameworks, always staying
+              current with the latest web standards and best practices. My approach combines technical
+              expertise with design sensibility, ensuring that the applications I build are not only
+              functional but also aesthetically pleasing.
+            </p>
+            
+            <p className="mb-4">
+              When I'm not coding, I enjoy exploring new design trends, contributing to open-source
+              projects, and continuously expanding my skillset through learning and experimentation.
+              I believe that great digital products come from a balance of technical excellence,
+              thoughtful design, and a deep understanding of user needs.
+            </p>
+            
+            <p>
+              I'm always open to new opportunities and collaborations. Feel free to reach out if you'd
+              like to discuss a project or just connect!
+            </p>
+          </div>
+          <div className="clear-both"></div>
+        </div>
+        
+        <ul className="space-y-2">
+          <li className="relative">
+            <Link 
+              href="/JH Resume 2-13-25 Fullstack.pdf" 
+              className="pageLinkContainer flex justify-between items-center border p-3 cursor-pointer group"
+              aria-label="Download resume"
+              target="_blank"
+              download
+            >
+              <div className="flex items-center gap-3">
+                <FaDownload className="text-primary text-xl" />
+                <div>
+                  <div className="text-primary font-medium">Resume</div>
+                  <div className="text-sm text-muted-foreground">Download my resume</div>
+                </div>
+              </div>
+              <div className="text-sm text-muted-foreground">
+                <FaDownload />
+              </div>
+            </Link>
+          </li>
+        </ul>
+      </div>
+    </PageLayout>
+  );
+} 

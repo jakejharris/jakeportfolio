@@ -1,0 +1,146 @@
+/* Magical Button Animation */
+.magical-button-wrapper {
+  position: relative;
+  border-radius: 0.1rem;
+  overflow: visible; /* Changed from hidden to fix border clipping */
+  z-index: 0;
+  transition: all 0.2s ease;
+  display: inline-block;
+}
+
+.magical-button-wrapper::before {
+  content: '';
+  position: absolute;
+  z-index: -2;
+  inset: -2px; /* Slightly larger than the button to ensure complete coverage */
+  border-radius: 0.15rem; /* Slightly larger radius to match the new inset */
+  background: linear-gradient(
+    135deg,
+    #00c4ff 0%,
+    #ff00ea 50%,
+    #00c4ff 100%
+  );
+  background-size: 200% 100%;
+  animation: rotate 3s linear infinite;
+}
+
+.magical-button {
+  position: relative;
+  z-index: 1;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  transition: all 0.2s ease;
+  padding: 0.4rem 1rem;
+  color: hsl(var(--foreground));
+  background: #f1f5f9e0; /* More translucent background */
+  backdrop-filter: blur(8px);
+  border: 1px solid hsl(var(--foreground)); /* Explicit black border */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.1rem;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  height: 36px; /* Fixed height for consistency */
+  line-height: 1; /* Improves vertical centering */
+}
+
+/* Hover Effects */
+.magical-button-wrapper:hover::before {
+  /* Change the effect rather than speeding up animation */
+  animation: rotate 3s linear infinite; /* Keep same speed */
+  filter: brightness(1.2); /* Brighten instead of speeding up */
+  background: linear-gradient(
+    135deg,
+    #00c4ff 0%,
+    #ff00ea 50%,
+    #00c4ff 100%
+  );
+  background-size: 200% 100%;
+}
+
+.magical-button-wrapper:hover .magical-button {
+  background: #f1f5f9f8; /* Slightly less translucent on hover */
+  border-color: hsl(var(--foreground));
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Active Effects */
+.magical-button-wrapper:active {
+  transform: scale(0.98);
+}
+
+.magical-button-wrapper:active .magical-button {
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
+  background: rgba(255, 255, 255, 0.75);
+}
+
+/* This ensures the border is always visible, even during transitions */
+.magical-button::after {
+  content: '';
+  position: absolute;
+  z-index: 2; /* Positioned above the content */
+  inset: -1px; /* Match the border exactly */
+  border-radius: 0.1rem;
+  pointer-events: none; /* So it doesn't interfere with clicks */
+  box-shadow: 0 0 0 1px hsl(var(--foreground)); /* Black border as fallback */
+  opacity: 0; /* Hidden by default */
+  transition: opacity 0.2s ease;
+}
+
+/* Show the border backup on hover to prevent disappearing */
+.magical-button-wrapper:hover .magical-button::after {
+  opacity: 0.1; /* Slightly visible as a safety */
+}
+
+/* Rotating Animation - now uses horizontal translation instead of rotation */
+@keyframes rotate {
+  0% {
+    background-position: 0% 0%;
+  }
+  100% {
+    background-position: 200% 0%;
+  }
+}
+
+/* Gradient Text Animation for special effects */
+.gradient-text {
+  background: linear-gradient(
+    90deg, 
+    #00c4ff 0%, 
+    #ff00ea 60%, 
+    #00c4ff 100%
+  );
+  background-size: 200% auto;
+  color: transparent;
+  background-clip: text;
+  -webkit-background-clip: text;
+  animation: shine 4s linear infinite;
+  font-weight: 600;
+}
+
+@keyframes shine {
+  to {
+    background-position: 200% center;
+  }
+}
+
+/* Dark mode adjustments */
+.dark .magical-button {
+  background: rgba(30, 30, 30, 0.8); /* Translucent dark background */
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.dark .magical-button-wrapper:hover .magical-button {
+  background: rgba(40, 40, 40, 0.9); /* Slightly less translucent on hover */
+}
+
+.dark .magical-button-wrapper:active .magical-button {
+  background: rgba(20, 20, 20, 0.75);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+/* Fixed width version for the Send Message button */
+.magical-button.w-full {
+  width: 100%;
+  justify-content: center;
+} 
