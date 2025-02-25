@@ -24,7 +24,7 @@ function ClientOnly({ children }: { children: React.ReactNode }) {
 }
 
 // Debounce function to limit how often a function is called
-function debounce<T extends (...args: any[]) => any>(
+function debounce<T extends (...args: Parameters<T>) => ReturnType<T>>(
   func: T,
   wait: number
 ): (...args: Parameters<T>) => void {
@@ -90,7 +90,7 @@ export default function Navbar() {
   }, []);
   
   const debouncedHandleResize = useCallback(
-    debounce(handleResize, 100),
+    () => debounce(handleResize, 100)(),
     [handleResize]
   );
 

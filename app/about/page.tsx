@@ -36,8 +36,8 @@ export default function AboutPage() {
           
           <div className="prose dark:prose-invert font-medium text-lg">
             <p className="mb-4">
-              I'm Jake Harris, a Frontend Developer and Designer with a passion for creating intuitive, 
-              user-friendly web experiences. With several years of experience in the industry, I've developed
+              I&apos;m Jake Harris, a Frontend Developer and Designer with a passion for creating intuitive, 
+              user-friendly web experiences. With several years of experience in the industry, I&apos;ve developed
               a keen eye for design and a deep understanding of modern web technologies.
             </p>
             
@@ -55,14 +55,14 @@ export default function AboutPage() {
             </p>
             
             <p className="mb-4">
-              When I'm not coding, I enjoy exploring new design trends, contributing to open-source
+              When I&apos;m not coding, I enjoy exploring new design trends, contributing to open-source
               projects, and continuously expanding my skillset through learning and experimentation.
               I believe that great digital products come from a balance of technical excellence,
               thoughtful design, and a deep understanding of user needs.
             </p>
             
             <p>
-              I'm always open to new opportunities and collaborations. Feel free to reach out if you'd
+              I&apos;m always open to new opportunities and collaborations. Feel free to reach out if you&apos;d
               like to discuss a project or just connect!
             </p>
           </div>
@@ -70,13 +70,13 @@ export default function AboutPage() {
         
         {/* Desktop layout - text wraps around image */}
         <div className="hidden md:block relative mb-8">
-          <div className="float-right ml-6 mb-4 relative w-full max-w-[250px] aspect-square">
+          <div className="float-right ml-6 mb-4 relative w-full max-w-[200px] aspect-square">
             <div className="group relative w-full h-full">
               <Image 
                 src="/images/4.png" 
                 alt="Jake Harris headshot" 
-                width={250} 
-                height={250} 
+                width={200} 
+                height={200} 
                 className="object-cover w-full h-full rounded-full transition-all duration-500 filter grayscale group-hover:grayscale-0"
                 priority
               />
@@ -86,8 +86,8 @@ export default function AboutPage() {
           
           <div className="prose dark:prose-invert font-medium text-lg">
             <p className="mb-4">
-              I'm Jake Harris, a Frontend Developer and Designer with a passion for creating intuitive, 
-              user-friendly web experiences. With several years of experience in the industry, I've developed
+              I&apos;m Jake Harris, a Frontend Developer and Designer with a passion for creating intuitive, 
+              user-friendly web experiences. With several years of experience in the industry, I&apos;ve developed
               a keen eye for design and a deep understanding of modern web technologies.
             </p>
             
@@ -105,14 +105,14 @@ export default function AboutPage() {
             </p>
             
             <p className="mb-4">
-              When I'm not coding, I enjoy exploring new design trends, contributing to open-source
+              When I&apos;m not coding, I enjoy exploring new design trends, contributing to open-source
               projects, and continuously expanding my skillset through learning and experimentation.
               I believe that great digital products come from a balance of technical excellence,
               thoughtful design, and a deep understanding of user needs.
             </p>
             
             <p>
-              I'm always open to new opportunities and collaborations. Feel free to reach out if you'd
+              I&apos;m always open to new opportunities and collaborations. Feel free to reach out if you&apos;d
               like to discuss a project or just connect!
             </p>
           </div>

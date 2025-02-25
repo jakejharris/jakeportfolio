@@ -1,8 +1,6 @@
 "use client";
 
-import { FaLinkedin } from 'react-icons/fa';
 import ThemeToggle from './ThemeToggle';
-import { Button } from './ui/button';
 import Link from 'next/link';
 
 interface DesktopNavbarProps {
