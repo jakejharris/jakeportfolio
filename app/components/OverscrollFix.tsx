@@ -2,10 +2,15 @@
 
 import { useEffect } from 'react';
 
+// Define a type for the Window with MSStream property
+interface WindowWithMSStream extends Window {
+  MSStream?: unknown;
+}
+
 export default function OverscrollFix() {
   useEffect(() => {
     // Check if we're on iOS
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as WindowWithMSStream).MSStream;
     
     if (isIOS) {
       // Add a class to the body for iOS-specific styling
