@@ -2,29 +2,64 @@ import './css/page.css'
 import './css/animations.css'
 import PageLayout from './components/PageLayout';
 import Link from 'next/link';
+import { sanityFetch } from './lib/sanity.client';
+import { PostSummary } from './types/sanity';
 
-export default function HomePage() {
-  const posts = [
-    { id: 1, title: "Project Alpha", date: "Jan 2023", viewCount: 200, link: "/page/project-alpha" },
-    { id: 2, title: "Blog Post Beta", date: "Mar 2023", viewCount: 150, link: "/page/blog-post-beta" },
-    { id: 3, title: "Project Gamma", date: "Feb 2023", viewCount: 300, link: "/page/project-gamma" },
-  ];
+// Query to fetch posts from Sanity
+const query = `*[_type == "post"] | order(publishedAt desc) {
+  _id,
+  title,
+  slug,
+  publishedAt,
+  viewCount,
+  excerpt,
+  "tags": tags[]->{ _id, title, slug }
+}`;
+
+export default async function HomePage() {
+  // Fetch posts from Sanity
+  const posts = await sanityFetch<PostSummary[]>({
+    query,
+    tags: ['post'],
+  });
 
   return (
     <PageLayout>
       <div className="max-w-none">
-        <h2 className="mb-4 text-xl md:text-2xl font-bold">Blog & Projects</h2>
-        <ul className="space-y-2">
+        {/* <h2 className="mb-4 text-xl md:text-2xl font-bold">Recent Posts</h2> */}
+        <ul className="space-y-2 mb-8">
           {posts.map((post) => (
-            <li key={post.id} className="relative">
+            <li key={post._id} className="relative">
               <Link 
-                href={post.link} 
+                href={`/posts/${post.slug.current}`} 
                 className="pageLinkContainer flex justify-between items-center border p-3 cursor-pointer group"
                 aria-label={`View ${post.title}`}
               >
-                <div>
-                  <div className="text-primary font-medium">{post.title}</div>
-                  <div className="text-sm text-muted-foreground">{post.date}</div>
+                <div className="flex items-center gap-3">
+                  <div>
+                    <div className="text-primary font-medium">{post.title}</div>
+                    <div className="flex items-center gap-2">
+                      <div className="text-sm text-muted-foreground">
+                        {new Date(post.publishedAt).toLocaleDateString('en-US', {
+                          year: 'numeric',
+                          month: 'short',
+                          day: 'numeric',
+                        })}
+                      </div>
+                      {post.tags && post.tags.length > 0 && (
+                        <div className="flex gap-1">
+                          {post.tags.map(tag => (
+                            <span 
+                              key={tag._id} 
+                              className="text-xs px-2 py-0.5 rounded-full bg-muted text-muted-foreground"
+                            >
+                              {tag.title}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </div>
                 <div className="text-sm text-muted-foreground">{post.viewCount} views</div>
               </Link>

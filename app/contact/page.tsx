@@ -67,27 +67,6 @@ export default function ContactPage() {
               </div>
             </a>
           </li>
-          
-          <li className="relative">
-            <a 
-              href="https://github.com/jakejharris" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="pageLinkContainer flex justify-between items-center border p-3 cursor-pointer group"
-              aria-label="Visit GitHub profile"
-            >
-              <div className="flex items-center gap-3">
-                <FaGithub className="text-primary text-xl" />
-                <div>
-                  <div className="text-primary font-medium">GitHub</div>
-                  <div className="text-sm text-muted-foreground">Check out my code</div>
-                </div>
-              </div>
-              <div className="text-sm text-muted-foreground">
-                <MdArrowForward />
-              </div>
-            </a>
-          </li>
         </ul>
       </div>
         
