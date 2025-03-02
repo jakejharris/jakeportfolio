@@ -1,5 +1,5 @@
 // Add type declaration for next-sanity
-// @ts-ignore
+// @ts-expect-error - next-sanity type definitions are outdated
 import { createClient } from 'next-sanity';
 import imageUrlBuilder from '@sanity/image-url';
 import { apiVersion, dataset, projectId } from './sanity.config';
@@ -23,7 +23,7 @@ export const writeClient = createClient({
 });
 
 // Helper function for generating image URLs with only the asset reference data
-export const urlFor = (source: any) => {
+export const urlFor = (source: SanityImageSource) => {
   return imageUrlBuilder(client).image(source);
 };
 
@@ -34,10 +34,20 @@ export async function sanityFetch<QueryResponse>({
   tags = [],
 }: {
   query: string;
-  params?: Record<string, any>;
+  params?: Record<string, unknown>;
   tags: string[];
 }): Promise<QueryResponse> {
   return client.fetch(query, params, {
     next: { tags },
   }) as Promise<QueryResponse>;
-} 
+}
+
+// Add type for SanityImageSource
+type SanityImageSource = {
+  asset: {
+    _ref: string;
+    _type: 'reference';
+  };
+  _type: 'image';
+  [key: string]: unknown;
+}; 

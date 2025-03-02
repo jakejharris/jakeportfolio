@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useState } from 'react'
-import { FaLinkedin, FaGithub, FaCopy, FaCheck } from 'react-icons/fa'
+import { FaLinkedin, FaCopy, FaCheck } from 'react-icons/fa'
 import { MdEmail, MdArrowForward } from 'react-icons/md'
 import '../css/animations.css'
 import '../css/magical-button.css'

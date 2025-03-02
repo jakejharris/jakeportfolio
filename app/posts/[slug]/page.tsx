@@ -1,14 +1,11 @@
 import PageLayout from '@/app/components/PageLayout';
-import Link from 'next/link';
 import Image from 'next/image';
 import { sanityFetch, urlFor } from '@/app/lib/sanity.client';
 import { PortableText } from '@portabletext/react';
 import { notFound } from 'next/navigation';
 import { FaGithub, FaGlobe, FaLinkedin, FaTwitter, FaYoutube, FaCodepen, FaExternalLinkAlt } from 'react-icons/fa';
-import { BiSolidLeftArrow, BiSolidLeftArrowSquare } from "react-icons/bi";
 import ViewCounter from './ViewCounter';
 import { Post } from '@/app/types/sanity';
-import { MdArrowBackIos, MdOutlineKeyboardDoubleArrowLeft } from 'react-icons/md';
 import { Button } from '@/app/components/ui/button';
 
 // Query to fetch a single post by slug
@@ -28,7 +25,7 @@ const query = `*[_type == "post" && slug.current == $slug][0] {
 // Components for rendering the portable text content
 const components = {
   types: {
-    image: ({ value }: any) => {
+    image: ({ value }: { value: ImageValue }) => {
       return (
         <div className={`my-8 ${value.fullWidth ? 'w-full' : 'max-w-2xl mx-auto'}`}>
           <Image
@@ -44,7 +41,7 @@ const components = {
         </div>
       );
     },
-    youtube: ({ value }: any) => {
+    youtube: ({ value }: { value: YoutubeValue }) => {
       // Extract video ID from YouTube URL
       const getYouTubeId = (url: string) => {
         const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
@@ -72,7 +69,7 @@ const components = {
         </div>
       );
     },
-    codeSnippet: ({ value }: any) => {
+    codeSnippet: ({ value }: { value: CodeSnippetValue }) => {
       return (
         <div className="my-8">
           {value.filename && (
@@ -88,7 +85,7 @@ const components = {
         </div>
       );
     },
-    imageCarousel: ({ value }: any) => {
+    imageCarousel: ({ value }: { value: ImageCarouselValue }) => {
       return (
         <div className="my-8">
           <div className="flex overflow-x-auto gap-4 pb-4 snap-x">
@@ -113,7 +110,7 @@ const components = {
         </div>
       );
     },
-    callToAction: ({ value }: any) => {
+    callToAction: ({ value }: { value: CallToActionValue }) => {
       const styles = {
         primary: 'bg-primary text-primary-foreground hover:bg-primary/90',
         secondary: 'bg-secondary text-secondary-foreground hover:bg-secondary/90',
@@ -133,7 +130,7 @@ const components = {
         </div>
       );
     },
-    quoteBlock: ({ value }: any) => {
+    quoteBlock: ({ value }: { value: QuoteBlockValue }) => {
       return (
         <blockquote className="my-8 border-l-4 border-primary pl-4 italic">
           <p className="text-lg">{value.quote}</p>
@@ -143,7 +140,7 @@ const components = {
         </blockquote>
       );
     },
-    divider: ({ value }: any) => {
+    divider: ({ value }: { value: DividerValue }) => {
       const styles = {
         line: 'border-t',
         dots: 'flex justify-center space-x-2',
@@ -184,6 +181,56 @@ type PageParams = {
     slug: string;
   }>;
 };
+
+// Define component value types
+interface ImageValue {
+  _type: 'image';
+  alt?: string;
+  caption?: string;
+  fullWidth?: boolean;
+  asset: {
+    _ref: string;
+    _type: 'reference';
+  };
+  [key: string]: unknown; // Add index signature to match SanityImageSource
+}
+
+interface YoutubeValue {
+  _type: 'youtube';
+  url: string;
+  caption?: string;
+}
+
+interface CodeSnippetValue {
+  _type: 'codeSnippet';
+  language?: string;
+  filename?: string;
+  code: string;
+}
+
+interface ImageCarouselValue {
+  _type: 'imageCarousel';
+  images: ImageValue[];
+  caption?: string;
+}
+
+interface CallToActionValue {
+  _type: 'callToAction';
+  text: string;
+  url: string;
+  style: 'primary' | 'secondary' | 'ghost';
+}
+
+interface QuoteBlockValue {
+  _type: 'quoteBlock';
+  quote: string;
+  attribution?: string;
+}
+
+interface DividerValue {
+  _type: 'divider';
+  style: 'line' | 'dots' | 'dashed';
+}
 
 export default async function PostPage({ params }: PageParams) {
   // Get the slug from params - await it properly
