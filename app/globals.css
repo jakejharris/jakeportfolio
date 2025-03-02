@@ -77,3 +77,20 @@
     font-family: Arial, Helvetica, sans-serif;
   }
 }
+
+/* Add specific styling for Portable Text lists */
+.portable-text ul {
+  list-style-type: disc;
+  padding-left: 1.5rem;
+  margin: 1rem 0;
+}
+
+.portable-text ol {
+  list-style-type: decimal;
+  padding-left: 1.5rem;
+  margin: 1rem 0;
+}
+
+.portable-text li {
+  margin-bottom: 0.5rem;
+}
