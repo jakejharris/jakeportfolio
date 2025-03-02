@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { revalidateTag } from 'next/cache';
+import { revalidateTag, revalidatePath } from 'next/cache';
 
 export async function POST(req: NextRequest) {
   try {
@@ -11,30 +11,35 @@ export async function POST(req: NextRequest) {
     
     // Verify the secret token
     if (secret !== process.env.SANITY_WEBHOOK_SECRET) {
+      console.log('Invalid webhook secret provided');
       return NextResponse.json({ message: 'Invalid secret' }, { status: 401 });
     }
     
     // Log the received payload for debugging
-    console.log('Received webhook payload:', body);
+    console.log('Received webhook payload:', JSON.stringify(body, null, 2));
     
-    // Extract information from Sanity webhook payload
-    // Sanity sends information in the following structure:
-    // { ids: { created: [], updated: [], deleted: [] }, operation: 'create|update|delete' }
-    const documentType = body?.documentType || 'post'; // Default to 'post' if not specified
+    // Extract the document type if available in the payload
+    // Sanity webhooks typically include _type in the body
+    const documentType = body?._type || 'post';
     
-    // Revalidate the tag based on document type
+    console.log(`Document type from webhook: ${documentType}`);
+    
+    // Revalidate by document type
     revalidateTag(documentType);
     
-    // Also revalidate the generic 'post' tag as it's used in our queries
+    // Always revalidate the 'post' tag as it's used in the main query
     revalidateTag('post');
     
+    // Additionally revalidate the home page path
+    revalidatePath('/', 'page');
+    
     // Log the revalidation
-    console.log(`Revalidated content with tag: ${documentType} and 'post'`);
+    console.log(`Revalidated content with tag: ${documentType} and 'post', also revalidated homepage path`);
     
     // Return success response
     return NextResponse.json({ 
       revalidated: true, 
-      message: `Revalidated content with tag: ${documentType} and 'post'` 
+      message: `Revalidated content successfully` 
     });
   } catch (error) {
     // Log and return error
