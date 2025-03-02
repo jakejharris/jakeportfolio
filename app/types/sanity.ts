@@ -2,6 +2,9 @@
  * Type definitions for Sanity content
  */
 
+import { PortableTextBlock } from '@portabletext/types';
+import { SanityImageSource } from './sanity-image';
+
 // Base interface for Sanity documents
 export interface SanityDocument {
   _id: string;
@@ -36,8 +39,8 @@ export interface PostSummary extends SanityDocument {
 
 // Full post interface with content
 export interface Post extends PostSummary {
-  content?: any; // Using 'any' for Portable Text content
-  mainImage?: any; // Main image for the post detail page
+  content?: PortableTextBlock[]; // Using PortableTextBlock for Portable Text content
+  mainImage?: SanityImageSource; // Main image using proper image type
   externalLinks?: ExternalLink[];
   seo?: SEO;
 }
@@ -53,5 +56,5 @@ export interface ExternalLink {
 export interface SEO {
   metaTitle?: string;
   metaDescription?: string;
-  shareImage?: any;
+  shareImage?: SanityImageSource; // Share image using proper image type
 } 
