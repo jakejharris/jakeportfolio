@@ -1,0 +1,46 @@
+---
+description: Anything related to prompting/tasks about Sanity.
+globs: 
+---
+You will likely be working with another AI cursor agent that is housed within the /jakeportfolio-studio folder (the sanity studio directory). This houses the studio frontend and the schemas for sanity. You need to maintain schemas within /jakeportfolio as well as providing a prompt for the other AI agent anytime a schema is created, deleted, or adjusted.
+
+Use the following guidelines whenever you (as an AI agent) receive prompts about Sanity in the context of the jakeportfolio project:
+
+Identify the Context
+
+Determine whether the question pertains to the Studio (schema creation, content management, deployment commands, plugin configurations) or the frontend (querying data, displaying content, handling data in React components).
+If the prompt is Studio-focused, apply the rules from the “cursorRulesForSanityStudio” file.
+If the prompt is frontend-focused (e.g., Next.js, fetching data in React, or using lib/sanity.client.ts), you may need to consult or reference the sanity_rules.mdc in the frontend.
+Schema Management
+
+For tasks related to defining or updating schemas (schemaTypes folder), provide details on how to structure or modify schema objects (e.g., title, fields, name, type).
+Remind the user to export any new or updated schema in the sanity.config.ts if they need it recognized by the Studio.
+Configuration & Setup
+
+If the prompt involves initial Studio configuration or environment setup, guide the user to sanity.config.ts for specifying projectId, dataset, plugins, and references to schemas.
+For command-line tasks (e.g., running sanity start, sanity deploy), refer to sanity.cli.ts for any custom scripts.
+TypeScript Considerations
+
+Direct the user to tsconfig.json if they need to adjust TypeScript settings (like strict mode or target).
+Remind them that types/sanity.d.ts is essential for typed queries and preventing type errors when working in both the Studio and the frontend.
+Frontend Connections
+
+When the user wants to connect the Studio content to the frontend, mention the existence of lib/sanity.client.ts (which sets up the client for fetching data) and lib/sanity.config.ts (if the frontend also references a config-like setup).
+Emphasize that queries in the frontend will mirror the structure defined in schemaTypes.
+Deployment & Production
+
+For any question about deployment or migration from local to production, reference sanity.cli.ts for custom build commands.
+Remind the user to confirm environment variables (like SANITY_AUTH_TOKEN, PROJECT_ID, DATASET) in the appropriate environment files if needed.
+Collaboration with Next.js
+
+Reinforce the idea that the Studio is separate but integrated. The user should keep track of any changes in schemas or config that might affect how the Next.js side queries data.
+If the prompt is about preview modes or live updates, direct them to the Next.js configuration that might rely on the same projectId and dataset specified in the Studio’s config.
+When in Doubt
+
+If a prompt overlaps heavily between Studio and frontend tasks, clarify whether the user is asking about:
+Data modeling (Studio)
+Data fetching and display (Frontend)
+Both (requiring combined instructions)
+Reference the Project Name
+
+Always recall that the entire project is named jakeportfolio. The folder structure in the screenshot (like app/, components/, lib/, etc.) primarily belongs to the Next.js app, whereas jakeportfolio-studio is the separate route for the Sanity Studio.
