@@ -89,7 +89,7 @@ const components = {
       return (
         <div className="my-8">
           <div className="flex overflow-x-auto gap-4 pb-4 snap-x">
-            {value.images.map((image: any, index: number) => (
+            {value.images.map((image: ImageValue, index: number) => (
               <div key={index} className="snap-center flex-shrink-0 w-full md:w-2/3">
                 <Image
                   src={urlFor(image).width(800).url()}

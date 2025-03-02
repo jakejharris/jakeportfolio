@@ -1,27 +1,74 @@
 declare module 'sanity' {
-  export function createStudio(config: any): React.ComponentType<any>;
-  export function defineConfig(config: any): any;
-  export function structureTool(): any;
+  interface StudioConfig {
+    projectId: string;
+    dataset: string;
+    apiVersion?: string;
+    title?: string;
+    basePath?: string;
+    plugins?: unknown[];
+    schema?: {
+      types: unknown[];
+    };
+    [key: string]: unknown;
+  }
+  
+  export function createStudio(config: StudioConfig): React.ComponentType<Record<string, unknown>>;
+  export function defineConfig(config: StudioConfig): StudioConfig;
+  export function structureTool(): unknown;
 }
 
 declare module '@sanity/vision' {
-  export function visionTool(options?: any): any;
+  interface VisionToolOptions {
+    defaultApiVersion?: string;
+    defaultDataset?: string;
+  }
+  export function visionTool(options?: VisionToolOptions): unknown;
 }
 
 declare module 'next-sanity/studio' {
-  export const NextStudio: React.ComponentType<any>;
+  interface StudioProps {
+    config: unknown;
+    [key: string]: unknown;
+  }
+  export const NextStudio: React.ComponentType<StudioProps>;
 }
 
 declare module 'next-sanity' {
-  export function createClient(config: any): any;
+  interface ClientConfig {
+    projectId: string;
+    dataset: string;
+    apiVersion: string;
+    useCdn?: boolean;
+    token?: string;
+    [key: string]: unknown;
+  }
+  interface SanityClient {
+    fetch: <T>(query: string, params?: Record<string, unknown>, options?: unknown) => Promise<T>;
+    [key: string]: unknown;
+  }
+  export function createClient(config: ClientConfig): SanityClient;
 }
 
 declare module '@sanity/image-url' {
-  export default function imageUrlBuilder(client: any): {
-    image: (source: any) => {
-      url: () => string;
-      width: (width: number) => any;
-      height: (height: number) => any;
+  interface ImageUrlBuilder {
+    image: (source: SanityImageSource) => ImageUrlBuilderOptions;
+  }
+  
+  interface ImageUrlBuilderOptions {
+    url: () => string;
+    width: (width: number) => ImageUrlBuilderOptions;
+    height: (height: number) => ImageUrlBuilderOptions;
+    [key: string]: unknown;
+  }
+  
+  interface SanityImageSource {
+    asset: {
+      _ref: string;
+      _type: string;
     };
-  };
+    _type: string;
+    [key: string]: unknown;
+  }
+  
+  export default function imageUrlBuilder(client: unknown): ImageUrlBuilder;
 } 
