@@ -14,27 +14,31 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ message: 'Invalid secret' }, { status: 401 });
     }
     
-    // Get the updated document type from the body
-    const documentType = body?.type;
+    // Log the received payload for debugging
+    console.log('Received webhook payload:', body);
     
-    if (!documentType) {
-      return NextResponse.json({ message: 'No document type provided' }, { status: 400 });
-    }
+    // Extract information from Sanity webhook payload
+    // Sanity sends information in the following structure:
+    // { ids: { created: [], updated: [], deleted: [] }, operation: 'create|update|delete' }
+    const documentType = body?.documentType || 'post'; // Default to 'post' if not specified
     
-    // Revalidate the appropriate tag based on document type
+    // Revalidate the tag based on document type
     revalidateTag(documentType);
     
+    // Also revalidate the generic 'post' tag as it's used in our queries
+    revalidateTag('post');
+    
     // Log the revalidation
-    console.log(`Revalidated content with tag: ${documentType}`);
+    console.log(`Revalidated content with tag: ${documentType} and 'post'`);
     
     // Return success response
     return NextResponse.json({ 
       revalidated: true, 
-      message: `Revalidated content with tag: ${documentType}` 
+      message: `Revalidated content with tag: ${documentType} and 'post'` 
     });
   } catch (error) {
     // Log and return error
     console.error('Error revalidating:', error);
-    return NextResponse.json({ message: 'Error revalidating' }, { status: 500 });
+    return NextResponse.json({ message: 'Error revalidating', error: String(error) }, { status: 500 });
   }
 } 
