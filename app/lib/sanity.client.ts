@@ -9,7 +9,10 @@ const clientConfig = {
   projectId,
   dataset,
   apiVersion,
-  useCdn: process.env.NODE_ENV === 'production',
+  // Always set useCdn to false to avoid caching issues when content changes
+  useCdn: false,
+  // Add a perspective value to ensure fresh content
+  perspective: 'published',
 };
 
 // Create a client for fetching data (read-only)
@@ -38,7 +41,12 @@ export async function sanityFetch<QueryResponse>({
   tags: string[];
 }): Promise<QueryResponse> {
   return client.fetch(query, params, {
-    next: { tags },
+    // Ensure Next.js uses the tags for revalidation
+    next: { 
+      tags,
+      // Set revalidate to 0 to force revalidation on every request
+      revalidate: 0 
+    },
   }) as Promise<QueryResponse>;
 }
 
