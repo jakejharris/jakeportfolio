@@ -50,7 +50,7 @@ export default function MobileNavbar({ scrolled, visible }: MobileNavbarProps) {
               <DrawerClose asChild>
                   <Link
                     href="/"
-                    className="text-xl py-3 px-6 rounded-md transition-all duration-150 hover:bg-accent active:scale-95 active:bg-accent/80"
+                    className="border border-border w-full text-center text-xl py-3 px-6 rounded-md transition-all duration-150 hover:bg-accent active:scale-95 active:bg-accent/80"
                   >
                     Home
                   </Link>
@@ -58,7 +58,7 @@ export default function MobileNavbar({ scrolled, visible }: MobileNavbarProps) {
                 <DrawerClose asChild>
                   <Link
                     href="/about"
-                    className="text-xl py-3 px-6 rounded-md transition-all duration-150 hover:bg-accent active:scale-95 active:bg-accent/80"
+                    className="border border-border w-full text-center text-xl py-3 px-6 rounded-md transition-all duration-150 hover:bg-accent active:scale-95 active:bg-accent/80"
                   >
                     About
                   </Link>
@@ -66,7 +66,7 @@ export default function MobileNavbar({ scrolled, visible }: MobileNavbarProps) {
                 <DrawerClose asChild>
                   <Link
                     href="/contact"
-                    className="text-xl py-3 px-6 rounded-md transition-all duration-150 hover:bg-accent active:scale-95 active:bg-accent/80"
+                    className="border border-border w-full text-center text-xl py-3 px-6 rounded-md transition-all duration-150 hover:bg-accent active:scale-95 active:bg-accent/80"
                   >
                     Contact
                   </Link>

@@ -7,6 +7,7 @@ import { FaGithub, FaGlobe, FaLinkedin, FaTwitter, FaYoutube, FaCodepen, FaExter
 import ViewCounter from './ViewCounter';
 import { Post } from '@/app/types/sanity';
 import { Button } from '@/app/components/ui/button';
+import React from 'react';
 
 // Query to fetch a single post by slug
 const query = `*[_type == "post" && slug.current == $slug][0] {
@@ -22,7 +23,7 @@ const query = `*[_type == "post" && slug.current == $slug][0] {
   "tags": tags[]->{ _id, title, slug }
 }`;
 
-// Components for rendering the portable text content
+// Directly overwrite the entire components object to fix the type issues
 const components = {
   types: {
     image: ({ value }: { value: ImageValue }) => {
@@ -42,7 +43,6 @@ const components = {
       );
     },
     youtube: ({ value }: { value: YoutubeValue }) => {
-      // Extract video ID from YouTube URL
       const getYouTubeId = (url: string) => {
         const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
         const match = url.match(regExp);
@@ -306,7 +306,7 @@ export default async function PostPage({ params }: PageParams) {
           </div>
         )}
         
-        <div className="prose dark:prose-invert max-w-none">
+        <div className="prose dark:prose-invert max-w-none portable-text">
           {post.content && (
             <PortableText value={post.content} components={components} />
           )}
