@@ -4,14 +4,16 @@ import PageLayout from './components/PageLayout';
 import Link from 'next/link';
 import { sanityFetch } from './lib/sanity.client';
 import { PostSummary } from './types/sanity';
+import { Eye, Pin } from "lucide-react";
 
 // Query to fetch posts from Sanity
-const query = `*[_type == "post"] | order(publishedAt desc) {
+const query = `*[_type == "post"] | order(featured desc, publishedAt desc) {
   _id,
   title,
   slug,
   publishedAt,
   viewCount,
+  featured,
   excerpt,
   "tags": tags[]->{ _id, title, slug }
 }`;
@@ -32,12 +34,15 @@ export default async function HomePage() {
             <li key={post._id} className="relative">
               <Link 
                 href={`/posts/${post.slug.current}`} 
-                className="pageLinkContainer flex justify-between items-center border p-3 cursor-pointer group"
+                className={`pageLinkContainer flex justify-between items-center border p-3 cursor-pointer group ${post.featured ? '' : ''}`}
                 aria-label={`View ${post.title}`}
               >
                 <div className="flex items-center gap-3">
                   <div>
-                    <div className="text-primary font-medium">{post.title}</div>
+                    <div className="text-primary text-sm md:text-base font-medium mb-1 leading-tight flex items-center gap-1">
+                      {post.title}
+                      {post.featured && <Pin className="h-3 w-3 text-primary ml-1 fill-primary" />}
+                    </div>
                     <div className="flex items-center gap-2">
                       <div className="text-sm text-muted-foreground">
                         {new Date(post.publishedAt).toLocaleDateString('en-US', {
@@ -61,7 +66,9 @@ export default async function HomePage() {
                     </div>
                   </div>
                 </div>
-                <div className="text-sm text-muted-foreground">{post.viewCount} views</div>
+                <div className="ms-2 text-sm text-muted-foreground whitespace-nowrap flex items-center gap-1">
+                  {post.viewCount} <Eye className="h-4 w-4" />
+                </div>
               </Link>
             </li>
           ))}
