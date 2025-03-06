@@ -4,7 +4,7 @@ import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import ScrollToTop from "./components/ScrollToTop";
 import { ThemeProvider } from "./components/theme-provider";
-// import OverscrollFix from "./components/OverscrollFix";
+import { Suspense } from "react";
 
 export const metadata = {
   title: "Jake Harris - Developer",
@@ -25,8 +25,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           enableSystem={false}
           disableTransitionOnChange
         >
-          {/* <OverscrollFix /> */}
-          <ScrollToTop />
+          <Suspense>
+            <ScrollToTop />
+          </Suspense>
           <Navbar />
           <main className="flex-1">
             {children}
