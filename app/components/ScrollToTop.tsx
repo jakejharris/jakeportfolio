@@ -34,19 +34,5 @@ export default function ScrollToTop() {
     });
   }, [pathname]);
 
-  // iOS specific scroll handling
-  useEffect(() => {
-    // Check if the device is iOS
-    const isIOS: boolean = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
-    
-    if (isIOS) {
-      // iOS specific scroll reset
-      window.scrollTo(0, 1);
-      setTimeout(() => {
-        window.scrollTo(0, 0);
-      }, 10);
-    }
-  }, [pathname]);
-
   return null;
 } 
