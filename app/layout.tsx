@@ -4,7 +4,7 @@ import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import ScrollToTop from "./components/ScrollToTop";
 import { ThemeProvider } from "./components/theme-provider";
-import OverscrollFix from "./components/OverscrollFix";
+// import OverscrollFix from "./components/OverscrollFix";
 
 export const metadata = {
   title: "Jake Harris - Developer",
@@ -25,7 +25,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           enableSystem={false}
           disableTransitionOnChange
         >
-          <OverscrollFix />
+          {/* <OverscrollFix /> */}
           <ScrollToTop />
           <Navbar />
           <main className="flex-1">
