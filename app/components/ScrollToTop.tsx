@@ -2,7 +2,6 @@
 
 import { useEffect, useLayoutEffect } from "react";
 import { usePathname } from "next/navigation";
-import { toast } from "sonner";
 
 export default function ScrollToTop() {
   const pathname = usePathname();
@@ -23,11 +22,6 @@ export default function ScrollToTop() {
       }
     }, 2);
     
-    toast("Scrolled to top", {
-      description: `Navigated to ${pathname}`,
-      position: "bottom-right",
-    });
-    
     return () => clearTimeout(timeoutId);
   }, [pathname]);
 
@@ -46,11 +40,6 @@ export default function ScrollToTop() {
         });
       }
     }, 2);
-    
-    toast("Page loaded", {
-      description: "Initial scroll to top",
-      position: "bottom-right",
-    });
     
     return () => clearTimeout(timeoutId);
   }, []);
