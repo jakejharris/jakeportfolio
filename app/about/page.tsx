@@ -1,10 +1,10 @@
 import PageLayout from '../components/PageLayout';
-import Link from 'next/link';
 import Image from 'next/image';
 import { FaDownload, FaGithub } from 'react-icons/fa';
 import '../css/page.css';
 import '../css/animations.css';
 import { MdArrowForward } from 'react-icons/md';
+import LinkTop from '../components/LinkTop';
 
 export const metadata = {
     title: "About - Jake Harris",
@@ -122,7 +122,7 @@ export default function AboutPage() {
 
                 <ul className="space-y-2">
                     <li className="relative">
-                        <Link
+                        <LinkTop
                             href="/JH Resume 2-13-25 Fullstack.pdf"
                             className="pageLinkContainer flex justify-between items-center border p-3 cursor-pointer group"
                             aria-label="Download resume"
@@ -139,10 +139,10 @@ export default function AboutPage() {
                             <div className="text-sm text-muted-foreground">
                                 <FaDownload />
                             </div>
-                        </Link>
+                        </LinkTop>
                     </li>
                     <li className="relative">
-                        <a
+                        <LinkTop
                             href="https://github.com/jakejharris"
                             target="_blank"
                             rel="noopener noreferrer"
@@ -159,7 +159,7 @@ export default function AboutPage() {
                             <div className="text-sm text-muted-foreground">
                                 <MdArrowForward />
                             </div>
-                        </a>
+                        </LinkTop>
                     </li>
                 </ul>
             </div>
