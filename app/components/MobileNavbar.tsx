@@ -32,7 +32,7 @@ export default function MobileNavbar({ scrolled, visible }: MobileNavbarProps) {
     >
       <div className="px-4 h-16 flex justify-between items-center">
         <div className="flex-1">
-          <Link href="/" scroll={true} className="animated-underline normal-case text-lg md:text-xl font-bold">Jake Harris</Link>
+          <Link href="/#" scroll={true} className="animated-underline normal-case text-lg md:text-xl font-bold">Jake Harris</Link>
         </div>
         <div className="flex items-center gap-2">
           <ThemeToggle />
@@ -49,7 +49,7 @@ export default function MobileNavbar({ scrolled, visible }: MobileNavbarProps) {
               <div className="flex flex-col items-center gap-2 p-6">
               <DrawerClose asChild>
                   <Link
-                    href="/"
+                    href="/#"
                     scroll={true}
                     className="border border-border w-full text-center text-xl py-3 px-6 rounded-md transition-all duration-150 hover:bg-accent active:scale-95 active:bg-accent/80"
                   >
@@ -58,7 +58,7 @@ export default function MobileNavbar({ scrolled, visible }: MobileNavbarProps) {
                 </DrawerClose>
                 <DrawerClose asChild>
                   <Link
-                    href="/about"
+                    href="/about#"
                     scroll={true}
                     className="border border-border w-full text-center text-xl py-3 px-6 rounded-md transition-all duration-150 hover:bg-accent active:scale-95 active:bg-accent/80"
                   >
@@ -67,7 +67,7 @@ export default function MobileNavbar({ scrolled, visible }: MobileNavbarProps) {
                 </DrawerClose>
                 <DrawerClose asChild>
                   <Link
-                    href="/contact"
+                    href="/contact#"
                     scroll={true}
                     className="border border-border w-full text-center text-xl py-3 px-6 rounded-md transition-all duration-150 hover:bg-accent active:scale-95 active:bg-accent/80"
                   >
