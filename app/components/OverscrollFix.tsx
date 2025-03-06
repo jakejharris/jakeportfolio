@@ -5,6 +5,7 @@ import { useEffect } from 'react';
 // Define a type for the Window with MSStream property
 interface WindowWithMSStream extends Window {
   MSStream?: unknown;
+  _lastScrollToTopTime?: number;
 }
 
 export default function OverscrollFix() {
@@ -18,11 +19,23 @@ export default function OverscrollFix() {
       
       // Handle document touchstart
       const handleTouchStart = (e: TouchEvent) => {
+        // Skip overscroll fix if ScrollToTop was recently triggered (within last 300ms)
+        const lastScrollTime = (window as WindowWithMSStream)._lastScrollToTopTime || 0;
+        if (Date.now() - lastScrollTime < 300) {
+          return;
+        }
+        
         // Store the initial touch position
         const startY = e.touches[0].clientY;
         
         // Handle document touchmove
         const handleTouchMove = (e: TouchEvent) => {
+          // Skip overscroll fix if ScrollToTop was recently triggered
+          const lastScrollTime = (window as WindowWithMSStream)._lastScrollToTopTime || 0;
+          if (Date.now() - lastScrollTime < 300) {
+            return;
+          }
+          
           // Get current scroll position
           const scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
           const scrollHeight = document.documentElement.scrollHeight || document.body.scrollHeight;

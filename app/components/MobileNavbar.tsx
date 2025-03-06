@@ -5,6 +5,7 @@ import { FaGithub } from 'react-icons/fa';
 import ThemeToggle from './ThemeToggle';
 import { Button } from './ui/button';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import HamburgerIcon from './HamburgerIcon';
 import {
   Drawer,
@@ -16,6 +17,11 @@ import {
   DrawerTrigger,
 } from "./ui/drawer";
 
+// Define window type with our custom property
+interface CustomWindow extends Window {
+  _lastScrollToTopTime?: number;
+}
+
 interface MobileNavbarProps {
   scrolled: boolean;
   visible: boolean;
@@ -23,6 +29,28 @@ interface MobileNavbarProps {
 
 export default function MobileNavbar({ scrolled, visible }: MobileNavbarProps) {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const router = useRouter();
+
+  // Helper function to handle navigation and ensure scrolling to top
+  const handleNavigation = (path: string) => {
+    // Close the drawer
+    setIsDrawerOpen(false);
+    
+    // Update the global timestamp (for coordination with OverscrollFix)
+    (window as CustomWindow)._lastScrollToTopTime = Date.now();
+    
+    // Navigate to the path
+    router.push(path);
+    
+    // Force scroll to top (backup for ScrollToTop component)
+    setTimeout(() => {
+      (window as CustomWindow)._lastScrollToTopTime = Date.now();
+      window.scrollTo({
+        top: 0,
+        behavior: "instant"
+      });
+    }, 50);
+  };
 
   return (
     <nav
@@ -36,7 +64,7 @@ export default function MobileNavbar({ scrolled, visible }: MobileNavbarProps) {
         </div>
         <div className="flex items-center gap-2">
           <ThemeToggle />
-          <Drawer onOpenChange={setIsDrawerOpen}>
+          <Drawer open={isDrawerOpen} onOpenChange={setIsDrawerOpen}>
             <DrawerTrigger asChild>
               <Button variant="ghost" size="icon" className="relative flex items-center justify-center">
                 <HamburgerIcon isOpen={isDrawerOpen} />
@@ -47,29 +75,29 @@ export default function MobileNavbar({ scrolled, visible }: MobileNavbarProps) {
                 <DrawerTitle>Jake Harris Navbar</DrawerTitle>
               </DrawerHeader>
               <div className="flex flex-col items-center gap-2 p-6">
-              <DrawerClose asChild>
-                  <Link
-                    href="/"
+                <DrawerClose asChild>
+                  <button
+                    onClick={() => handleNavigation("/")}
                     className="border border-border w-full text-center text-xl py-3 px-6 rounded-md transition-all duration-150 hover:bg-accent active:scale-95 active:bg-accent/80"
                   >
                     Home
-                  </Link>
+                  </button>
                 </DrawerClose>
                 <DrawerClose asChild>
-                  <Link
-                    href="/about"
+                  <button
+                    onClick={() => handleNavigation("/about")}
                     className="border border-border w-full text-center text-xl py-3 px-6 rounded-md transition-all duration-150 hover:bg-accent active:scale-95 active:bg-accent/80"
                   >
                     About
-                  </Link>
+                  </button>
                 </DrawerClose>
                 <DrawerClose asChild>
-                  <Link
-                    href="/contact"
+                  <button
+                    onClick={() => handleNavigation("/contact")}
                     className="border border-border w-full text-center text-xl py-3 px-6 rounded-md transition-all duration-150 hover:bg-accent active:scale-95 active:bg-accent/80"
                   >
                     Contact
-                  </Link>
+                  </button>
                 </DrawerClose>
               </div>
               <DrawerFooter className="mt-auto pt-4">

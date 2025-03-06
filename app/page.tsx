@@ -85,7 +85,7 @@ export default async function HomePage() {
                         <span className="text-xs font-medium">Pinned Post</span> */}
                       </div>
                     )}
-                    <h4 className="text-sm font-semibold">{post.title}</h4>
+                    {/* <h4 className="text-sm font-semibold">{post.title}</h4> */}
                     {post.excerpt && (
                       <p className="text-sm text-muted-foreground">
                         {post.excerpt}
