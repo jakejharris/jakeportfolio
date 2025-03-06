@@ -37,7 +37,7 @@ export default function ScrollToTop() {
   // iOS specific scroll handling
   useEffect(() => {
     // Check if the device is iOS
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
+    const isIOS: boolean = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
     
     if (isIOS) {
       // iOS specific scroll reset
