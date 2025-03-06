@@ -8,7 +8,7 @@ import ViewCounter from './ViewCounter';
 import { Post } from '@/app/types/sanity';
 import { Button } from '@/app/components/ui/button';
 import React from 'react';
-
+import ScrollToTop from '@/app/components/ScrollToTop';
 // Query to fetch a single post by slug
 const query = `*[_type == "post" && slug.current == $slug][0] {
   _id,
@@ -250,6 +250,7 @@ export default async function PostPage({ params }: PageParams) {
 
   return (
       <PageLayout>
+        <ScrollToTop />
         <div className="max-w-none">
           {/* <Link 
           href="/" 

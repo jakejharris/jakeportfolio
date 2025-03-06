@@ -7,6 +7,7 @@ import '../css/animations.css'
 import '../css/magical-button.css'
 import '../css/page.css'
 import PageLayout from '../components/PageLayout'
+import ScrollToTop from '../components/ScrollToTop'
 
 export default function ContactPage() {
   const [copiedEmail, setCopiedEmail] = useState(false);
@@ -25,6 +26,7 @@ export default function ContactPage() {
 
   return (
     <PageLayout center={false} className="pt-6">
+      <ScrollToTop />
       <div className="max-w-none">
         <h2 className="mb-4 text-xl md:text-2xl font-bold">Get in Touch</h2>        
         <ul className="space-y-2">

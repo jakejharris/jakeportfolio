@@ -5,6 +5,7 @@ import { FaDownload, FaGithub } from 'react-icons/fa';
 import '../css/page.css';
 import '../css/animations.css';
 import { MdArrowForward } from 'react-icons/md';
+import ScrollToTop from '../components/ScrollToTop';
 
 export const metadata = {
     title: "About - Jake Harris",
@@ -14,6 +15,7 @@ export const metadata = {
 export default function AboutPage() {
     return (
         <PageLayout>
+            <ScrollToTop />
             <div className="max-w-none">
                 <h2 className="mb-4 text-xl md:text-2xl font-bold">About</h2>
 
