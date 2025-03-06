@@ -19,7 +19,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </head>
       <body className="min-h-screen bg-background text-foreground flex flex-col">
-        <ScrollToTop />
         <Toaster />
         <ThemeProvider
           attribute="class"
