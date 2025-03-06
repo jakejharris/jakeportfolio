@@ -2,6 +2,9 @@
 const nextConfig = {
   /* config options here */
   trailingSlash: true,
+  experimental: {
+    scrollRestoration: false,
+  },
   images: {
     remotePatterns: [
       {
