@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { FaGithub } from 'react-icons/fa';
 import ThemeToggle from './ThemeToggle';
 import { Button } from './ui/button';
+import Link from 'next/link';
 import HamburgerIcon from './HamburgerIcon';
 import {
   Drawer,
@@ -14,7 +15,7 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from "./ui/drawer";
-import LinkTop from './LinkTop';
+
 interface MobileNavbarProps {
   scrolled: boolean;
   visible: boolean;
@@ -31,7 +32,7 @@ export default function MobileNavbar({ scrolled, visible }: MobileNavbarProps) {
     >
       <div className="px-4 h-16 flex justify-between items-center">
         <div className="flex-1">
-          <LinkTop href="/#" scroll={true} className="animated-underline normal-case text-lg md:text-xl font-bold">Jake Harris</LinkTop>
+          <Link href="/#" scroll={true} className="animated-underline normal-case text-lg md:text-xl font-bold">Jake Harris</Link>
         </div>
         <div className="flex items-center gap-2">
           <ThemeToggle />
@@ -47,31 +48,31 @@ export default function MobileNavbar({ scrolled, visible }: MobileNavbarProps) {
               </DrawerHeader>
               <div className="flex flex-col items-center gap-2 p-6">
               <DrawerClose asChild>
-                  <LinkTop
+                  <Link
                     href="/#"
                     scroll={true}
                     className="border border-border w-full text-center text-xl py-3 px-6 rounded-md transition-all duration-150 hover:bg-accent active:scale-95 active:bg-accent/80"
                   >
                     Home
-                  </LinkTop>
+                  </Link>
                 </DrawerClose>
                 <DrawerClose asChild>
-                  <LinkTop
+                  <Link
                     href="/about#"
                     scroll={true}
                     className="border border-border w-full text-center text-xl py-3 px-6 rounded-md transition-all duration-150 hover:bg-accent active:scale-95 active:bg-accent/80"
                   >
                     About
-                  </LinkTop>
+                  </Link>
                 </DrawerClose>
                 <DrawerClose asChild>
-                  <LinkTop
+                  <Link
                     href="/contact#"
                     scroll={true}
                     className="border border-border w-full text-center text-xl py-3 px-6 rounded-md transition-all duration-150 hover:bg-accent active:scale-95 active:bg-accent/80"
                   >
                     Contact
-                  </LinkTop>
+                  </Link>
                 </DrawerClose>
               </div>
               <DrawerFooter className="mt-auto pt-4">
@@ -79,14 +80,14 @@ export default function MobileNavbar({ scrolled, visible }: MobileNavbarProps) {
                   <p className="text-sm text-muted-foreground">
                     © {new Date().getFullYear()} Jake Harris
                   </p>
-                  <LinkTop
+                  <a 
                     href="https://github.com/jakejh"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex h-4 items-center gap-2 text-sm text-muted-foreground hover:text-foreground active:scale-95 transition-all"
                   >
                     <FaGithub className="w-4 h-4" /> View Source
-                  </LinkTop>
+                  </a>
                 </div>
               </DrawerFooter>
             </DrawerContent>

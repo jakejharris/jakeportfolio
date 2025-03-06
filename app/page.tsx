@@ -1,6 +1,7 @@
 import './css/page.css'
 import './css/animations.css'
 import PageLayout from './components/PageLayout';
+import Link from 'next/link';
 import { sanityFetch } from './lib/sanity.client';
 import { PostSummary } from './types/sanity';
 import { Eye } from "lucide-react";
@@ -9,7 +10,6 @@ import {
   HoverCardTrigger, 
   HoverCardContent 
 } from './components/hover-card';
-import LinkTop from './components/LinkTop';
 
 // Query to fetch posts from Sanity
 const query = `*[_type == "post"] | order(featured desc, publishedAt desc) {
@@ -39,7 +39,7 @@ export default async function HomePage() {
             <li key={post._id} className="relative">
               <HoverCard>
                 <HoverCardTrigger asChild>
-                  <LinkTop
+                  <Link 
                     href={`/posts/${post.slug.current}#`} 
                     className={`pageLinkContainer flex justify-between items-center border p-3 cursor-pointer group ${post.featured ? 'pinnedLinkBorder' : ''}`}
                     aria-label={`View ${post.title}`}
@@ -76,7 +76,7 @@ export default async function HomePage() {
                     <div className="ms-2 text-sm text-muted-foreground whitespace-nowrap flex items-center gap-1">
                       {post.viewCount} <Eye className="h-4 w-4" />
                     </div>
-                  </LinkTop>
+                  </Link>
                 </HoverCardTrigger>
                 <HoverCardContent className="w-80">
                   <div className="space-y-2">
@@ -92,9 +92,9 @@ export default async function HomePage() {
                         {post.excerpt}
                       </p>
                     )}
-                    <LinkTop href={`/posts/${post.slug.current}#`} scroll={true} className="animated-underline-small-muted pt-2 text-xs text-muted-foreground">
+                    <Link href={`/posts/${post.slug.current}#`} scroll={true} className="animated-underline-small-muted pt-2 text-xs text-muted-foreground">
                       Click to read full post
-                    </LinkTop>
+                    </Link>
                   </div>
                 </HoverCardContent>
               </HoverCard>
