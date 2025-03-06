@@ -2,7 +2,6 @@
 
 import { useEffect, useLayoutEffect } from "react";
 import { usePathname } from "next/navigation";
-import { toast } from "sonner";
 
 export default function ScrollToTop() {
   const pathname = usePathname();
