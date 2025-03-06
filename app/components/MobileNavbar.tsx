@@ -26,7 +26,7 @@ export default function MobileNavbar({ scrolled, visible }: MobileNavbarProps) {
 
   return (
     <nav
-      className={`navbar-sticky fixed top-0 z-40 w-full bg-secondary transition-all duration-300
+      className={`navbar-sticky sticky top-0 z-40 w-full bg-secondary transition-all duration-300
         ${scrolled ? 'scrolled' : ''}
         ${visible ? '' : 'translate-y-[-100%]'}`}
     >
