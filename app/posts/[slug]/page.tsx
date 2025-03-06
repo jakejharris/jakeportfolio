@@ -8,6 +8,7 @@ import ViewCounter from './ViewCounter';
 import { Post } from '@/app/types/sanity';
 import { Button } from '@/app/components/ui/button';
 import React from 'react';
+import ScrollToTopWrapper from '@/app/components/ScrollToTopWrapper';
 
 // Query to fetch a single post by slug
 const query = `*[_type == "post" && slug.current == $slug][0] {
@@ -48,15 +49,15 @@ const components = {
         const match = url.match(regExp);
         return match && match[2].length === 11 ? match[2] : null;
       };
-      
+
       const videoId = getYouTubeId(value.url);
-      
+
       if (!videoId) return <div>Invalid YouTube URL</div>;
-      
+
       return (
         <div className="my-8">
           <div className="relative pb-[56.25%] h-0 overflow-hidden max-w-full">
-            <iframe 
+            <iframe
               src={`https://www.youtube.com/embed/${videoId}`}
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowFullScreen
@@ -116,12 +117,12 @@ const components = {
         secondary: 'bg-secondary text-secondary-foreground hover:bg-secondary/90',
         ghost: 'hover:bg-accent hover:text-accent-foreground'
       };
-      
+
       return (
         <div className="my-8 flex justify-center">
-          <a 
-            href={value.url} 
-            target="_blank" 
+          <a
+            href={value.url}
+            target="_blank"
             rel="noopener noreferrer"
             className={`px-4 py-2 rounded-md font-medium ${styles[value.style as keyof typeof styles]}`}
           >
@@ -146,7 +147,7 @@ const components = {
         dots: 'flex justify-center space-x-2',
         dashed: 'border-t border-dashed'
       };
-      
+
       if (value.style === 'dots') {
         return (
           <div className="my-8 flex justify-center space-x-2">
@@ -156,7 +157,7 @@ const components = {
           </div>
         );
       }
-      
+
       return (
         <hr className={`my-8 ${styles[value.style as keyof typeof styles]}`} />
       );
@@ -235,7 +236,7 @@ interface DividerValue {
 export default async function PostPage({ params }: PageParams) {
   // Get the slug from params - await it properly
   const { slug } = await params;
-  
+
   // Fetch the post data from Sanity
   const post = await sanityFetch<Post>({
     query,
@@ -249,9 +250,10 @@ export default async function PostPage({ params }: PageParams) {
   }
 
   return (
-    <PageLayout>
-      <div className="max-w-none">
-        {/* <Link 
+    <ScrollToTopWrapper>
+      <PageLayout>
+        <div className="max-w-none">
+          {/* <Link 
           href="/" 
           className="group animated-underline !flex w-fit items-center gap-0 mb-6"
           aria-label="Return to home page"
@@ -259,88 +261,89 @@ export default async function PostPage({ params }: PageParams) {
  
           <span className="font-medium">&larr; Back to Home</span>
         </Link> */}
-        
-        {post.mainImage && (
-          <div className="mb-6 relative h-[300px] md:h-[400px] rounded-sm overflow-hidden">
-            <Image
-              src={urlFor(post.mainImage).width(1200).height(600).url()}
-              alt={post.title}
-              fill
-              className="object-cover"
-              priority
-            />
-          </div>
-        )}
-        
-        <h1 className="text-2xl md:text-3xl font-bold mb-2">
-          {post.title}
-        </h1>
-        
-        <div className="flex items-center gap-4 mb-6 text-sm text-muted-foreground">
-          <time dateTime={post.publishedAt}>
-            {new Date(post.publishedAt).toLocaleDateString('en-US', {
-              year: 'numeric',
-              month: 'long',
-              day: 'numeric',
-            })}
-          </time>
-          <ViewCounter slug={slug} initialCount={post.viewCount} />
-          
-          {post.tags && post.tags.length > 0 && (
-            <div className="flex gap-2">
-              {post.tags.map(tag => (
-                <span 
-                  key={tag._id} 
-                  className="px-2 py-0.5 rounded-full bg-muted text-muted-foreground"
-                >
-                  {tag.title}
-                </span>
-              ))}
+
+          {post.mainImage && (
+            <div className="mb-6 relative h-[300px] md:h-[400px] rounded-sm overflow-hidden">
+              <Image
+                src={urlFor(post.mainImage).width(1200).height(600).url()}
+                alt={post.title}
+                fill
+                className="object-cover"
+                priority
+              />
             </div>
           )}
-        </div>
-        
-        {post.excerpt && (
-          <div className="mb-8 text-lg font-medium text-muted-foreground">
-            {post.excerpt}
-          </div>
-        )}
-        
-        <div className="prose dark:prose-invert max-w-none portable-text">
-          {post.content && (
-            <PortableText value={post.content} components={components} />
-          )}
-        </div>
-        
-        {post.externalLinks && post.externalLinks.length > 0 && (
-          <div className="mt-12 pt-6 border-t">
-            <h2 className="text-xl font-bold mb-4">External Links</h2>
-            <div className="flex flex-wrap gap-4">
-              {post.externalLinks.map((link, index) => {
-                const Icon = iconMap[link.icon] || FaExternalLinkAlt;
-                return (
-                  <Button
-                    key={index}
-                    variant="outline"
-                    size="sm"
-                    asChild
-                  >
-                    <a
-                      href={link.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-2"
-                    >
-                      <Icon />
-                      <span>{link.title}</span>
-                    </a>
-                  </Button>
-                );
+
+          <h1 className="text-2xl md:text-3xl font-bold mb-2">
+            {post.title}
+          </h1>
+
+          <div className="flex items-center gap-4 mb-6 text-sm text-muted-foreground">
+            <time dateTime={post.publishedAt}>
+              {new Date(post.publishedAt).toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
               })}
-            </div>
+            </time>
+            <ViewCounter slug={slug} initialCount={post.viewCount} />
+
+            {post.tags && post.tags.length > 0 && (
+              <div className="flex gap-2">
+                {post.tags.map(tag => (
+                  <span
+                    key={tag._id}
+                    className="px-2 py-0.5 rounded-full bg-muted text-muted-foreground"
+                  >
+                    {tag.title}
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
-        )}
-      </div>
-    </PageLayout>
+
+          {post.excerpt && (
+            <div className="mb-8 text-lg font-medium text-muted-foreground">
+              {post.excerpt}
+            </div>
+          )}
+
+          <div className="prose dark:prose-invert max-w-none portable-text">
+            {post.content && (
+              <PortableText value={post.content} components={components} />
+            )}
+          </div>
+
+          {post.externalLinks && post.externalLinks.length > 0 && (
+            <div className="mt-12 pt-6 border-t">
+              <h2 className="text-xl font-bold mb-4">External Links</h2>
+              <div className="flex flex-wrap gap-4">
+                {post.externalLinks.map((link, index) => {
+                  const Icon = iconMap[link.icon] || FaExternalLinkAlt;
+                  return (
+                    <Button
+                      key={index}
+                      variant="outline"
+                      size="sm"
+                      asChild
+                    >
+                      <a
+                        href={link.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-2"
+                      >
+                        <Icon />
+                        <span>{link.title}</span>
+                      </a>
+                    </Button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+      </PageLayout>
+    </ScrollToTopWrapper>
   );
 } 
