@@ -9,19 +9,22 @@ export default function ScrollToTop() {
 
   // Use useLayoutEffect to ensure this runs before browser paint
   useLayoutEffect(() => {
-    // Force scroll to top immediately with multiple approaches
-    window.scrollTo(0, 0);
-    document.documentElement.scrollTo(0, 0);
-    document.body.scrollTo(0, 0);
-    document.body.scrollIntoView({
-      behavior: 'instant'
-    });
+    const scrollToTop = () => {
+      // Force scroll to top immediately with multiple approaches for maximum compatibility
+      window.scrollTo(0, 0);
+      document.documentElement.scrollTo(0, 0);
+      document.body.scrollTo(0, 0);
+      document.body.scrollIntoView({
+        behavior: 'instant'
+      });
+    };
+
+    scrollToTop();
   }, [pathname, searchParams]); // Include searchParams to handle query parameter changes too
 
   // Backup with useEffect and setTimeout to ensure it runs after all rendering
   useEffect(() => {
     const timer = setTimeout(() => {
-      // Force scroll to top with multiple approaches
       window.scrollTo(0, 0);
       document.documentElement.scrollTo(0, 0);
       document.body.scrollTo(0, 0);
@@ -33,5 +36,5 @@ export default function ScrollToTop() {
     return () => clearTimeout(timer);
   }, [pathname, searchParams]);
 
-  return null;
+  return null; // This component doesn't render anything
 }
