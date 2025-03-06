@@ -1,40 +1,47 @@
 "use client";
 
 import { useEffect, useLayoutEffect } from "react";
-import { usePathname, useSearchParams } from "next/navigation";
+import { usePathname } from "next/navigation";
+import { toast } from "sonner";
 
 export default function ScrollToTop() {
   const pathname = usePathname();
-  const searchParams = useSearchParams();
 
-  // Use useLayoutEffect to ensure this runs before browser paint
-  useLayoutEffect(() => {
-    const scrollToTop = () => {
-      // Force scroll to top immediately with multiple approaches for maximum compatibility
-      window.scrollTo(0, 0);
-      document.documentElement.scrollTo(0, 0);
-      document.body.scrollTo(0, 0);
-      document.body.scrollIntoView({
-        behavior: 'instant'
-      });
-    };
-
-    scrollToTop();
-  }, [pathname, searchParams]); // Include searchParams to handle query parameter changes too
-
-  // Backup with useEffect and setTimeout to ensure it runs after all rendering
   useEffect(() => {
-    const timer = setTimeout(() => {
-      window.scrollTo(0, 0);
-      document.documentElement.scrollTo(0, 0);
-      document.body.scrollTo(0, 0);
-      document.body.scrollIntoView({
-        behavior: 'instant'
-      });
-    }, 0);
-    
-    return () => clearTimeout(timer);
-  }, [pathname, searchParams]);
+    window.scrollTo({
+      top: 0,
+      behavior: "instant"
+    });
+    toast("Scrolled to top", {
+      description: `Navigated to ${pathname}`,
+      position: "bottom-right",
+    });
+  }, [pathname]);
 
-  return null; // This component doesn't render anything
-}
+  useEffect(() => {
+    window.scrollTo({
+      top: 0,
+      behavior: "instant"
+    });
+    toast("Page loaded", {
+      description: "Initial scroll to top",
+      position: "bottom-right",
+    });
+  }, []);
+
+  useLayoutEffect(() => {
+    window.scrollTo(0, 0);
+    document.body.scrollIntoView({
+      behavior: 'instant'
+    });
+  }, []);
+
+  useLayoutEffect(() => {
+    window.scrollTo(0, 0);
+    document.body.scrollIntoView({
+      behavior: 'instant'
+    });
+  }, [pathname]);
+
+  return null;
+} 

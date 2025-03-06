@@ -4,7 +4,7 @@ import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import ScrollToTop from "./components/ScrollToTop";
 import { ThemeProvider } from "./components/theme-provider";
-import { Suspense } from "react";
+import { Toaster } from "./components/ui/sonner";
 
 export const metadata = {
   title: "Jake Harris - Developer",
@@ -19,15 +19,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </head>
       <body className="min-h-screen bg-background text-foreground flex flex-col">
+        <ScrollToTop />
+        <Toaster />
         <ThemeProvider
           attribute="class"
           defaultTheme="light"
           enableSystem={false}
           disableTransitionOnChange
         >
-          <Suspense>
-            <ScrollToTop />
-          </Suspense>
           <Navbar />
           <main className="flex-1">
             {children}
