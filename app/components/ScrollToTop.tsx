@@ -23,11 +23,6 @@ export default function ScrollToTop() {
       }
     }, 2);
     
-    toast("Scrolled to top", {
-      description: `Navigated to ${pathname}`,
-      position: "bottom-right",
-    });
-    
     return () => clearTimeout(timeoutId);
   }, [pathname]);
 
@@ -46,11 +41,6 @@ export default function ScrollToTop() {
         });
       }
     }, 2);
-    
-    toast("Page loaded", {
-      description: "Initial scroll to top",
-      position: "bottom-right",
-    });
     
     return () => clearTimeout(timeoutId);
   }, []);
