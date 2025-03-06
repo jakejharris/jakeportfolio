@@ -43,7 +43,7 @@ export default async function HomePage() {
                     href={`/posts/${post.slug.current}`} 
                     className={`pageLinkContainer flex justify-between items-center border p-3 cursor-pointer group ${post.featured ? 'pinnedLinkBorder' : ''}`}
                     aria-label={`View ${post.title}`}
-                    scroll={false}
+                    scroll={true}
                   >
                     <div className="flex items-center gap-3">
                       <div>
@@ -92,7 +92,7 @@ export default async function HomePage() {
                         {post.excerpt}
                       </p>
                     )}
-                    <Link href={`/posts/${post.slug.current}`} scroll={false} className="animated-underline-small-muted pt-2 text-xs text-muted-foreground">
+                    <Link href={`/posts/${post.slug.current}`} scroll={true} className="animated-underline-small-muted pt-2 text-xs text-muted-foreground">
                       Click to read full post
                     </Link>
                   </div>

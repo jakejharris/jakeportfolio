@@ -32,7 +32,7 @@ export default function MobileNavbar({ scrolled, visible }: MobileNavbarProps) {
     >
       <div className="px-4 h-16 flex justify-between items-center">
         <div className="flex-1">
-          <Link href="/" scroll={false} className="animated-underline normal-case text-lg md:text-xl font-bold">Jake Harris</Link>
+          <Link href="/" scroll={true} className="animated-underline normal-case text-lg md:text-xl font-bold">Jake Harris</Link>
         </div>
         <div className="flex items-center gap-2">
           <ThemeToggle />
@@ -50,7 +50,7 @@ export default function MobileNavbar({ scrolled, visible }: MobileNavbarProps) {
               <DrawerClose asChild>
                   <Link
                     href="/"
-                    scroll={false}
+                    scroll={true}
                     className="border border-border w-full text-center text-xl py-3 px-6 rounded-md transition-all duration-150 hover:bg-accent active:scale-95 active:bg-accent/80"
                   >
                     Home
@@ -59,7 +59,7 @@ export default function MobileNavbar({ scrolled, visible }: MobileNavbarProps) {
                 <DrawerClose asChild>
                   <Link
                     href="/about"
-                    scroll={false}
+                    scroll={true}
                     className="border border-border w-full text-center text-xl py-3 px-6 rounded-md transition-all duration-150 hover:bg-accent active:scale-95 active:bg-accent/80"
                   >
                     About
@@ -68,7 +68,7 @@ export default function MobileNavbar({ scrolled, visible }: MobileNavbarProps) {
                 <DrawerClose asChild>
                   <Link
                     href="/contact"
-                    scroll={false}
+                    scroll={true}
                     className="border border-border w-full text-center text-xl py-3 px-6 rounded-md transition-all duration-150 hover:bg-accent active:scale-95 active:bg-accent/80"
                   >
                     Contact
