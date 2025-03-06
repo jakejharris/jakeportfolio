@@ -8,7 +8,6 @@ import ViewCounter from './ViewCounter';
 import { Post } from '@/app/types/sanity';
 import { Button } from '@/app/components/ui/button';
 import React from 'react';
-import ScrollToTopWrapper from '@/app/components/ScrollToTopWrapper';
 
 // Query to fetch a single post by slug
 const query = `*[_type == "post" && slug.current == $slug][0] {
@@ -250,7 +249,6 @@ export default async function PostPage({ params }: PageParams) {
   }
 
   return (
-    <ScrollToTopWrapper>
       <PageLayout>
         <div className="max-w-none">
           {/* <Link 
@@ -344,6 +342,5 @@ export default async function PostPage({ params }: PageParams) {
           )}
         </div>
       </PageLayout>
-    </ScrollToTopWrapper>
   );
 } 
