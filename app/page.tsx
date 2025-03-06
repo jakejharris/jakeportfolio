@@ -10,7 +10,6 @@ import {
   HoverCardTrigger, 
   HoverCardContent 
 } from './components/hover-card';
-import { PinIcon } from "lucide-react";
 
 // Query to fetch posts from Sanity
 const query = `*[_type == "post"] | order(featured desc, publishedAt desc) {
