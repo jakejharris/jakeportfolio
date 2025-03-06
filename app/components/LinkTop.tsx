@@ -11,7 +11,7 @@ interface LinkTopProps {
   target?: string;
   style?: CSSProperties;
   ariaLabel?: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 /**
