@@ -12,23 +12,10 @@ export default function ScrollToTop() {
       top: 0,
       behavior: "instant"
     });
-    
-    // Check after 2ms if we're actually at the top
-    const timeoutId = setTimeout(() => {
-      if (window.scrollY !== 0) {
-        window.scrollTo({
-          top: 0,
-          behavior: "instant"
-        });
-      }
-    }, 2);
-    
     toast("Scrolled to top", {
       description: `Navigated to ${pathname}`,
       position: "bottom-right",
     });
-    
-    return () => clearTimeout(timeoutId);
   }, [pathname]);
 
   useEffect(() => {
@@ -36,23 +23,10 @@ export default function ScrollToTop() {
       top: 0,
       behavior: "instant"
     });
-    
-    // Check after 2ms if we're actually at the top
-    const timeoutId = setTimeout(() => {
-      if (window.scrollY !== 0) {
-        window.scrollTo({
-          top: 0,
-          behavior: "instant"
-        });
-      }
-    }, 2);
-    
     toast("Page loaded", {
       description: "Initial scroll to top",
       position: "bottom-right",
     });
-    
-    return () => clearTimeout(timeoutId);
   }, []);
 
   useLayoutEffect(() => {
@@ -60,15 +34,6 @@ export default function ScrollToTop() {
     document.body.scrollIntoView({
       behavior: 'instant'
     });
-    
-    // Check after 2ms if we're actually at the top
-    const timeoutId = setTimeout(() => {
-      if (window.scrollY !== 0) {
-        window.scrollTo(0, 0);
-      }
-    }, 2);
-    
-    return () => clearTimeout(timeoutId);
   }, []);
 
   useLayoutEffect(() => {
@@ -76,15 +41,6 @@ export default function ScrollToTop() {
     document.body.scrollIntoView({
       behavior: 'instant'
     });
-    
-    // Check after 2ms if we're actually at the top
-    const timeoutId = setTimeout(() => {
-      if (window.scrollY !== 0) {
-        window.scrollTo(0, 0);
-      }
-    }, 2);
-    
-    return () => clearTimeout(timeoutId);
   }, [pathname]);
 
   return null;
