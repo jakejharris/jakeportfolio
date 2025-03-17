@@ -74,7 +74,7 @@ export default async function HomePage() {
                         </div>
                       </div>
                     </div>
-                    <div className="ms-2 text-sm text-muted-foreground whitespace-nowrap flex items-center gap-1">
+                    <div className="ms-4 text-sm text-muted-foreground whitespace-nowrap flex items-center gap-1">
                       {post.viewCount} <Eye className="h-4 w-4" />
                     </div>
                   </Link>
