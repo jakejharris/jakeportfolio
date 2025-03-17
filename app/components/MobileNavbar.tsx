@@ -81,7 +81,7 @@ export default function MobileNavbar({ scrolled, visible }: MobileNavbarProps) {
                     © {new Date().getFullYear()} Jake Harris
                   </p>
                   <a 
-                    href="https://github.com/jakejh"
+                    href="https://github.com/jakejharris/jakeportfolio"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex h-4 items-center gap-2 text-sm text-muted-foreground hover:text-foreground active:scale-95 transition-all"
