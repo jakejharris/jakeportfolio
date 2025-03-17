@@ -1,5 +1,5 @@
 import React from 'react';
-import { cn } from '../lib/utils';
+import { cn } from '@/app/lib/utils';
 
 interface PageLayoutProps {
   children: React.ReactNode;
