@@ -1,5 +1,5 @@
-// Add type declaration for next-sanity
-// @ts-expect-error - next-sanity type definitions are outdated
+// Import the updated next-sanity client
+// @ts-expect-error - Handling next-sanity type definitions
 import { createClient } from 'next-sanity';
 import imageUrlBuilder from '@sanity/image-url';
 import { apiVersion, dataset, projectId } from './sanity.config';
