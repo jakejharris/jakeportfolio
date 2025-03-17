@@ -248,11 +248,11 @@ interface DividerValue {
 }
 
 // Define interface for link mark value
-interface LinkMarkValue {
-  _type: 'link';
-  href: string;
-  blank?: boolean;
-}
+// interface LinkMarkValue {
+//   _type: 'link';
+//   href: string;
+//   blank?: boolean;
+// }
 
 export default async function PostPage({ params }: PageParams) {
   // Get the slug from params - await it properly
