@@ -20,6 +20,8 @@
     "autoprefixer": "^10.4.20",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "eslint": "8.56.0",
+    "eslint-config-next": "13.5.6",
     "lucide-react": "^0.476.0",
     "next": "^15.1.7",
     "next-sanity": "^8.0.0",
@@ -40,8 +42,6 @@
     "@portabletext/types": "^2.0.13",
     "@types/node": "^20",
     "@types/react": "^18",
-    "@types/react-dom": "^18",
-    "eslint": "8.56.0",
-    "eslint-config-next": "13.5.6"
+    "@types/react-dom": "^18"
   }
 }

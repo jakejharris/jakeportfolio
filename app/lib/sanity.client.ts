@@ -11,8 +11,8 @@ const clientConfig = {
   apiVersion,
   // Always set useCdn to false to avoid caching issues when content changes
   useCdn: false,
-  // Add a perspective value to ensure fresh content
-  perspective: 'published',
+  // Set the perspective to published for reliable content delivery
+  perspective: 'published' as const,
 };
 
 // Create a client for fetching data (read-only)
