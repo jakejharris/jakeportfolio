@@ -21,7 +21,7 @@ export default function PageLayout({
         className
       )}
     >
-      <div className="max-w-3xl mx-auto px-4 w-full">
+      <div className="max-w-2xl mx-auto px-4 w-full">
         {children}
       </div>
     </div>
