@@ -12,9 +12,12 @@ declare module 'sanity' {
     [key: string]: unknown;
   }
   
-  export function createStudio(config: StudioConfig): React.ComponentType<Record<string, unknown>>;
   export function defineConfig(config: StudioConfig): StudioConfig;
   export function structureTool(): unknown;
+  export function visionTool(options?: {
+    defaultApiVersion?: string;
+    defaultDataset?: string;
+  }): unknown;
 }
 
 declare module '@sanity/vision' {
@@ -40,12 +43,19 @@ declare module 'next-sanity' {
     apiVersion: string;
     useCdn?: boolean;
     token?: string;
+    perspective?: string;
     [key: string]: unknown;
   }
+  
   interface SanityClient {
-    fetch: <T>(query: string, params?: Record<string, unknown>, options?: unknown) => Promise<T>;
+    fetch: <T>(
+      query: string, 
+      params?: Record<string, unknown>, 
+      options?: { next?: { tags?: string[]; revalidate?: number } }
+    ) => Promise<T>;
     [key: string]: unknown;
   }
+  
   export function createClient(config: ClientConfig): SanityClient;
 }
 
