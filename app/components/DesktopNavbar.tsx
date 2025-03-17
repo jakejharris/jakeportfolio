@@ -15,7 +15,7 @@ export default function DesktopNavbar({ scrolled, visible }: DesktopNavbarProps)
         ${scrolled ? 'scrolled' : ''}
         ${visible ? '' : 'translate-y-[-100%]'}`}
     >
-      <div className="max-w-3xl mx-auto px-4 h-32 flex justify-between items-center">
+      <div className="max-w-2xl mx-auto px-4 h-32 flex justify-between items-center">
         <div className="flex-1">
           <Link href="/#" scroll={true} className="animated-underline normal-case text-xl font-bold">Jake Harris</Link>
         </div>

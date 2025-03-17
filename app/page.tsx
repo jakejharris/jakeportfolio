@@ -57,7 +57,6 @@ export default async function HomePage() {
                             {new Date(post.publishedAt).toLocaleDateString('en-US', {
                               year: 'numeric',
                               month: 'short',
-                              day: 'numeric',
                             })}
                           </div>
                           {post.tags && post.tags.length > 0 && (
@@ -102,6 +101,11 @@ export default async function HomePage() {
               </HoverCard>
             </li>
           ))}
+          <li className="relative w-full !mt-16">
+            <div className="text-sm text-muted-foreground w-full text-center">
+              <span>More Posts Coming Soon</span>
+            </div>
+          </li>
         </ul>
       </div>
     </PageLayout>

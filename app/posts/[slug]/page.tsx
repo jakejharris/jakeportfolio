@@ -1,7 +1,7 @@
 import PageLayout from '@/app/components/PageLayout';
 import Image from 'next/image';
 import { sanityFetch, urlFor } from '@/app/lib/sanity.client';
-import { PortableText } from '@portabletext/react';
+import { PortableText, PortableTextReactComponents } from '@portabletext/react';
 import { notFound } from 'next/navigation';
 import { FaGithub, FaGlobe, FaLinkedin, FaTwitter, FaYoutube, FaCodepen, FaExternalLinkAlt } from 'react-icons/fa';
 import ViewCounter from './ViewCounter';
@@ -24,7 +24,7 @@ const query = `*[_type == "post" && slug.current == $slug][0] {
 }`;
 
 // Directly overwrite the entire components object to fix the type issues
-const components = {
+const components: Partial<PortableTextReactComponents> = {
   types: {
     image: ({ value }: { value: ImageValue }) => {
       return (
@@ -161,6 +161,21 @@ const components = {
         <hr className={`my-8 ${styles[value.style as keyof typeof styles]}`} />
       );
     }
+  },
+  // Add marks configuration for links
+  marks: {
+    link: ({value, children}) => {
+      return (
+        <a 
+          href={value?.href}
+          target={value?.blank ? '_blank' : undefined}
+          rel={value?.blank ? 'noopener noreferrer' : undefined}
+          className="text-primary underline decoration-primary underline-offset-2 hover:text-primary/80 transition-colors"
+        >
+          {children}
+        </a>
+      );
+    }
   }
 };
 
@@ -230,6 +245,13 @@ interface QuoteBlockValue {
 interface DividerValue {
   _type: 'divider';
   style: 'line' | 'dots' | 'dashed';
+}
+
+// Define interface for link mark value
+interface LinkMarkValue {
+  _type: 'link';
+  href: string;
+  blank?: boolean;
 }
 
 export default async function PostPage({ params }: PageParams) {

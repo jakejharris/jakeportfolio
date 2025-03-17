@@ -4,6 +4,7 @@ import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import { ThemeProvider } from "./components/theme-provider";
 import { Toaster } from "./components/ui/sonner";
+import { inter } from "./lib/fonts";
 
 export const metadata = {
   title: "Jake Harris - Developer",
@@ -12,12 +13,12 @@ export const metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning className={`${inter.variable}`}>
       <head>
         <link rel="icon" href="/favicon.ico" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </head>
-      <body className="min-h-screen bg-background text-foreground flex flex-col">
+      <body className="min-h-screen bg-background text-foreground flex flex-col font-sans">
         <Toaster />
         <ThemeProvider
           attribute="class"
