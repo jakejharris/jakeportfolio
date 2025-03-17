@@ -5,6 +5,7 @@ import Footer from "./components/Footer";
 import { ThemeProvider } from "./components/theme-provider";
 import { Toaster } from "./components/ui/sonner";
 import { inter } from "./lib/fonts";
+import { GoogleAnalytics } from '@next/third-parties/google'
 
 export const metadata = {
   title: "Jake Harris - Developer",
@@ -29,6 +30,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <Navbar />
           <main className="flex-1">
             {children}
+            {process.env.NODE_ENV === 'production' && (
+              <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID!} />
+            )}
           </main>
           <Footer />
         </ThemeProvider>
