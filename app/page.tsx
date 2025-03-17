@@ -101,11 +101,11 @@ export default async function HomePage() {
               </HoverCard>
             </li>
           ))}
-          <li className="relative w-full !mt-16">
+          {/* <li className="relative w-full !mt-4">
             <div className="text-sm text-muted-foreground w-full text-center">
               <span>More Posts Coming Soon</span>
             </div>
-          </li>
+          </li> */}
         </ul>
       </div>
     </PageLayout>
