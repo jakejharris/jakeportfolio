@@ -10,6 +10,7 @@ import { Button } from '@/app/components/ui/button';
 import React from 'react';
 import ScrollToTop from '@/app/components/ScrollToTop';
 import dynamic from 'next/dynamic';
+import TableOfContents from '@/app/components/TableOfContents';
 
 // Create a separate client component for the syntax highlighter
 const CodeHighlighter = dynamic(() => import('@/app/components/CodeHighlighter'), { ssr: true });
@@ -30,6 +31,30 @@ const query = `*[_type == "post" && slug.current == $slug][0] {
 
 // Directly overwrite the entire components object to fix the type issues
 const components: Partial<PortableTextReactComponents> = {
+  block: {
+    normal: ({ children, value }: any) => {
+      // Check if children contain any strong elements
+      const hasStrongChild = value.children?.some((child: any) => 
+        child.marks?.includes('strong') && child.text && child.text.trim().length > 0
+      );
+      
+      // If there's a strong child, add an ID based on the block's index
+      if (hasStrongChild) {
+        const strongText = value.children.find((child: any) => 
+          child.marks?.includes('strong') && child.text && child.text.trim().length > 0
+        );
+        const blockId = `section-${value._key}`;
+        
+        return (
+          <p id={blockId} className="relative scroll-mt-20">
+            {children}
+          </p>
+        );
+      }
+      
+      return <p>{children}</p>;
+    }
+  },
   types: {
     image: ({ value }: { value: ImageValue }) => {
       return (
@@ -336,6 +361,9 @@ export default async function PostPage({ params }: PageParams) {
               {post.excerpt}
             </div>
           )}
+          
+          {/* Table of Contents */}
+          {post.content && <TableOfContents content={post.content} externalLinks={post.externalLinks} />}
 
           <div className="prose dark:prose-invert max-w-none portable-text">
             {post.content && (
@@ -344,7 +372,7 @@ export default async function PostPage({ params }: PageParams) {
           </div>
 
           {post.externalLinks && post.externalLinks.length > 0 && (
-            <div className="mt-12 pt-6 border-t">
+            <div id="external-links" className="mt-12 pt-6 border-t scroll-mt-20">
               <h2 className="text-xl font-bold mb-4">External Links</h2>
               <div className="flex flex-wrap gap-4">
                 {post.externalLinks.map((link, index) => {
