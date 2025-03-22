@@ -9,6 +9,11 @@ import { Post } from '@/app/types/sanity';
 import { Button } from '@/app/components/ui/button';
 import React from 'react';
 import ScrollToTop from '@/app/components/ScrollToTop';
+import dynamic from 'next/dynamic';
+
+// Create a separate client component for the syntax highlighter
+const CodeHighlighter = dynamic(() => import('@/app/components/CodeHighlighter'), { ssr: true });
+
 // Query to fetch a single post by slug
 const query = `*[_type == "post" && slug.current == $slug][0] {
   _id,
@@ -79,7 +84,10 @@ const components: Partial<PortableTextReactComponents> = {
           )}
           <pre className={`p-4 rounded-sm ${value.filename ? 'rounded-t-none' : ''} bg-muted overflow-x-auto`}>
             <code className={`language-${value.language || 'javascript'}`}>
-              {value.code}
+              <CodeHighlighter 
+                code={value.code} 
+                language={value.language || 'javascript'} 
+              />
             </code>
           </pre>
         </div>
