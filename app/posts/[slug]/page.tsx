@@ -82,7 +82,7 @@ const components: Partial<PortableTextReactComponents> = {
               {value.filename}
             </div>
           )}
-          <pre className={`p-4 rounded-sm ${value.filename ? 'rounded-t-none' : ''} bg-muted overflow-x-auto`}>
+          <pre className={`p-4 text-sm md:text-base rounded-sm ${value.filename ? 'rounded-t-none' : ''} bg-muted overflow-x-auto`}>
             <code className={`language-${value.language || 'javascript'}`}>
               <CodeHighlighter 
                 code={value.code} 
