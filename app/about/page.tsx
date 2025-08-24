@@ -14,10 +14,10 @@ export const metadata = {
 
 const aboutContent = {
     paragraphs: [
-        "I'm Jake Harris, a Full Stack Developer who builds AI-powered web applications. My background combines frontend development, entrepreneurship, and AI implementation.",
-        "I studied Computer Science at George Washington University before co-founding Adventure Genie. There, I led frontend development for our AI trip planning platform, which secured $3M in funding and grew to 50,000 monthly users.",
-        "Now I run JJH DIGITAL, a consulting firm that delivers full stack solutions with AI integration. My projects include custom e-commerce platforms like Apres Surf Club, community websites, and HiHey.ai—an application that lets AI assistants handle phone calls autonomously.",
-        "My technical toolkit includes TypeScript, React, Next.js, Python, AWS and Azure. I focus on creating clear interfaces for complex systems, making AI technology useful through good design.",
+        "I'm Jake Harris, a Full Stack Developer who builds AI-powered web applications. My background combines software development, entrepreneurship, and AI implementation.",
+        "I studied Computer Science at George Washington University before co-founding AG. There, I led frontend development for our AI trip planning platform, which secured $3M in funding and grew to 50,000 monthly users.",
+        "Now I run JJH DIGITAL, a consulting firm that delivers full stack solutions with AI integration. My projects include custom e-commerce platforms, community websites, and custom AI applications.",
+        "My typical stack includes TypeScript, React, Next.js, AWS and/or Azure. I focus on creating clear interfaces for complex systems, making AI technology useful through good design.",
         "I build digital products that work. My approach combines solid architecture with practical problem-solving to create tools people actually want to use."
     ]
 };
