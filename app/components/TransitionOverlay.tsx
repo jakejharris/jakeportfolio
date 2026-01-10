@@ -4,6 +4,9 @@ import { useEffect, useState, useCallback, useRef } from "react";
 import { usePathname } from "next/navigation";
 import { useTransition } from "./TransitionProvider";
 
+// Feature flag - set to true to enable page transitions
+const ENABLE_PAGE_TRANSITIONS = false;
+
 interface Particle {
   id: number;
   fillX: number;
@@ -101,6 +104,7 @@ export default function TransitionOverlay() {
 
   // Handle click (origin change)
   useEffect(() => {
+    if (!ENABLE_PAGE_TRANSITIONS) return;
     if (!origin) return;
 
     const vw = window.innerWidth;
@@ -153,6 +157,7 @@ export default function TransitionOverlay() {
     return () => clearTimeout(disperseTimer);
   }, [phase, cleanup]);
 
+  if (!ENABLE_PAGE_TRANSITIONS) return null;
   if (phase === "idle" || particles.length === 0) return null;
 
   return (
