@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git switch:*)",
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nAdd particle-based page transition and accent color picker\n\nImplement an animated page transition using particle effects:\n- Particles expand from click position to cover the screen\n- Gentle floating animation while page loads\n- Particles disperse outward when navigation completes\n- Smart detection waits for actual page load before dispersing\n- Same-page navigation triggers minimal animation\n\nAdd user-configurable accent color system:\n- 5 color options: default, red, blue, green, amber\n- Different values for light/dark modes\n- Persisted to localStorage\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git push:*)",
+      "Bash(gh auth:*)"
+    ]
+  }
+}
