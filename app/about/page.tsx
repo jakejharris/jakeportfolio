@@ -31,6 +31,7 @@ export default function AboutPage() {
 
                 {/* Mobile layout - image first, then text */}
                 <div className="md:hidden mb-8">
+                    {/* Profile picture commented out
                     <div className="flex justify-center mb-6 bg-secondary rounded-sm">
                         <div className="relative w-[150px] aspect-square">
                             <div className="group relative w-full h-full">
@@ -46,6 +47,7 @@ export default function AboutPage() {
                             </div>
                         </div>
                     </div>
+                    */}
 
                     <div className="prose dark:prose-invert font-base text-base">
                         {aboutContent.paragraphs.map((paragraph, index) => (
@@ -58,6 +60,7 @@ export default function AboutPage() {
 
                 {/* Desktop layout - text wraps around image */}
                 <div className="hidden md:block relative mb-8">
+                    {/* Profile picture commented out
                     <div className="float-right ml-2 mb-4 relative w-full max-w-[150px] aspect-square">
                         <div className="group relative w-full h-full">
                             <Image
@@ -71,6 +74,7 @@ export default function AboutPage() {
                             <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-150 rounded-full"></div>
                         </div>
                     </div>
+                    */}
 
                     <div className="prose dark:prose-invert font-base text-base">
                         {aboutContent.paragraphs.map((paragraph, index) => (

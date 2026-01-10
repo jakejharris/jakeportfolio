@@ -3,8 +3,9 @@
 import { useState } from 'react';
 import { FaGithub } from 'react-icons/fa';
 import ThemeToggle from './ThemeToggle';
+import AccentPicker from './AccentPicker';
 import { Button } from './ui/button';
-import Link from 'next/link';
+import TransitionLink from './TransitionLink';
 import HamburgerIcon from './HamburgerIcon';
 import {
   Drawer,
@@ -32,9 +33,10 @@ export default function MobileNavbar({ scrolled, visible }: MobileNavbarProps) {
     >
       <div className="px-4 h-16 flex justify-between items-center">
         <div className="flex-1">
-          <Link href="/#" scroll={true} className="animated-underline normal-case text-lg md:text-xl font-bold">Jake Harris</Link>
+          <TransitionLink href="/#" scroll={true} className="animated-underline normal-case text-lg md:text-xl font-bold">Jake Harris</TransitionLink>
         </div>
         <div className="flex items-center gap-2">
+          <AccentPicker />
           <ThemeToggle />
           <Drawer onOpenChange={setIsDrawerOpen}>
             <DrawerTrigger asChild>
@@ -48,31 +50,31 @@ export default function MobileNavbar({ scrolled, visible }: MobileNavbarProps) {
               </DrawerHeader>
               <div className="flex flex-col items-center gap-2 p-6">
               <DrawerClose asChild>
-                  <Link
+                  <TransitionLink
                     href="/#"
                     scroll={true}
                     className="border border-border w-full text-center text-xl py-3 px-6 rounded-md transition-all duration-150 hover:bg-accent active:scale-95 active:bg-accent/80"
                   >
                     Home
-                  </Link>
+                  </TransitionLink>
                 </DrawerClose>
                 <DrawerClose asChild>
-                  <Link
+                  <TransitionLink
                     href="/about#"
                     scroll={true}
                     className="border border-border w-full text-center text-xl py-3 px-6 rounded-md transition-all duration-150 hover:bg-accent active:scale-95 active:bg-accent/80"
                   >
                     About
-                  </Link>
+                  </TransitionLink>
                 </DrawerClose>
                 <DrawerClose asChild>
-                  <Link
+                  <TransitionLink
                     href="/contact#"
                     scroll={true}
                     className="border border-border w-full text-center text-xl py-3 px-6 rounded-md transition-all duration-150 hover:bg-accent active:scale-95 active:bg-accent/80"
                   >
                     Contact
-                  </Link>
+                  </TransitionLink>
                 </DrawerClose>
               </div>
               <DrawerFooter className="mt-auto pt-4">
