@@ -6,6 +6,9 @@ import { ThemeProvider } from "./components/theme-provider";
 import { Toaster } from "./components/ui/sonner";
 import { inter } from "./lib/fonts";
 import { GoogleAnalytics } from '@next/third-parties/google'
+import AccentScript from "./components/AccentScript";
+import { TransitionProvider } from "./components/TransitionProvider";
+import TransitionOverlay from "./components/TransitionOverlay";
 
 export const metadata = {
   title: "Jake Harris - Developer",
@@ -16,6 +19,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" suppressHydrationWarning className={`${inter.variable}`}>
       <head>
+        <AccentScript />
         <link rel="icon" href="/favicon.ico" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </head>
@@ -27,14 +31,17 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           enableSystem={false}
           disableTransitionOnChange
         >
-          <Navbar />
-          <main className="flex-1">
-            {children}
-            {process.env.NODE_ENV === 'production' && (
-              <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID!} />
-            )}
-          </main>
-          <Footer />
+          <TransitionProvider>
+            <TransitionOverlay />
+            <Navbar />
+            <main className="flex-1">
+              {children}
+              {process.env.NODE_ENV === 'production' && (
+                <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID!} />
+              )}
+            </main>
+            <Footer />
+          </TransitionProvider>
         </ThemeProvider>
       </body>
     </html>

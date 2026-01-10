@@ -13,7 +13,7 @@
   height: 2px;
   bottom: 0;
   left: 0;
-  background-color: hsl(var(--primary));
+  background-color: var(--accent-color);
   transform-origin: bottom right;
   transition: transform 0.3s ease-out;
 }
@@ -138,4 +138,52 @@
 
 .delay-500 {
   animation-delay: 500ms;
+}
+
+/* Page transition: particles enter from click point to fill screen */
+@keyframes particle-enter {
+  0% {
+    opacity: 0;
+    transform: translate(calc(-50% + var(--offsetX)), calc(-50% + var(--offsetY))) scale(0);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+/* Page transition: subtle drift while loading */
+@keyframes particle-loading {
+  0%, 100% {
+    transform: translate(-50%, -50%) scale(1);
+  }
+  50% {
+    transform: translate(calc(-50% + var(--driftX)), calc(-50% + var(--driftY))) scale(1.01);
+  }
+}
+
+/* Page transition: particles disperse outward and fade */
+@keyframes particle-disperse {
+  0% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(calc(-50% + var(--disperseX)), calc(-50% + var(--disperseY))) scale(0);
+  }
+}
+
+.animate-particle-enter {
+  animation: particle-enter 200ms ease-out forwards;
+  animation-delay: var(--delay);
+}
+
+.animate-particle-loading {
+  animation: particle-loading 2.5s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+  animation-delay: var(--loadingDelay);
+}
+
+.animate-particle-disperse {
+  animation: particle-disperse 300ms ease-out forwards;
 } 
