@@ -9,10 +9,34 @@ import { GoogleAnalytics } from '@next/third-parties/google'
 import AccentScript from "./components/AccentScript";
 import { TransitionProvider } from "./components/TransitionProvider";
 import TransitionOverlay from "./components/TransitionOverlay";
+import type { Metadata } from "next";
 
-export const metadata = {
-  title: "Jake Harris - Developer",
-  description: "Portfolio and blog of Jake Harris",
+export const metadata: Metadata = {
+  title: {
+    default: "Jake Harris - Full Stack Developer",
+    template: "%s | Jake Harris"
+  },
+  description: "Jake Harris is a Full Stack Developer building AI-powered web applications, custom platforms, and digital experiences. Explore projects, insights, and more.",
+  keywords: ["Jake Harris", "Full Stack Developer", "AI Developer", "Web Development", "React", "Next.js", "TypeScript"],
+  authors: [{ name: "Jake Harris" }],
+  creator: "Jake Harris",
+  openGraph: {
+    type: "website",
+    locale: "en_US",
+    url: "https://jakejh.com",
+    siteName: "Jake Harris",
+    title: "Jake Harris - Full Stack Developer",
+    description: "Full Stack Developer building AI-powered web applications, custom platforms, and digital experiences.",
+  },
+  twitter: {
+    card: "summary",
+    title: "Jake Harris - Full Stack Developer",
+    description: "Full Stack Developer building AI-powered web applications, custom platforms, and digital experiences.",
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -27,7 +51,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <Toaster />
         <ThemeProvider
           attribute="class"
-          defaultTheme="light"
+          defaultTheme="dark"
           enableSystem={false}
           disableTransitionOnChange
         >

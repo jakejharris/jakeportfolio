@@ -1,13 +1,27 @@
 :root {
-  --page-border-color: hsl(var(--border));
-  --page-border-background-color: hsl(var(--accent));
-  --page-hover-transform: scale(1.01);
+  --page-border-color: rgba(255, 255, 255, 0.4);
+  --page-hover-transform: translateY(-2px) scale(1.01);
+  --glass-bg: rgba(255, 255, 255, 0.25);
+  --glass-bg-hover: rgba(255, 255, 255, 0.45);
+  --glass-shadow:
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.6),
+    0 8px 32px rgba(0, 0, 0, 0.1);
+  --glass-shadow-hover:
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.8),
+    0 12px 40px rgba(0, 0, 0, 0.12);
 }
 
 .dark {
-  --page-border-color: hsl(var(--border));
-  --page-border-background-color: hsl(var(--accent));
-  --page-hover-transform: scale(1.01);
+  --page-border-color: rgba(255, 255, 255, 0.15);
+  --page-hover-transform: translateY(-2px) scale(1.01);
+  --glass-bg: rgba(0, 0, 0, 0.35);
+  --glass-bg-hover: rgba(0, 0, 0, 0.5);
+  --glass-shadow:
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.1),
+    0 8px 32px rgba(0, 0, 0, 0.3);
+  --glass-shadow-hover:
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.15),
+    0 12px 40px rgba(0, 0, 0, 0.4);
 }
 
 .pinnedLinkBorder {
@@ -15,25 +29,39 @@
 }
 
 .pageLinkContainer {
-    border: 1px solid var(--page-border-color);
-    border-radius: 2px;
-    padding: 10px;
-    margin-bottom: 10px;
-    transition: all 0.2s ease;
+    /* Layout */
     position: relative;
+    padding: 12px 16px;
+    margin-bottom: 10px;
     overflow: hidden;
-    /* box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); */
+    cursor: pointer;
+
+    /* Glass Effect */
+    background: var(--glass-bg);
+    backdrop-filter: blur(16px) saturate(120%);
+    -webkit-backdrop-filter: blur(16px) saturate(120%);
+
+    /* Border & Shape */
+    border: 1px solid var(--page-border-color);
+    border-radius: 6px;
+
+    /* Lighting */
+    box-shadow: var(--glass-shadow);
+
+    /* Transitions */
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
 
+/* Hover State */
 @media (hover: hover) {
     .pageLinkContainer:hover {
-        background-color: var(--page-border-background-color);
+        background: var(--glass-bg-hover);
+        box-shadow: var(--glass-shadow-hover);
     }
 }
 
 .pageLinkContainer:hover {
     transform: var(--page-hover-transform);
-    /* box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05); */
 }
 
 .pageLinkContainer:hover .text-primary {
@@ -41,12 +69,15 @@
     font-weight: 500;
 }
 
+/* Active/Click State */
 .pageLinkContainer:active {
-    transform: scale(0.99); /* Slight scale down when pressed */
-    box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.1); /* Inner shadow when pressed */
+    transform: translateY(0) scale(0.98);
+    box-shadow:
+        inset 0 2px 4px rgba(0, 0, 0, 0.1),
+        0 4px 16px rgba(0, 0, 0, 0.1);
 }
 
-/* Adding a subtle line animation for list items */
+/* Accent line animation for list items */
 .pageLinkContainer:not(.pinnedLinkBorder)::after {
     content: '';
     position: absolute;
@@ -58,6 +89,7 @@
     transform: scaleX(0);
     transform-origin: bottom right;
     transition: transform 0.3s ease;
+    z-index: 2;
 }
 
 @media (hover: hover) {

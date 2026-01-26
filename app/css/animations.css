@@ -186,4 +186,11 @@
 
 .animate-particle-disperse {
   animation: particle-disperse 300ms ease-out forwards;
+}
+
+/* CRT screen flicker effect for retro pixel background */
+@keyframes flicker {
+  0% { opacity: 0.9; }
+  50% { opacity: 1.0; }
+  100% { opacity: 0.9; }
 } 
