@@ -3,6 +3,9 @@
 import { useEffect, useRef, useCallback } from "react";
 import { useTheme } from "next-themes";
 
+// Feature flag for pixel fluid background
+const ENABLE_PIXEL_FLUID_BACKGROUND = true;
+
 // Same colors as AccentPicker for consistency
 const COLORS = [
   { name: "Default", light: "0 0% 9%", dark: "0 0% 98%" },
@@ -221,6 +224,11 @@ export default function PixelFluidBackground({ className }: PixelFluidBackground
   useEffect(() => {
     updateBaseHue();
   }, [theme, resolvedTheme, updateBaseHue]);
+
+  // Return null if feature is disabled
+  if (!ENABLE_PIXEL_FLUID_BACKGROUND) {
+    return null;
+  }
 
   return (
     <div className={`fixed inset-0 -z-10 ${className || ""}`}>
