@@ -43,7 +43,7 @@
 
     /* Border & Shape */
     border: 1px solid var(--page-border-color);
-    border-radius: 12px;
+    border-radius: 2px;
 
     /* Lighting */
     box-shadow: var(--glass-shadow);
