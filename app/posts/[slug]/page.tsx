@@ -36,22 +36,29 @@ export async function generateMetadata({
     };
   }
 
-  const imageUrl = post.mainImage ? urlFor(post.mainImage).width(1200).height(630).url() : undefined;
+  const description = post.excerpt || `Read ${post.title} by Jake Harris`;
+
+  // Only generate image URL if mainImage exists
+  let imageUrl: string | null = null;
+  if (post.mainImage?.asset) {
+    imageUrl = urlFor(post.mainImage).width(1200).height(630).url();
+  }
 
   return {
     title: post.title,
-    description: post.excerpt || `Read ${post.title} by Jake Harris`,
+    description,
     openGraph: {
       title: post.title,
-      description: post.excerpt || `Read ${post.title} by Jake Harris`,
+      description,
       type: 'article',
-      images: imageUrl ? [{ url: imageUrl, width: 1200, height: 630 }] : [],
+      ...(imageUrl && { images: [{ url: imageUrl, width: 1200, height: 630 }] }),
     },
     twitter: {
-      card: 'summary_large_image',
+      // Use summary card when no image, summary_large_image when image exists
+      card: imageUrl ? 'summary_large_image' : 'summary',
       title: post.title,
-      description: post.excerpt || `Read ${post.title} by Jake Harris`,
-      images: imageUrl ? [imageUrl] : [],
+      description,
+      ...(imageUrl && { images: [imageUrl] }),
     },
   };
 }

@@ -29,7 +29,7 @@ export const metadata: Metadata = {
     description: "Full Stack Developer building AI-powered web applications, custom platforms, and digital experiences.",
   },
   twitter: {
-    card: "summary_large_image",
+    card: "summary",
     title: "Jake Harris - Full Stack Developer",
     description: "Full Stack Developer building AI-powered web applications, custom platforms, and digital experiences.",
   },
