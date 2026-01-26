@@ -82,7 +82,7 @@ export default async function HomePage() {
                     </div>
                   </TransitionLink>
                 </HoverCardTrigger>
-                <HoverCardContent className="w-80">
+                <HoverCardContent className="w-80 hidden md:block">
                   <div className="space-y-2">
                     {post.featured && (
                       <div className="flex h-2 items-center text-black bg-accent rounded-[1px] mb-3">
