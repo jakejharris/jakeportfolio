@@ -61,19 +61,19 @@ export default function MobileNavbar({ scrolled, visible }: MobileNavbarProps) {
               <div className="flex flex-col items-center gap-2 p-6">
                 <button
                   onClick={() => handleNavClick('/#')}
-                  className="border border-border w-full text-center text-xl py-3 px-6 rounded-sm transition-all duration-150 hover:bg-accent active:scale-95 active:bg-accent/80"
+                  className="border border-border w-full text-center text-xl py-3 px-6 rounded-md transition-all duration-150 hover:bg-accent active:scale-95 active:bg-accent/80"
                 >
                   Home
                 </button>
                 <button
                   onClick={() => handleNavClick('/about#')}
-                  className="border border-border w-full text-center text-xl py-3 px-6 rounded-sm transition-all duration-150 hover:bg-accent active:scale-95 active:bg-accent/80"
+                  className="border border-border w-full text-center text-xl py-3 px-6 rounded-md transition-all duration-150 hover:bg-accent active:scale-95 active:bg-accent/80"
                 >
                   About
                 </button>
                 <button
                   onClick={() => handleNavClick('/contact#')}
-                  className="border border-border w-full text-center text-xl py-3 px-6 rounded-sm transition-all duration-150 hover:bg-accent active:scale-95 active:bg-accent/80"
+                  className="border border-border w-full text-center text-xl py-3 px-6 rounded-md transition-all duration-150 hover:bg-accent active:scale-95 active:bg-accent/80"
                 >
                   Contact
                 </button>
