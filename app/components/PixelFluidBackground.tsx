@@ -35,14 +35,15 @@ export default function PixelFluidBackground({ className }: PixelFluidBackground
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationRef = useRef<number>(0);
   const timeRef = useRef(0);
+  const pointerRef = useRef({ x: -1000, y: -1000, active: false });
   const configRef = useRef({
-    pixelSize: 20,
-    speed: 0.03,
-    baseHue: 217, // Default to blue
+    pixelSize: 18,
+    speed: 0.02,
+    baseHue: 215,
     baseSaturation: 80,
-    waveScale: 0.08,
-    isGrayscale: false, // For white/black options
-    grayscaleInverted: false, // true for black option (darker shades)
+    waveScale: 0.09,
+    isGrayscale: false,
+    grayscaleInverted: false,
   });
   const { theme, resolvedTheme } = useTheme();
   const isDark = resolvedTheme === "dark";
@@ -62,16 +63,12 @@ export default function PixelFluidBackground({ className }: PixelFluidBackground
     const hue = parseHue(colorString);
     const saturation = parseSaturation(colorString);
 
-    // Check if Default option is selected (index 0, grayscale)
     if (index === 0 || saturation === 0) {
-      // Default option - render grayscale waves
-      // In light mode: darker shades, in dark mode: lighter shades
       configRef.current.isGrayscale = true;
-      configRef.current.grayscaleInverted = !isDark; // Inverted in light mode for darker shades
+      configRef.current.grayscaleInverted = !isDark;
       configRef.current.baseHue = 0;
       configRef.current.baseSaturation = 0;
     } else {
-      // Colored option
       configRef.current.isGrayscale = false;
       configRef.current.grayscaleInverted = false;
       configRef.current.baseHue = hue;
@@ -79,13 +76,33 @@ export default function PixelFluidBackground({ className }: PixelFluidBackground
     }
   }, [getAccentColor, isDark]);
 
-  // Wave height calculation
+  // Wave height calculation with interactive ripple
   const getWaveHeight = useCallback((x: number, y: number, t: number) => {
     const scale = configRef.current.waveScale;
+    const pointer = pointerRef.current;
+
+    // Base ocean swell
     const w1 = Math.sin(x * scale + t);
-    const w2 = Math.cos(y * scale * 0.8 - t * 0.5);
-    const w3 = Math.sin((x + y) * scale * 0.3 + t * 0.2);
-    return (w1 + w2 + w3 + 3) / 6;
+    const w2 = Math.cos(y * scale * 0.7 - t * 0.4);
+    const w3 = Math.sin((x - y) * scale * 0.5 + t * 0.3);
+
+    let h = (w1 + w2 + w3 + 3) / 6;
+
+    // Interactive ripple effect
+    if (pointer.active) {
+      const dx = x - pointer.x;
+      const dy = y - pointer.y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+
+      // Ripple radius: 15 blocks
+      if (dist < 15) {
+        const ripple = Math.cos(dist * 0.6 - t * 4) * 0.25;
+        const decay = 1 - dist / 15;
+        h -= ripple * decay;
+      }
+    }
+
+    return h;
   }, []);
 
   // Draw function
@@ -100,79 +117,82 @@ export default function PixelFluidBackground({ className }: PixelFluidBackground
     const cols = Math.ceil(canvas.width / pixelSize);
     const rows = Math.ceil(canvas.height / pixelSize);
 
-    // Background colors based on theme
+    // Background color based on theme
     const bgColor = isDark ? "#0a0a0a" : "#ffffff";
-    const midToneBase = isDark ? 15 : 95;
+
+    // Fill background first
+    ctx.fillStyle = bgColor;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Foam colors for dithering (theme-aware)
+    const foamLight1 = isDark ? "#1a1a1a" : "#f1f5f9";
+    const foamLight2 = isDark ? "#252525" : "#e2e8f0";
 
     for (let x = 0; x < cols; x++) {
       for (let y = 0; y < rows; y++) {
         const noiseVal = getWaveHeight(x, y, timeRef.current);
-        let color: string;
+        let color: string | null = null;
 
-        if (noiseVal < 0.40) {
-          // Background (Low points)
-          color = bgColor;
-        } else if (noiseVal < 0.55) {
-          // Mid-tones (Grey/Foam)
-          const step = Math.floor(noiseVal * 100);
-          const lightness = isDark
-            ? midToneBase + ((step % 3) * 3) // 15%, 18%, 21% for dark
-            : midToneBase - ((step % 3) * 3); // 95%, 92%, 89% for light
-          color = `hsl(0, 0%, ${lightness}%)`;
-        } else {
-          // Water (High points) - use accent color or grayscale
-          const norm = (noiseVal - 0.55) * 2.2;
+        // 1. Pure background (skip drawing for performance)
+        if (noiseVal < 0.45) {
+          continue;
+        }
+        // 2. Dithered transition (foam) with checkerboard pattern
+        else if (noiseVal < 0.58) {
+          const isEven = (x + y) % 2 === 0;
 
-          if (isGrayscale) {
-            // Grayscale rendering for default option
+          if (noiseVal < 0.52) {
+            // Lightest foam
+            color = isEven ? bgColor : foamLight1;
+          } else {
+            // Denser foam
+            color = isEven ? foamLight1 : foamLight2;
+          }
+        }
+        // 3. Water body
+        else {
+          const norm = (noiseVal - 0.58) * 2.4;
+
+          // Highlight glints on peaks
+          if (noiseVal > 0.85 && (x * y) % 17 === 0) {
+            color = isDark ? "#ffffff" : "#ffffff";
+          } else if (isGrayscale) {
+            // Grayscale rendering
             let light: number;
             if (grayscaleInverted) {
-              // Light mode: use very light grey shades
-              if (isDark) {
-                light = 30 - (norm * 20); // 30% down to 10%
-              } else {
-                light = 88 - (norm * 12); // 88% down to 76% (very subtle greys)
-              }
+              // Light mode: subtle grey shades
+              light = isDark ? 30 - norm * 20 : 88 - norm * 12;
             } else {
               // Dark mode: lighter shades
-              if (isDark) {
-                light = 85 - (norm * 25); // 85% down to 60%
-              } else {
-                light = 95 - (norm * 20); // 95% down to 75%
-              }
+              light = isDark ? 85 - norm * 25 : 95 - norm * 20;
             }
-            light = Math.floor(light / 4) * 4;
+            light = Math.floor(light / 6) * 6;
             color = `hsl(0, 0%, ${light}%)`;
           } else {
             // Colored rendering
-            // Hue shift for depth
-            const hue = baseHue + (norm * 15);
+            const hue = baseHue + norm * 10;
+            const sat = 70 + norm * 25;
+            let light = 85 - norm * 55;
+            light = Math.floor(light / 6) * 6;
 
-            // Saturation based on depth
-            const sat = Math.min(baseSaturation - 20 + (norm * 30), 95);
-
-            // Lightness with banding
-            let light: number;
+            // Adjust for dark mode
             if (isDark) {
-              // Dark mode: lighter colors
-              light = 65 - (norm * 25); // 65% down to 40%
-            } else {
-              // Light mode: darker colors for contrast
-              light = 75 - (norm * 45); // 75% down to 30%
+              light = Math.min(light + 15, 80);
             }
-            light = Math.floor(light / 4) * 4;
 
             color = `hsl(${hue}, ${sat}%, ${light}%)`;
           }
         }
 
-        ctx.fillStyle = color;
-        ctx.fillRect(
-          x * pixelSize,
-          y * pixelSize,
-          pixelSize + 0.5,
-          pixelSize + 0.5
-        );
+        if (color) {
+          ctx.fillStyle = color;
+          ctx.fillRect(
+            x * pixelSize,
+            y * pixelSize,
+            pixelSize + 0.5,
+            pixelSize + 0.5
+          );
+        }
       }
     }
 
@@ -188,6 +208,30 @@ export default function PixelFluidBackground({ className }: PixelFluidBackground
     canvas.height = window.innerHeight;
   }, []);
 
+  // Pointer update handler
+  const updatePointer = useCallback((e: MouseEvent | TouchEvent) => {
+    let x: number, y: number;
+
+    if ("touches" in e && e.touches.length > 0) {
+      x = e.touches[0].clientX;
+      y = e.touches[0].clientY;
+    } else if ("clientX" in e) {
+      x = e.clientX;
+      y = e.clientY;
+    } else {
+      return;
+    }
+
+    // Convert screen pixels to grid coordinates
+    pointerRef.current.x = x / configRef.current.pixelSize;
+    pointerRef.current.y = y / configRef.current.pixelSize;
+    pointerRef.current.active = true;
+  }, []);
+
+  const clearPointer = useCallback(() => {
+    pointerRef.current.active = false;
+  }, []);
+
   useEffect(() => {
     // Initial setup
     updateBaseHue();
@@ -198,6 +242,13 @@ export default function PixelFluidBackground({ className }: PixelFluidBackground
 
     // Handle resize
     window.addEventListener("resize", resize);
+
+    // Handle pointer/touch interaction
+    window.addEventListener("mousemove", updatePointer);
+    window.addEventListener("touchmove", updatePointer, { passive: true });
+    window.addEventListener("touchstart", updatePointer, { passive: true });
+    window.addEventListener("touchend", clearPointer);
+    window.addEventListener("mouseleave", clearPointer);
 
     // Watch for accent changes via MutationObserver
     const observer = new MutationObserver((mutations) => {
@@ -216,9 +267,14 @@ export default function PixelFluidBackground({ className }: PixelFluidBackground
     return () => {
       cancelAnimationFrame(animationRef.current);
       window.removeEventListener("resize", resize);
+      window.removeEventListener("mousemove", updatePointer);
+      window.removeEventListener("touchmove", updatePointer);
+      window.removeEventListener("touchstart", updatePointer);
+      window.removeEventListener("touchend", clearPointer);
+      window.removeEventListener("mouseleave", clearPointer);
       observer.disconnect();
     };
-  }, [draw, resize, updateBaseHue]);
+  }, [draw, resize, updateBaseHue, updatePointer, clearPointer]);
 
   // Re-update hue when theme changes
   useEffect(() => {
@@ -242,10 +298,10 @@ export default function PixelFluidBackground({ className }: PixelFluidBackground
             to bottom,
             rgba(255,255,255,0),
             rgba(255,255,255,0) 50%,
-            rgba(0,0,0,0.03) 50%,
-            rgba(0,0,0,0.03)
+            rgba(0,0,0,0.04) 50%,
+            rgba(0,0,0,0.04)
           )`,
-          backgroundSize: "100% 2px",
+          backgroundSize: "100% 3px",
         }}
       />
 
@@ -254,18 +310,10 @@ export default function PixelFluidBackground({ className }: PixelFluidBackground
         className="absolute inset-0 pointer-events-none z-[11]"
         style={{
           background: `radial-gradient(
-            circle,
-            rgba(0,0,0,0) 60%,
+            circle at center,
+            rgba(0,0,0,0) 50%,
             rgba(0,0,0,0.15) 100%
           )`,
-        }}
-      />
-
-      {/* Subtle glow/flicker */}
-      <div
-        className="absolute inset-0 pointer-events-none z-[12] animate-[flicker_0.15s_infinite]"
-        style={{
-          background: isDark ? "rgba(255, 255, 255, 0.01)" : "rgba(255, 255, 255, 0.02)",
         }}
       />
     </div>
