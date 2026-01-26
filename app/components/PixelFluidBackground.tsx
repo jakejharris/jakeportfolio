@@ -124,11 +124,11 @@ export default function PixelFluidBackground({ className }: PixelFluidBackground
             // Grayscale rendering for default option
             let light: number;
             if (grayscaleInverted) {
-              // Light mode: use lighter grey shades (not too dark)
+              // Light mode: use very light grey shades
               if (isDark) {
                 light = 30 - (norm * 20); // 30% down to 10%
               } else {
-                light = 75 - (norm * 20); // 75% down to 55% (lighter greys)
+                light = 88 - (norm * 12); // 88% down to 76% (very subtle greys)
               }
             } else {
               // Dark mode: lighter shades
