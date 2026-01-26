@@ -53,7 +53,7 @@ export default function MobileNavbar({ scrolled, visible }: MobileNavbarProps) {
                   <TransitionLink
                     href="/#"
                     scroll={true}
-                    className="border border-border w-full text-center text-xl py-3 px-6 rounded-md transition-all duration-150 hover:bg-accent active:scale-95 active:bg-accent/80"
+                    className="border border-border w-full text-center text-xl py-3 px-6 rounded-sm transition-all duration-150 hover:bg-accent active:scale-95 active:bg-accent/80"
                   >
                     Home
                   </TransitionLink>
@@ -62,7 +62,7 @@ export default function MobileNavbar({ scrolled, visible }: MobileNavbarProps) {
                   <TransitionLink
                     href="/about#"
                     scroll={true}
-                    className="border border-border w-full text-center text-xl py-3 px-6 rounded-md transition-all duration-150 hover:bg-accent active:scale-95 active:bg-accent/80"
+                    className="border border-border w-full text-center text-xl py-3 px-6 rounded-sm transition-all duration-150 hover:bg-accent active:scale-95 active:bg-accent/80"
                   >
                     About
                   </TransitionLink>
@@ -71,7 +71,7 @@ export default function MobileNavbar({ scrolled, visible }: MobileNavbarProps) {
                   <TransitionLink
                     href="/contact#"
                     scroll={true}
-                    className="border border-border w-full text-center text-xl py-3 px-6 rounded-md transition-all duration-150 hover:bg-accent active:scale-95 active:bg-accent/80"
+                    className="border border-border w-full text-center text-xl py-3 px-6 rounded-sm transition-all duration-150 hover:bg-accent active:scale-95 active:bg-accent/80"
                   >
                     Contact
                   </TransitionLink>
