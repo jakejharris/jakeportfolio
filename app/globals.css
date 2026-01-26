@@ -104,6 +104,8 @@
 :root[data-accent="2"] { --accent-color: hsl(217 80% 50%); }
 :root[data-accent="3"] { --accent-color: hsl(160 65% 40%); }
 :root[data-accent="4"] { --accent-color: hsl(35 90% 48%); }
+:root[data-accent="5"] { --accent-color: hsl(0 0% 100%); }
+:root[data-accent="6"] { --accent-color: hsl(0 0% 15%); }
 
 .dark {
   --accent-color: hsl(0 0% 98%);
@@ -112,6 +114,8 @@
 .dark[data-accent="2"] { --accent-color: hsl(217 70% 65%); }
 .dark[data-accent="3"] { --accent-color: hsl(160 50% 55%); }
 .dark[data-accent="4"] { --accent-color: hsl(35 70% 60%); }
+.dark[data-accent="5"] { --accent-color: hsl(0 0% 85%); }
+.dark[data-accent="6"] { --accent-color: hsl(0 0% 5%); }
 
 @layer base {
   * {

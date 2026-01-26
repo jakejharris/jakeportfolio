@@ -3,7 +3,7 @@ export default function AccentScript() {
     (function() {
       try {
         var accent = localStorage.getItem('accent-index');
-        if (accent && ['1','2','3','4'].includes(accent)) {
+        if (accent && ['1','2','3','4','5','6'].includes(accent)) {
           document.documentElement.setAttribute('data-accent', accent);
         }
       } catch (e) {}

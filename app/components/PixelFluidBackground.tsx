@@ -10,6 +10,8 @@ const COLORS = [
   { name: "Blue", light: "217 80% 50%", dark: "217 70% 65%" },
   { name: "Green", light: "160 65% 40%", dark: "160 50% 55%" },
   { name: "Amber", light: "35 90% 48%", dark: "35 70% 60%" },
+  { name: "White", light: "0 0% 100%", dark: "0 0% 85%" },
+  { name: "Black", light: "0 0% 15%", dark: "0 0% 5%" },
 ];
 
 // Parse HSL string to get hue value
@@ -38,6 +40,8 @@ export default function PixelFluidBackground({ className }: PixelFluidBackground
     baseHue: 217, // Default to blue
     baseSaturation: 80,
     waveScale: 0.08,
+    isGrayscale: false, // For white/black options
+    grayscaleInverted: false, // true for black option (darker shades)
   });
   const { theme, resolvedTheme } = useTheme();
   const isDark = resolvedTheme === "dark";
@@ -46,22 +50,40 @@ export default function PixelFluidBackground({ className }: PixelFluidBackground
   const getAccentColor = useCallback(() => {
     const accentAttr = document.documentElement.getAttribute("data-accent");
     const accentIndex = accentAttr ? parseInt(accentAttr, 10) : 0;
-    const validIndex = accentIndex >= 0 && accentIndex <= 4 ? accentIndex : 0;
+    const validIndex = accentIndex >= 0 && accentIndex <= 6 ? accentIndex : 0;
     const color = COLORS[validIndex];
-    return isDark ? color.dark : color.light;
+    return { colorString: isDark ? color.dark : color.light, index: validIndex };
   }, [isDark]);
 
   // Update base hue from accent color
   const updateBaseHue = useCallback(() => {
-    const colorString = getAccentColor();
+    const { colorString, index } = getAccentColor();
     const hue = parseHue(colorString);
     const saturation = parseSaturation(colorString);
 
-    // For default (grayscale), use blue as fallback
-    if (saturation === 0) {
+    // Check if white (5) or black (6) option is selected
+    if (index === 5) {
+      // White option - grayscale with lighter shades
+      configRef.current.isGrayscale = true;
+      configRef.current.grayscaleInverted = false;
+      configRef.current.baseHue = 0;
+      configRef.current.baseSaturation = 0;
+    } else if (index === 6) {
+      // Black option - grayscale with darker shades
+      configRef.current.isGrayscale = true;
+      configRef.current.grayscaleInverted = true;
+      configRef.current.baseHue = 0;
+      configRef.current.baseSaturation = 0;
+    } else if (saturation === 0) {
+      // Default (grayscale) - use blue as fallback
+      configRef.current.isGrayscale = false;
+      configRef.current.grayscaleInverted = false;
       configRef.current.baseHue = 217;
       configRef.current.baseSaturation = 80;
     } else {
+      // Colored option
+      configRef.current.isGrayscale = false;
+      configRef.current.grayscaleInverted = false;
       configRef.current.baseHue = hue;
       configRef.current.baseSaturation = saturation;
     }
@@ -84,7 +106,7 @@ export default function PixelFluidBackground({ className }: PixelFluidBackground
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    const { pixelSize, baseHue, baseSaturation } = configRef.current;
+    const { pixelSize, baseHue, baseSaturation, isGrayscale, grayscaleInverted } = configRef.current;
     const cols = Math.ceil(canvas.width / pixelSize);
     const rows = Math.ceil(canvas.height / pixelSize);
 
@@ -106,29 +128,52 @@ export default function PixelFluidBackground({ className }: PixelFluidBackground
           const lightness = isDark
             ? midToneBase + ((step % 3) * 3) // 15%, 18%, 21% for dark
             : midToneBase - ((step % 3) * 3); // 95%, 92%, 89% for light
-          color = `hsl(${baseHue}, 5%, ${lightness}%)`;
+          color = `hsl(0, 0%, ${lightness}%)`;
         } else {
-          // Water (High points) - use accent color
+          // Water (High points) - use accent color or grayscale
           const norm = (noiseVal - 0.55) * 2.2;
 
-          // Hue shift for depth
-          const hue = baseHue + (norm * 15);
-
-          // Saturation based on depth
-          const sat = Math.min(baseSaturation - 20 + (norm * 30), 95);
-
-          // Lightness with banding
-          let light: number;
-          if (isDark) {
-            // Dark mode: lighter colors
-            light = 65 - (norm * 25); // 65% down to 40%
+          if (isGrayscale) {
+            // Grayscale rendering for white/black options
+            let light: number;
+            if (grayscaleInverted) {
+              // Black option: darker shades
+              if (isDark) {
+                light = 30 - (norm * 20); // 30% down to 10%
+              } else {
+                light = 50 - (norm * 35); // 50% down to 15%
+              }
+            } else {
+              // White option: lighter shades
+              if (isDark) {
+                light = 85 - (norm * 25); // 85% down to 60%
+              } else {
+                light = 95 - (norm * 20); // 95% down to 75%
+              }
+            }
+            light = Math.floor(light / 4) * 4;
+            color = `hsl(0, 0%, ${light}%)`;
           } else {
-            // Light mode: darker colors for contrast
-            light = 75 - (norm * 45); // 75% down to 30%
-          }
-          light = Math.floor(light / 4) * 4;
+            // Colored rendering
+            // Hue shift for depth
+            const hue = baseHue + (norm * 15);
 
-          color = `hsl(${hue}, ${sat}%, ${light}%)`;
+            // Saturation based on depth
+            const sat = Math.min(baseSaturation - 20 + (norm * 30), 95);
+
+            // Lightness with banding
+            let light: number;
+            if (isDark) {
+              // Dark mode: lighter colors
+              light = 65 - (norm * 25); // 65% down to 40%
+            } else {
+              // Light mode: darker colors for contrast
+              light = 75 - (norm * 45); // 75% down to 30%
+            }
+            light = Math.floor(light / 4) * 4;
+
+            color = `hsl(${hue}, ${sat}%, ${light}%)`;
+          }
         }
 
         ctx.fillStyle = color;
