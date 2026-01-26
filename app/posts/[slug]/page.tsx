@@ -11,6 +11,50 @@ import React from 'react';
 import ScrollToTop from '@/app/components/ScrollToTop';
 import dynamic from 'next/dynamic';
 import TableOfContents from '@/app/components/TableOfContents';
+import type { Metadata } from 'next';
+
+// Generate dynamic metadata for each post
+export async function generateMetadata({
+  params
+}: {
+  params: Promise<{ slug: string }>
+}): Promise<Metadata> {
+  const { slug } = await params;
+  const post = await sanityFetch<Post | null>({
+    query: `*[_type == "post" && slug.current == $slug][0] {
+      title,
+      excerpt,
+      mainImage
+    }`,
+    params: { slug },
+    tags: ['post'],
+  });
+
+  if (!post) {
+    return {
+      title: 'Post Not Found',
+    };
+  }
+
+  const imageUrl = post.mainImage ? urlFor(post.mainImage).width(1200).height(630).url() : undefined;
+
+  return {
+    title: post.title,
+    description: post.excerpt || `Read ${post.title} by Jake Harris`,
+    openGraph: {
+      title: post.title,
+      description: post.excerpt || `Read ${post.title} by Jake Harris`,
+      type: 'article',
+      images: imageUrl ? [{ url: imageUrl, width: 1200, height: 630 }] : [],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: post.title,
+      description: post.excerpt || `Read ${post.title} by Jake Harris`,
+      images: imageUrl ? [imageUrl] : [],
+    },
+  };
+}
 
 // Create a separate client component for the syntax highlighter
 const CodeHighlighter = dynamic(() => import('@/app/components/CodeHighlighter'), { ssr: true });
