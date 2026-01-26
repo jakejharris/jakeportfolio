@@ -8,8 +8,8 @@ import { MdArrowForward } from 'react-icons/md';
 import ScrollToTop from '../components/ScrollToTop';
 
 export const metadata = {
-    title: "About - Jake Harris",
-    description: "Learn more about Jake Harris - Developer and Designer",
+    title: "About",
+    description: "Jake Harris is a Full Stack Developer with experience in AI-powered applications, startup development, and consulting. Learn about his background, skills, and projects.",
 };
 
 const aboutContent = {
