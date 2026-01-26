@@ -10,8 +10,6 @@ const COLORS = [
   { name: "Blue", light: "217 80% 50%", dark: "217 70% 65%" },
   { name: "Green", light: "160 65% 40%", dark: "160 50% 55%" },
   { name: "Amber", light: "35 90% 48%", dark: "35 70% 60%" },
-  { name: "White", light: "0 0% 100%", dark: "0 0% 85%" },
-  { name: "Black", light: "0 0% 15%", dark: "0 0% 5%" },
 ];
 
 // Parse HSL string to get hue value
@@ -50,7 +48,7 @@ export default function PixelFluidBackground({ className }: PixelFluidBackground
   const getAccentColor = useCallback(() => {
     const accentAttr = document.documentElement.getAttribute("data-accent");
     const accentIndex = accentAttr ? parseInt(accentAttr, 10) : 0;
-    const validIndex = accentIndex >= 0 && accentIndex <= 6 ? accentIndex : 0;
+    const validIndex = accentIndex >= 0 && accentIndex <= 4 ? accentIndex : 0;
     const color = COLORS[validIndex];
     return { colorString: isDark ? color.dark : color.light, index: validIndex };
   }, [isDark]);
@@ -61,25 +59,14 @@ export default function PixelFluidBackground({ className }: PixelFluidBackground
     const hue = parseHue(colorString);
     const saturation = parseSaturation(colorString);
 
-    // Check if white (5) or black (6) option is selected
-    if (index === 5) {
-      // White option - grayscale with lighter shades
+    // Check if Default option is selected (index 0, grayscale)
+    if (index === 0 || saturation === 0) {
+      // Default option - render grayscale waves
+      // In light mode: darker shades, in dark mode: lighter shades
       configRef.current.isGrayscale = true;
-      configRef.current.grayscaleInverted = false;
+      configRef.current.grayscaleInverted = !isDark; // Inverted in light mode for darker shades
       configRef.current.baseHue = 0;
       configRef.current.baseSaturation = 0;
-    } else if (index === 6) {
-      // Black option - grayscale with darker shades
-      configRef.current.isGrayscale = true;
-      configRef.current.grayscaleInverted = true;
-      configRef.current.baseHue = 0;
-      configRef.current.baseSaturation = 0;
-    } else if (saturation === 0) {
-      // Default (grayscale) - use blue as fallback
-      configRef.current.isGrayscale = false;
-      configRef.current.grayscaleInverted = false;
-      configRef.current.baseHue = 217;
-      configRef.current.baseSaturation = 80;
     } else {
       // Colored option
       configRef.current.isGrayscale = false;
@@ -87,7 +74,7 @@ export default function PixelFluidBackground({ className }: PixelFluidBackground
       configRef.current.baseHue = hue;
       configRef.current.baseSaturation = saturation;
     }
-  }, [getAccentColor]);
+  }, [getAccentColor, isDark]);
 
   // Wave height calculation
   const getWaveHeight = useCallback((x: number, y: number, t: number) => {
