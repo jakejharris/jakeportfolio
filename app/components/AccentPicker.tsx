@@ -18,8 +18,6 @@ const COLORS = [
   { name: "Blue", light: "217 80% 50%", dark: "217 70% 65%" },
   { name: "Green", light: "160 65% 40%", dark: "160 50% 55%" },
   { name: "Amber", light: "35 90% 48%", dark: "35 70% 60%" },
-  { name: "White", light: "0 0% 100%", dark: "0 0% 85%" },
-  { name: "Black", light: "0 0% 15%", dark: "0 0% 5%" },
 ];
 
 export default function AccentPicker() {
@@ -32,7 +30,7 @@ export default function AccentPicker() {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) {
       const idx = parseInt(stored, 10);
-      if (idx >= 0 && idx <= 6) setSelected(idx);
+      if (idx >= 0 && idx <= 4) setSelected(idx);
     }
   }, []);
 
