@@ -208,8 +208,9 @@ export default function PixelFluidBackground({ className }: PixelFluidBackground
     canvas.height = window.innerHeight;
 
     // Slower animation on desktop, faster on mobile
+    // Original speed was 0.02; mobile is 30% slower, desktop is 60% slower
     const isMobile = window.innerWidth < 768;
-    configRef.current.speed = isMobile ? 0.02 : 0.012;
+    configRef.current.speed = isMobile ? 0.014 : 0.008;
   }, []);
 
   // Pointer update handler
