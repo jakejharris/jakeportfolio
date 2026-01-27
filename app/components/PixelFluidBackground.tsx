@@ -200,12 +200,16 @@ export default function PixelFluidBackground({ className }: PixelFluidBackground
     animationRef.current = requestAnimationFrame(draw);
   }, [isDark, getWaveHeight]);
 
-  // Resize handler
+  // Resize handler - also adjusts speed based on screen size
   const resize = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
+
+    // Slower animation on desktop, faster on mobile
+    const isMobile = window.innerWidth < 768;
+    configRef.current.speed = isMobile ? 0.02 : 0.012;
   }, []);
 
   // Pointer update handler
