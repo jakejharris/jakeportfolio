@@ -38,7 +38,7 @@ export default function PixelFluidBackground({ className }: PixelFluidBackground
   const pointerRef = useRef({ x: -1000, y: -1000, active: false });
   const configRef = useRef({
     pixelSize: 18,
-    speed: 0.02,
+    speed: 0.012,
     baseHue: 215,
     baseSaturation: 80,
     waveScale: 0.09,
