@@ -1,3 +1,4 @@
+import '@/app/css/page.css';
 import PageLayout from '@/app/components/PageLayout';
 import TransitionLink from '@/app/components/TransitionLink';
 import { sanityFetch } from '@/app/lib/sanity.client';
@@ -6,6 +7,7 @@ import { Eye } from 'lucide-react';
 import { TagBadge } from '@/app/components/blog/TagBadge';
 import ScrollToTop from '@/app/components/ScrollToTop';
 import { siteConfig } from '@/app/lib/site.config';
+import PixelFluidBackground from '@/app/components/PixelFluidBackground';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
@@ -81,8 +83,10 @@ export default async function BlogPage() {
   const nonFeaturedPosts = recentPosts.filter(p => !featuredIds.has(p._id));
 
   return (
-    <PageLayout>
-      <ScrollToTop />
+    <>
+      <PixelFluidBackground />
+      <PageLayout>
+        <ScrollToTop />
       <div className="max-w-none">
         <h1 className="text-2xl md:text-3xl font-bold mb-2">Blog</h1>
         <p className="text-muted-foreground mb-8">
@@ -129,7 +133,8 @@ export default async function BlogPage() {
           </ul>
         </section>
       </div>
-    </PageLayout>
+      </PageLayout>
+    </>
   );
 }
 
@@ -156,12 +161,7 @@ function PostCard({ post }: { post: PostSummary }) {
             {post.tags && post.tags.length > 0 && (
               <div className="flex gap-1">
                 {post.tags.map(tag => (
-                  <span
-                    key={tag._id}
-                    className="text-xs px-2 py-0.5 rounded-full bg-muted text-muted-foreground"
-                  >
-                    {tag.title}
-                  </span>
+                  <TagBadge key={tag._id} tag={tag} size="sm" />
                 ))}
               </div>
             )}

@@ -1,3 +1,4 @@
+import '@/app/css/page.css';
 import PageLayout from '@/app/components/PageLayout';
 import TransitionLink from '@/app/components/TransitionLink';
 import { sanityFetch, client } from '@/app/lib/sanity.client';
@@ -6,6 +7,8 @@ import { Eye } from 'lucide-react';
 import { notFound } from 'next/navigation';
 import ScrollToTop from '@/app/components/ScrollToTop';
 import { siteConfig } from '@/app/lib/site.config';
+import PixelFluidBackground from '@/app/components/PixelFluidBackground';
+import { TagBadge } from '@/app/components/blog/TagBadge';
 import type { Metadata } from 'next';
 
 // Generate static params for all tags
@@ -111,8 +114,10 @@ export default async function TagPage({ params }: PageParams) {
   }
 
   return (
-    <PageLayout>
-      <ScrollToTop />
+    <>
+      <PixelFluidBackground />
+      <PageLayout>
+        <ScrollToTop />
       <div className="max-w-none">
         <div className="mb-8">
           <TransitionLink
@@ -159,12 +164,7 @@ export default async function TagPage({ params }: PageParams) {
                         {post.tags && post.tags.length > 0 && (
                           <div className="flex gap-1">
                             {post.tags.map(t => (
-                              <span
-                                key={t._id}
-                                className="text-xs px-2 py-0.5 rounded-full bg-muted text-muted-foreground"
-                              >
-                                {t.title}
-                              </span>
+                              <TagBadge key={t._id} tag={t} size="sm" />
                             ))}
                           </div>
                         )}
@@ -180,6 +180,7 @@ export default async function TagPage({ params }: PageParams) {
           </ul>
         )}
       </div>
-    </PageLayout>
+      </PageLayout>
+    </>
   );
 }

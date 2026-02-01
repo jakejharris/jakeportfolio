@@ -1,9 +1,11 @@
+import '@/app/css/page.css';
 import PageLayout from '@/app/components/PageLayout';
 import TransitionLink from '@/app/components/TransitionLink';
 import { sanityFetch } from '@/app/lib/sanity.client';
 import { Tag } from '@/app/types/sanity';
 import ScrollToTop from '@/app/components/ScrollToTop';
 import { siteConfig } from '@/app/lib/site.config';
+import PixelFluidBackground from '@/app/components/PixelFluidBackground';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
@@ -44,8 +46,10 @@ export default async function TagsIndexPage() {
   const activeTags = tags.filter(tag => tag.postCount > 0);
 
   return (
-    <PageLayout>
-      <ScrollToTop />
+    <>
+      <PixelFluidBackground />
+      <PageLayout>
+        <ScrollToTop />
       <div className="max-w-none">
         <div className="mb-8">
           <TransitionLink
@@ -91,6 +95,7 @@ export default async function TagsIndexPage() {
           </div>
         )}
       </div>
-    </PageLayout>
+      </PageLayout>
+    </>
   );
 }
