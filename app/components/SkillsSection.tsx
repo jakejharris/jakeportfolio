@@ -1,9 +1,11 @@
 import { Badge } from "./ui/badge";
 
 const SKILLS = {
-  languages: ["TypeScript", "Python", "JavaScript", "SQL", "Go"],
+  languages: ["TypeScript", "Python", "JavaScript", "SQL", "Go", "C#", ".NET"],
   frameworks: ["React", "Next.js", "Node.js", "FastAPI", "Tailwind CSS"],
-  tools: ["Git", "Docker", "PostgreSQL", "Redis", "AWS"],
+  databases: ["PostgreSQL", "Redis", "CosmosDB"],
+  cloud: ["AWS", "Docker", "Kubernetes"],
+  architecture: ["Microservices", "REST APIs", "Event-Driven"],
   ai: ["OpenAI API", "LangChain", "RAG", "Prompt Engineering"],
 };
 

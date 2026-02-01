@@ -9,16 +9,25 @@ export default function Footer() {
         <div className="text-sm">
           © Jake Harris {currentYear}
         </div>
-        <div className="text-sm">
-          <Button 
-            variant="ghost" 
-            size="sm" 
+        <div className="text-sm flex items-center">
+          <Button
+            variant="ghost"
+            size="sm"
+            asChild
+          >
+            <a href="/blog">
+              Blog
+            </a>
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
             asChild
             className="flex items-center gap-1"
           >
-            <a 
-              href="https://github.com/jakejharris/jakeportfolio" 
-              target="_blank" 
+            <a
+              href="https://github.com/jakejharris/jakeportfolio"
+              target="_blank"
               rel="noopener noreferrer"
             >
               Source <FaGithub className="ps-1 w-4 h-4" />
