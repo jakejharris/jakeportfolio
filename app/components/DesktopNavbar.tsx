@@ -44,6 +44,11 @@ export default function DesktopNavbar({ scrolled, visible }: DesktopNavbarProps)
                 <span className="animated-underline font-semibold">Contact</span>
               </TransitionLink>
             </li>
+            <li className="flex items-center justify-center">
+              <a href="/JH Resume 2-13-25 Fullstack.pdf" target="_blank" rel="noopener noreferrer" className="px-3 py-2">
+                <span className="animated-underline font-semibold">Resume</span>
+              </a>
+            </li>
           </ul>
         </div>
       </div>

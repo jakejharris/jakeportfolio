@@ -7,6 +7,7 @@ import '../css/animations.css';
 import { MdArrowForward } from 'react-icons/md';
 import ScrollToTop from '../components/ScrollToTop';
 import { siteConfig } from '../lib/site.config';
+import SkillsSection from '../components/SkillsSection';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
@@ -100,6 +101,10 @@ export default function AboutPage() {
                         ))}
                     </div>
                     <div className="clear-both"></div>
+                </div>
+
+                <div className="mb-8">
+                    <SkillsSection />
                 </div>
 
                 <ul className="space-y-2">
