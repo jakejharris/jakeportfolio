@@ -1,5 +1,6 @@
 import './css/page.css'
 import './css/animations.css'
+import './css/hero.css'
 import PageLayout from './components/PageLayout';
 import TransitionLink from './components/TransitionLink';
 import { sanityFetch } from './lib/sanity.client';
