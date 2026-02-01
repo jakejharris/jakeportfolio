@@ -13,6 +13,7 @@ import {
 import ScrollToTop from './components/ScrollToTop';
 import PixelFluidBackground from './components/PixelFluidBackground';
 import { TagBadge } from './components/blog/TagBadge';
+import HeroSection from './components/HeroSection';
 
 // Query to fetch posts from Sanity
 const query = `*[_type == "post"] | order(featured desc, publishedAt desc) {
@@ -38,8 +39,9 @@ export default async function HomePage() {
       <PixelFluidBackground />
       <PageLayout>
         <ScrollToTop />
+      <HeroSection />
       <div className="max-w-none">
-        {/* <h2 className="mb-4 text-xl md:text-2xl font-bold">Recent Posts</h2> */}
+        <h2 className="text-xl font-semibold mb-4">Recent Writing</h2>
         <ul className="space-y-2 mb-8">
           {posts.map((post) => (
             <li key={post._id} className="relative">
