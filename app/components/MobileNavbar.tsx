@@ -66,6 +66,12 @@ export default function MobileNavbar({ scrolled, visible }: MobileNavbarProps) {
                   Home
                 </button>
                 <button
+                  onClick={() => handleNavClick('/blog#')}
+                  className="border border-border w-full text-center text-xl py-3 px-6 rounded-md transition-all duration-150 hover:bg-accent active:scale-95 active:bg-accent/80"
+                >
+                  Blog
+                </button>
+                <button
                   onClick={() => handleNavClick('/about#')}
                   className="border border-border w-full text-center text-xl py-3 px-6 rounded-md transition-all duration-150 hover:bg-accent active:scale-95 active:bg-accent/80"
                 >
