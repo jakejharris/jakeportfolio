@@ -36,6 +36,8 @@ export default function PixelFluidBackground({ className }: PixelFluidBackground
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationRef = useRef<number>(0);
   const timeRef = useRef(0);
+  const lastFrameTimeRef = useRef(0);
+  const frameIntervalRef = useRef(22); // Default 45fps (~22ms), mobile will be 33ms (30fps)
   const pointerRef = useRef({ x: -1000, y: -1000, active: false });
   const configRef = useRef({
     pixelSize: 18,
@@ -108,10 +110,21 @@ export default function PixelFluidBackground({ className }: PixelFluidBackground
     return h;
   }, []);
 
-  // Draw function
-  const draw = useCallback(() => {
+  // Draw function with frame rate throttling
+  const draw = useCallback((timestamp?: number) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
+
+    // Frame rate throttling - skip frame if not enough time has passed
+    const now = timestamp || performance.now();
+    const elapsed = now - lastFrameTimeRef.current;
+    if (elapsed < frameIntervalRef.current) {
+      if (isVisible && !reducedMotion) {
+        animationRef.current = requestAnimationFrame(draw);
+      }
+      return;
+    }
+    lastFrameTimeRef.current = now - (elapsed % frameIntervalRef.current);
 
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
@@ -206,7 +219,7 @@ export default function PixelFluidBackground({ className }: PixelFluidBackground
     }
   }, [isDark, getWaveHeight, isVisible, reducedMotion]);
 
-  // Resize handler - also adjusts speed based on screen size
+  // Resize handler - also adjusts speed and frame rate based on screen size
   const resize = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -217,6 +230,9 @@ export default function PixelFluidBackground({ className }: PixelFluidBackground
     // Original speed was 0.02; mobile is 30% slower, desktop is 60% slower
     const isMobile = window.innerWidth < 768;
     configRef.current.speed = isMobile ? 0.014 : 0.008;
+
+    // Frame rate throttling: 30fps on mobile (~33ms), 45fps on desktop (~22ms)
+    frameIntervalRef.current = isMobile ? 33 : 22;
   }, []);
 
   // Pointer update handler
@@ -279,13 +295,20 @@ export default function PixelFluidBackground({ className }: PixelFluidBackground
     };
     document.addEventListener("visibilitychange", handleVisibilityChange);
 
-    // Watch for accent changes via MutationObserver
+    // Watch for accent changes via MutationObserver with debouncing
+    let mutationTimeout: NodeJS.Timeout | null = null;
     const observer = new MutationObserver((mutations) => {
-      mutations.forEach((mutation) => {
-        if (mutation.attributeName === "data-accent" || mutation.attributeName === "class") {
-          updateBaseHue();
-        }
-      });
+      // Debounce: only process after 50ms of no changes
+      if (mutationTimeout) {
+        clearTimeout(mutationTimeout);
+      }
+      mutationTimeout = setTimeout(() => {
+        mutations.forEach((mutation) => {
+          if (mutation.attributeName === "data-accent" || mutation.attributeName === "class") {
+            updateBaseHue();
+          }
+        });
+      }, 50);
     });
 
     observer.observe(document.documentElement, {
@@ -295,6 +318,9 @@ export default function PixelFluidBackground({ className }: PixelFluidBackground
 
     return () => {
       cancelAnimationFrame(animationRef.current);
+      if (mutationTimeout) {
+        clearTimeout(mutationTimeout);
+      }
       window.removeEventListener("resize", resize);
       window.removeEventListener("mousemove", updatePointer);
       window.removeEventListener("touchmove", updatePointer);
@@ -318,7 +344,11 @@ export default function PixelFluidBackground({ className }: PixelFluidBackground
 
   return (
     <div className={`fixed inset-0 -z-10 ${className || ""}`}>
-      <canvas ref={canvasRef} className="block w-full h-full" />
+      <canvas
+        ref={canvasRef}
+        className="block w-full h-full"
+        style={{ willChange: "transform" }}
+      />
 
       {/* Scanlines overlay */}
       <div
