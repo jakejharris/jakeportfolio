@@ -36,10 +36,10 @@
     overflow: hidden;
     cursor: pointer;
 
-    /* Glass Effect */
+    /* Glass Effect - reduced blur for better GPU performance */
     background: var(--glass-bg);
-    backdrop-filter: blur(16px) saturate(120%);
-    -webkit-backdrop-filter: blur(16px) saturate(120%);
+    backdrop-filter: blur(8px) saturate(120%);
+    -webkit-backdrop-filter: blur(8px) saturate(120%);
 
     /* Border & Shape */
     border: 1px solid var(--page-border-color);
