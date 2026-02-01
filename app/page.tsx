@@ -12,6 +12,7 @@ import {
 } from './components/hover-card';
 import ScrollToTop from './components/ScrollToTop';
 import PixelFluidBackground from './components/PixelFluidBackground';
+import { TagBadge } from './components/blog/TagBadge';
 
 // Query to fetch posts from Sanity
 const query = `*[_type == "post"] | order(featured desc, publishedAt desc) {
@@ -65,12 +66,7 @@ export default async function HomePage() {
                           {post.tags && post.tags.length > 0 && (
                             <div className="flex gap-1">
                               {post.tags.map(tag => (
-                                <span 
-                                  key={tag._id} 
-                                  className="text-xs px-2 py-0.5 rounded-full bg-muted text-muted-foreground"
-                                >
-                                  {tag.title}
-                                </span>
+                                <TagBadge key={tag._id} tag={tag} size="sm" />
                               ))}
                             </div>
                           )}

@@ -14,6 +14,8 @@ import TableOfContents from '@/app/components/TableOfContents';
 import { BlogPostingJsonLd } from '@/app/components/JsonLd';
 import { siteConfig } from '@/app/lib/site.config';
 import type { Metadata } from 'next';
+import { RelatedPosts } from '@/app/components/blog/RelatedPosts';
+import { TagBadge } from '@/app/components/blog/TagBadge';
 
 // Generate static params for all blog posts
 export async function generateStaticParams() {
@@ -434,12 +436,7 @@ export default async function PostPage({ params }: PageParams) {
             {post.tags && post.tags.length > 0 && (
               <div className="flex gap-2">
                 {post.tags.map(tag => (
-                  <span
-                    key={tag._id}
-                    className="px-2 py-0.5 rounded-full bg-muted text-muted-foreground"
-                  >
-                    {tag.title}
-                  </span>
+                  <TagBadge key={tag._id} tag={tag} size="sm" />
                 ))}
               </div>
             )}
@@ -487,6 +484,14 @@ export default async function PostPage({ params }: PageParams) {
                 })}
               </div>
             </div>
+          )}
+
+          {/* Related Posts */}
+          {post.tags && post.tags.length > 0 && (
+            <RelatedPosts
+              currentPostId={post._id}
+              tagIds={post.tags.map(tag => tag._id)}
+            />
           )}
         </div>
         </PageLayout>

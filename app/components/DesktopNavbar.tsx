@@ -29,6 +29,11 @@ export default function DesktopNavbar({ scrolled, visible }: DesktopNavbarProps)
               <ThemeToggle />
             </li>
             <li className="flex items-center justify-center">
+              <TransitionLink href="/blog#" scroll={true} className="px-3 py-2">
+                <span className="animated-underline font-semibold">Blog</span>
+              </TransitionLink>
+            </li>
+            <li className="flex items-center justify-center">
               <TransitionLink href="/about#" scroll={true} className="px-3 py-2">
                 <span className="animated-underline font-semibold">About</span>
               </TransitionLink>
