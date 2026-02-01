@@ -1,0 +1,143 @@
+{
+  "auditors": [
+    {
+      "id": 1,
+      "name": "First Impression Auditor",
+      "focus": "The critical first 5 seconds",
+      "coreQuestion": "Who is this person?",
+      "questions": [
+        "What do I understand about this person within 5 seconds?",
+        "Is there a clear 'this is who I am and what I do' statement?",
+        "Does the page feel like a portfolio or a generic blog template?",
+        "What emotion does the landing experience evoke?",
+        "Would I remember this site tomorrow?"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "Recruiter/Hiring Manager",
+      "focus": "Can I quickly assess if this person is hireable?",
+      "coreQuestion": "Should I hire them?",
+      "questions": [
+        "Where are your skills and tech stack listed?",
+        "Can I find your resume/CV in one click?",
+        "Are there case studies or project breakdowns?",
+        "What's your contact info? How do I reach you?",
+        "Do I see evidence of real work, or just blog posts?",
+        "Is there social proof (testimonials, companies worked with)?"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "Accessibility Advocate",
+      "focus": "WCAG compliance and inclusive design",
+      "coreQuestion": "Can everyone use this?",
+      "questions": [
+        "Does the pixel fluid background cause issues for vestibular disorders?",
+        "Are there prefers-reduced-motion fallbacks?",
+        "What's the color contrast ratio on muted text over glass cards?",
+        "Can I navigate entirely with keyboard?",
+        "Do screen readers announce post metadata sensibly?",
+        "Are focus states visible and clear?"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "Performance Engineer",
+      "focus": "Speed, efficiency, Core Web Vitals",
+      "coreQuestion": "Is this fast?",
+      "questions": [
+        "What's the JS bundle size? Is the canvas animation blocking?",
+        "How does the site perform on a 3G connection?",
+        "Is the pixel fluid animation killing battery on mobile?",
+        "Are images optimized? Is there lazy loading?",
+        "What's the Lighthouse score?",
+        "Does the animation affect LCP/CLS/INP?"
+      ]
+    },
+    {
+      "id": 5,
+      "name": "SEO Specialist",
+      "focus": "Discoverability and search presence",
+      "coreQuestion": "Can people find this?",
+      "questions": [
+        "Does the homepage have proper meta title/description?",
+        "Is there structured data (Person schema, BlogPosting)?",
+        "Are blog posts generating organic traffic?",
+        "Is there an XML sitemap and robots.txt?",
+        "Are URLs semantic and readable?",
+        "Is there an RSS feed for subscribers?"
+      ]
+    },
+    {
+      "id": 6,
+      "name": "Mobile Experience Tester",
+      "focus": "Touch-first, small-screen reality",
+      "coreQuestion": "Does this work on my phone?",
+      "questions": [
+        "Are tap targets large enough (44x44px minimum)?",
+        "Does the glass blur perform well on older phones?",
+        "Is the HoverCard absence handled gracefully?",
+        "How does the navbar behave on scroll?",
+        "Is text readable without zooming?",
+        "Does the animation drain battery noticeably?"
+      ]
+    },
+    {
+      "id": 7,
+      "name": "Brand Strategist",
+      "focus": "Personal identity and differentiation",
+      "coreQuestion": "Is this memorable?",
+      "questions": [
+        "What makes Jake's portfolio different from 1000 others?",
+        "Is there a consistent visual language throughout?",
+        "Does the accent color system reinforce identity?",
+        "What's the personality/voice? Professional? Playful? Technical?",
+        "Does the design match the type of work Jake wants to attract?",
+        "Is there a memorable hook or signature element?"
+      ]
+    },
+    {
+      "id": 8,
+      "name": "Content Strategist",
+      "focus": "Messaging, structure, and narrative",
+      "coreQuestion": "Is this organized?",
+      "questions": [
+        "Is it clear what topics you write about?",
+        "Are posts categorized in a discoverable way?",
+        "Is there an 'about' page that tells your story?",
+        "What's the reading experience like on a blog post?",
+        "Is there a content hierarchy (featured → recent → archive)?",
+        "Are there calls-to-action (newsletter, follow, contact)?"
+      ]
+    },
+    {
+      "id": 9,
+      "name": "Conversion Optimizer",
+      "focus": "What action should visitors take?",
+      "coreQuestion": "What should I do next?",
+      "questions": [
+        "What's the primary goal of this site? (Get hired? Build audience? Showcase work?)",
+        "Is there a clear CTA above the fold?",
+        "Can I subscribe to updates?",
+        "Is there a contact form or scheduling link?",
+        "Are social links prominent?",
+        "What happens after someone reads a post? Dead end or funnel?"
+      ]
+    },
+    {
+      "id": 10,
+      "name": "Motion Designer",
+      "focus": "Animation purpose and polish",
+      "coreQuestion": "Do animations add value?",
+      "questions": [
+        "Does the pixel fluid animation serve the brand or just look cool?",
+        "Are entrance animations enhancing comprehension or causing delay?",
+        "Is there animation fatigue after extended browsing?",
+        "Do hover states feel responsive or sluggish?",
+        "Is there consistency in easing curves across interactions?",
+        "Could animations be reduced without losing character?"
+      ]
+    }
+  ]
+}
