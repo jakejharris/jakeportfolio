@@ -5,6 +5,9 @@ export default function AccentScript() {
         var accent = localStorage.getItem('accent-index');
         if (accent && ['1','2','3','4'].includes(accent)) {
           document.documentElement.setAttribute('data-accent', accent);
+        } else {
+          // Default to blue (index 2) for brand consistency
+          document.documentElement.setAttribute('data-accent', '2');
         }
       } catch (e) {}
     })();
