@@ -2,6 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Motion Design System */
+@import './css/motion-tokens.css';
+
 @layer base {
   :root {
     --background: 0 0% 100%;
@@ -147,4 +150,13 @@
 .portable-text p strong{
   font-size: 1.125rem;
   line-height: 1.75;
+}
+
+/* Global Reduced Motion: Disable all animations for users who prefer reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
