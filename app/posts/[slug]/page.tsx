@@ -16,6 +16,7 @@ import { siteConfig } from '@/app/lib/site.config';
 import type { Metadata } from 'next';
 import { RelatedPosts } from '@/app/components/blog/RelatedPosts';
 import { TagBadge } from '@/app/components/blog/TagBadge';
+import PostCTA from '@/app/components/PostCTA';
 
 // Generate static params for all blog posts
 export async function generateStaticParams() {
@@ -493,6 +494,9 @@ export default async function PostPage({ params }: PageParams) {
               tagIds={post.tags.map(tag => tag._id)}
             />
           )}
+
+          {/* Post CTA */}
+          <PostCTA />
         </div>
         </PageLayout>
       </>
