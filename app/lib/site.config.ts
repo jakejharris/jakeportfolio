@@ -14,6 +14,7 @@ export const siteConfig = {
     linkedin: "https://linkedin.com/in/jakejh",
     github: "https://github.com/jakejharris",
   },
+  keywords: ["Jake Harris", "Full Stack Developer", "AI Developer", "React", "Next.js", "TypeScript", "Web Development"],
   locale: "en_US",
 } as const;
 

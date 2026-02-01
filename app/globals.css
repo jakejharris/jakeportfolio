@@ -100,6 +100,7 @@
 }
 
 /* Accent color system - defined via data-accent attribute */
+/* Brand: Blue (accent index 2) is the signature color */
 :root {
   --accent-color: hsl(0 0% 9%);
 }
