@@ -8,7 +8,7 @@ export default function PostCTA() {
         <p className="text-muted-foreground mb-4">
           Let&apos;s connect! I&apos;m always open to discussing new projects and opportunities.
         </p>
-        <div className="flex gap-3">
+        <div className="flex flex-col sm:flex-row gap-3">
           <TransitionLink
             href="/contact"
             className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:opacity-90 transition-opacity text-sm"
