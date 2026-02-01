@@ -1,0 +1,31 @@
+/* Motion Design Tokens
+ * Centralized animation timing and easing values for consistent motion throughout the site.
+ * Use these CSS custom properties instead of hardcoded values.
+ */
+
+:root {
+  /* Duration Tokens */
+  --motion-duration-instant: 100ms;
+  --motion-duration-fast: 150ms;
+  --motion-duration-normal: 250ms;
+  --motion-duration-slow: 400ms;
+  --motion-duration-deliberate: 600ms;
+
+  /* Easing Tokens (Material Design 3 inspired) */
+  --motion-ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+  --motion-ease-decelerate: cubic-bezier(0, 0, 0.2, 1);
+  --motion-ease-accelerate: cubic-bezier(0.4, 0, 1, 1);
+  --motion-ease-emphasized: cubic-bezier(0.16, 1, 0.3, 1);
+  --motion-ease-linear: linear;
+}
+
+/* Reduced Motion: Disable animations for users who prefer reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --motion-duration-instant: 0ms;
+    --motion-duration-fast: 0ms;
+    --motion-duration-normal: 0ms;
+    --motion-duration-slow: 0ms;
+    --motion-duration-deliberate: 0ms;
+  }
+}

@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef, useCallback, useState } from "react";
 import { useTheme } from "next-themes";
+import { useReducedMotion } from "@/app/hooks/use-reduced-motion";
 
 // Feature flag for pixel fluid background
 const ENABLE_PIXEL_FLUID_BACKGROUND = true;
@@ -47,6 +48,8 @@ export default function PixelFluidBackground({ className }: PixelFluidBackground
   });
   const { theme, resolvedTheme } = useTheme();
   const isDark = resolvedTheme === "dark";
+  const reducedMotion = useReducedMotion();
+  const [isVisible, setIsVisible] = useState(true);
 
   // Get the current accent color based on data-accent attribute
   const getAccentColor = useCallback(() => {
@@ -197,8 +200,11 @@ export default function PixelFluidBackground({ className }: PixelFluidBackground
     }
 
     timeRef.current += configRef.current.speed;
-    animationRef.current = requestAnimationFrame(draw);
-  }, [isDark, getWaveHeight]);
+    // Only continue animation if visible and motion is allowed
+    if (isVisible && !reducedMotion) {
+      animationRef.current = requestAnimationFrame(draw);
+    }
+  }, [isDark, getWaveHeight, isVisible, reducedMotion]);
 
   // Resize handler - also adjusts speed based on screen size
   const resize = useCallback(() => {
@@ -242,18 +248,36 @@ export default function PixelFluidBackground({ className }: PixelFluidBackground
     updateBaseHue();
     resize();
 
-    // Start animation
-    animationRef.current = requestAnimationFrame(draw);
+    // Only start animation if motion is allowed
+    if (!reducedMotion) {
+      animationRef.current = requestAnimationFrame(draw);
+    } else {
+      // For reduced motion, draw a single static frame
+      draw();
+    }
 
     // Handle resize
     window.addEventListener("resize", resize);
 
-    // Handle pointer/touch interaction
-    window.addEventListener("mousemove", updatePointer);
-    window.addEventListener("touchmove", updatePointer, { passive: true });
-    window.addEventListener("touchstart", updatePointer, { passive: true });
-    window.addEventListener("touchend", clearPointer);
-    window.addEventListener("mouseleave", clearPointer);
+    // Handle pointer/touch interaction (only if motion is allowed)
+    if (!reducedMotion) {
+      window.addEventListener("mousemove", updatePointer);
+      window.addEventListener("touchmove", updatePointer, { passive: true });
+      window.addEventListener("touchstart", updatePointer, { passive: true });
+      window.addEventListener("touchend", clearPointer);
+      window.addEventListener("mouseleave", clearPointer);
+    }
+
+    // Handle visibility changes (pause animation when tab is hidden)
+    const handleVisibilityChange = () => {
+      const visible = document.visibilityState === "visible";
+      setIsVisible(visible);
+      if (visible && !reducedMotion) {
+        // Resume animation when tab becomes visible again
+        animationRef.current = requestAnimationFrame(draw);
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
 
     // Watch for accent changes via MutationObserver
     const observer = new MutationObserver((mutations) => {
@@ -277,9 +301,10 @@ export default function PixelFluidBackground({ className }: PixelFluidBackground
       window.removeEventListener("touchstart", updatePointer);
       window.removeEventListener("touchend", clearPointer);
       window.removeEventListener("mouseleave", clearPointer);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
       observer.disconnect();
     };
-  }, [draw, resize, updateBaseHue, updatePointer, clearPointer]);
+  }, [draw, resize, updateBaseHue, updatePointer, clearPointer, reducedMotion]);
 
   // Re-update hue when theme changes
   useEffect(() => {

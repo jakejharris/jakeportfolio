@@ -1,7 +1,7 @@
 /* Navbar animations and transitions */
 .navbar-sticky {
   transform: translateY(0);
-  transition: transform 0.3s ease;
+  transition: transform var(--motion-duration-normal) var(--motion-ease-standard);
   will-change: transform;
   background-color: hsl(var(--secondary));
 }
