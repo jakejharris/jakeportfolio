@@ -1,6 +1,6 @@
 import PageLayout from '@/app/components/PageLayout';
 import Image from 'next/image';
-import { sanityFetch, urlFor } from '@/app/lib/sanity.client';
+import { sanityFetch, urlFor, client } from '@/app/lib/sanity.client';
 import { PortableText, PortableTextReactComponents } from '@portabletext/react';
 import { notFound } from 'next/navigation';
 import { FaGithub, FaGlobe, FaLinkedin, FaTwitter, FaYoutube, FaCodepen, FaExternalLinkAlt } from 'react-icons/fa';
@@ -11,7 +11,25 @@ import React from 'react';
 import ScrollToTop from '@/app/components/ScrollToTop';
 import dynamic from 'next/dynamic';
 import TableOfContents from '@/app/components/TableOfContents';
+import { BlogPostingJsonLd } from '@/app/components/JsonLd';
+import { siteConfig } from '@/app/lib/site.config';
 import type { Metadata } from 'next';
+
+// Generate static params for all blog posts
+export async function generateStaticParams() {
+  try {
+    const posts = await client.fetch<{ slug: { current: string } }[]>(
+      `*[_type == "post"] { slug }`
+    );
+
+    return posts.map((post) => ({
+      slug: post.slug.current,
+    }));
+  } catch (error) {
+    console.warn('generateStaticParams: Could not fetch posts from Sanity:', error);
+    return [];
+  }
+}
 
 // Generate dynamic metadata for each post
 export async function generateMetadata({
@@ -44,13 +62,19 @@ export async function generateMetadata({
     imageUrl = urlFor(post.mainImage).width(1200).height(630).url();
   }
 
+  const canonicalUrl = `${siteConfig.url}/posts/${slug}`;
+
   return {
     title: post.title,
     description,
+    alternates: {
+      canonical: canonicalUrl,
+    },
     openGraph: {
       title: post.title,
       description,
       type: 'article',
+      url: canonicalUrl,
       ...(imageUrl && { images: [{ url: imageUrl, width: 1200, height: 630 }] }),
     },
     twitter: {
@@ -354,9 +378,23 @@ export default async function PostPage({ params }: PageParams) {
     notFound();
   }
 
+  // Generate image URL for JSON-LD if available
+  const imageUrl = post.mainImage?.asset
+    ? urlFor(post.mainImage).width(1200).height(630).url()
+    : undefined;
+
   return (
-      <PageLayout>
-        <ScrollToTop />
+      <>
+        <BlogPostingJsonLd
+          title={post.title}
+          description={post.excerpt || `Read ${post.title} by Jake Harris`}
+          url={`${siteConfig.url}/posts/${slug}`}
+          datePublished={post.publishedAt}
+          dateModified={post._updatedAt}
+          imageUrl={imageUrl}
+        />
+        <PageLayout>
+          <ScrollToTop />
         <div className="max-w-none">
           {/* <Link 
           href="/" 
@@ -451,6 +489,7 @@ export default async function PostPage({ params }: PageParams) {
             </div>
           )}
         </div>
-      </PageLayout>
+        </PageLayout>
+      </>
   );
 } 
