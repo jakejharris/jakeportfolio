@@ -84,6 +84,14 @@ export default function MobileNavbar({ scrolled, visible }: MobileNavbarProps) {
                 >
                   Contact
                 </button>
+                <a
+                  href="/JH Resume 2-13-25 Fullstack.pdf"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="border border-border w-full text-center text-xl py-3 px-6 rounded-md transition-all duration-150 hover:bg-accent active:scale-95 active:bg-accent/80"
+                >
+                  Resume
+                </a>
               </div>
               <DrawerFooter className="mt-auto pt-4">
                 <div className="flex flex-col items-center text-center gap-2 pb-2">
