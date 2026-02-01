@@ -11,6 +11,7 @@ import { TransitionProvider } from "./components/TransitionProvider";
 import TransitionOverlay from "./components/TransitionOverlay";
 import { PersonJsonLd, WebSiteJsonLd } from "./components/JsonLd";
 import { siteConfig } from "./lib/site.config";
+import SkipLink from "./components/SkipLink";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -60,6 +61,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <WebSiteJsonLd />
       </head>
       <body className="min-h-screen bg-background text-foreground flex flex-col font-sans">
+        <SkipLink />
         <Toaster />
         <ThemeProvider
           attribute="class"
@@ -70,7 +72,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <TransitionProvider>
             <TransitionOverlay />
             <Navbar />
-            <main className="flex-1">
+            <main id="main-content" tabIndex={-1} className="flex-1">
               {children}
               {process.env.NODE_ENV === 'production' && (
                 <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID!} />

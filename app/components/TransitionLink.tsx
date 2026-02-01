@@ -2,7 +2,7 @@
 
 import Link, { LinkProps } from "next/link";
 import { useTransition } from "./TransitionProvider";
-import { ReactNode, MouseEvent } from "react";
+import { ReactNode, MouseEvent, KeyboardEvent, useRef } from "react";
 
 interface TransitionLinkProps extends LinkProps {
   children: ReactNode;
@@ -11,21 +11,35 @@ interface TransitionLinkProps extends LinkProps {
 
 export default function TransitionLink({ children, className, href, ...props }: TransitionLinkProps) {
   const { setOrigin } = useTransition();
+  const linkRef = useRef<HTMLAnchorElement>(null);
 
-  const handleClick = (e: MouseEvent<HTMLAnchorElement>) => {
+  const triggerTransition = (x: number, y: number) => {
     // Extract pathname without hash
     const hrefString = typeof href === "string" ? href : href.pathname || "/";
     const destination = hrefString.split("#")[0] || "/";
 
     setOrigin({
-      x: e.clientX,
-      y: e.clientY,
+      x,
+      y,
       destination,
     });
   };
 
+  const handleClick = (e: MouseEvent<HTMLAnchorElement>) => {
+    triggerTransition(e.clientX, e.clientY);
+  };
+
+  const handleKeyDown = (e: KeyboardEvent<HTMLAnchorElement>) => {
+    if (e.key === "Enter" || e.key === " ") {
+      if (linkRef.current) {
+        const rect = linkRef.current.getBoundingClientRect();
+        triggerTransition(rect.left + rect.width / 2, rect.top + rect.height / 2);
+      }
+    }
+  };
+
   return (
-    <Link href={href} {...props} className={className} onClick={handleClick}>
+    <Link ref={linkRef} href={href} {...props} className={className} onClick={handleClick} onKeyDown={handleKeyDown}>
       {children}
     </Link>
   );
