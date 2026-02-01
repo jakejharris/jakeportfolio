@@ -9,7 +9,7 @@ export default function HeroSection() {
       <p className="text-lg text-muted-foreground mb-6">
         Full Stack Developer building AI-powered web applications and digital experiences.
       </p>
-      <div className="flex gap-4">
+      <div className="flex flex-col sm:flex-row gap-4">
         <TransitionLink
           href="/about"
           className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:opacity-90 transition-opacity"
