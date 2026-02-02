@@ -48,10 +48,17 @@ export default function PixelFluidBackground({ className }: PixelFluidBackground
     isGrayscale: false,
     grayscaleInverted: false,
   });
-  const { theme, resolvedTheme } = useTheme();
-  const isDark = resolvedTheme === "dark";
+  const { resolvedTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
   const reducedMotion = useReducedMotion();
   const [isVisible, setIsVisible] = useState(true);
+
+  // Wait for theme to resolve (avoid hydration mismatch)
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const isDark = mounted ? resolvedTheme === "dark" : true;
 
   // Get the current accent color based on data-accent attribute
   const getAccentColor = useCallback(() => {
@@ -334,8 +341,10 @@ export default function PixelFluidBackground({ className }: PixelFluidBackground
 
   // Re-update hue when theme changes
   useEffect(() => {
-    updateBaseHue();
-  }, [theme, resolvedTheme, updateBaseHue]);
+    if (mounted) {
+      updateBaseHue();
+    }
+  }, [mounted, resolvedTheme, updateBaseHue]);
 
   // Return null if feature is disabled
   if (!ENABLE_PIXEL_FLUID_BACKGROUND) {
