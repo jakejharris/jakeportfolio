@@ -69,18 +69,13 @@ export default function HeroSection() {
         </p>
 
         {/* CTA buttons */}
-        <div className="flex flex-col sm:flex-row gap-3 hero-animate-in hero-delay-3 mb-6">
+        <div className="flex flex-col sm:flex-row gap-3 hero-animate-in hero-delay-3">
           <TransitionLink href="/about" className="hero-cta-primary">
             Explore My Work
           </TransitionLink>
           <TransitionLink href="/contact" className="hero-cta-secondary">
             Get in Touch
           </TransitionLink>
-        </div>
-
-        {/* Subtle credibility line */}
-        <div className="hero-credibility hero-animate-in hero-delay-4">
-          Building for the web with modern frameworks and AI tools
         </div>
       </div>
     </section>
