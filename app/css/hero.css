@@ -29,13 +29,11 @@
 /* Subtle accent glow on hover */
 @media (hover: hover) {
     .heroContainer {
-        transition: box-shadow var(--motion-duration-slow) var(--motion-ease-emphasized);
+        transition: border-color var(--motion-duration-slow) var(--motion-ease-emphasized);
     }
 
     .heroContainer:hover {
-        box-shadow:
-            var(--glass-shadow-hover),
-            0 0 60px -20px var(--accent-color);
+        border-color: var(--accent-color);
     }
 }
 
@@ -147,22 +145,6 @@
     transform: translateY(0);
 }
 
-/* Credibility line */
-.hero-credibility {
-    font-size: 0.875rem;
-    color: hsl(var(--muted-foreground));
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.hero-credibility::before {
-    content: '';
-    width: 24px;
-    height: 1px;
-    background: hsl(var(--muted-foreground) / 0.4);
-}
-
 /* Entrance animations */
 .hero-animate-in {
     animation: hero-fade-up var(--motion-duration-slow) var(--motion-ease-decelerate) forwards;
@@ -195,9 +177,5 @@
     .hero-animate-in {
         animation: none;
         opacity: 1;
-    }
-
-    .heroContainer:hover {
-        box-shadow: var(--glass-shadow-hover);
     }
 }

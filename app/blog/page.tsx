@@ -1,4 +1,5 @@
 import '@/app/css/page.css';
+import '@/app/css/hero.css';
 import PageLayout from '@/app/components/PageLayout';
 import TransitionLink from '@/app/components/TransitionLink';
 import { sanityFetch } from '@/app/lib/sanity.client';
@@ -88,10 +89,12 @@ export default async function BlogPage() {
       <PageLayout>
         <ScrollToTop />
       <div className="max-w-none">
-        <h1 className="text-2xl md:text-3xl font-bold mb-2">Blog</h1>
-        <p className="text-muted-foreground mb-8">
-          Articles and insights about web development, AI, and building digital experiences.
-        </p>
+        <div className="heroContainer mb-8">
+          <h1 className="text-2xl md:text-3xl font-bold mb-2">Blog</h1>
+          <p className="text-muted-foreground">
+            Articles and insights about web development, AI, and building digital experiences.
+          </p>
+        </div>
 
         {/* Tag Cloud */}
         {tags.length > 0 && (
