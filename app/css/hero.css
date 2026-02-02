@@ -85,9 +85,9 @@
 
 /* Typewriter effect */
 .typewriter-container {
-    display: inline-flex;
-    align-items: baseline;
-    min-height: 1.5em;
+    display: inline-block;
+    min-width: 11ch; /* Width of longest word "experiences" */
+    text-align: left;
 }
 
 .typewriter-text {
