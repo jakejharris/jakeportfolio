@@ -18,6 +18,10 @@
     padding: 2rem 1.5rem;
     position: relative;
     overflow: hidden;
+
+    /* Cursor-tracking glow custom properties */
+    --glow-x: 50%;
+    --glow-y: 50%;
 }
 
 @media (min-width: 768px) {
@@ -26,14 +30,56 @@
     }
 }
 
-/* Subtle accent glow on hover */
+/* Cursor-tracking glow effect for hover devices */
 @media (hover: hover) {
     .heroContainer {
         transition: border-color var(--motion-duration-slow) var(--motion-ease-emphasized);
     }
 
+    .heroContainer::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: radial-gradient(
+            600px circle at var(--glow-x) var(--glow-y),
+            color-mix(in srgb, var(--accent-color) 15%, transparent),
+            transparent 40%
+        );
+        opacity: 0;
+        transition: opacity var(--motion-duration-fast) var(--motion-ease-standard);
+        pointer-events: none;
+        z-index: 0;
+    }
+
     .heroContainer:hover {
         border-color: var(--accent-color);
+    }
+
+    .heroContainer:hover::before {
+        opacity: 1;
+    }
+}
+
+/* Mobile fallback: subtle constant glow at center */
+@media (hover: none), (pointer: coarse) {
+    .heroContainer::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: radial-gradient(
+            400px circle at 50% 50%,
+            color-mix(in srgb, var(--accent-color) 8%, transparent),
+            transparent 50%
+        );
+        opacity: 1;
+        pointer-events: none;
+        z-index: 0;
     }
 }
 
@@ -111,15 +157,43 @@
     transition: all var(--motion-duration-fast) var(--motion-ease-standard);
     border: none;
     cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    z-index: 1;
+}
+
+/* Button fill animation - fills from left to right on hover */
+.hero-cta-primary::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: color-mix(in srgb, var(--accent-color) 100%, white 15%);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform var(--motion-duration-fast) var(--motion-ease-emphasized);
+    z-index: -1;
+}
+
+.hero-cta-primary:hover::before {
+    transform: scaleX(1);
 }
 
 .hero-cta-primary:hover {
-    opacity: 0.9;
     transform: translateY(-1px);
 }
 
 .hero-cta-primary:active {
     transform: translateY(0);
+}
+
+/* Focus glow for keyboard accessibility */
+.hero-cta-primary:focus-visible {
+    outline: 2px solid var(--accent-color);
+    outline-offset: 2px;
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent-color) 25%, transparent);
 }
 
 .hero-cta-secondary {
@@ -143,6 +217,13 @@
 
 .hero-cta-secondary:active {
     transform: translateY(0);
+}
+
+/* Focus glow for keyboard accessibility */
+.hero-cta-secondary:focus-visible {
+    outline: 2px solid var(--accent-color);
+    outline-offset: 2px;
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent-color) 25%, transparent);
 }
 
 /* Entrance animations */
