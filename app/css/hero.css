@@ -16,70 +16,11 @@
 
     /* Layout */
     padding: 2rem 1.5rem;
-    position: relative;
-    overflow: hidden;
-
-    /* Cursor-tracking glow custom properties */
-    --glow-x: 50%;
-    --glow-y: 50%;
 }
 
 @media (min-width: 768px) {
     .heroContainer {
         padding: 2.5rem 2rem;
-    }
-}
-
-/* Cursor-tracking glow effect for hover devices */
-@media (hover: hover) {
-    .heroContainer {
-        transition: border-color var(--motion-duration-slow) var(--motion-ease-emphasized);
-    }
-
-    .heroContainer::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: radial-gradient(
-            600px circle at var(--glow-x) var(--glow-y),
-            color-mix(in srgb, var(--accent-color) 15%, transparent),
-            transparent 40%
-        );
-        opacity: 0;
-        transition: opacity var(--motion-duration-fast) var(--motion-ease-standard);
-        pointer-events: none;
-        z-index: 0;
-    }
-
-    .heroContainer:hover {
-        border-color: var(--accent-color);
-    }
-
-    .heroContainer:hover::before {
-        opacity: 1;
-    }
-}
-
-/* Mobile fallback: subtle constant glow at center */
-@media (hover: none), (pointer: coarse) {
-    .heroContainer::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: radial-gradient(
-            400px circle at 50% 50%,
-            color-mix(in srgb, var(--accent-color) 8%, transparent),
-            transparent 50%
-        );
-        opacity: 1;
-        pointer-events: none;
-        z-index: 0;
     }
 }
 
