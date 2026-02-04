@@ -295,7 +295,7 @@ export default function PixelFluidBackground({ className }: PixelFluidBackground
     <div className={`fixed inset-0 -z-10 ${className || ""}`}>
       <canvas ref={canvasRef} className="block w-full h-full" />
 
-      {/* Scanlines overlay */}
+      {/* Scanlines overlay (static background lines) */}
       <div
         className="absolute inset-0 pointer-events-none z-10"
         style={{
@@ -303,10 +303,60 @@ export default function PixelFluidBackground({ className }: PixelFluidBackground
             to bottom,
             rgba(255,255,255,0),
             rgba(255,255,255,0) 50%,
-            rgba(0,0,0,0.04) 50%,
-            rgba(0,0,0,0.04)
+            rgba(0,0,0,0.03) 50%,
+            rgba(0,0,0,0.03)
           )`,
           backgroundSize: "100% 3px",
+        }}
+      />
+
+      {/* Moving scanline 1 - Primary (faster sweep) */}
+      <div
+        className="absolute inset-x-0 pointer-events-none z-[12] scanline-sweep-1"
+        style={{
+          height: "8px",
+          top: 0,
+          background: isDark
+            ? `linear-gradient(
+                to bottom,
+                rgba(255,255,255,0) 0%,
+                rgba(255,255,255,0.08) 40%,
+                rgba(255,255,255,0.12) 50%,
+                rgba(255,255,255,0.08) 60%,
+                rgba(255,255,255,0) 100%
+              )`
+            : `linear-gradient(
+                to bottom,
+                rgba(0,0,0,0) 0%,
+                rgba(0,0,0,0.05) 40%,
+                rgba(0,0,0,0.08) 50%,
+                rgba(0,0,0,0.05) 60%,
+                rgba(0,0,0,0) 100%
+              )`,
+          willChange: "transform",
+        }}
+      />
+
+      {/* Moving scanline 2 - Secondary (slower sweep, creates double-line interference) */}
+      <div
+        className="absolute inset-x-0 pointer-events-none z-[12] scanline-sweep-2"
+        style={{
+          height: "4px",
+          top: 0,
+          background: isDark
+            ? `linear-gradient(
+                to bottom,
+                rgba(255,255,255,0) 0%,
+                rgba(255,255,255,0.06) 50%,
+                rgba(255,255,255,0) 100%
+              )`
+            : `linear-gradient(
+                to bottom,
+                rgba(0,0,0,0) 0%,
+                rgba(0,0,0,0.04) 50%,
+                rgba(0,0,0,0) 100%
+              )`,
+          willChange: "transform",
         }}
       />
 
