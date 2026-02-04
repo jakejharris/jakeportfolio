@@ -303,8 +303,8 @@ export default function PixelFluidBackground({ className }: PixelFluidBackground
             to bottom,
             rgba(255,255,255,0),
             rgba(255,255,255,0) 50%,
-            rgba(0,0,0,0.02) 50%,
-            rgba(0,0,0,0.02)
+            rgba(0,0,0,0.03) 50%,
+            rgba(0,0,0,0.03)
           )`,
           backgroundSize: "100% 3px",
         }}
@@ -320,17 +320,17 @@ export default function PixelFluidBackground({ className }: PixelFluidBackground
             ? `linear-gradient(
                 to bottom,
                 rgba(255,255,255,0) 0%,
-                rgba(255,255,255,0.12) 40%,
-                rgba(255,255,255,0.18) 50%,
-                rgba(255,255,255,0.12) 60%,
+                rgba(255,255,255,0.08) 40%,
+                rgba(255,255,255,0.12) 50%,
+                rgba(255,255,255,0.08) 60%,
                 rgba(255,255,255,0) 100%
               )`
             : `linear-gradient(
                 to bottom,
                 rgba(0,0,0,0) 0%,
-                rgba(0,0,0,0.08) 40%,
-                rgba(0,0,0,0.12) 50%,
-                rgba(0,0,0,0.08) 60%,
+                rgba(0,0,0,0.05) 40%,
+                rgba(0,0,0,0.08) 50%,
+                rgba(0,0,0,0.05) 60%,
                 rgba(0,0,0,0) 100%
               )`,
           willChange: "transform",
@@ -347,13 +347,13 @@ export default function PixelFluidBackground({ className }: PixelFluidBackground
             ? `linear-gradient(
                 to bottom,
                 rgba(255,255,255,0) 0%,
-                rgba(255,255,255,0.10) 50%,
+                rgba(255,255,255,0.06) 50%,
                 rgba(255,255,255,0) 100%
               )`
             : `linear-gradient(
                 to bottom,
                 rgba(0,0,0,0) 0%,
-                rgba(0,0,0,0.07) 50%,
+                rgba(0,0,0,0.04) 50%,
                 rgba(0,0,0,0) 100%
               )`,
           willChange: "transform",
