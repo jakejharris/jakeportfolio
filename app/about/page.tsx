@@ -6,10 +6,27 @@ import '../css/page.css';
 import '../css/animations.css';
 import { MdArrowForward } from 'react-icons/md';
 import ScrollToTop from '../components/ScrollToTop';
+import { siteConfig } from '../lib/site.config';
+import SkillsSection from '../components/SkillsSection';
+import type { Metadata } from 'next';
 
-export const metadata = {
+export const metadata: Metadata = {
     title: "About",
     description: "Jake Harris is a Full Stack Developer with experience in AI-powered applications, startup development, and consulting. Learn about his background, skills, and projects.",
+    alternates: {
+        canonical: `${siteConfig.url}/about`,
+    },
+    openGraph: {
+        title: `About | ${siteConfig.name}`,
+        description: "Jake Harris is a Full Stack Developer with experience in AI-powered applications, startup development, and consulting.",
+        url: `${siteConfig.url}/about`,
+        type: "profile",
+    },
+    twitter: {
+        card: "summary",
+        title: `About | ${siteConfig.name}`,
+        description: "Jake Harris is a Full Stack Developer with experience in AI-powered applications, startup development, and consulting.",
+    },
 };
 
 const aboutContent = {
@@ -84,6 +101,10 @@ export default function AboutPage() {
                         ))}
                     </div>
                     <div className="clear-both"></div>
+                </div>
+
+                <div className="mb-8">
+                    <SkillsSection />
                 </div>
 
                 <ul className="space-y-2">

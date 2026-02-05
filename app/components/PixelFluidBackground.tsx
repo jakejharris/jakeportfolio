@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef, useCallback, useState } from "react";
 import { useTheme } from "next-themes";
+import { useReducedMotion } from "@/app/hooks/use-reduced-motion";
 
 // Feature flag for pixel fluid background
 const ENABLE_PIXEL_FLUID_BACKGROUND = true;
@@ -35,6 +36,8 @@ export default function PixelFluidBackground({ className }: PixelFluidBackground
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationRef = useRef<number>(0);
   const timeRef = useRef(0);
+  const lastFrameTimeRef = useRef(0);
+  const frameIntervalRef = useRef(22); // Default 45fps (~22ms), mobile will be 33ms (30fps)
   const pointerRef = useRef({ x: -1000, y: -1000, active: false });
   const configRef = useRef({
     pixelSize: 18,
@@ -45,8 +48,17 @@ export default function PixelFluidBackground({ className }: PixelFluidBackground
     isGrayscale: false,
     grayscaleInverted: false,
   });
-  const { theme, resolvedTheme } = useTheme();
-  const isDark = resolvedTheme === "dark";
+  const { resolvedTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+  const reducedMotion = useReducedMotion();
+  const [isVisible, setIsVisible] = useState(true);
+
+  // Wait for theme to resolve (avoid hydration mismatch)
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const isDark = mounted ? resolvedTheme === "dark" : true;
 
   // Get the current accent color based on data-accent attribute
   const getAccentColor = useCallback(() => {
@@ -105,10 +117,21 @@ export default function PixelFluidBackground({ className }: PixelFluidBackground
     return h;
   }, []);
 
-  // Draw function
-  const draw = useCallback(() => {
+  // Draw function with frame rate throttling
+  const draw = useCallback((timestamp?: number) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
+
+    // Frame rate throttling - skip frame if not enough time has passed
+    const now = timestamp || performance.now();
+    const elapsed = now - lastFrameTimeRef.current;
+    if (elapsed < frameIntervalRef.current) {
+      if (isVisible && !reducedMotion) {
+        animationRef.current = requestAnimationFrame(draw);
+      }
+      return;
+    }
+    lastFrameTimeRef.current = now - (elapsed % frameIntervalRef.current);
 
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
@@ -197,10 +220,13 @@ export default function PixelFluidBackground({ className }: PixelFluidBackground
     }
 
     timeRef.current += configRef.current.speed;
-    animationRef.current = requestAnimationFrame(draw);
-  }, [isDark, getWaveHeight]);
+    // Only continue animation if visible and motion is allowed
+    if (isVisible && !reducedMotion) {
+      animationRef.current = requestAnimationFrame(draw);
+    }
+  }, [isDark, getWaveHeight, isVisible, reducedMotion]);
 
-  // Resize handler - also adjusts speed based on screen size
+  // Resize handler - also adjusts speed and frame rate based on screen size
   const resize = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -211,6 +237,9 @@ export default function PixelFluidBackground({ className }: PixelFluidBackground
     // Original speed was 0.02; mobile is 30% slower, desktop is 60% slower
     const isMobile = window.innerWidth < 768;
     configRef.current.speed = isMobile ? 0.014 : 0.008;
+
+    // Frame rate throttling: 30fps on mobile (~33ms), 45fps on desktop (~22ms)
+    frameIntervalRef.current = isMobile ? 33 : 22;
   }, []);
 
   // Pointer update handler
@@ -242,26 +271,51 @@ export default function PixelFluidBackground({ className }: PixelFluidBackground
     updateBaseHue();
     resize();
 
-    // Start animation
-    animationRef.current = requestAnimationFrame(draw);
+    // Only start animation if motion is allowed
+    if (!reducedMotion) {
+      animationRef.current = requestAnimationFrame(draw);
+    } else {
+      // For reduced motion, draw a single static frame
+      draw();
+    }
 
     // Handle resize
     window.addEventListener("resize", resize);
 
-    // Handle pointer/touch interaction
-    window.addEventListener("mousemove", updatePointer);
-    window.addEventListener("touchmove", updatePointer, { passive: true });
-    window.addEventListener("touchstart", updatePointer, { passive: true });
-    window.addEventListener("touchend", clearPointer);
-    window.addEventListener("mouseleave", clearPointer);
+    // Handle pointer/touch interaction (only if motion is allowed)
+    if (!reducedMotion) {
+      window.addEventListener("mousemove", updatePointer);
+      window.addEventListener("touchmove", updatePointer, { passive: true });
+      window.addEventListener("touchstart", updatePointer, { passive: true });
+      window.addEventListener("touchend", clearPointer);
+      window.addEventListener("mouseleave", clearPointer);
+    }
 
-    // Watch for accent changes via MutationObserver
+    // Handle visibility changes (pause animation when tab is hidden)
+    const handleVisibilityChange = () => {
+      const visible = document.visibilityState === "visible";
+      setIsVisible(visible);
+      if (visible && !reducedMotion) {
+        // Resume animation when tab becomes visible again
+        animationRef.current = requestAnimationFrame(draw);
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    // Watch for accent changes via MutationObserver with debouncing
+    let mutationTimeout: NodeJS.Timeout | null = null;
     const observer = new MutationObserver((mutations) => {
-      mutations.forEach((mutation) => {
-        if (mutation.attributeName === "data-accent" || mutation.attributeName === "class") {
-          updateBaseHue();
-        }
-      });
+      // Debounce: only process after 50ms of no changes
+      if (mutationTimeout) {
+        clearTimeout(mutationTimeout);
+      }
+      mutationTimeout = setTimeout(() => {
+        mutations.forEach((mutation) => {
+          if (mutation.attributeName === "data-accent" || mutation.attributeName === "class") {
+            updateBaseHue();
+          }
+        });
+      }, 50);
     });
 
     observer.observe(document.documentElement, {
@@ -271,20 +325,26 @@ export default function PixelFluidBackground({ className }: PixelFluidBackground
 
     return () => {
       cancelAnimationFrame(animationRef.current);
+      if (mutationTimeout) {
+        clearTimeout(mutationTimeout);
+      }
       window.removeEventListener("resize", resize);
       window.removeEventListener("mousemove", updatePointer);
       window.removeEventListener("touchmove", updatePointer);
       window.removeEventListener("touchstart", updatePointer);
       window.removeEventListener("touchend", clearPointer);
       window.removeEventListener("mouseleave", clearPointer);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
       observer.disconnect();
     };
-  }, [draw, resize, updateBaseHue, updatePointer, clearPointer]);
+  }, [draw, resize, updateBaseHue, updatePointer, clearPointer, reducedMotion]);
 
   // Re-update hue when theme changes
   useEffect(() => {
-    updateBaseHue();
-  }, [theme, resolvedTheme, updateBaseHue]);
+    if (mounted) {
+      updateBaseHue();
+    }
+  }, [mounted, resolvedTheme, updateBaseHue]);
 
   // Return null if feature is disabled
   if (!ENABLE_PIXEL_FLUID_BACKGROUND) {
@@ -293,7 +353,11 @@ export default function PixelFluidBackground({ className }: PixelFluidBackground
 
   return (
     <div className={`fixed inset-0 -z-10 ${className || ""}`}>
-      <canvas ref={canvasRef} className="block w-full h-full" />
+      <canvas
+        ref={canvasRef}
+        className="block w-full h-full"
+        style={{ willChange: "transform" }}
+      />
 
       {/* Scanlines overlay (static background lines) */}
       <div

@@ -1,5 +1,6 @@
 import './css/page.css'
 import './css/animations.css'
+import './css/hero.css'
 import PageLayout from './components/PageLayout';
 import TransitionLink from './components/TransitionLink';
 import { sanityFetch } from './lib/sanity.client';
@@ -12,6 +13,8 @@ import {
 } from './components/hover-card';
 import ScrollToTop from './components/ScrollToTop';
 import PixelFluidBackground from './components/PixelFluidBackground';
+import { TagBadge } from './components/blog/TagBadge';
+import HeroSection from './components/HeroSection';
 
 // Query to fetch posts from Sanity
 const query = `*[_type == "post"] | order(featured desc, publishedAt desc) {
@@ -37,8 +40,9 @@ export default async function HomePage() {
       <PixelFluidBackground />
       <PageLayout>
         <ScrollToTop />
+      <HeroSection />
       <div className="max-w-none">
-        {/* <h2 className="mb-4 text-xl md:text-2xl font-bold">Recent Posts</h2> */}
+        <h2 className="text-xl font-semibold mb-4">Recent Writing</h2>
         <ul className="space-y-2 mb-8">
           {posts.map((post) => (
             <li key={post._id} className="relative">
@@ -65,12 +69,7 @@ export default async function HomePage() {
                           {post.tags && post.tags.length > 0 && (
                             <div className="flex gap-1">
                               {post.tags.map(tag => (
-                                <span 
-                                  key={tag._id} 
-                                  className="text-xs px-2 py-0.5 rounded-full bg-muted text-muted-foreground"
-                                >
-                                  {tag.title}
-                                </span>
+                                <TagBadge key={tag._id} tag={tag} size="sm" />
                               ))}
                             </div>
                           )}

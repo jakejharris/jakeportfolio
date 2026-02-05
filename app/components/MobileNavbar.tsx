@@ -37,6 +37,7 @@ export default function MobileNavbar({ scrolled, visible }: MobileNavbarProps) {
 
   return (
     <nav
+      aria-label="Main navigation"
       className={`navbar-sticky sticky top-0 z-40 w-full bg-secondary transition-all duration-300
         ${scrolled ? 'scrolled' : ''}
         ${visible ? '' : 'translate-y-[-100%]'}`}
@@ -54,7 +55,7 @@ export default function MobileNavbar({ scrolled, visible }: MobileNavbarProps) {
                 <HamburgerIcon isOpen={isDrawerOpen} />
               </Button>
             </DrawerTrigger>
-            <DrawerContent className="h-[65vh]">
+            <DrawerContent aria-label="Navigation menu" className="h-[65vh]">
               <DrawerHeader className="hidden">
                 <DrawerTitle>Jake Harris Navbar</DrawerTitle>
               </DrawerHeader>

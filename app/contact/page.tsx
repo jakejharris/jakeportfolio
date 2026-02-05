@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useState } from 'react'
-import { FaLinkedin, FaCopy, FaCheck } from 'react-icons/fa'
+import { FaLinkedin, FaGithub, FaCopy, FaCheck } from 'react-icons/fa'
 import { MdEmail, MdArrowForward } from 'react-icons/md'
 import '../css/animations.css'
 import '../css/magical-button.css'
@@ -50,9 +50,9 @@ export default function ContactPage() {
           </li>
           
           <li className="relative">
-            <a 
-              href="https://linkedin.com/in/jakejh" 
-              target="_blank" 
+            <a
+              href="https://linkedin.com/in/jakejh"
+              target="_blank"
               rel="noopener noreferrer"
               className="pageLinkContainer flex justify-between items-center border p-3 cursor-pointer group"
               aria-label="Visit LinkedIn profile"
@@ -62,6 +62,27 @@ export default function ContactPage() {
                 <div>
                   <div className="text-primary font-medium">LinkedIn</div>
                   <div className="text-sm text-muted-foreground">Connect with me professionally</div>
+                </div>
+              </div>
+              <div className="text-sm text-muted-foreground">
+                <MdArrowForward />
+              </div>
+            </a>
+          </li>
+
+          <li className="relative">
+            <a
+              href="https://github.com/jakejharris"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="pageLinkContainer flex justify-between items-center border p-3 cursor-pointer group"
+              aria-label="Visit GitHub profile"
+            >
+              <div className="flex items-center gap-3">
+                <FaGithub className="text-primary text-xl" />
+                <div>
+                  <div className="text-primary font-medium">GitHub</div>
+                  <div className="text-sm text-muted-foreground">Check out my open source projects</div>
                 </div>
               </div>
               <div className="text-sm text-muted-foreground">

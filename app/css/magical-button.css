@@ -4,7 +4,7 @@
   border-radius: 0.1rem;
   overflow: visible; /* Changed from hidden to fix border clipping */
   z-index: 0;
-  transition: all 0.2s ease;
+  transition: all var(--motion-duration-fast) var(--motion-ease-standard);
   display: inline-block;
 }
 
@@ -29,7 +29,7 @@
   z-index: 1;
   font-weight: 700;
   letter-spacing: 0.01em;
-  transition: all 0.2s ease;
+  transition: all var(--motion-duration-fast) var(--motion-ease-standard);
   padding: 0.4rem 1rem;
   color: hsl(var(--foreground));
   background: #f1f5f9e0; /* More translucent background */
@@ -84,7 +84,7 @@
   pointer-events: none; /* So it doesn't interfere with clicks */
   box-shadow: 0 0 0 1px hsl(var(--foreground)); /* Black border as fallback */
   opacity: 0; /* Hidden by default */
-  transition: opacity 0.2s ease;
+  transition: opacity var(--motion-duration-fast) var(--motion-ease-standard);
 }
 
 /* Show the border backup on hover to prevent disappearing */
@@ -143,4 +143,17 @@
 .magical-button.w-full {
   width: 100%;
   justify-content: center;
+}
+
+/* Reduced motion: stop infinite animations */
+@media (prefers-reduced-motion: reduce) {
+  .magical-button-wrapper::before {
+    animation: none;
+    background-position: 0% 0%;
+  }
+
+  .gradient-text {
+    animation: none;
+    background-position: 0% center;
+  }
 } 

@@ -2,6 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Motion Design System */
+@import './css/motion-tokens.css';
+
 @layer base {
   :root {
     --background: 0 0% 100%;
@@ -26,7 +29,7 @@
     --destructive-foreground: 0 0% 98%;
     
     --muted: 0 0% 96.1%;
-    --muted-foreground: 0 0% 45.1%;
+    --muted-foreground: 0 0% 35%;
     
     --popover: 0 0% 100%;
     --popover-foreground: 0 0% 3.9%;
@@ -72,7 +75,7 @@
     --destructive-foreground: 0 0% 98%;
     
     --muted: 0 0% 14.9%;
-    --muted-foreground: 0 0% 63.9%;
+    --muted-foreground: 0 0% 75%;
     
     --popover: 0 0% 3.9%;
     --popover-foreground: 0 0% 98%;
@@ -97,6 +100,7 @@
 }
 
 /* Accent color system - defined via data-accent attribute */
+/* Brand: Blue (accent index 2) is the signature color */
 :root {
   --accent-color: hsl(0 0% 9%);
 }
@@ -147,4 +151,13 @@
 .portable-text p strong{
   font-size: 1.125rem;
   line-height: 1.75;
+}
+
+/* Global Reduced Motion: Disable all animations for users who prefer reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

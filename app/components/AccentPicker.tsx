@@ -81,7 +81,7 @@ export default function AccentPicker() {
             <button
               key={i}
               onClick={() => selectColor(i)}
-              className={`w-7 h-7 rounded-full border-2 transition-transform hover:scale-110
+              className={`w-11 h-11 rounded-full border-2 transition-transform hover:scale-110
                 ${selected === i ? "border-foreground" : "border-transparent"}`}
               style={{ backgroundColor: `hsl(${getSwatchColor(i)})` }}
               aria-label={color.name}
