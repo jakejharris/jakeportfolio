@@ -24,7 +24,10 @@ export async function generateMetadata({
     query: `*[_type == "post" && slug.current == $slug][0] {
       title,
       excerpt,
-      mainImage
+      mainImage,
+      publishedAt,
+      seo { metaTitle, metaDescription, shareImage },
+      "tags": tags[]->{ title }
     }`,
     params: { slug },
     tags: ['post'],
@@ -36,28 +39,39 @@ export async function generateMetadata({
     };
   }
 
-  const description = post.excerpt || `Read ${post.title} by Jake Harris`;
+  const title = post.seo?.metaTitle || post.title;
+  const description = post.seo?.metaDescription || post.excerpt || `Read ${post.title} by Jake Harris`;
 
-  // Only generate image URL if mainImage exists
+  // Check SEO share image first, fall back to mainImage
   let imageUrl: string | null = null;
-  if (post.mainImage?.asset) {
+  if (post.seo?.shareImage?.asset) {
+    imageUrl = urlFor(post.seo.shareImage).width(1200).height(630).url();
+  } else if (post.mainImage?.asset) {
     imageUrl = urlFor(post.mainImage).width(1200).height(630).url();
   }
 
   return {
-    title: post.title,
+    title,
     description,
+    alternates: {
+      canonical: `https://jakejh.com/posts/${slug}/`,
+    },
     openGraph: {
-      title: post.title,
+      title,
       description,
       type: 'article',
+      publishedTime: post.publishedAt,
+      authors: ['Jake Harris'],
+      ...(post.tags?.length && { tags: post.tags.map(t => t.title) }),
       ...(imageUrl && { images: [{ url: imageUrl, width: 1200, height: 630 }] }),
     },
     twitter: {
       // Use summary card when no image, summary_large_image when image exists
       card: imageUrl ? 'summary_large_image' : 'summary',
-      title: post.title,
+      title,
       description,
+      site: '@jakeharrisdev',
+      creator: '@jakeharrisdev',
       ...(imageUrl && { images: [imageUrl] }),
     },
   };
@@ -77,6 +91,7 @@ const query = `*[_type == "post" && slug.current == $slug][0] {
   excerpt,
   viewCount,
   externalLinks,
+  seo { metaTitle, metaDescription, shareImage },
   "tags": tags[]->{ _id, title, slug }
 }`;
 
@@ -354,7 +369,43 @@ export default async function PostPage({ params }: PageParams) {
     notFound();
   }
 
+  // Build image URL for JSON-LD
+  const imageUrl = post.mainImage?.asset
+    ? urlFor(post.mainImage).width(1200).height(630).url()
+    : null;
+
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BlogPosting',
+    headline: post.title,
+    description: post.excerpt || '',
+    datePublished: post.publishedAt,
+    dateModified: post.publishedAt,
+    author: {
+      '@type': 'Person',
+      name: 'Jake Harris',
+      url: 'https://jakejh.com/about/',
+    },
+    publisher: {
+      '@type': 'Organization',
+      name: 'Jake Harris',
+      url: 'https://jakejh.com',
+    },
+    url: `https://jakejh.com/posts/${post.slug.current}/`,
+    mainEntityOfPage: {
+      '@type': 'WebPage',
+      '@id': `https://jakejh.com/posts/${post.slug.current}/`,
+    },
+    ...(imageUrl && { image: imageUrl }),
+    ...(post.tags?.length && { keywords: post.tags.map(t => t.title) }),
+  };
+
   return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <PageLayout>
         <ScrollToTop />
         <div className="max-w-none">
@@ -452,5 +503,6 @@ export default async function PostPage({ params }: PageParams) {
           )}
         </div>
       </PageLayout>
+    </>
   );
 } 
