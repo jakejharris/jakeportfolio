@@ -10,6 +10,9 @@ import ScrollToTop from '../components/ScrollToTop';
 export const metadata = {
     title: "About",
     description: "Jake Harris is a Full Stack Developer with experience in AI-powered applications, startup development, and consulting. Learn about his background, skills, and projects.",
+    alternates: {
+        canonical: 'https://jakejh.com/about/',
+    },
 };
 
 const aboutContent = {
