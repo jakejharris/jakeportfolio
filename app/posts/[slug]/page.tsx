@@ -5,7 +5,8 @@ import { PortableText, PortableTextReactComponents } from '@portabletext/react';
 import { notFound } from 'next/navigation';
 import { FaGithub, FaGlobe, FaLinkedin, FaTwitter, FaYoutube, FaCodepen, FaExternalLinkAlt } from 'react-icons/fa';
 import ViewCounter from './ViewCounter';
-import { Post } from '@/app/types/sanity';
+import { Post, InteractiveComponentValue } from '@/app/types/sanity';
+import InteractiveBlock from '@/app/components/blog-components/InteractiveBlock';
 import { Button } from '@/app/components/ui/button';
 import React from 'react';
 import ScrollToTop from '@/app/components/ScrollToTop';
@@ -237,6 +238,14 @@ const components: Partial<PortableTextReactComponents> = {
             <footer className="text-sm text-muted-foreground mt-2">— {value.attribution}</footer>
           )}
         </blockquote>
+      );
+    },
+    interactiveComponent: ({ value }: { value: InteractiveComponentValue }) => {
+      return (
+        <InteractiveBlock
+          componentName={value.componentName}
+          caption={value.caption}
+        />
       );
     },
     divider: ({ value }: { value: DividerValue }) => {

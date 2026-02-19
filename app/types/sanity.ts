@@ -46,6 +46,14 @@ export interface Post extends PostSummary {
   seo?: SEO;
 }
 
+// Interactive component block embedded in portable text
+export interface InteractiveComponentValue {
+  _type: 'interactiveComponent';
+  _key: string;
+  componentName: string;
+  caption?: string;
+}
+
 // External link interface
 export interface ExternalLink {
   title: string;
