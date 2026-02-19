@@ -289,6 +289,41 @@ export default {
             }
           ]
         },
+        // Interactive Component
+        {
+          name: 'interactiveComponent',
+          type: 'object',
+          title: 'Interactive Component',
+          fields: [
+            {
+              name: 'componentName',
+              title: 'Component',
+              type: 'string',
+              description: 'Select the interactive component to embed',
+              options: {
+                list: [
+                  { title: 'Hero Compression Animation', value: 'HeroCompression' },
+                ],
+              },
+              validation: (Rule: any) => Rule.required(),
+            },
+            {
+              name: 'caption',
+              title: 'Caption',
+              type: 'string',
+              description: 'Optional caption displayed below the component',
+            },
+          ],
+          preview: {
+            select: { title: 'componentName', caption: 'caption' },
+            prepare({ title, caption }: { title?: string; caption?: string }) {
+              return {
+                title: `Interactive: ${title || 'Not selected'}`,
+                subtitle: caption || '',
+              }
+            },
+          },
+        },
         // Divider
         {
           name: 'divider',
