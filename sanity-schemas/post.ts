@@ -303,6 +303,11 @@ export default {
               options: {
                 list: [
                   { title: 'Hero Compression Animation', value: 'HeroCompression' },
+                  { title: 'Compression Pyramid', value: 'CompressionPyramid' },
+                  { title: 'Scaling Table', value: 'ScalingTable' },
+                  { title: 'Token Compression', value: 'TokenCompression' },
+                  { title: 'Agent Hierarchy', value: 'AgentHierarchy' },
+                  { title: 'Lossy Drift', value: 'LossyDrift' },
                 ],
               },
               validation: (Rule: any) => Rule.required(),
