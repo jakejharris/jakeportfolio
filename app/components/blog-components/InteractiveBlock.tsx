@@ -8,6 +8,26 @@ const componentRegistry: Record<string, ComponentType> = {
     () => import('./compression-intelligence/HeroCompression'),
     { ssr: false }
   ),
+  CompressionPyramid: dynamic(
+    () => import('./compression-intelligence/CompressionPyramid'),
+    { ssr: false }
+  ),
+  ScalingTable: dynamic(
+    () => import('./compression-intelligence/ScalingTable'),
+    { ssr: false }
+  ),
+  TokenCompression: dynamic(
+    () => import('./compression-intelligence/TokenCompression'),
+    { ssr: false }
+  ),
+  AgentHierarchy: dynamic(
+    () => import('./compression-intelligence/AgentHierarchy'),
+    { ssr: false }
+  ),
+  LossyDrift: dynamic(
+    () => import('./compression-intelligence/LossyDrift'),
+    { ssr: false }
+  ),
 };
 
 interface InteractiveBlockProps {
