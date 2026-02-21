@@ -144,7 +144,7 @@ export default async function TagPage({
                               })}
                             </div>
                             {post.tags && post.tags.length > 0 && (
-                              <div className="flex gap-1">
+                              <div className="hidden md:flex gap-1">
                                 {post.tags.map((t) => (
                                   <TagPill linked={false} tag={t} key={t.slug.current} />
                                 ))}

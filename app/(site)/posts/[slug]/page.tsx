@@ -473,8 +473,11 @@ export default async function PostPage({ params }: PageParams) {
 
             {post.tags && post.tags.length > 0 && (
               <div className="flex gap-2">
-                {post.tags.map(tag => (
-                  <TagPill linked={true} tag={tag} key={tag.slug.current} />
+                <TagPill linked={true} tag={post.tags[0]} key={post.tags[0].slug.current} />
+                {post.tags.slice(1).map(tag => (
+                  <span key={tag.slug.current} className="hidden md:inline-flex">
+                    <TagPill linked={true} tag={tag} />
+                  </span>
                 ))}
               </div>
             )}
