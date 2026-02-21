@@ -3,11 +3,11 @@
 import React, { useState } from 'react'
 import { FaLinkedin, FaCopy, FaCheck } from 'react-icons/fa'
 import { MdEmail, MdArrowForward } from 'react-icons/md'
-import '../css/animations.css'
-import '../css/magical-button.css'
-import '../css/page.css'
-import PageLayout from '../components/PageLayout'
-import ScrollToTop from '../components/ScrollToTop'
+import '../../css/animations.css'
+import '../../css/magical-button.css'
+import '../../css/page.css'
+import PageLayout from '../../components/PageLayout'
+import ScrollToTop from '../../components/ScrollToTop'
 
 export default function ContactPage() {
   const [copiedEmail, setCopiedEmail] = useState(false);

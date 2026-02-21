@@ -1,5 +1,16 @@
 'use client';
 
+// Animated version of the table from "The Math That Should Have Killed the
+// Idea." Rows reveal one by one with counting animations to dramatize the
+// logarithmic scaling: at ~10:1 compression per layer, going from Claude's
+// 800KB context window to all of English Wikipedia takes just 5 layers, and
+// compressing every book ever written takes only 8. The punchline rows
+// (Library of Congress, all books) pulse to underscore the article's
+// realization: "Going from 'a textbook' to 'all human knowledge ever written'
+// costs five additional layers." The final row (1 EB — total data created per
+// year, 13 layers) glows to land the point that the scaling is logarithmic,
+// not linear.
+
 import { useEffect, useRef, useState, useCallback } from 'react';
 
 // --- Table Data ---
@@ -17,6 +28,8 @@ const PUNCHLINE_INDICES = [4, 5];
 const FINAL_INDEX = 6;
 const ROW_STAGGER_MS = 160;
 const ROW_ENTER_MS = 450;
+const LOOP_HOLD_MS = 3000;
+const FADE_OUT_MS = 600;
 
 // Ease-out cubic
 function easeOutCubic(t: number): number {
@@ -33,9 +46,12 @@ export default function ScalingTable() {
   const [punchlineActive, setPunchlineActive] = useState(false);
   const [finalRowActive, setFinalRowActive] = useState(false);
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
+  const [fadingOut, setFadingOut] = useState(false);
+  const [restartTrigger, setRestartTrigger] = useState(0);
 
   const countAnimations = useRef<Map<number, number>>(new Map());
   const staggerTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const completedRowsRef = useRef<Set<number>>(new Set());
 
   // --- Reduced motion detection ---
   useEffect(() => {
@@ -120,14 +136,14 @@ export default function ScalingTable() {
     []
   );
 
-  // --- Staggered reveal chain ---
+  // --- Staggered reveal chain + loop ---
   useEffect(() => {
     if (!isVisible || prefersReducedMotion) return;
 
     const timers = staggerTimers.current;
     const counts = countAnimations.current;
 
-    // Start header + first row after a short pause
+    // Start header + rows after a short pause
     const headerDelay = setTimeout(() => {
       TABLE_DATA.forEach((_, i) => {
         const timer = setTimeout(() => {
@@ -135,7 +151,37 @@ export default function ScalingTable() {
           animateCount(i);
         }, i * ROW_STAGGER_MS);
         timers.push(timer);
+
+        // Track when each row's entrance animation completes
+        const animDoneTimer = setTimeout(() => {
+          completedRowsRef.current.add(i);
+        }, i * ROW_STAGGER_MS + ROW_ENTER_MS + 50);
+        timers.push(animDoneTimer);
       });
+
+      // Schedule loop: after all animations + hold, fade out and restart
+      const totalAnimTime =
+        (TABLE_DATA.length - 1) * ROW_STAGGER_MS + // last row starts
+        650 + // longest count animation (final row)
+        150 + // finalRowActive delay
+        100;  // buffer
+
+      const loopTimer = setTimeout(() => {
+        setFadingOut(true);
+
+        const resetTimer = setTimeout(() => {
+          // Reset all animation state
+          completedRowsRef.current.clear();
+          setRevealedRows(0);
+          setCountedValues(TABLE_DATA.map(() => 0));
+          setPunchlineActive(false);
+          setFinalRowActive(false);
+          setFadingOut(false);
+          setRestartTrigger((prev) => prev + 1);
+        }, FADE_OUT_MS);
+        timers.push(resetTimer);
+      }, totalAnimTime + LOOP_HOLD_MS);
+      timers.push(loopTimer);
     }, 200);
 
     timers.push(headerDelay);
@@ -146,7 +192,7 @@ export default function ScalingTable() {
       counts.forEach((id) => cancelAnimationFrame(id));
       counts.clear();
     };
-  }, [isVisible, prefersReducedMotion, animateCount]);
+  }, [isVisible, prefersReducedMotion, animateCount, restartTrigger]);
 
   // --- If reduced motion, show everything immediately ---
   const showAll = prefersReducedMotion || !isVisible;
@@ -156,7 +202,11 @@ export default function ScalingTable() {
     <div
       ref={containerRef}
       className="rounded-lg overflow-hidden border border-white/10 bg-[#0a0a14] relative"
-      style={{ background: 'linear-gradient(135deg, #0a0a14 0%, #0d0d1a 50%, #0a0a14 100%)' }}
+      style={{
+        background: 'linear-gradient(135deg, #0a0a14 0%, #0d0d1a 50%, #0a0a14 100%)',
+        opacity: fadingOut ? 0 : 1,
+        transition: `opacity ${FADE_OUT_MS}ms ease-in-out`,
+      }}
     >
       <style>{`
         @keyframes st-row-enter {
@@ -233,7 +283,7 @@ export default function ScalingTable() {
         }
       `}</style>
 
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto" style={{ overflowY: 'hidden' }}>
         <table
           className="w-full border-collapse"
           aria-label="Compression layers required by data size — logarithmic scaling from kilobytes to exabytes"
@@ -285,13 +335,14 @@ export default function ScalingTable() {
               const isPunchline = PUNCHLINE_INDICES.includes(i);
               const isFinal = i === FINAL_INDEX;
               const displayValue = showAll ? row.layers : countedValues[i];
+              const animComplete = completedRowsRef.current.has(i);
 
               // The layer intensity — maps 0..13 to a faint blue bar
               const layerIntensity = row.layers / 13;
 
               return (
                 <tr
-                  key={i}
+                  key={`${restartTrigger}-${i}`}
                   className={[
                     'transition-colors',
                     isRevealed && !showAll ? 'st-row-animated' : '',
@@ -300,7 +351,7 @@ export default function ScalingTable() {
                     .filter(Boolean)
                     .join(' ')}
                   style={{
-                    opacity: showAll ? 1 : undefined,
+                    opacity: showAll || animComplete ? 1 : undefined,
                     animationDelay:
                       isRevealed && !showAll ? '0ms' : undefined,
                     borderBottom: '1px solid rgba(120, 140, 200, 0.08)',

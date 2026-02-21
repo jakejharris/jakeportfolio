@@ -12,6 +12,7 @@ import React from 'react';
 import ScrollToTop from '@/app/components/ScrollToTop';
 import dynamic from 'next/dynamic';
 import TableOfContents from '@/app/components/TableOfContents';
+import TagPill from '@/app/components/TagPill';
 import type { Metadata } from 'next';
 
 // Generate dynamic metadata for each post
@@ -99,26 +100,41 @@ const query = `*[_type == "post" && slug.current == $slug][0] {
 // Directly overwrite the entire components object to fix the type issues
 const components: Partial<PortableTextReactComponents> = {
   block: {
+    h1: ({ children, value }: any) => (
+      <h1 id={`section-${value._key}`} className="scroll-mt-20">{children}</h1>
+    ),
+    h2: ({ children, value }: any) => (
+      <h2 id={`section-${value._key}`} className="scroll-mt-20">{children}</h2>
+    ),
+    h3: ({ children, value }: any) => (
+      <h3 id={`section-${value._key}`} className="scroll-mt-20">{children}</h3>
+    ),
+    h4: ({ children, value }: any) => (
+      <h4 id={`section-${value._key}`} className="scroll-mt-20">{children}</h4>
+    ),
     normal: ({ children, value }: any) => {
       // Check if children contain any strong elements
-      const hasStrongChild = value.children?.some((child: any) => 
+      const hasStrongChild = value.children?.some((child: any) =>
         child.marks?.includes('strong') && child.text && child.text.trim().length > 0
       );
-      
+
       // If there's a strong child, add an ID based on the block's index
       if (hasStrongChild) {
-        const strongText = value.children.find((child: any) => 
-          child.marks?.includes('strong') && child.text && child.text.trim().length > 0
-        );
         const blockId = `section-${value._key}`;
-        
+
         return (
           <p id={blockId} className="relative scroll-mt-20">
             {children}
           </p>
         );
       }
-      
+
+      // Handle empty paragraphs (blank lines from Sanity editor)
+      const isEmpty = !value.children?.some((child: any) => child.text?.trim().length > 0);
+      if (isEmpty) {
+        return <p className="portable-text-empty">&nbsp;</p>;
+      }
+
       return <p>{children}</p>;
     }
   },
@@ -257,7 +273,7 @@ const components: Partial<PortableTextReactComponents> = {
 
       if (value.style === 'dots') {
         return (
-          <div className="my-8 flex justify-center space-x-2">
+          <div className="flex justify-center space-x-2" style={{ margin: '2.5em 0' }}>
             <span className="w-2 h-2 rounded-full bg-muted-foreground"></span>
             <span className="w-2 h-2 rounded-full bg-muted-foreground"></span>
             <span className="w-2 h-2 rounded-full bg-muted-foreground"></span>
@@ -266,19 +282,21 @@ const components: Partial<PortableTextReactComponents> = {
       }
 
       return (
-        <hr className={`my-8 ${styles[value.style as keyof typeof styles]}`} />
+        <hr className={`${styles[value.style as keyof typeof styles]}`} />
       );
     }
   },
   // Add marks configuration for links
   marks: {
     link: ({value, children}) => {
+      const href = value?.href || '';
+      const isExternal = value?.blank || href.startsWith('http');
       return (
-        <a 
-          href={value?.href}
-          target={value?.blank ? '_blank' : undefined}
-          rel={value?.blank ? 'noopener noreferrer' : undefined}
-          className="text-primary underline decoration-primary underline-offset-2 hover:text-primary/80 transition-colors"
+        <a
+          href={href}
+          target={isExternal ? '_blank' : undefined}
+          rel={isExternal ? 'noopener noreferrer' : undefined}
+          className="portable-text-link"
         >
           {children}
         </a>
@@ -456,12 +474,7 @@ export default async function PostPage({ params }: PageParams) {
             {post.tags && post.tags.length > 0 && (
               <div className="flex gap-2">
                 {post.tags.map(tag => (
-                  <span
-                    key={tag._id}
-                    className="px-2 py-0.5 rounded-full bg-muted text-muted-foreground"
-                  >
-                    {tag.title}
-                  </span>
+                  <TagPill linked={true} tag={tag} key={tag.slug.current} />
                 ))}
               </div>
             )}
@@ -476,7 +489,7 @@ export default async function PostPage({ params }: PageParams) {
           {/* Table of Contents */}
           {post.content && <TableOfContents content={post.content} externalLinks={post.externalLinks} />}
 
-          <div className="prose dark:prose-invert max-w-none portable-text">
+          <div className="max-w-none portable-text">
             {post.content && (
               <PortableText value={post.content} components={components} />
             )}

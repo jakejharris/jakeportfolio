@@ -1,5 +1,14 @@
 'use client';
 
+// Visualizes "Lossy drift" from "The Hard Problems." Signal particles (blue)
+// and noise particles (red/orange) flow left-to-right through eight
+// sequential compression filters. At each filter, ~5% of remaining noise is
+// caught and dissolves downward, while signal passes through unimpeded. After
+// all eight layers, 66.34% of the original stream survives as pure signal —
+// matching the article's math: "If each pass preserves 95% of reasoning-
+// relevant information, eight layers retain about 66% of the original signal.
+// That sounds bad until you realize: the 34% you lost was the noise."
+
 import { useEffect, useRef, useState, useCallback } from 'react';
 
 // --- Constants ---
@@ -20,6 +29,11 @@ const PHASE_DURATION = 1.2;
 const NOISE_FALL_DURATION = 0.9;
 const SETTLE_DURATION = 0.8;
 
+// Loop timing (seconds)
+const LOOP_HOLD_DURATION = 3.0;
+const FADE_OUT_DURATION = 0.5;
+const FADE_IN_DURATION = 0.4;
+
 // Stream positioning (normalized)
 const STREAM_CENTER_Y = 0.38;
 const STREAM_SPREAD = 0.18;
@@ -29,6 +43,7 @@ const END_X = 0.96;
 // --- Types ---
 
 type ParticleState = 'waiting' | 'flowing' | 'dissolving' | 'arrived' | 'gone';
+type LoopState = 'playing' | 'holding' | 'fading-out' | 'fading-in';
 
 interface Particle {
   type: 'signal' | 'noise';
@@ -361,6 +376,12 @@ export default function LossyDrift() {
   const phaseRef = useRef(0);
   const phaseStartTimeRef = useRef(0);
   const dimensionsRef = useRef({ width: 0, height: 0 });
+
+  // Loop state
+  const loopStateRef = useRef<LoopState>('playing');
+  const loopTimerRef = useRef(0);
+  const globalAlphaRef = useRef(1);
+
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
 
@@ -369,13 +390,16 @@ export default function LossyDrift() {
     const particles = particlesRef.current;
     const currentPhase = phaseRef.current;
 
-    // --- Background ---
+    // --- Background (always full alpha) ---
     const bgGrad = ctx.createLinearGradient(0, 0, width, height);
     bgGrad.addColorStop(0, '#0a0a14');
     bgGrad.addColorStop(0.5, '#0d0d1a');
     bgGrad.addColorStop(1, '#0a0a14');
     ctx.fillStyle = bgGrad;
     ctx.fillRect(0, 0, width, height);
+
+    // Apply global alpha for fade transitions (after background)
+    ctx.globalAlpha = globalAlphaRef.current;
 
     // --- Filter barriers ---
     ctx.save();
@@ -498,6 +522,9 @@ export default function LossyDrift() {
       ctx.fillStyle = 'rgba(230, 90, 55, 0.45)';
       ctx.fill();
     }
+
+    // Reset global alpha
+    ctx.globalAlpha = 1;
   }, []);
 
   // Reduced motion detection
@@ -509,18 +536,13 @@ export default function LossyDrift() {
     return () => mq.removeEventListener('change', handler);
   }, []);
 
-  // Scroll trigger
+  // Scroll trigger (continuous — toggles visibility)
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
 
     const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setIsVisible(true);
-          observer.disconnect();
-        }
-      },
+      ([entry]) => setIsVisible(entry.isIntersecting),
       { threshold: 0.3 },
     );
 
@@ -547,6 +569,9 @@ export default function LossyDrift() {
       phaseRef.current = 0;
       phaseStartTimeRef.current = 0;
       timeRef.current = 0;
+      loopStateRef.current = 'playing';
+      loopTimerRef.current = 0;
+      globalAlphaRef.current = 1;
     };
 
     resize();
@@ -555,7 +580,18 @@ export default function LossyDrift() {
     if (prefersReducedMotion) {
       const { width, height } = dimensionsRef.current;
       drawReducedMotion(ctx, width, height);
-    } else {
+    } else if (isVisible) {
+      // Reset for fresh play
+      const { width, height } = dimensionsRef.current;
+      const count = getParticleCount(width);
+      particlesRef.current = createParticles(count, width, height);
+      phaseRef.current = 0;
+      phaseStartTimeRef.current = 0;
+      timeRef.current = 0;
+      loopStateRef.current = 'playing';
+      loopTimerRef.current = 0;
+      globalAlphaRef.current = 1;
+
       let lastTime = performance.now();
 
       const animate = (now: number) => {
@@ -566,7 +602,7 @@ export default function LossyDrift() {
         const { width, height } = dimensionsRef.current;
 
         // Phase advancement
-        if (isVisible && phaseRef.current < 9) {
+        if (phaseRef.current < 9) {
           if (phaseRef.current === 0) {
             phaseRef.current = 1;
             phaseStartTimeRef.current = timeRef.current;
@@ -588,11 +624,56 @@ export default function LossyDrift() {
           height,
         );
 
+        // --- Loop state machine ---
+        const isComplete = phaseRef.current >= 9
+          && (timeRef.current - phaseStartTimeRef.current) >= SETTLE_DURATION;
+
+        if (loopStateRef.current === 'playing' && isComplete) {
+          loopStateRef.current = 'holding';
+          loopTimerRef.current = timeRef.current;
+        }
+
+        if (loopStateRef.current === 'holding') {
+          if (timeRef.current - loopTimerRef.current >= LOOP_HOLD_DURATION) {
+            loopStateRef.current = 'fading-out';
+            loopTimerRef.current = timeRef.current;
+          }
+        }
+
+        if (loopStateRef.current === 'fading-out') {
+          const fadeElapsed = timeRef.current - loopTimerRef.current;
+          globalAlphaRef.current = Math.max(0, 1 - fadeElapsed / FADE_OUT_DURATION);
+          if (fadeElapsed >= FADE_OUT_DURATION) {
+            // Reset particles and phase
+            const count = getParticleCount(width);
+            particlesRef.current = createParticles(count, width, height);
+            phaseRef.current = 0;
+            phaseStartTimeRef.current = 0;
+            globalAlphaRef.current = 0;
+            loopStateRef.current = 'fading-in';
+            loopTimerRef.current = timeRef.current;
+          }
+        }
+
+        if (loopStateRef.current === 'fading-in') {
+          const fadeElapsed = timeRef.current - loopTimerRef.current;
+          globalAlphaRef.current = Math.min(1, fadeElapsed / FADE_IN_DURATION);
+          if (fadeElapsed >= FADE_IN_DURATION) {
+            globalAlphaRef.current = 1;
+            loopStateRef.current = 'playing';
+          }
+        }
+
         draw(ctx, width, height);
         animFrameRef.current = requestAnimationFrame(animate);
       };
 
       animFrameRef.current = requestAnimationFrame(animate);
+    } else {
+      // Not visible — draw static idle frame
+      const { width, height } = dimensionsRef.current;
+      globalAlphaRef.current = 1;
+      draw(ctx, width, height);
     }
 
     return () => {

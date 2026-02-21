@@ -38,10 +38,10 @@ function debounce<T extends (...args: Parameters<T>) => ReturnType<T>>(
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
-  const [prevScrollPos, setPrevScrollPos] = useState(0);
   const [visible, setVisible] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
   const [isClient, setIsClient] = useState(false);
+  const prevScrollPos = useRef(0);
   const ticking = useRef(false);
   
   // Create a stable scroll handler with useCallback
@@ -52,18 +52,18 @@ export default function Navbar() {
       // Use requestAnimationFrame to optimize performance
       requestAnimationFrame(() => {
         const currentScrollPos = window.scrollY;
-        
+
         // Set scrolled state for styling
         setScrolled(currentScrollPos > 10);
-        
+
         // Only apply hide/show logic on mobile
         if (isMobile) {
-          const isScrolledDown = prevScrollPos < currentScrollPos;
-          const isScrollingUp = prevScrollPos > currentScrollPos;
+          const isScrolledDown = prevScrollPos.current < currentScrollPos;
+          const isScrollingUp = prevScrollPos.current > currentScrollPos;
           const isAtTop = currentScrollPos < 10;
-          
+
           // Only hide when scrolling down significantly and not at the top
-          if (isScrolledDown && !isAtTop && Math.abs(currentScrollPos - prevScrollPos) > 5) {
+          if (isScrolledDown && !isAtTop && Math.abs(currentScrollPos - prevScrollPos.current) > 5) {
             setVisible(false);
           } else if (isScrollingUp || isAtTop) {
             setVisible(true);
@@ -72,13 +72,13 @@ export default function Navbar() {
           // On desktop, always keep the navbar visible
           setVisible(true);
         }
-        
+
         // Remember the scroll position for next comparison
-        setPrevScrollPos(currentScrollPos);
+        prevScrollPos.current = currentScrollPos;
         ticking.current = false;
       });
     }
-  }, [prevScrollPos, isMobile]);
+  }, [isMobile]);
   
   // Create a debounced version of the resize handler
   const handleResize = useCallback(() => {

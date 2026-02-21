@@ -1,5 +1,16 @@
 'use client';
 
+// Visualizes "The Architecture" — the recursive compression pipeline that
+// takes raw data (Layer 0, 10TB) through progressively narrower layers down
+// to dense semantic signal (~200K tokens). 220 particles fall through a
+// five-layer tapering pyramid, and at each internal boundary a survival
+// probability determines which particles pass through and which are
+// eliminated. Survivors brighten as they descend, representing the article's
+// claim that "each layer strips noise, preserves signal, and passes a denser
+// representation upward." The pyramid shape itself encodes the logarithmic
+// scaling: the narrowing is dramatic early and gentle late, just like the
+// math in the article's compression table.
+
 import { useEffect, useRef, useState, useCallback } from 'react';
 
 // ─── Configuration ──────────────────────────────────────────────────────────

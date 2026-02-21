@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef, useCallback, useState } from "react";
 import { useTheme } from "next-themes";
 
 // Feature flag for pixel fluid background
@@ -47,8 +47,9 @@ export default function PixelFluidBackground({ className }: PixelFluidBackground
     isGrayscale: false,
     grayscaleInverted: false,
   });
+  const [mounted, setMounted] = useState(false);
   const { theme, resolvedTheme } = useTheme();
-  const isDark = resolvedTheme === "dark";
+  const isDark = mounted ? resolvedTheme === "dark" : true;
 
   // Get the current accent color based on data-accent attribute
   const getAccentColor = useCallback(() => {
@@ -247,6 +248,10 @@ export default function PixelFluidBackground({ className }: PixelFluidBackground
 
   const clearPointer = useCallback(() => {
     pointerRef.current.active = false;
+  }, []);
+
+  useEffect(() => {
+    setMounted(true);
   }, []);
 
   useEffect(() => {
