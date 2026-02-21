@@ -1,11 +1,11 @@
-import PageLayout from '../components/PageLayout';
+import PageLayout from '../../components/PageLayout';
 import Link from 'next/link';
 import Image from 'next/image';
 import { FaDownload, FaGithub } from 'react-icons/fa';
-import '../css/page.css';
-import '../css/animations.css';
+import '../../css/page.css';
+import '../../css/animations.css';
 import { MdArrowForward } from 'react-icons/md';
-import ScrollToTop from '../components/ScrollToTop';
+import ScrollToTop from '../../components/ScrollToTop';
 
 export const metadata = {
     title: "About",
