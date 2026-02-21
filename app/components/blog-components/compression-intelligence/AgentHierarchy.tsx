@@ -1,5 +1,14 @@
 'use client';
 
+// Visualizes the three-tier agent hierarchy described in "What I Learned
+// Running Three-Tier Agent Hierarchies." Six cheap Haiku explore agents feed
+// into three mid-tier Sonnet workers, which feed into one Opus coordinator,
+// which reports to the human. Flow particles travel upward along Bezier
+// curves, and a compression threshold (4 Haiku arrivals spawn 1 Sonnet
+// particle) demonstrates the key insight: "Every tier compresses information
+// for the tier above it." The result is a live depiction of context cost
+// dropping from O(file_size) to O(result_count) at each boundary.
+
 import { useEffect, useRef, useState, useCallback } from 'react';
 
 // --- Types ---
@@ -113,6 +122,16 @@ function calculateLayout(width: number, height: number): Layout {
   const nodes: HierarchyNode[] = [];
   const nodesByTier: Record<string, HierarchyNode[]> = {};
 
+  // On short canvases, shift tiers down to prevent top clipping
+  const yOffsets: Record<string, number> = {};
+  if (height < 380) {
+    // Compress spread and add top margin so human label isn't clipped
+    yOffsets['human'] = 0.18;
+    yOffsets['opus'] = 0.35;
+    yOffsets['sonnet'] = 0.56;
+    yOffsets['haiku'] = 0.80;
+  }
+
   const horizontalPadding = width < 400 ? 0.15 : 0.12;
   const usableWidth = width * (1 - 2 * horizontalPadding);
   const startX = width * horizontalPadding;
@@ -124,7 +143,8 @@ function calculateLayout(width: number, height: number): Layout {
 
   for (const config of TIER_CONFIGS) {
     const tierNodes: HierarchyNode[] = [];
-    const y = config.yPosition * height;
+    const yPos = yOffsets[config.tier] ?? config.yPosition;
+    const y = yPos * height;
 
     for (let i = 0; i < config.nodeCount; i++) {
       let x: number;
@@ -327,7 +347,9 @@ export default function AgentHierarchy() {
     ctx.font = `${fontSize}px ui-monospace, SFMono-Regular, monospace`;
 
     for (const config of TIER_CONFIGS) {
-      const y = config.yPosition * height;
+      // Use actual node y from layout (respects mobile adjustments)
+      const tierNode = nodes.find(n => n.tier === config.tier);
+      const y = tierNode ? tierNode.y : config.yPosition * height;
       ctx.fillStyle = `rgba(${config.colorRgb}, 0.55)`;
 
       if (isNarrow) {
