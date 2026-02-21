@@ -1,5 +1,13 @@
 'use client';
 
+// Visualizes the article's core thesis: compression is intelligence. Particles
+// scattered across four named layers (Raw Input → Features → Compression →
+// Latent Space) drift toward a central convergence point, representing how
+// raw, noisy data gets progressively compressed into dense latent
+// representations. The movement mirrors the claim that "every optimization
+// I'd made was the same operation at different scales" — information
+// converging from chaos into signal.
+
 import { useEffect, useRef, useState, useCallback } from 'react';
 
 // --- Constants ---

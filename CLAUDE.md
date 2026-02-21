@@ -11,6 +11,8 @@ npm run start    # Start production server
 npm run lint     # Run ESLint
 ```
 
+**Important:** Do NOT run `npm run build`, `npm run dev`, or `npm run start` directly. Always ask the user to run these commands themselves.
+
 ## Git Conventions
 
 - Use `git switch -c <branch>` to create new branches (not `git checkout -b`)

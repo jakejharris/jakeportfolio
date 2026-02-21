@@ -40,13 +40,19 @@ So I went looking for the theory.
 
 ## The Theory: Compression Is Intelligence
 
-The Hutter Prize offers €500,000 for compressing 1GB of Wikipedia. Not for AI research. Not for novel architectures. For compression. Because the premise is that to compress something well, you have to understand it. You have to know what's essential, what's redundant, what's derivable from context. Compression and comprehension are the same operation.
+The Hutter Prize offers €500,000 for compressing 1GB of Wikipedia. Not for AI research. Not for novel architectures. For compression. Because the premise is that to compress something well, you have to understand it. You have to know what's essential, what's redundant, what's derivable from context. ***Compression and comprehension are the same operation.***
 
-DeepMind formalized this in "Language Modeling Is Compression" (ICLR 2024), proving that optimal prediction and optimal compression are mathematically equivalent. Chinchilla 70B compresses ImageNet to 43.4%, beating PNG, and LibriSpeech to 16.4%, beating FLAC. These aren't language tasks. LLMs aren't just language models. They're general-purpose compression engines that happen to be trained on text.
+The thread goes back further than the prize. Gregory Chaitin, one of the founders of algorithmic information theory, put it as plainly as anyone has: "Compression is comprehension." Not as a metaphor — as a mathematical claim. In his framework, every scientific theory is literally a compressed representation of observed data. Newton's laws compress the motion of every object in the universe into a handful of equations. E=mc² compresses the relationship between mass and energy into five characters. The shorter the program that generates the observation, the deeper the understanding. Ray Solomonoff formalized this in 1964, proving that optimal prediction and optimal compression are the same operation. Marcus Hutter unified both threads with AIXI and operationalized the whole thing with a cash prize. The idea that compression equals intelligence isn't a recent ML insight. It's been converging from mathematics, philosophy, and information theory for over sixty years.
 
-And this is exactly what I was watching in my agent hierarchies. A Haiku model reads 4,000 tokens of code and returns 300 tokens of structure. That's compression. A Sonnet teammate reads the summaries from five Haiku agents and synthesizes them into a plan. That's compression of compression. The Opus coordinator reads the plan and makes a decision. Each layer strips noise, preserves signal, and passes a denser representation upward.
+DeepMind formalized it for language models in "Language Modeling Is Compression" (Delétang et al., ICLR 2024), proving that optimal prediction and optimal compression are mathematically equivalent. Chinchilla 70B compresses ImageNet to 43.4%, beating PNG, and LibriSpeech to 16.4%, beating FLAC. These aren't language tasks. LLMs aren't just language models. ***They're general-purpose compression engines that happen to be trained on text.***
 
-The question that kept me up: what if you formalized this? What if instead of doing it ad hoc with `sed` commands on codebases, you built a pipeline that recursively compressed arbitrarily large datasets into something a frontier model could actually reason over?
+In 2024, Huang et al. closed the remaining gap between theory and empirical evidence. They treated 31 public LLMs from nine different organizations as data compressors, measured how efficiently each model compressed external text, and plotted that against downstream benchmark scores across twelve tasks. The correlation was almost perfectly linear: Pearson ρ ≈ −0.95. Better compressor, smarter model — across different architectures, different tokenizers, different training data, all sitting on the same curve. The average deviation from the line was 3.1 percentage points, which is within the noise range of just changing prompt formatting. Before this paper, compression-equals-intelligence was a theoretical claim. After it, it's a measured straight line across 31 models.
+
+What made my ears perk up: the correlation sharpened when they matched the compression corpus to the task domain. Compressing GitHub code predicted coding ability at ρ = −0.937. Compressing ArXiv papers predicted mathematical reasoning at ρ = −0.953. But using Common Crawl to predict math scores dropped the correlation to −0.623. What you compress *against* determines what intelligence emerges. This mapped directly onto what I'd found in my agent hierarchies. You can't run the same generic compression at every depth. Early layers should preserve facts and entities. Middle layers should preserve relationships and causal chains. Deep layers should preserve reasoning patterns and structural insights. Huang et al. proved it statistically across 31 models. I'd stumbled into it empirically, one `sed` command at a time.
+
+And this is exactly what I was watching play out in real time. A Haiku model reads 4,000 tokens of code and returns 300 tokens of structure. *That's compression.* A Sonnet teammate reads the summaries from five Haiku agents and synthesizes them into a plan. *That's compression of compression.* The Opus coordinator reads the plan and makes a decision. Each layer strips noise, preserves signal, and passes a denser representation upward.
+
+The question that kept me up: *what if you formalized this?* What if instead of doing it ad hoc with `sed` commands and manual sub-agent hierarchies, you built a pipeline that recursively compressed arbitrarily large inputs into something a single frontier model could reason over?
 
 ## The Architecture
 
@@ -106,15 +112,23 @@ MIT published Recursive Language Models (Zhang, Khattab, Kraska, December 2025) 
 
 The approaches are complementary, not competing. RLM handles query-time decomposition. This architecture handles pre-query compression. The compression pyramid could serve as the structured variable that RLM operates on, drilling into lower layers on demand rather than processing raw data every time. Pre-compression for speed, recursive traversal for precision. Together, they're the full stack.
 
-## A $120 Experiment
+## What the Researchers Proved — and What They Didn't Build
 
-The whole hypothesis is falsifiable for under $120 in API costs.
+Here's what everything I've cited has in common: it operates at the level of model weights. How well does a trained model compress text? How does that compression efficiency correlate with benchmark performance? The question is always about the model's internal representations — about what the model *is*.
 
-100MB of Wikipedia. 200 QA pairs across five categories: factual recall, relational reasoning, cross-article inference, pattern recognition, temporal-causal chains. Compress through 8 layers using Llama 70B via Groq. At each layer, evaluate against the full benchmark using Claude Opus. Four configurations testing model size and chunk granularity map the sensitivity landscape.
+Nobody asked the inference-time question.
 
-If cross-article reasoning accuracy stays above 60% through 5+ layers, the architecture works. If it collapses by layer 3, we know exactly where and why it breaks. Either outcome is valuable. This is a weekend project for anyone with API access and curiosity.
+Nobody asked: what if you used models *as* compressors at runtime — not measuring their compression ability, but deploying it as an engineering primitive? What if the same principle that makes a model intelligent during training could be exploited at inference time to make it reason over inputs that would otherwise destroy it?
 
-I intend to run it. I'll publish the results either way.
+That's what I've been doing by hand. When I instruct a Haiku agent to return file references instead of file contents, I'm applying compression at inference time. When I build a graduated reading protocol that cuts 15,000 tokens down to 670, I'm running the same operation Huang et al. measured — at a different layer of the stack. When I give agents layer-aware instructions that change what gets preserved at each depth, I'm doing exactly what their domain-specific findings predicted: matching the compression to the task.
+
+The rabbit hole goes deeper than I expected. Maguire and colleagues at University College Dublin proposed that consciousness itself — not just intelligence, but subjective experience — might be data compression, coining the term "Compressionism" as a formal theory of mind. I'm not qualified to evaluate that claim. But I notice that the thread connecting Shannon (1948) to Solomonoff (1964) to Chaitin (2006) to Hutter (2006) to DeepMind (2024) to Huang et al. (2024) has been converging from independent fields for seventy-five years. That kind of convergence usually means something.
+
+The researchers proved the relationship at the model level. The practitioners discovered the same thing independently from the engineering side. What hasn't been built is the recursive pipeline that takes this from manual technique to systematic architecture — the thing that lets eight layers of logarithmic scaling compress a library into a context window.
+
+The components all exist. The theory is proven from multiple directions. The engineering is understood. I think this is less a question of *whether* someone builds it than *when* — and whether, when they do, they realize they're assembling a sixty-year-old idea that mathematicians, philosophers, and information theorists have been pointing at all along.
+
+None of this started with a theory. It started with watching Claude Code choke on a 3,000-line file, trimming the context down to make it work, and then one day recognizing the pattern underneath the fix.
 
 ---
 

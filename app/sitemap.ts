@@ -9,9 +9,19 @@ type Post = {
   _updatedAt: string;
 };
 
+type SitemapTag = {
+  slug: string;
+  _updatedAt: string;
+};
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const posts = await sanityFetch<Post[]>({
     query: `*[_type == "post"] | order(publishedAt desc) { slug, publishedAt, _updatedAt }`,
+    tags: ["post"],
+  });
+
+  const tags = await sanityFetch<SitemapTag[]>({
+    query: `*[_type == "tag"]{ "slug": slug.current, _updatedAt }`,
     tags: ["post"],
   });
 
@@ -40,5 +50,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.6,
   }));
 
-  return [...staticEntries, ...postEntries];
+  const tagEntries: MetadataRoute.Sitemap = tags.map((tag) => ({
+    url: `${BASE_URL}/tags/${tag.slug}/`,
+    lastModified: new Date(tag._updatedAt),
+    changeFrequency: "weekly",
+    priority: 0.5,
+  }));
+
+  return [...staticEntries, ...postEntries, ...tagEntries];
 }

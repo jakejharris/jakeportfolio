@@ -1,5 +1,15 @@
 'use client';
 
+// Visualizes the graduated reading protocol described in "The Hard Problems"
+// and the agent hierarchy section. A grid of ~600 blocks represents 15,000
+// tokens of raw file content. Three compression phases play in sequence —
+// `tree` (15k→4k), `rg` (4k→1.5k), `sed -n` (1.5k→670) — eliminating
+// blocks from the edges inward until only a small surviving cluster remains.
+// This is the article's concrete example of inference-time compression:
+// "A graduated reading protocol uses about 670 tokens where reading all
+// relevant files would cost 15,000+. That's 95% savings, and it's not a
+// trick. It's compression."
+
 import { useEffect, useRef, useState, useCallback } from 'react';
 
 // --- Phase Configuration ---
@@ -16,13 +26,16 @@ const BLOCK_GAP = 1;
 const BLOCK_MIN_SIZE = 3;
 const BLOCK_MAX_SIZE = 6;
 
+// Loop timing
+const LOOP_HOLD = 3000;
+const FADE_DURATION = 500;
+const FADE_IN_DURATION = 400;
+
 // Colors (matching HeroCompression palette)
 const BG_COLOR = '#0a0a14';
 const BG_MID = '#0d0d1a';
 const LABEL_DIM = 'rgba(160, 175, 220, 0.3)';
-const LABEL_ACTIVE = 'rgba(160, 200, 255, 0.85)';
 const COUNTER_COLOR = 'rgba(200, 215, 240, 0.9)';
-const SAVINGS_COLOR = 'rgba(140, 200, 255, 0.95)';
 const MONOSPACE = 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace';
 
 // --- Helpers ---
@@ -47,7 +60,9 @@ type AnimPhase =
   | 'phase-1'
   | 'pause-1'
   | 'phase-2'
-  | 'complete';
+  | 'complete'
+  | 'fade-out'
+  | 'fade-in';
 
 interface Block {
   col: number;
@@ -179,6 +194,7 @@ export default function TokenCompression() {
   const phaseRef = useRef<AnimPhase>('idle');
   const phaseStartRef = useRef(0);
   const globalTimeRef = useRef(0);
+  const globalAlphaRef = useRef(1);
 
   // Counter
   const displayCountRef = useRef(15000);
@@ -191,7 +207,6 @@ export default function TokenCompression() {
   const activeLabelIdx = useRef(-1);
   const showSavingsRef = useRef(false);
   const savingsTimeRef = useRef(0);
-  const hasPlayedRef = useRef(false);
 
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
@@ -244,13 +259,45 @@ export default function TokenCompression() {
         }
         phaseRef.current = 'complete';
         phaseStartRef.current = now;
-        hasPlayedRef.current = true;
         // Schedule savings text
         savingsTimeRef.current = now + FINAL_SAVINGS_DELAY;
         showSavingsRef.current = false;
-      } else if (phase === 'complete' && !showSavingsRef.current && now >= savingsTimeRef.current) {
-        showSavingsRef.current = true;
-        savingsTimeRef.current = now; // reuse as appearance time for fade-in
+      } else if (phase === 'complete') {
+        // Show savings text
+        if (!showSavingsRef.current && now >= savingsTimeRef.current) {
+          showSavingsRef.current = true;
+          savingsTimeRef.current = now; // reuse as appearance time for fade-in
+        }
+        // After savings shown + hold, start fade-out for loop
+        if (showSavingsRef.current) {
+          const sinceShown = now - savingsTimeRef.current;
+          if (sinceShown >= LOOP_HOLD) {
+            phaseRef.current = 'fade-out';
+            phaseStartRef.current = now;
+          }
+        }
+      } else if (phase === 'fade-out') {
+        globalAlphaRef.current = Math.max(0, 1 - elapsed / FADE_DURATION);
+        if (elapsed >= FADE_DURATION) {
+          // Reset everything for next loop
+          resetBlocks(blocksRef.current);
+          displayCountRef.current = 15000;
+          countFromRef.current = 15000;
+          countToRef.current = 15000;
+          countStartRef.current = now;
+          activeLabelIdx.current = -1;
+          showSavingsRef.current = false;
+          globalAlphaRef.current = 0;
+          phaseRef.current = 'fade-in';
+          phaseStartRef.current = now;
+        }
+      } else if (phase === 'fade-in') {
+        globalAlphaRef.current = Math.min(1, elapsed / FADE_IN_DURATION);
+        if (elapsed >= FADE_IN_DURATION) {
+          globalAlphaRef.current = 1;
+          phaseRef.current = 'initial-hold';
+          phaseStartRef.current = now;
+        }
       }
     },
     [startCount]
@@ -262,13 +309,16 @@ export default function TokenCompression() {
       const phase = phaseRef.current;
       const phaseElapsed = now - phaseStartRef.current;
 
-      // Background gradient
+      // Background gradient (always full alpha)
       const bgGrad = ctx.createLinearGradient(0, 0, w, h);
       bgGrad.addColorStop(0, BG_COLOR);
       bgGrad.addColorStop(0.5, BG_MID);
       bgGrad.addColorStop(1, BG_COLOR);
       ctx.fillStyle = bgGrad;
       ctx.fillRect(0, 0, w, h);
+
+      // Apply global alpha for fade transitions (after background)
+      ctx.globalAlpha = globalAlphaRef.current;
 
       // --- Phase labels (top-left) ---
       const labelFontSize = Math.max(10, w * 0.022);
@@ -414,6 +464,9 @@ export default function TokenCompression() {
         ctx.arc(cx, cy, glowR, 0, Math.PI * 2);
         ctx.fill();
       }
+
+      // Reset global alpha
+      ctx.globalAlpha = 1;
     },
     []
   );
@@ -496,7 +549,7 @@ export default function TokenCompression() {
       ctx.fillText('tree  >  rg  >  sed -n', midX, 16);
 
       // 95% compression
-      ctx.fillStyle = SAVINGS_COLOR;
+      ctx.fillStyle = 'rgba(140, 200, 255, 0.95)';
       ctx.font = `500 ${Math.max(12, w * 0.028)}px ${MONOSPACE}`;
       ctx.fillText('95% compression', midX, 16 + labelFont + 6);
     },
@@ -512,19 +565,13 @@ export default function TokenCompression() {
     return () => mq.removeEventListener('change', handler);
   }, []);
 
-  // --- Intersection Observer ---
+  // --- Intersection Observer (continuous — toggles visibility) ---
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
 
     const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setIsVisible(true);
-        } else if (hasPlayedRef.current) {
-          setIsVisible(false);
-        }
-      },
+      ([entry]) => setIsVisible(entry.isIntersecting),
       { threshold: 0.3 }
     );
 
@@ -561,6 +608,7 @@ export default function TokenCompression() {
       phaseRef.current = 'initial-hold';
       phaseStartRef.current = performance.now();
       globalTimeRef.current = 0;
+      globalAlphaRef.current = 1;
       displayCountRef.current = 15000;
       countFromRef.current = 15000;
       countToRef.current = 15000;
@@ -583,6 +631,7 @@ export default function TokenCompression() {
     } else {
       // Not visible, draw idle state (full grid)
       const rect = canvas.getBoundingClientRect();
+      globalAlphaRef.current = 1;
       displayCountRef.current = 15000;
       draw(ctx, rect.width, rect.height, performance.now());
     }
