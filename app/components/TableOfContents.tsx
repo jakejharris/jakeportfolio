@@ -29,27 +29,19 @@ interface HeadingItem {
 export default function TableOfContents({ content, externalLinks }: TableOfContentsProps) {
   const [headings, setHeadings] = useState<HeadingItem[]>([])
 
-  // Extract headings from content (paragraphs with strong/bold elements)
+  // Extract headings from content (h1–h4 heading blocks)
   const extractHeadings = useCallback(() => {
     const extractedHeadings: HeadingItem[] = []
 
     if (!content || !Array.isArray(content)) return []
 
     content.forEach((block) => {
-      // Check if it's a paragraph block
-      if (block._type === 'block' && block.style === 'normal') {
-        // Check for children that include strong marks
-        const strongText = block.children?.find((child: any) => 
-          child.marks?.includes('strong') && child.text && child.text.trim().length > 0
-        )
-
-        if (strongText) {
-          const headingText = strongText.text
-          const headingId = `section-${block._key}`
-          
+      if (block._type === 'block' && ['h1', 'h2', 'h3', 'h4'].includes(block.style || '')) {
+        const text = block.children?.map((child: any) => child.text).join('') || ''
+        if (text.trim().length > 0) {
           extractedHeadings.push({
-            text: headingText,
-            id: headingId,
+            text: text.trim(),
+            id: `section-${block._key}`,
           })
         }
       }
