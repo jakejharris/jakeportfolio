@@ -1,8 +1,5 @@
-import { Inter } from 'next/font/google';
+import { GeistSans } from 'geist/font/sans';
+import { GeistMono } from 'geist/font/mono';
 
-// Define Inter as the primary font
-export const inter = Inter({
-  subsets: ['latin'],
-  display: 'swap',
-  variable: '--font-inter',
-}); 
+export const geistSans = GeistSans;
+export const geistMono = GeistMono;
