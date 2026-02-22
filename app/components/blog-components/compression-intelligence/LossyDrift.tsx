@@ -3,389 +3,85 @@
 // Visualizes "Lossy drift" from "The Hard Problems." Signal particles (blue)
 // and noise particles (red/orange) flow left-to-right through eight
 // sequential compression filters. At each filter, ~5% of remaining noise is
-// caught and dissolves downward, while signal passes through unimpeded. After
-// all eight layers, 66.34% of the original stream survives as pure signal —
-// matching the article's math: "If each pass preserves 95% of reasoning-
-// relevant information, eight layers retain about 66% of the original signal.
-// That sounds bad until you realize: the 34% you lost was the noise."
+// caught and dissolves (red sparks), while signal passes through unimpeded.
+// After all eight layers, 66.34% of the original stream survives as pure
+// signal. Hover over filter barriers for real-time purge statistics.
 
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { useTheme } from 'next-themes';
 import { getCanvasTheme } from './theme-colors';
 
-// --- Constants ---
+// ─── Configuration & Math ─────────────────────────────────────────────────
+const MAX_PARTICLES = 350;
+const STAGE_PERCENTAGES = [100, 95.0, 90.3, 85.7, 81.5, 77.4, 73.5, 69.8, 66.3];
+const FILTER_POSITIONS = [0.15, 0.25, 0.35, 0.45, 0.55, 0.65, 0.75, 0.85];
 
-// Percentage remaining at each stage (before filter 1, after filters 1-8)
-const STAGE_PERCENTAGES = [100, 95, 90.25, 85.74, 81.45, 77.38, 73.51, 69.83, 66.34];
+// How much of the original 100% is lost at each specific filter (totaling ~33.66%)
+const STAGE_DROPS = [5.0, 4.75, 4.51, 4.29, 4.07, 3.87, 3.68, 3.49];
+const TOTAL_NOISE = 33.66; // 100 - 66.34
 
-// 8 filter positions (normalized x, 0-1), evenly spaced with margins
-const FILTER_POSITIONS = Array.from({ length: 8 }, (_, i) => 0.14 + (i * 0.72) / 7);
-
-// Responsive particle counts
-const PARTICLE_COUNT_MOBILE = 40;
-const PARTICLE_COUNT_TABLET = 70;
-const PARTICLE_COUNT_DESKTOP = 100;
-
-// Timing
-const PHASE_DURATION = 1.2;
-const NOISE_FALL_DURATION = 0.9;
-const SETTLE_DURATION = 0.8;
-
-// Loop timing (seconds)
-const LOOP_HOLD_DURATION = 3.0;
-const FADE_OUT_DURATION = 0.5;
-const FADE_IN_DURATION = 0.4;
-
-// Stream positioning (normalized)
-const STREAM_CENTER_Y = 0.38;
-const STREAM_SPREAD = 0.18;
-const START_X = 0.04;
-const END_X = 0.96;
-
-// --- Types ---
-
-type ParticleState = 'waiting' | 'flowing' | 'dissolving' | 'arrived' | 'gone';
-type LoopState = 'playing' | 'holding' | 'fading-out' | 'fading-in';
+type ParticleType = 'signal' | 'noise';
 
 interface Particle {
-  type: 'signal' | 'noise';
+  id: number;
+  type: ParticleType;
   x: number;
   y: number;
+  vx: number;
+  vy: number;
   baseY: number;
+  targetY: number;
   radius: number;
-  baseRadius: number;
-  baseOpacity: number;
-  currentOpacity: number;
-  r: number;
-  g: number;
-  b: number;
-  speed: number;
   phase: number;
   jitter: number;
-  state: ParticleState;
-  filterCaughtAt: number; // -1 for signal
-  dissolveStartTime: number;
-  startX: number;
-  targetX: number;
+  deathFilter: number; // -1 if signal, 0-7 if noise
+  history: { x: number; y: number }[];
+  active: boolean;
 }
 
-// --- Helpers ---
-
-function lerp(a: number, b: number, t: number): number {
-  return a + (b - a) * t;
+interface Spark {
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  life: number;
+  maxLife: number;
+  rgb: string;
 }
 
-function easeOutCubic(t: number): number {
-  return 1 - Math.pow(1 - t, 3);
+interface FilterStats {
+  purgedCount: number;
+  pulseTime: number;
 }
 
-function easeInQuad(t: number): number {
-  return t * t;
-}
+// ─── Helpers ──────────────────────────────────────────────────────────────
 
-function getParticleCount(width: number): number {
-  if (width < 480) return PARTICLE_COUNT_MOBILE;
-  if (width < 768) return PARTICLE_COUNT_TABLET;
-  return PARTICLE_COUNT_DESKTOP;
-}
-
-// --- Particle creation ---
-
-function createParticles(count: number, width: number, height: number, isDark: boolean): Particle[] {
-  const particles: Particle[] = [];
-  const centerY = height * STREAM_CENTER_Y;
-  const spread = height * STREAM_SPREAD;
-  const startX = width * START_X;
-
-  // Calculate how many noise particles die at each filter
-  const noisePerFilter: number[] = [];
-  let remaining = count;
-  for (let k = 0; k < 8; k++) {
-    const dies = Math.max(1, Math.round(remaining * 0.05));
-    noisePerFilter.push(dies);
-    remaining -= dies;
-  }
-
-  let idx = 0;
-
-  // Noise particles — assigned to specific filters
-  for (let filterIdx = 0; filterIdx < 8; filterIdx++) {
-    for (let j = 0; j < noisePerFilter[filterIdx]; j++) {
-      const baseY = centerY + (seededRandom(idx, 0) - 0.5) * 2 * spread;
-      const opacityBase = 0.25 + seededRandom(idx, 1) * 0.2;
-      particles.push({
-        type: 'noise',
-        x: startX + (seededRandom(idx, 2) - 0.5) * width * 0.03,
-        y: baseY,
-        baseY,
-        radius: 1.2 + seededRandom(idx, 3) * 1.0,
-        baseRadius: 1.2 + seededRandom(idx, 3) * 1.0,
-        baseOpacity: opacityBase,
-        currentOpacity: opacityBase,
-        r: isDark ? lerp(180, 255, seededRandom(idx, 4)) : lerp(160, 220, seededRandom(idx, 4)),
-        g: isDark ? lerp(70, 110, seededRandom(idx, 5)) : lerp(50, 90, seededRandom(idx, 5)),
-        b: isDark ? lerp(40, 65, seededRandom(idx, 6)) : lerp(20, 50, seededRandom(idx, 6)),
-        speed: 0.6 + seededRandom(idx, 7) * 0.3,
-        phase: seededRandom(idx, 8) * Math.PI * 2,
-        jitter: 2.5 + seededRandom(idx, 9) * 2.0,
-        state: 'waiting',
-        filterCaughtAt: filterIdx,
-        dissolveStartTime: 0,
-        startX: startX + (seededRandom(idx, 2) - 0.5) * width * 0.03,
-        targetX: FILTER_POSITIONS[filterIdx] * width,
-      });
-      idx++;
-    }
-  }
-
-  // Signal particles
-  const signalCount = count - idx;
-  for (let j = 0; j < signalCount; j++) {
-    const baseY = centerY + (seededRandom(idx, 0) - 0.5) * 2 * spread;
-    const opacityBase = 0.6 + seededRandom(idx, 1) * 0.3;
-    particles.push({
-      type: 'signal',
-      x: startX + (seededRandom(idx, 2) - 0.5) * width * 0.03,
-      y: baseY,
-      baseY,
-      radius: 1.8 + seededRandom(idx, 3) * 1.5,
-      baseRadius: 1.8 + seededRandom(idx, 3) * 1.5,
-      baseOpacity: opacityBase,
-      currentOpacity: opacityBase,
-      r: isDark ? lerp(90, 140, seededRandom(idx, 4)) : lerp(30, 80, seededRandom(idx, 4)),
-      g: isDark ? lerp(150, 210, seededRandom(idx, 5)) : lerp(100, 170, seededRandom(idx, 5)),
-      b: 255,
-      speed: 0.6 + seededRandom(idx, 7) * 0.25,
-      phase: seededRandom(idx, 8) * Math.PI * 2,
-      jitter: 0.4 + seededRandom(idx, 9) * 0.4,
-      state: 'waiting',
-      filterCaughtAt: -1,
-      dissolveStartTime: 0,
-      startX: startX + (seededRandom(idx, 2) - 0.5) * width * 0.03,
-      targetX: width * END_X,
-    });
-    idx++;
-  }
-
-  return particles;
-}
-
-// Deterministic pseudo-random for stable particle positions
-function seededRandom(index: number, seed: number): number {
-  const x = Math.sin(index * 127.1 + seed * 311.7) * 43758.5453;
-  return x - Math.floor(x);
-}
-
-// --- Particle update ---
-
-function updateParticles(
-  particles: Particle[],
-  dt: number,
-  time: number,
-  currentPhase: number,
-  width: number,
-  height: number,
-) {
-  const totalTravelTime = 8 * PHASE_DURATION;
-
-  for (const p of particles) {
-    // --- Waiting ---
-    if (p.state === 'waiting') {
-      p.y = p.baseY + Math.sin(time * 1.5 + p.phase) * p.jitter;
-      p.x = p.startX + Math.sin(time * 0.8 + p.phase * 1.7) * p.jitter * 0.5;
-
-      if (currentPhase >= 1) {
-        p.state = 'flowing';
-      }
-      continue;
-    }
-
-    // --- Flowing ---
-    if (p.state === 'flowing') {
-      if (p.type === 'signal') {
-        const travelSpeed = (width * (END_X - START_X)) / totalTravelTime;
-        p.x += travelSpeed * dt;
-        p.y = p.baseY + Math.sin(time * 1.5 + p.phase) * p.jitter;
-
-        if (p.x >= p.targetX) {
-          p.x = p.targetX;
-          p.state = 'arrived';
-          p.dissolveStartTime = time; // reuse for glow timing
-        }
-      } else {
-        // Noise particle: travel from start to its assigned filter
-        const filterPhase = p.filterCaughtAt + 1;
-        const travelTime = filterPhase * PHASE_DURATION;
-        const travelSpeed = (p.targetX - p.startX) / travelTime;
-        p.x += travelSpeed * dt;
-        p.y = p.baseY
-          + Math.sin(time * 2.5 + p.phase) * p.jitter
-          + Math.cos(time * 3.7 + p.phase * 0.6) * p.jitter * 0.5;
-
-        if (p.x >= p.targetX) {
-          p.x = p.targetX;
-          p.state = 'dissolving';
-          p.dissolveStartTime = time;
-        }
-      }
-      continue;
-    }
-
-    // --- Dissolving (noise only) ---
-    if (p.state === 'dissolving') {
-      const elapsed = time - p.dissolveStartTime;
-      const t = Math.min(elapsed / NOISE_FALL_DURATION, 1.0);
-      const easedT = easeInQuad(t);
-
-      // Drift downward with gravity
-      p.y += (40 + (p.filterCaughtAt * 4)) * dt * (0.3 + easedT);
-      // Slight horizontal scatter
-      p.x += Math.sin(time * 3 + p.phase) * 0.3 * (1 - easedT);
-      // Fade
-      p.currentOpacity = p.baseOpacity * (1 - easedT);
-      // Shrink
-      p.radius = p.baseRadius * (1 - easedT * 0.4);
-
-      if (t >= 1.0 || p.y > height) {
-        p.state = 'gone';
-        p.currentOpacity = 0;
-      }
-      continue;
-    }
-
-    // --- Arrived (signal) ---
-    if (p.state === 'arrived') {
-      p.y = p.baseY + Math.sin(time * 1.2 + p.phase) * p.jitter * 0.3;
-
-      if (currentPhase >= 9) {
-        const glowElapsed = time - p.dissolveStartTime;
-        const glowT = Math.min(glowElapsed / SETTLE_DURATION, 1.0);
-        p.currentOpacity = Math.min(1.0, p.baseOpacity + 0.25 * easeOutCubic(glowT));
-      }
-    }
-  }
-}
-
-// --- Reduced motion static frame ---
-
-function drawReducedMotion(ctx: CanvasRenderingContext2D, width: number, height: number, isDark: boolean, theme: ReturnType<typeof getCanvasTheme>) {
-  // Background
-  const bgGrad = ctx.createLinearGradient(0, 0, width, height);
-  bgGrad.addColorStop(0, theme.bg);
-  bgGrad.addColorStop(0.5, theme.bgMid);
-  bgGrad.addColorStop(1, theme.bg);
-  ctx.fillStyle = bgGrad;
-  ctx.fillRect(0, 0, width, height);
-
-  // Draw 8 faded filter lines
-  ctx.save();
-  ctx.setLineDash([6, 6]);
-  ctx.strokeStyle = `rgba(${theme.filterLine}, 0.1)`;
-  ctx.lineWidth = 1;
+function getDeathFilter(): number {
+  let r = Math.random() * TOTAL_NOISE;
   for (let i = 0; i < 8; i++) {
-    const fx = FILTER_POSITIONS[i] * width;
-    ctx.beginPath();
-    ctx.moveTo(fx, height * 0.08);
-    ctx.lineTo(fx, height * 0.70);
-    ctx.stroke();
+    if (r < STAGE_DROPS[i]) return i;
+    r -= STAGE_DROPS[i];
   }
-  ctx.restore();
-
-  const centerY = height * 0.40;
-  const leftCenterX = width * 0.07;
-  const rightCenterX = width * 0.93;
-
-  // Left cluster: mixed signal + noise (golden angle spiral)
-  const leftCount = 20;
-  for (let i = 0; i < leftCount; i++) {
-    const isNoise = i < 7;
-    const angle = i * 2.399963;
-    const rSpread = Math.sqrt(i / leftCount) * Math.min(width * 0.04, 30);
-    const px = leftCenterX + Math.cos(angle) * rSpread;
-    const py = centerY + Math.sin(angle) * rSpread * 1.8;
-    const r = isNoise ? 1.3 : 2.0;
-    ctx.beginPath();
-    ctx.arc(px, py, r, 0, Math.PI * 2);
-    ctx.fillStyle = isNoise
-      ? `rgba(${theme.noise}, 0.35)`
-      : `rgba(${theme.signal}, 0.7)`;
-    ctx.fill();
-  }
-
-  // Right cluster: only signal, brighter
-  const rightCount = 13;
-  for (let i = 0; i < rightCount; i++) {
-    const angle = i * 2.399963;
-    const rSpread = Math.sqrt(i / rightCount) * Math.min(width * 0.03, 22);
-    const px = rightCenterX + Math.cos(angle) * rSpread;
-    const py = centerY + Math.sin(angle) * rSpread * 1.5;
-    ctx.beginPath();
-    ctx.arc(px, py, 2.2, 0, Math.PI * 2);
-    ctx.fillStyle = `rgba(${theme.blueLight}, 0.85)`;
-    ctx.fill();
-
-    // Glow
-    const glowR = 8;
-    const glow = ctx.createRadialGradient(px, py, 0, px, py, glowR);
-    glow.addColorStop(0, `rgba(${theme.blueLight}, 0.25)`);
-    glow.addColorStop(1, `rgba(${theme.blueLight}, 0)`);
-    ctx.fillStyle = glow;
-    ctx.beginPath();
-    ctx.arc(px, py, glowR, 0, Math.PI * 2);
-    ctx.fill();
-  }
-
-  // Arrow
-  const arrowY = centerY;
-  ctx.strokeStyle = `rgba(${theme.labelDim}, 0.25)`;
-  ctx.lineWidth = 1.5;
-  ctx.setLineDash([]);
-  ctx.beginPath();
-  ctx.moveTo(width * 0.15, arrowY);
-  ctx.lineTo(width * 0.85, arrowY);
-  ctx.moveTo(width * 0.82, arrowY - 5);
-  ctx.lineTo(width * 0.85, arrowY);
-  ctx.lineTo(width * 0.82, arrowY + 5);
-  ctx.stroke();
-
-  // Labels
-  const fontSize = Math.max(10, Math.min(13, width * 0.022));
-  ctx.font = `${fontSize}px ui-monospace, SFMono-Regular, monospace`;
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'top';
-  ctx.fillStyle = `rgba(${theme.labelDim}, 0.6)`;
-  ctx.fillText('100%', leftCenterX, height * 0.78);
-  ctx.fillStyle = `rgba(${theme.blueDeep}, 0.85)`;
-  ctx.fillText('66.34%', rightCenterX, height * 0.78);
-
-  // Subtitle labels
-  const subFontSize = Math.max(8, Math.min(10, width * 0.016));
-  ctx.font = `${subFontSize}px ui-monospace, SFMono-Regular, monospace`;
-  ctx.fillStyle = `rgba(${theme.labelDim}, 0.35)`;
-  ctx.fillText('signal + noise', leftCenterX, height * 0.84);
-  ctx.fillStyle = `rgba(${theme.blueDeep}, 0.5)`;
-  ctx.fillText('pure signal', rightCenterX, height * 0.84);
+  return 7;
 }
 
-// --- Component ---
-
+// ─── Component ──────────────────────────────────────────────────────────────
 export default function LossyDrift() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const particlesRef = useRef<Particle[]>([]);
   const animFrameRef = useRef<number>(0);
+
+  const particlesRef = useRef<Particle[]>([]);
+  const sparksRef = useRef<Spark[]>([]);
+  const filterStatsRef = useRef<FilterStats[]>(
+    Array(8).fill(null).map(() => ({ purgedCount: 0, pulseTime: 0 }))
+  );
+  const particleIdCounter = useRef(0);
+
+  const mouseRef = useRef({ x: -1000, y: -1000, activeFilter: -1 });
+  const dimsRef = useRef({ w: 0, h: 0 });
   const timeRef = useRef(0);
-  const phaseRef = useRef(0);
-  const phaseStartTimeRef = useRef(0);
-  const dimensionsRef = useRef({ width: 0, height: 0 });
-
-  // Loop state
-  const loopStateRef = useRef<LoopState>('playing');
-  const loopTimerRef = useRef(0);
-  const globalAlphaRef = useRef(1);
-
-  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
-  const [isVisible, setIsVisible] = useState(false);
+  const [noMotion, setNoMotion] = useState(false);
 
   const { resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
@@ -393,314 +89,402 @@ export default function LossyDrift() {
   const isDark = mounted ? resolvedTheme === 'dark' : true;
   const theme = getCanvasTheme(isDark);
 
-  const draw = useCallback((ctx: CanvasRenderingContext2D, width: number, height: number) => {
+  // --- Spawner ---
+  const spawnParticle = useCallback((w: number, h: number, startX: number = 0) => {
+    const isNoise = Math.random() < (TOTAL_NOISE / 100);
+    const type: ParticleType = isNoise ? 'noise' : 'signal';
+    const baseY = h * 0.50 + (Math.random() - 0.5) * (h * 0.35);
+
+    particlesRef.current.push({
+      id: particleIdCounter.current++,
+      type,
+      x: startX,
+      y: baseY,
+      vx: w * 0.0012 + Math.random() * (w * 0.0005),
+      vy: 0,
+      baseY,
+      targetY: h * 0.50,
+      radius: type === 'signal' ? 2.5 + Math.random() * 1.0 : 1.5 + Math.random() * 1.5,
+      phase: Math.random() * Math.PI * 2,
+      jitter: type === 'noise' ? 3 + Math.random() * 3 : 0.5 + Math.random() * 1,
+      deathFilter: isNoise ? getDeathFilter() : -1,
+      history: [],
+      active: true,
+    });
+  }, []);
+
+  // --- Main Render Loop ---
+  const draw = useCallback((ctx: CanvasRenderingContext2D, w: number, h: number, dt: number) => {
+    if (w === 0 || h === 0) return;
     const time = timeRef.current;
     const particles = particlesRef.current;
-    const currentPhase = phaseRef.current;
+    const sparks = sparksRef.current;
+    const filterStats = filterStatsRef.current;
+    const mouse = mouseRef.current;
 
-    // --- Background (always full alpha) ---
-    const bgGrad = ctx.createLinearGradient(0, 0, width, height);
+    // 1. Background
+    const bgGrad = ctx.createLinearGradient(0, 0, 0, h);
     bgGrad.addColorStop(0, theme.bg);
     bgGrad.addColorStop(0.5, theme.bgMid);
     bgGrad.addColorStop(1, theme.bg);
     ctx.fillStyle = bgGrad;
-    ctx.fillRect(0, 0, width, height);
+    ctx.fillRect(0, 0, w, h);
 
-    // Apply global alpha for fade transitions (after background)
-    ctx.globalAlpha = globalAlphaRef.current;
-
-    // --- Filter barriers ---
+    // Subtle horizontal flow lines
     ctx.save();
-    for (let i = 0; i < 8; i++) {
-      const fx = FILTER_POSITIONS[i] * width;
-      const isActive = currentPhase >= i + 1;
-
-      // Dashed vertical line
-      ctx.setLineDash([6, 6]);
-      ctx.strokeStyle = isActive
-        ? `rgba(${theme.filterLine}, 0.25)`
-        : `rgba(${theme.filterLine}, 0.08)`;
-      ctx.lineWidth = 1;
+    ctx.strokeStyle = isDark ? 'rgba(255, 255, 255, 0.02)' : 'rgba(0, 0, 0, 0.03)';
+    ctx.lineWidth = 1;
+    for (let y = h * 0.25; y <= h * 0.75; y += 20) {
       ctx.beginPath();
-      ctx.moveTo(fx, height * 0.08);
-      ctx.lineTo(fx, height * 0.68);
+      ctx.moveTo(0, y);
+      ctx.lineTo(w, y);
       ctx.stroke();
+    }
+    ctx.restore();
 
-      // Glow band when active
-      if (isActive) {
-        const glowGrad = ctx.createLinearGradient(fx - 10, 0, fx + 10, 0);
+    // 2. Filter Barriers & Percentages
+    let hoveredFilterIndex = -1;
+
+    for (let i = 0; i < 8; i++) {
+      const fx = FILTER_POSITIONS[i] * w;
+      const isHovered = Math.abs(mouse.x - fx) < w * 0.04 && mouse.y < h * 0.92;
+      if (isHovered) hoveredFilterIndex = i;
+
+      // Pulse effect from catching noise
+      const timeSincePulse = time - filterStats[i].pulseTime;
+      const pulseIntensity = Math.max(0, 1 - timeSincePulse * 2);
+
+      // Filter Line
+      ctx.save();
+      ctx.setLineDash([4, 6]);
+      ctx.lineDashOffset = -time * 10;
+      ctx.strokeStyle = `rgba(${theme.filterLine}, ${0.15 + pulseIntensity * 0.5})`;
+      ctx.lineWidth = isHovered ? 2 : 1;
+      ctx.beginPath();
+      ctx.moveTo(fx, h * 0.15);
+      ctx.lineTo(fx, h * 0.80);
+      ctx.stroke();
+      ctx.restore();
+
+      // Glow when active or hit
+      if (isHovered || pulseIntensity > 0) {
+        const glowGrad = ctx.createLinearGradient(fx - 15, 0, fx + 15, 0);
+        const glowAlpha = isHovered ? 0.1 : pulseIntensity * 0.2;
         glowGrad.addColorStop(0, `rgba(${theme.filterLine}, 0)`);
-        glowGrad.addColorStop(0.5, `rgba(${theme.filterLine}, 0.05)`);
+        glowGrad.addColorStop(0.5, `rgba(${theme.filterLine}, ${glowAlpha})`);
         glowGrad.addColorStop(1, `rgba(${theme.filterLine}, 0)`);
         ctx.fillStyle = glowGrad;
-        ctx.setLineDash([]);
-        ctx.fillRect(fx - 10, height * 0.08, 20, height * 0.60);
+        ctx.fillRect(fx - 15, h * 0.15, 30, h * 0.65);
       }
 
-      // Filter label
-      const fontSize = Math.max(8, Math.min(11, width * 0.018));
-      ctx.font = `${fontSize}px ui-monospace, SFMono-Regular, monospace`;
-      ctx.fillStyle = isActive
-        ? `rgba(${theme.labelDim}, 0.5)`
-        : `rgba(${theme.labelDim}, 0.25)`;
+      // Filter label (top)
+      ctx.fillStyle = `rgba(${theme.labelDim}, 0.6)`;
+      ctx.font = `600 ${Math.max(10, w * 0.012)}px ui-monospace, monospace`;
       ctx.textAlign = 'center';
-      ctx.textBaseline = 'top';
-      ctx.setLineDash([]);
-      ctx.fillText(`L${i + 1}`, fx, height * 0.71);
-    }
-    ctx.restore();
+      ctx.fillText(`L${i + 1}`, fx, h * 0.12);
 
-    // --- Percentage labels ---
+      // Percentage label (bottom)
+      ctx.fillStyle = isHovered
+        ? `rgba(${theme.labelBright}, 1)`
+        : `rgba(${theme.blue}, ${0.4 + (i / 8) * 0.4})`;
+      ctx.fillText(`${STAGE_PERCENTAGES[i + 1]}%`, fx, h * 0.87);
+    }
+    mouse.activeFilter = hoveredFilterIndex;
+
+    // Start/End labels
+    ctx.font = `600 ${Math.max(10, w * 0.012)}px ui-monospace, monospace`;
+    ctx.fillStyle = `rgba(${theme.noise}, 0.7)`;
+    ctx.textAlign = 'left';
+    ctx.fillText('100% INPUT', w * 0.02, h * 0.87);
+
+    ctx.fillStyle = `rgba(${theme.signal}, 0.9)`;
+    ctx.textAlign = 'right';
+    ctx.fillText(`${STAGE_PERCENTAGES[8]}% SIGNAL`, w * 0.98, h * 0.87);
+
+    // 3. Update & Draw Particles
+    if (!noMotion) {
+      if (particles.length < MAX_PARTICLES && Math.random() < 0.7) {
+        spawnParticle(w, h, -20);
+      }
+
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
+
+        p.history.push({ x: p.x, y: p.y });
+        if (p.history.length > (p.type === 'signal' ? 12 : 6)) p.history.shift();
+
+        // Check Filter Crossings
+        let crossedFilter = -1;
+        for (let j = 0; j < 8; j++) {
+          const fx = FILTER_POSITIONS[j] * w;
+          if (p.x < fx && p.x + p.vx >= fx) {
+            crossedFilter = j;
+            break;
+          }
+        }
+
+        if (crossedFilter !== -1) {
+          if (p.type === 'noise' && p.deathFilter === crossedFilter) {
+            // CAUGHT! Strip the noise
+            filterStats[crossedFilter].purgedCount++;
+            filterStats[crossedFilter].pulseTime = time;
+
+            // Shatter into sparks
+            for (let s = 0; s < 4; s++) {
+              sparks.push({
+                x: FILTER_POSITIONS[crossedFilter] * w,
+                y: p.y,
+                vx: (Math.random() - 0.5) * 60,
+                vy: (Math.random() * 40) + 20,
+                life: 0,
+                maxLife: 0.5 + Math.random() * 0.5,
+                rgb: theme.noise,
+              });
+            }
+            particles.splice(i, 1);
+            continue;
+          }
+        }
+
+        // Physics
+        p.x += p.vx;
+        const funnelStrength = p.type === 'signal' ? 0.02 * (p.x / w) : 0.005;
+        p.vy += (p.targetY - p.y) * funnelStrength;
+        p.vy *= 0.9;
+        const wobble = Math.sin(time * 5 + p.phase) * p.jitter;
+        p.y += p.vy + wobble;
+
+        // Cleanup off-screen
+        if (p.x > w + 20) particles.splice(i, 1);
+      }
+    }
+
+    // 4. Render Particles
     ctx.save();
-    const pctFontSize = Math.max(8, Math.min(11, width * 0.017));
-    ctx.font = `${pctFontSize}px ui-monospace, SFMono-Regular, monospace`;
-    ctx.textBaseline = 'top';
-    ctx.textAlign = 'center';
-
-    for (let i = 0; i < STAGE_PERCENTAGES.length; i++) {
-      let px: number;
-      if (i === 0) {
-        px = width * START_X;
-      } else if (i === 8) {
-        px = width * END_X;
-      } else {
-        px = ((FILTER_POSITIONS[i - 1] + FILTER_POSITIONS[i]) / 2) * width;
-      }
-
-      const isReached = currentPhase >= i;
-      const isFinal = i === 8 && currentPhase >= 9;
-
-      ctx.fillStyle = isFinal
-        ? `rgba(${theme.blueDeep}, ${0.75 + 0.1 * Math.sin(time * 2)})`
-        : isReached
-          ? `rgba(${theme.labelDim}, 0.55)`
-          : `rgba(${theme.labelDim}, 0.15)`;
-
-      const pctText = i === 0 ? '100%' : `${STAGE_PERCENTAGES[i].toFixed(1)}%`;
-      ctx.fillText(pctText, px, height * 0.80);
-    }
-    ctx.restore();
-
-    // --- Particles ---
     for (const p of particles) {
-      if (p.state === 'gone') continue;
-      if (p.currentOpacity <= 0.01) continue;
+      const isSignal = p.type === 'signal';
+      const alpha = isSignal ? 0.85 : 0.6;
+      const rgb = isSignal ? theme.signal : theme.noise;
 
-      // Final glow halo for arrived signal particles
-      if (p.type === 'signal' && p.state === 'arrived' && currentPhase >= 9) {
-        const glowR = p.radius * 4;
-        const glow = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, glowR);
-        glow.addColorStop(0, `rgba(${Math.round(p.r)}, ${Math.round(p.g)}, ${Math.round(p.b)}, ${p.currentOpacity * 0.35})`);
-        glow.addColorStop(0.5, `rgba(${Math.round(p.r)}, ${Math.round(p.g)}, ${Math.round(p.b)}, ${p.currentOpacity * 0.1})`);
-        glow.addColorStop(1, `rgba(${Math.round(p.r)}, ${Math.round(p.g)}, ${Math.round(p.b)}, 0)`);
-        ctx.fillStyle = glow;
+      // Trails
+      if (p.history.length > 1 && !noMotion) {
         ctx.beginPath();
-        ctx.arc(p.x, p.y, glowR, 0, Math.PI * 2);
-        ctx.fill();
+        ctx.moveTo(p.history[0].x, p.history[0].y);
+        for (let i = 1; i < p.history.length; i++) {
+          ctx.lineTo(p.history[i].x, p.history[i].y);
+        }
+        const grad = ctx.createLinearGradient(p.history[0].x, p.history[0].y, p.x, p.y);
+        grad.addColorStop(0, `rgba(${rgb}, 0)`);
+        grad.addColorStop(1, `rgba(${rgb}, ${alpha * 0.5})`);
+        ctx.strokeStyle = grad;
+        ctx.lineWidth = p.radius * 1.5;
+        ctx.lineCap = 'round';
+        ctx.stroke();
       }
 
-      // Core particle dot
+      // Core
       ctx.beginPath();
       ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(${Math.round(p.r)}, ${Math.round(p.g)}, ${Math.round(p.b)}, ${p.currentOpacity})`;
+      ctx.fillStyle = `rgba(${rgb}, ${alpha})`;
       ctx.fill();
+
+      // Glow for signal
+      if (isSignal) {
+        const glow = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.radius * 3);
+        glow.addColorStop(0, `rgba(${rgb}, 0.3)`);
+        glow.addColorStop(1, `rgba(${rgb}, 0)`);
+        ctx.fillStyle = glow;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.radius * 3, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+    ctx.restore();
+
+    // 5. Render Sparks (Caught Noise)
+    for (let i = sparks.length - 1; i >= 0; i--) {
+      const s = sparks[i];
+      s.life += dt;
+      if (s.life >= s.maxLife) {
+        sparks.splice(i, 1);
+        continue;
+      }
+
+      s.vy += 200 * dt;
+      s.x += s.vx * dt;
+      s.y += s.vy * dt;
+
+      const alpha = 1 - (s.life / s.maxLife);
+      ctx.fillStyle = `rgba(${s.rgb}, ${alpha})`;
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, 1.5, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.strokeStyle = `rgba(${s.rgb}, ${alpha * 0.5})`;
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(s.x, s.y);
+      ctx.lineTo(s.x - s.vx * dt * 2, s.y - s.vy * dt * 2);
+      ctx.stroke();
     }
 
-    // --- "Signal" / "Noise" legend (top corners, subtle) ---
-    if (currentPhase >= 1) {
-      const legendFontSize = Math.max(8, Math.min(10, width * 0.015));
-      ctx.font = `${legendFontSize}px ui-monospace, SFMono-Regular, monospace`;
-      ctx.textBaseline = 'top';
+    // 6. Output Collector Glow (Right side)
+    const oCx = w;
+    const oCy = h * 0.50;
+    const oGr = 80 + 10 * Math.sin(time * 2);
+    const oGlow = ctx.createRadialGradient(oCx, oCy, 0, oCx, oCy, oGr);
+    oGlow.addColorStop(0, `rgba(${theme.signal}, 0.25)`);
+    oGlow.addColorStop(0.5, `rgba(${theme.signal}, 0.05)`);
+    oGlow.addColorStop(1, `rgba(${theme.signal}, 0)`);
+    ctx.fillStyle = oGlow;
+    ctx.beginPath();
+    ctx.arc(oCx, oCy, oGr, 0, Math.PI * 2);
+    ctx.fill();
 
-      // Signal legend (top-right)
-      ctx.fillStyle = `rgba(${theme.signal}, 0.4)`;
-      ctx.textAlign = 'right';
-      ctx.fillText('signal', width - 10, 8);
+    // 7. Interactive HUD
+    if (hoveredFilterIndex !== -1) {
+      const stats = filterStats[hoveredFilterIndex];
+      const tWidth = 180;
+      const tHeight = 85;
+
+      let tx = mouse.x + 15;
+      let ty = mouse.y + 15;
+      if (tx + tWidth > w) tx = mouse.x - tWidth - 15;
+      if (ty + tHeight > h) ty = mouse.y - tHeight - 15;
+
+      ctx.save();
+      ctx.shadowColor = 'rgba(0,0,0,0.6)';
+      ctx.shadowBlur = 12;
+      ctx.shadowOffsetY = 4;
+
+      // Tooltip BG
+      ctx.fillStyle = isDark ? 'rgba(15, 15, 25, 0.95)' : 'rgba(240, 242, 248, 0.95)';
+      ctx.strokeStyle = `rgba(${theme.filterLine}, 0.5)`;
+      ctx.lineWidth = 1.5;
       ctx.beginPath();
-      ctx.arc(width - ctx.measureText('signal').width - 16, 13, 3, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(${theme.signal}, 0.6)`;
+      ctx.roundRect(tx, ty, tWidth, tHeight, 6);
       ctx.fill();
+      ctx.stroke();
 
-      // Noise legend (top-left)
-      ctx.fillStyle = `rgba(${theme.noise}, 0.4)`;
+      ctx.shadowColor = 'transparent';
+      const pad = 12;
+      const lh = 20;
+
+      ctx.fillStyle = isDark ? '#FFFFFF' : '#1a1a2e';
+      ctx.font = 'bold 12px ui-sans-serif, system-ui, sans-serif';
       ctx.textAlign = 'left';
-      ctx.fillText('noise', 18, 8);
-      ctx.beginPath();
-      ctx.arc(12, 13, 2.5, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(${theme.noise}, 0.45)`;
-      ctx.fill();
+      ctx.textBaseline = 'top';
+      ctx.fillText(`Layer ${hoveredFilterIndex + 1} Filter`, tx + pad, ty + pad);
+
+      ctx.fillStyle = `rgba(${theme.signal}, 1)`;
+      ctx.font = '11px ui-monospace, SFMono-Regular, monospace';
+      ctx.fillText(`Passing : ${STAGE_PERCENTAGES[hoveredFilterIndex + 1]}%`, tx + pad, ty + pad + lh * 1.3);
+
+      ctx.fillStyle = `rgba(${theme.noise}, 1)`;
+      ctx.fillText(`Noise Purged: ${stats.purgedCount}`, tx + pad, ty + pad + lh * 2.3);
+
+      ctx.restore();
     }
 
-    // Reset global alpha
-    ctx.globalAlpha = 1;
-  }, [theme]);
+  }, [noMotion, spawnParticle, theme, isDark]);
 
-  // Reduced motion detection
+  // --- Reduced motion detection ---
   useEffect(() => {
     const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
-    setPrefersReducedMotion(mq.matches);
-    const handler = (e: MediaQueryListEvent) => setPrefersReducedMotion(e.matches);
+    setNoMotion(mq.matches);
+    const handler = (e: MediaQueryListEvent) => setNoMotion(e.matches);
     mq.addEventListener('change', handler);
     return () => mq.removeEventListener('change', handler);
   }, []);
 
-  // Scroll trigger (continuous — toggles visibility)
+  // --- Initialization & Loop ---
   useEffect(() => {
-    const el = containerRef.current;
-    if (!el) return;
-
-    const observer = new IntersectionObserver(
-      ([entry]) => setIsVisible(entry.isIntersecting),
-      { threshold: 0.3 },
-    );
-
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, []);
-
-  // Canvas setup and animation loop
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
+    const cvs = canvasRef.current;
+    if (!cvs) return;
+    const ctx = cvs.getContext('2d');
     if (!ctx) return;
 
     const resize = () => {
-      const rect = canvas.getBoundingClientRect();
+      const rect = cvs.getBoundingClientRect();
       const dpr = window.devicePixelRatio || 1;
-      canvas.width = rect.width * dpr;
-      canvas.height = rect.height * dpr;
+      cvs.width = rect.width * dpr;
+      cvs.height = rect.height * dpr;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      dimensionsRef.current = { width: rect.width, height: rect.height };
-      const count = getParticleCount(rect.width);
-      particlesRef.current = createParticles(count, rect.width, rect.height, isDark);
-      phaseRef.current = 0;
-      phaseStartTimeRef.current = 0;
-      timeRef.current = 0;
-      loopStateRef.current = 'playing';
-      loopTimerRef.current = 0;
-      globalAlphaRef.current = 1;
+      dimsRef.current = { w: rect.width, h: rect.height };
+
+      // Pre-fill particles
+      particlesRef.current = [];
+      filterStatsRef.current = Array(8).fill(null).map(() => ({ purgedCount: 0, pulseTime: 0 }));
+      particleIdCounter.current = 0;
+      for (let i = 0; i < MAX_PARTICLES * 0.7; i++) {
+        spawnParticle(rect.width, rect.height, Math.random() * rect.width);
+      }
     };
 
     resize();
     window.addEventListener('resize', resize);
 
-    if (prefersReducedMotion) {
-      const { width, height } = dimensionsRef.current;
-      drawReducedMotion(ctx, width, height, isDark, theme);
-    } else if (isVisible) {
-      // Reset for fresh play
-      const { width, height } = dimensionsRef.current;
-      const count = getParticleCount(width);
-      particlesRef.current = createParticles(count, width, height, isDark);
-      phaseRef.current = 0;
-      phaseStartTimeRef.current = 0;
-      timeRef.current = 0;
-      loopStateRef.current = 'playing';
-      loopTimerRef.current = 0;
-      globalAlphaRef.current = 1;
+    const handleMouseMove = (e: MouseEvent) => {
+      const rect = cvs.getBoundingClientRect();
+      mouseRef.current.x = e.clientX - rect.left;
+      mouseRef.current.y = e.clientY - rect.top;
+    };
+    const handleMouseLeave = () => {
+      mouseRef.current.x = -1000;
+      mouseRef.current.y = -1000;
+    };
+    cvs.addEventListener('mousemove', handleMouseMove);
+    cvs.addEventListener('mouseleave', handleMouseLeave);
 
-      let lastTime = performance.now();
+    let lastTime = performance.now();
 
-      const animate = (now: number) => {
-        const dt = Math.min((now - lastTime) / 1000, 0.05);
-        lastTime = now;
-        timeRef.current += dt;
+    const animate = (now: number) => {
+      const dt = Math.min((now - lastTime) / 1000, 0.05);
+      lastTime = now;
+      timeRef.current += dt;
 
-        const { width, height } = dimensionsRef.current;
+      if (mouseRef.current.activeFilter !== -1) {
+        cvs.style.cursor = 'crosshair';
+      } else {
+        cvs.style.cursor = 'default';
+      }
 
-        // Phase advancement
-        if (phaseRef.current < 9) {
-          if (phaseRef.current === 0) {
-            phaseRef.current = 1;
-            phaseStartTimeRef.current = timeRef.current;
-          } else {
-            const phaseElapsed = timeRef.current - phaseStartTimeRef.current;
-            if (phaseElapsed >= PHASE_DURATION) {
-              phaseRef.current += 1;
-              phaseStartTimeRef.current = timeRef.current;
-            }
-          }
-        }
-
-        updateParticles(
-          particlesRef.current,
-          dt,
-          timeRef.current,
-          phaseRef.current,
-          width,
-          height,
-        );
-
-        // --- Loop state machine ---
-        const isComplete = phaseRef.current >= 9
-          && (timeRef.current - phaseStartTimeRef.current) >= SETTLE_DURATION;
-
-        if (loopStateRef.current === 'playing' && isComplete) {
-          loopStateRef.current = 'holding';
-          loopTimerRef.current = timeRef.current;
-        }
-
-        if (loopStateRef.current === 'holding') {
-          if (timeRef.current - loopTimerRef.current >= LOOP_HOLD_DURATION) {
-            loopStateRef.current = 'fading-out';
-            loopTimerRef.current = timeRef.current;
-          }
-        }
-
-        if (loopStateRef.current === 'fading-out') {
-          const fadeElapsed = timeRef.current - loopTimerRef.current;
-          globalAlphaRef.current = Math.max(0, 1 - fadeElapsed / FADE_OUT_DURATION);
-          if (fadeElapsed >= FADE_OUT_DURATION) {
-            // Reset particles and phase
-            const count = getParticleCount(width);
-            particlesRef.current = createParticles(count, width, height, isDark);
-            phaseRef.current = 0;
-            phaseStartTimeRef.current = 0;
-            globalAlphaRef.current = 0;
-            loopStateRef.current = 'fading-in';
-            loopTimerRef.current = timeRef.current;
-          }
-        }
-
-        if (loopStateRef.current === 'fading-in') {
-          const fadeElapsed = timeRef.current - loopTimerRef.current;
-          globalAlphaRef.current = Math.min(1, fadeElapsed / FADE_IN_DURATION);
-          if (fadeElapsed >= FADE_IN_DURATION) {
-            globalAlphaRef.current = 1;
-            loopStateRef.current = 'playing';
-          }
-        }
-
-        draw(ctx, width, height);
-        animFrameRef.current = requestAnimationFrame(animate);
-      };
-
+      draw(ctx, dimsRef.current.w, dimsRef.current.h, dt);
       animFrameRef.current = requestAnimationFrame(animate);
-    } else {
-      // Not visible — draw static idle frame
-      const { width, height } = dimensionsRef.current;
-      globalAlphaRef.current = 1;
-      draw(ctx, width, height);
-    }
+    };
+
+    animFrameRef.current = requestAnimationFrame(animate);
 
     return () => {
       window.removeEventListener('resize', resize);
+      cvs.removeEventListener('mousemove', handleMouseMove);
+      cvs.removeEventListener('mouseleave', handleMouseLeave);
       if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
     };
-  }, [prefersReducedMotion, isVisible, draw, isDark, theme]);
+  }, [noMotion, draw, spawnParticle]);
 
   return (
-    <div
-      ref={containerRef}
-      className={`rounded-lg overflow-hidden border ${theme.wrapperClass}`}
-    >
-      <canvas
-        ref={canvasRef}
-        className="w-full h-[280px] sm:h-[340px] md:h-[420px]"
-        aria-label="Animated diagram showing a particle stream passing through eight compression filters, where noise particles are stripped away at each layer while signal particles grow brighter and more cohesive, retaining 66 percent of the original as pure signal"
-        role="img"
-      />
+    <div className="w-full flex justify-center items-center">
+      <div className="w-full max-w-5xl">
+        <div
+          ref={containerRef}
+          className={`relative rounded-xl overflow-hidden border shadow-2xl group ${
+            isDark
+              ? 'border-white/10 shadow-blue-900/10'
+              : 'border-black/10 shadow-blue-200/20'
+          }`}
+        >
+          <canvas
+            ref={canvasRef}
+            className="w-full h-[320px] sm:h-[400px] md:h-[480px] outline-none"
+            aria-label="Interactive simulation showing red noise particles being filtered out of a blue signal stream across 8 sequential layers. Hover over filter barriers for real-time purge statistics."
+            role="img"
+          />
+          <div className={`absolute inset-0 pointer-events-none rounded-xl ring-1 ring-inset ${
+            isDark ? 'ring-white/10' : 'ring-black/5'
+          }`} />
+        </div>
+      </div>
     </div>
   );
 }
