@@ -11,6 +11,8 @@
 // trick. It's compression."
 
 import { useEffect, useRef, useState, useCallback } from 'react';
+import { useTheme } from 'next-themes';
+import { getCanvasTheme } from './theme-colors';
 
 // --- Phase Configuration ---
 const PHASES = [
@@ -31,11 +33,6 @@ const LOOP_HOLD = 3000;
 const FADE_DURATION = 500;
 const FADE_IN_DURATION = 400;
 
-// Colors (matching HeroCompression palette)
-const BG_COLOR = '#0a0a14';
-const BG_MID = '#0d0d1a';
-const LABEL_DIM = 'rgba(160, 175, 220, 0.3)';
-const COUNTER_COLOR = 'rgba(200, 215, 240, 0.9)';
 const MONOSPACE = 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace';
 
 // --- Helpers ---
@@ -211,6 +208,12 @@ export default function TokenCompression() {
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
 
+  const { resolvedTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
+  const isDark = mounted ? resolvedTheme === 'dark' : true;
+  const theme = getCanvasTheme(isDark);
+
   // --- Counter helper ---
   const startCount = useCallback((from: number, to: number, dur: number) => {
     countFromRef.current = from;
@@ -311,9 +314,9 @@ export default function TokenCompression() {
 
       // Background gradient (always full alpha)
       const bgGrad = ctx.createLinearGradient(0, 0, w, h);
-      bgGrad.addColorStop(0, BG_COLOR);
-      bgGrad.addColorStop(0.5, BG_MID);
-      bgGrad.addColorStop(1, BG_COLOR);
+      bgGrad.addColorStop(0, theme.bg);
+      bgGrad.addColorStop(0.5, theme.bgMid);
+      bgGrad.addColorStop(1, theme.bg);
       ctx.fillStyle = bgGrad;
       ctx.fillRect(0, 0, w, h);
 
@@ -330,7 +333,7 @@ export default function TokenCompression() {
       const labelY = 16;
       for (let i = 0; i < PHASES.length; i++) {
         if (i > 0) {
-          ctx.fillStyle = LABEL_DIM;
+          ctx.fillStyle = `rgba(${theme.labelDim}, 0.3)`;
           ctx.fillText('>', labelX, labelY);
           labelX += ctx.measureText('>').width + 8;
         }
@@ -342,11 +345,11 @@ export default function TokenCompression() {
           // Fade in over 150ms
           const fadeT = clamp(0, phaseElapsed / 150, 1);
           const alpha = 0.3 + fadeT * 0.55;
-          ctx.fillStyle = `rgba(160, 200, 255, ${alpha})`;
+          ctx.fillStyle = `rgba(${theme.labelMid}, ${alpha})`;
         } else if (isPast) {
-          ctx.fillStyle = 'rgba(160, 200, 255, 0.5)';
+          ctx.fillStyle = `rgba(${theme.labelMid}, 0.5)`;
         } else {
-          ctx.fillStyle = LABEL_DIM;
+          ctx.fillStyle = `rgba(${theme.labelDim}, 0.3)`;
         }
 
         ctx.fillText(PHASES[i].label, labelX, labelY);
@@ -364,7 +367,7 @@ export default function TokenCompression() {
       ctx.font = `600 ${counterFontSize}px ${MONOSPACE}`;
       ctx.textAlign = 'right';
       ctx.textBaseline = 'top';
-      ctx.fillStyle = COUNTER_COLOR;
+      ctx.fillStyle = `rgba(${theme.labelBright}, 0.9)`;
       const countStr = Math.round(displayCountRef.current).toLocaleString() + ' tokens';
       ctx.fillText(countStr, w - 16, 14);
 
@@ -376,7 +379,7 @@ export default function TokenCompression() {
         ctx.font = `500 ${savFontSize}px ${MONOSPACE}`;
         ctx.textAlign = 'right';
         ctx.textBaseline = 'top';
-        ctx.fillStyle = `rgba(140, 200, 255, ${savingsAlpha * 0.95})`;
+        ctx.fillStyle = `rgba(${theme.blueDeep}, ${savingsAlpha * 0.95})`;
         ctx.fillText('95% compression', w - 16, 18 + counterFontSize);
       }
 
@@ -431,14 +434,14 @@ export default function TokenCompression() {
             phase === 'complete'
               ? 0.8 + 0.2 * Math.sin(globalTimeRef.current * 2.5 + b.stagger * Math.PI * 2)
               : 0.85;
-          r = Math.round(100 + pulse * 40);
-          g = Math.round(160 + pulse * 40);
-          bv = 255;
+          r = isDark ? Math.round(100 + pulse * 40) : Math.round(30 + pulse * 40);
+          g = isDark ? Math.round(160 + pulse * 40) : Math.round(100 + pulse * 40);
+          bv = isDark ? 255 : Math.round(200 + pulse * 20);
         } else {
           // Being eliminated: shift toward dim
-          r = 70;
-          g = 100;
-          bv = 180;
+          r = isDark ? 70 : 100;
+          g = isDark ? 100 : 130;
+          bv = isDark ? 180 : 200;
         }
 
         ctx.fillStyle = `rgba(${r}, ${g}, ${bv}, ${b.opacity})`;
@@ -456,9 +459,9 @@ export default function TokenCompression() {
         const cy = scy / sCount;
         const glowR = 35 + 8 * Math.sin(globalTimeRef.current * 1.5);
         const glow = ctx.createRadialGradient(cx, cy, 0, cx, cy, glowR);
-        glow.addColorStop(0, 'rgba(100, 180, 255, 0.18)');
-        glow.addColorStop(0.5, 'rgba(100, 180, 255, 0.06)');
-        glow.addColorStop(1, 'rgba(100, 180, 255, 0)');
+        glow.addColorStop(0, `rgba(${theme.blue}, 0.18)`);
+        glow.addColorStop(0.5, `rgba(${theme.blue}, 0.06)`);
+        glow.addColorStop(1, `rgba(${theme.blue}, 0)`);
         ctx.fillStyle = glow;
         ctx.beginPath();
         ctx.arc(cx, cy, glowR, 0, Math.PI * 2);
@@ -468,7 +471,7 @@ export default function TokenCompression() {
       // Reset global alpha
       ctx.globalAlpha = 1;
     },
-    []
+    [isDark, theme]
   );
 
   // --- Draw static reduced-motion frame ---
@@ -476,9 +479,9 @@ export default function TokenCompression() {
     (ctx: CanvasRenderingContext2D, w: number, h: number) => {
       // Background
       const bgGrad = ctx.createLinearGradient(0, 0, w, h);
-      bgGrad.addColorStop(0, BG_COLOR);
-      bgGrad.addColorStop(0.5, BG_MID);
-      bgGrad.addColorStop(1, BG_COLOR);
+      bgGrad.addColorStop(0, theme.bg);
+      bgGrad.addColorStop(0.5, theme.bgMid);
+      bgGrad.addColorStop(1, theme.bg);
       ctx.fillStyle = bgGrad;
       ctx.fillRect(0, 0, w, h);
 
@@ -486,12 +489,11 @@ export default function TokenCompression() {
       const midX = w / 2;
 
       // Left side: dense grid (before)
-      const leftBlocks = blocks.filter(() => true); // all blocks
-      for (const b of leftBlocks) {
+      for (const b of blocks) {
         // Shift blocks to left half
         const shiftedX = b.initX * 0.45 + w * 0.02;
         const shiftedY = b.initY;
-        ctx.fillStyle = `rgba(70, 100, 180, 0.5)`;
+        ctx.fillStyle = isDark ? 'rgba(70, 100, 180, 0.5)' : 'rgba(80, 110, 190, 0.45)';
         ctx.fillRect(
           Math.round(shiftedX - b.initSize / 2),
           Math.round(shiftedY - b.initSize / 2),
@@ -512,7 +514,7 @@ export default function TokenCompression() {
         const row = Math.floor(i / survCols);
         const sx = rightCX + (col - survCols / 2) * spacing;
         const sy = rightCY + (row - Math.ceil(survivors.length / survCols) / 2) * spacing;
-        ctx.fillStyle = 'rgba(140, 200, 255, 0.85)';
+        ctx.fillStyle = `rgba(${theme.blueDeep}, 0.85)`;
         ctx.fillRect(
           Math.round(sx - survivors[0].initSize / 2),
           Math.round(sy - survivors[0].initSize / 2),
@@ -523,7 +525,7 @@ export default function TokenCompression() {
 
       // Arrow
       const arrowY = h / 2;
-      ctx.strokeStyle = 'rgba(160, 200, 255, 0.4)';
+      ctx.strokeStyle = `rgba(${theme.labelMid}, 0.4)`;
       ctx.lineWidth = 1.5;
       ctx.beginPath();
       ctx.moveTo(midX - 30, arrowY);
@@ -539,21 +541,21 @@ export default function TokenCompression() {
       ctx.textAlign = 'center';
       ctx.textBaseline = 'bottom';
 
-      ctx.fillStyle = COUNTER_COLOR;
+      ctx.fillStyle = `rgba(${theme.labelBright}, 0.9)`;
       ctx.fillText('15,000 tokens', w * 0.24, h - 14);
       ctx.fillText('670 tokens', w * 0.75, h - 14);
 
       // Phase labels
       ctx.textBaseline = 'top';
-      ctx.fillStyle = 'rgba(160, 200, 255, 0.5)';
+      ctx.fillStyle = `rgba(${theme.labelMid}, 0.5)`;
       ctx.fillText('tree  >  rg  >  sed -n', midX, 16);
 
       // 95% compression
-      ctx.fillStyle = 'rgba(140, 200, 255, 0.95)';
+      ctx.fillStyle = `rgba(${theme.blueDeep}, 0.95)`;
       ctx.font = `500 ${Math.max(12, w * 0.028)}px ${MONOSPACE}`;
       ctx.fillText('95% compression', midX, 16 + labelFont + 6);
     },
-    []
+    [isDark, theme]
   );
 
   // --- Prefers reduced motion ---
@@ -645,7 +647,7 @@ export default function TokenCompression() {
   return (
     <div
       ref={containerRef}
-      className="rounded-lg overflow-hidden border border-white/10 bg-[#0a0a14]"
+      className={`rounded-lg overflow-hidden border ${theme.wrapperClass}`}
     >
       <canvas
         ref={canvasRef}

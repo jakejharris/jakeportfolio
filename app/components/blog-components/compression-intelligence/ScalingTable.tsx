@@ -12,6 +12,8 @@
 // not linear.
 
 import { useEffect, useRef, useState, useCallback } from 'react';
+import { useTheme } from 'next-themes';
+import { getCanvasTheme } from './theme-colors';
 
 // --- Table Data ---
 const TABLE_DATA = [
@@ -52,6 +54,12 @@ export default function ScalingTable() {
   const countAnimations = useRef<Map<number, number>>(new Map());
   const staggerTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
   const completedRowsRef = useRef<Set<number>>(new Set());
+
+  const { resolvedTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
+  const isDark = mounted ? resolvedTheme === 'dark' : true;
+  const theme = getCanvasTheme(isDark);
 
   // --- Reduced motion detection ---
   useEffect(() => {
@@ -198,12 +206,28 @@ export default function ScalingTable() {
   const showAll = prefersReducedMotion || !isVisible;
   const headerVisible = isVisible;
 
+  // Theme-derived colors for inline styles
+  const headerColor = `rgba(${theme.labelDim}, 0.55)`;
+  const borderColor = `rgba(${theme.structLine}, 0.12)`;
+  const rowBorderColor = `rgba(${theme.structLine}, 0.08)`;
+  const sizeColor = `rgba(${theme.labelBright}, 0.85)`;
+  const descColor = isDark ? 'rgba(180, 190, 220, 0.7)' : 'rgba(60, 70, 100, 0.7)';
+  const descPunchColor = isDark ? 'rgba(200, 215, 245, 0.9)' : 'rgba(30, 45, 80, 0.9)';
+  const punchBlueBg = `rgba(${theme.blue}, 0.1)`;
+  const punchBlueBgMid = `rgba(${theme.blue}, 0.06)`;
+  const punchBlueBgFaint = `rgba(${theme.blue}, 0.03)`;
+  const punchBlueBgStatic = `rgba(${theme.blue}, 0.04)`;
+  const finalGlowColor = `rgba(${theme.blue}, 0.06)`;
+  const finalGlowColorFaint = `rgba(${theme.blue}, 0.03)`;
+  const topEdgeColor = `rgba(${theme.blueMid}, 0.1)`;
+  const bottomEdgeColor = `rgba(${theme.blueMid}, 0.06)`;
+
   return (
     <div
       ref={containerRef}
-      className="rounded-lg overflow-hidden border border-white/10 bg-[#0a0a14] relative"
+      className={`rounded-lg overflow-hidden border ${theme.wrapperClass} relative`}
       style={{
-        background: 'linear-gradient(135deg, #0a0a14 0%, #0d0d1a 50%, #0a0a14 100%)',
+        background: `linear-gradient(135deg, ${theme.bg} 0%, ${theme.bgMid} 50%, ${theme.bg} 100%)`,
         opacity: fadingOut ? 0 : 1,
         transition: `opacity ${FADE_OUT_MS}ms ease-in-out`,
       }}
@@ -227,15 +251,15 @@ export default function ScalingTable() {
 
         @keyframes st-punchline-pulse {
           0% { background-color: transparent; }
-          30% { background-color: rgba(100, 180, 255, 0.1); }
-          70% { background-color: rgba(100, 180, 255, 0.06); }
-          100% { background-color: rgba(100, 180, 255, 0.03); }
+          30% { background-color: ${punchBlueBg}; }
+          70% { background-color: ${punchBlueBgMid}; }
+          100% { background-color: ${punchBlueBgFaint}; }
         }
 
         @keyframes st-final-glow {
           0% { box-shadow: inset 0 0 0 0 transparent; }
-          50% { box-shadow: inset 0 0 20px rgba(100, 180, 255, 0.06); }
-          100% { box-shadow: inset 0 0 12px rgba(100, 180, 255, 0.03); }
+          50% { box-shadow: inset 0 0 20px ${finalGlowColor}; }
+          100% { box-shadow: inset 0 0 12px ${finalGlowColorFaint}; }
         }
 
         @keyframes st-number-pop {
@@ -275,7 +299,7 @@ export default function ScalingTable() {
           }
           .st-punchline-cell {
             animation: none !important;
-            background-color: rgba(100, 180, 255, 0.04) !important;
+            background-color: ${punchBlueBgStatic} !important;
           }
           .st-final-row {
             animation: none !important;
@@ -299,9 +323,9 @@ export default function ScalingTable() {
                 scope="col"
                 className="text-right px-3 sm:px-4 md:px-6 py-3 text-[10px] sm:text-xs font-medium tracking-widest uppercase"
                 style={{
-                  color: 'rgba(160, 175, 220, 0.55)',
+                  color: headerColor,
                   fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
-                  borderBottom: '1px solid rgba(120, 140, 200, 0.12)',
+                  borderBottom: `1px solid ${borderColor}`,
                 }}
               >
                 Data Size
@@ -310,8 +334,8 @@ export default function ScalingTable() {
                 scope="col"
                 className="text-left px-3 sm:px-4 md:px-6 py-3 text-[10px] sm:text-xs font-medium tracking-widest uppercase"
                 style={{
-                  color: 'rgba(160, 175, 220, 0.55)',
-                  borderBottom: '1px solid rgba(120, 140, 200, 0.12)',
+                  color: headerColor,
+                  borderBottom: `1px solid ${borderColor}`,
                 }}
               >
                 What It Is
@@ -320,9 +344,9 @@ export default function ScalingTable() {
                 scope="col"
                 className="text-center px-3 sm:px-4 md:px-6 py-3 text-[10px] sm:text-xs font-medium tracking-widest uppercase"
                 style={{
-                  color: 'rgba(160, 175, 220, 0.55)',
+                  color: headerColor,
                   fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
-                  borderBottom: '1px solid rgba(120, 140, 200, 0.12)',
+                  borderBottom: `1px solid ${borderColor}`,
                 }}
               >
                 Layers
@@ -354,7 +378,7 @@ export default function ScalingTable() {
                     opacity: showAll || animComplete ? 1 : undefined,
                     animationDelay:
                       isRevealed && !showAll ? '0ms' : undefined,
-                    borderBottom: '1px solid rgba(120, 140, 200, 0.08)',
+                    borderBottom: `1px solid ${rowBorderColor}`,
                   }}
                 >
                   {/* Data Size */}
@@ -364,7 +388,7 @@ export default function ScalingTable() {
                       fontFamily:
                         'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
                       fontVariantNumeric: 'tabular-nums',
-                      color: 'rgba(200, 210, 240, 0.85)',
+                      color: sizeColor,
                     }}
                   >
                     {row.size}
@@ -374,9 +398,7 @@ export default function ScalingTable() {
                   <td
                     className="text-left px-3 sm:px-4 md:px-6 py-2.5 sm:py-3 text-xs sm:text-sm"
                     style={{
-                      color: isPunchline
-                        ? 'rgba(200, 215, 245, 0.9)'
-                        : 'rgba(180, 190, 220, 0.7)',
+                      color: isPunchline ? descPunchColor : descColor,
                     }}
                   >
                     {row.description}
@@ -400,7 +422,7 @@ export default function ScalingTable() {
                     <div
                       className="absolute inset-0 pointer-events-none"
                       style={{
-                        background: `linear-gradient(90deg, transparent 0%, rgba(100, 160, 255, ${
+                        background: `linear-gradient(90deg, transparent 0%, rgba(${theme.blueMid}, ${
                           0.03 + layerIntensity * 0.05
                         }) 50%, transparent 100%)`,
                         opacity: isRevealed ? 1 : 0,
@@ -417,12 +439,12 @@ export default function ScalingTable() {
                       style={{
                         color:
                           isFinal && finalRowActive
-                            ? 'rgba(140, 200, 255, 1)'
+                            ? `rgba(${theme.blueDeep}, 1)`
                             : isPunchline && punchlineActive
-                              ? 'rgba(130, 195, 255, 0.95)'
-                              : `rgba(${150 + layerIntensity * 80}, ${
-                                  180 + layerIntensity * 40
-                                }, 255, ${0.7 + layerIntensity * 0.25})`,
+                              ? `rgba(${theme.blueDeep}, 0.95)`
+                              : `rgba(${isDark ? 150 + layerIntensity * 80 : 20 + layerIntensity * 40}, ${
+                                  isDark ? 180 + layerIntensity * 40 : 60 + layerIntensity * 40
+                                }, ${isDark ? 255 : 220}, ${0.7 + layerIntensity * 0.25})`,
                       }}
                     >
                       {displayValue}
@@ -440,14 +462,14 @@ export default function ScalingTable() {
         className="absolute top-0 left-0 right-0 h-px pointer-events-none"
         style={{
           background:
-            'linear-gradient(90deg, transparent, rgba(120, 160, 255, 0.1), transparent)',
+            `linear-gradient(90deg, transparent, ${topEdgeColor}, transparent)`,
         }}
       />
       <div
         className="absolute bottom-0 left-0 right-0 h-px pointer-events-none"
         style={{
           background:
-            'linear-gradient(90deg, transparent, rgba(120, 160, 255, 0.06), transparent)',
+            `linear-gradient(90deg, transparent, ${bottomEdgeColor}, transparent)`,
         }}
       />
     </div>

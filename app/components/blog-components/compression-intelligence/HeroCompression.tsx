@@ -9,6 +9,8 @@
 // converging from chaos into signal.
 
 import { useEffect, useRef, useState, useCallback } from 'react';
+import { useTheme } from 'next-themes';
+import { getCanvasTheme } from './theme-colors';
 
 // --- Constants ---
 const PARTICLE_COUNT = 60;
@@ -65,14 +67,20 @@ export default function HeroCompression() {
   const timeRef = useRef(0);
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
 
+  const { resolvedTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
+  const isDark = mounted ? resolvedTheme === 'dark' : true;
+  const theme = getCanvasTheme(isDark);
+
   const draw = useCallback((ctx: CanvasRenderingContext2D, width: number, height: number) => {
     const time = timeRef.current;
 
     // Background gradient
     const bgGrad = ctx.createLinearGradient(0, 0, width, height);
-    bgGrad.addColorStop(0, '#0a0a14');
-    bgGrad.addColorStop(0.5, '#0d0d1a');
-    bgGrad.addColorStop(1, '#0a0a14');
+    bgGrad.addColorStop(0, theme.bg);
+    bgGrad.addColorStop(0.5, theme.bgMid);
+    bgGrad.addColorStop(1, theme.bg);
     ctx.fillStyle = bgGrad;
     ctx.fillRect(0, 0, width, height);
 
@@ -81,7 +89,7 @@ export default function HeroCompression() {
     ctx.setLineDash([4, 8]);
     for (let i = 0; i < LAYER_POSITIONS.length; i++) {
       const lx = LAYER_POSITIONS[i] * width;
-      ctx.strokeStyle = 'rgba(120, 140, 200, 0.12)';
+      ctx.strokeStyle = `rgba(${theme.structLine}, 0.12)`;
       ctx.lineWidth = 1;
       ctx.beginPath();
       ctx.moveTo(lx, 0);
@@ -89,7 +97,7 @@ export default function HeroCompression() {
       ctx.stroke();
 
       // Label
-      ctx.fillStyle = 'rgba(160, 175, 220, 0.45)';
+      ctx.fillStyle = `rgba(${theme.labelDim}, 0.45)`;
       ctx.font = `${Math.max(10, width * 0.022)}px ui-monospace, monospace`;
       ctx.textAlign = 'center';
       ctx.fillText(LAYER_LABELS[i], lx, height - 12);
@@ -108,7 +116,7 @@ export default function HeroCompression() {
         if (q.layer !== p.layer + 1) continue;
         const dy = Math.abs(p.y - q.y);
         if (dy < height * 0.15) {
-          ctx.strokeStyle = `rgba(100, 160, 255, ${0.04 + 0.02 * Math.sin(time * 2 + i)})`;
+          ctx.strokeStyle = `rgba(${theme.blueMid}, ${0.04 + 0.02 * Math.sin(time * 2 + i)})`;
           ctx.lineWidth = 0.5;
           ctx.beginPath();
           ctx.moveTo(p.x, p.y);
@@ -125,9 +133,9 @@ export default function HeroCompression() {
     const cy = height * CONVERGENCE_Y;
     const glowRadius = 30 + 8 * Math.sin(time * 1.5);
     const glow = ctx.createRadialGradient(cx, cy, 0, cx, cy, glowRadius);
-    glow.addColorStop(0, 'rgba(100, 180, 255, 0.18)');
-    glow.addColorStop(0.5, 'rgba(100, 180, 255, 0.06)');
-    glow.addColorStop(1, 'rgba(100, 180, 255, 0)');
+    glow.addColorStop(0, `rgba(${theme.blue}, 0.18)`);
+    glow.addColorStop(0.5, `rgba(${theme.blue}, 0.06)`);
+    glow.addColorStop(1, `rgba(${theme.blue}, 0)`);
     ctx.fillStyle = glow;
     ctx.beginPath();
     ctx.arc(cx, cy, glowRadius, 0, Math.PI * 2);
@@ -146,16 +154,16 @@ export default function HeroCompression() {
 
       // Color: shift from warm (input) to cool (latent)
       const t = p.layer / (LAYER_POSITIONS.length - 1);
-      const r = Math.round(200 - t * 120);
-      const g = Math.round(120 + t * 60);
-      const b = Math.round(150 + t * 105);
+      const r = isDark ? Math.round(200 - t * 120) : Math.round(160 - t * 100);
+      const g = isDark ? Math.round(120 + t * 60) : Math.round(80 + t * 60);
+      const b = isDark ? Math.round(150 + t * 105) : Math.round(140 + t * 80);
 
       ctx.beginPath();
       ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
       ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${p.opacity})`;
       ctx.fill();
     }
-  }, [prefersReducedMotion]);
+  }, [prefersReducedMotion, isDark, theme]);
 
   useEffect(() => {
     // Check prefers-reduced-motion
@@ -206,7 +214,7 @@ export default function HeroCompression() {
   }, [prefersReducedMotion, draw]);
 
   return (
-    <div className="rounded-lg overflow-hidden border border-white/10 bg-[#0a0a14]">
+    <div className={`rounded-lg overflow-hidden border ${theme.wrapperClass}`}>
       <canvas
         ref={canvasRef}
         className="w-full h-[260px] sm:h-[320px] md:h-[380px]"
