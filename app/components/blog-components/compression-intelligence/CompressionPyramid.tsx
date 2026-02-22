@@ -78,6 +78,7 @@ export default function CompressionPyramid() {
   const frameRef = useRef(0);
   const tRef = useRef(0);
   const mouseRef = useRef({ x: -1000, y: -1000, activeLayer: -1 });
+  const visibleRef = useRef(true);
   const dimsRef = useRef({ w: 0, h: 0 });
   const [noMotion, setNoMotion] = useState(false);
 
@@ -483,6 +484,18 @@ export default function CompressionPyramid() {
     return () => mq.removeEventListener('change', handler);
   }, []);
 
+  // --- Visibility gating (skip paint when off-screen) ---
+  useEffect(() => {
+    const cvs = canvasRef.current;
+    if (!cvs) return;
+    const obs = new IntersectionObserver(
+      ([entry]) => { visibleRef.current = entry.isIntersecting; },
+      { threshold: 0.05 }
+    );
+    obs.observe(cvs);
+    return () => obs.disconnect();
+  }, []);
+
   // --- Init & Loop ---
   useEffect(() => {
     const cvs = canvasRef.current;
@@ -492,6 +505,8 @@ export default function CompressionPyramid() {
 
     const resize = () => {
       const rect = cvs.getBoundingClientRect();
+      const { w: prevW, h: prevH } = dimsRef.current;
+      if (prevW > 0 && Math.abs(rect.width - prevW) < 1 && Math.abs(rect.height - prevH) < 1) return;
       const dpr = window.devicePixelRatio || 1;
       cvs.width = rect.width * dpr;
       cvs.height = rect.height * dpr;
@@ -513,8 +528,10 @@ export default function CompressionPyramid() {
       mouseRef.current.x = -1000;
       mouseRef.current.y = -1000;
     };
-    cvs.addEventListener('mousemove', handleMouseMove);
-    cvs.addEventListener('mouseleave', handleMouseLeave);
+    if (dimsRef.current.w >= 768) {
+      cvs.addEventListener('mousemove', handleMouseMove);
+      cvs.addEventListener('mouseleave', handleMouseLeave);
+    }
 
     let lastTime = performance.now();
 
@@ -523,13 +540,15 @@ export default function CompressionPyramid() {
       lastTime = now;
       tRef.current += dt;
 
-      if (mouseRef.current.activeLayer !== -1) {
-        cvs.style.cursor = 'crosshair';
-      } else {
-        cvs.style.cursor = 'default';
-      }
+      if (visibleRef.current) {
+        if (mouseRef.current.activeLayer !== -1) {
+          cvs.style.cursor = 'crosshair';
+        } else {
+          cvs.style.cursor = 'default';
+        }
 
-      paint(ctx, dimsRef.current.w, dimsRef.current.h, dt);
+        paint(ctx, dimsRef.current.w, dimsRef.current.h, dt);
+      }
       frameRef.current = requestAnimationFrame(animate);
     };
 
@@ -553,7 +572,7 @@ export default function CompressionPyramid() {
         }`}>
           <canvas
             ref={canvasRef}
-            className="w-full h-[550px] sm:h-[650px] md:h-[750px] outline-none"
+            className="w-full h-[550px] sm:h-[650px] md:h-[750px] outline-none touch-pan-y"
             aria-label="Interactive animated compression pipeline: data particles fall through a 5-layer funnel, visually being compressed and stripped of noise until yielding a dense semantic output. Hover over any layer to inspect its objective and compression ratio."
             role="img"
           />
