@@ -323,6 +323,7 @@ export default function AgentHierarchy() {
   const accumulatorsRef = useRef<Record<string, number>>({});
   const spawnTimersRef = useRef<Record<string, number>>({});
   const arrivalPulseRef = useRef<Record<string, number>>({});
+  const visibleRef = useRef(true);
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
 
   const { resolvedTheme } = useTheme();
@@ -505,6 +506,18 @@ export default function AgentHierarchy() {
     return () => mq.removeEventListener('change', handler);
   }, []);
 
+  // --- Visibility gating (skip draw when off-screen) ---
+  useEffect(() => {
+    const cvs = canvasRef.current;
+    if (!cvs) return;
+    const obs = new IntersectionObserver(
+      ([entry]) => { visibleRef.current = entry.isIntersecting; },
+      { threshold: 0.05 }
+    );
+    obs.observe(cvs);
+    return () => obs.disconnect();
+  }, []);
+
   // Main canvas and animation loop
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -512,8 +525,11 @@ export default function AgentHierarchy() {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
+    let prevDims = { w: 0, h: 0 };
     const resize = () => {
       const rect = canvas.getBoundingClientRect();
+      if (prevDims.w > 0 && Math.abs(rect.width - prevDims.w) < 1 && Math.abs(rect.height - prevDims.h) < 1) return;
+      prevDims = { w: rect.width, h: rect.height };
       const dpr = window.devicePixelRatio || 1;
       canvas.width = rect.width * dpr;
       canvas.height = rect.height * dpr;
@@ -642,8 +658,10 @@ export default function AgentHierarchy() {
           particles.splice(toRemove[i], 1);
         }
 
-        const rect = canvas.getBoundingClientRect();
-        draw(ctx, rect.width, rect.height);
+        if (visibleRef.current) {
+          const rect = canvas.getBoundingClientRect();
+          draw(ctx, rect.width, rect.height);
+        }
         animFrameRef.current = requestAnimationFrame(animate);
       };
 
@@ -660,7 +678,7 @@ export default function AgentHierarchy() {
     <div className={`rounded-lg overflow-hidden border ${canvasTheme.wrapperClass}`}>
       <canvas
         ref={canvasRef}
-        className="w-full h-[300px] sm:h-[380px] md:h-[440px]"
+        className="w-full h-[300px] sm:h-[380px] md:h-[440px] touch-pan-y"
         aria-label="Animated diagram showing a three-tier agent hierarchy: many small Haiku reader nodes at the bottom send data particles upward to Sonnet worker nodes in the middle, which compress and forward fewer, larger particles to a single Opus coordinator at the top, demonstrating data compression at each tier"
         role="img"
       />

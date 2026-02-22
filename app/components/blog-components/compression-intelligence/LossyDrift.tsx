@@ -79,6 +79,7 @@ export default function LossyDrift() {
   const particleIdCounter = useRef(0);
 
   const mouseRef = useRef({ x: -1000, y: -1000, activeFilter: -1 });
+  const visibleRef = useRef(true);
   const dimsRef = useRef({ w: 0, h: 0 });
   const timeRef = useRef(0);
   const [noMotion, setNoMotion] = useState(false);
@@ -397,6 +398,18 @@ export default function LossyDrift() {
     return () => mq.removeEventListener('change', handler);
   }, []);
 
+  // --- Visibility gating (skip draw when off-screen) ---
+  useEffect(() => {
+    const cvs = canvasRef.current;
+    if (!cvs) return;
+    const obs = new IntersectionObserver(
+      ([entry]) => { visibleRef.current = entry.isIntersecting; },
+      { threshold: 0.05 }
+    );
+    obs.observe(cvs);
+    return () => obs.disconnect();
+  }, []);
+
   // --- Initialization & Loop ---
   useEffect(() => {
     const cvs = canvasRef.current;
@@ -406,6 +419,8 @@ export default function LossyDrift() {
 
     const resize = () => {
       const rect = cvs.getBoundingClientRect();
+      const { w: prevW, h: prevH } = dimsRef.current;
+      if (prevW > 0 && Math.abs(rect.width - prevW) < 1 && Math.abs(rect.height - prevH) < 1) return;
       const dpr = window.devicePixelRatio || 1;
       cvs.width = rect.width * dpr;
       cvs.height = rect.height * dpr;
@@ -433,8 +448,10 @@ export default function LossyDrift() {
       mouseRef.current.x = -1000;
       mouseRef.current.y = -1000;
     };
-    cvs.addEventListener('mousemove', handleMouseMove);
-    cvs.addEventListener('mouseleave', handleMouseLeave);
+    if (dimsRef.current.w >= 768) {
+      cvs.addEventListener('mousemove', handleMouseMove);
+      cvs.addEventListener('mouseleave', handleMouseLeave);
+    }
 
     let lastTime = performance.now();
 
@@ -443,13 +460,15 @@ export default function LossyDrift() {
       lastTime = now;
       timeRef.current += dt;
 
-      if (mouseRef.current.activeFilter !== -1) {
-        cvs.style.cursor = 'crosshair';
-      } else {
-        cvs.style.cursor = 'default';
-      }
+      if (visibleRef.current) {
+        if (mouseRef.current.activeFilter !== -1) {
+          cvs.style.cursor = 'crosshair';
+        } else {
+          cvs.style.cursor = 'default';
+        }
 
-      draw(ctx, dimsRef.current.w, dimsRef.current.h, dt);
+        draw(ctx, dimsRef.current.w, dimsRef.current.h, dt);
+      }
       animFrameRef.current = requestAnimationFrame(animate);
     };
 
@@ -476,7 +495,7 @@ export default function LossyDrift() {
         >
           <canvas
             ref={canvasRef}
-            className="w-full h-[320px] sm:h-[400px] md:h-[480px] outline-none"
+            className="w-full h-[320px] sm:h-[400px] md:h-[480px] outline-none touch-pan-y"
             aria-label="Interactive simulation showing red noise particles being filtered out of a blue signal stream across 8 sequential layers. Hover over filter barriers for real-time purge statistics."
             role="img"
           />
