@@ -457,7 +457,7 @@ export default async function PostPage({ params }: PageParams) {
             </div>
           )}
 
-          <h1 className="text-2xl md:text-3xl font-bold mb-2">
+          <h1 className="text-3xl md:text-4xl font-extrabold mb-2">
             {post.title}
           </h1>
 
