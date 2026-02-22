@@ -42,6 +42,7 @@ export default function AboutPage() {
                 </div>
 
                 <ul className="space-y-2">
+                    {/* Resume download temporarily disabled — resume is out of date
                     <li className="relative">
                         <Link
                             href="/JH Resume 2-13-25 Fullstack.pdf"
@@ -62,6 +63,7 @@ export default function AboutPage() {
                             </div>
                         </Link>
                     </li>
+                    */}
                     <li className="relative">
                         <a
                             href="https://github.com/jakejharris"
