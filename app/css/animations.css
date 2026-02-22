@@ -188,47 +188,4 @@
   animation: particle-disperse 300ms ease-out forwards;
 }
 
-/* CRT screen flicker effect for retro pixel background */
-@keyframes flicker {
-  0% { opacity: 0.9; }
-  50% { opacity: 1.0; }
-  100% { opacity: 0.9; }
-}
-
-/* Double line video effect - Primary sweep (faster) */
-@keyframes scanline-sweep-1 {
-  0% {
-    transform: translateY(-100%);
-  }
-  100% {
-    transform: translateY(calc(100vh + 100%));
-  }
-}
-
-/* Double line video effect - Secondary sweep (slower, creates interference pattern) */
-@keyframes scanline-sweep-2 {
-  0% {
-    transform: translateY(-100%);
-  }
-  100% {
-    transform: translateY(calc(100vh + 100%));
-  }
-}
-
-/* Scanline overlay utility classes */
-.scanline-sweep-1 {
-  animation: scanline-sweep-1 8s linear infinite;
-}
-
-.scanline-sweep-2 {
-  animation: scanline-sweep-2 13s linear infinite;
-  animation-delay: -4s; /* Offset start for visual variety */
-}
-
-/* Respect reduced motion preference */
-@media (prefers-reduced-motion: reduce) {
-  .scanline-sweep-1,
-  .scanline-sweep-2 {
-    animation: none;
-  }
-} 
+ 

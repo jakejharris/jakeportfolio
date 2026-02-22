@@ -1,6 +1,5 @@
 import PageLayout from '../../components/PageLayout';
 import Link from 'next/link';
-import Image from 'next/image';
 import { FaDownload, FaGithub } from 'react-icons/fa';
 import '../../css/page.css';
 import '../../css/animations.css';
@@ -17,11 +16,13 @@ export const metadata = {
 
 const aboutContent = {
     paragraphs: [
-        "I'm Jake Harris, a Full Stack Developer who builds AI-powered web applications. My background combines software development, entrepreneurship, and AI implementation.",
-        "I studied Computer Science at George Washington University before co-founding AG. There, I led frontend development for our AI trip planning platform, which secured $3M in funding and grew to 50,000 monthly users.",
-        "Now I run JJH DIGITAL, a consulting firm that delivers full stack solutions with AI integration. My projects include custom e-commerce platforms, community websites, and custom AI applications.",
-        "My typical stack includes TypeScript, React, Next.js, AWS and/or Azure. I focus on creating clear interfaces for complex systems, making AI technology useful through good design.",
-        "I build digital products that work. My approach combines solid architecture with practical problem-solving to create tools people actually want to use."
+        "I\u2019m Jake Harris, a software engineer at Docusign and the founder of JJH Digital, a software consultancy.",
+        "At Docusign I work on the Workspaces team. I built the team\u2019s cronjobs infrastructure from scratch, wrote a 200-page API parity analysis that became the reference for our global expansion initiative, and deployed Redis and CosmosDB across six production regions. I lead incident response for major releases and I\u2019ve driven AI tooling adoption across the engineering org. The stack is C#/.NET, gRPC, Kubernetes, and Azure.",
+        "Before Docusign, I co-founded AG, an AI-powered travel platform. I led frontend development, helped raise $3M in funding, and grew the platform to 50,000 monthly users. That experience is where I developed a conviction that AI isn\u2019t something you bolt on at the end. It\u2019s an architecture decision you make on day one.",
+        "Through JJH Digital I take on consulting work for businesses that need more than a template. Full stack applications, AI integrations, custom e-commerce platforms. TypeScript, React, Next.js, and whatever else the problem calls for. Clients own their code.",
+        "I spend a lot of time thinking about AI beyond just using it. Lately I\u2019ve been exploring recursive semantic compression, the idea that intelligence doesn\u2019t scale by making context windows bigger, it scales by compressing information the way biological cognition does, layer by layer. I\u2019ve built agent workflows on enterprise codebases, I write about it on this blog, and my working thesis is that the bottleneck in AI right now isn\u2019t capability. It\u2019s context.",
+        "I studied Computer Science at George Washington University, where I rowed Division I and contributed to a 7th place national finish at the IRA Championship. After college I coached my high school rowing club for a season where the team put up multiple podium finishes at Youth Nationals, which for a club out of Atlanta is kind of unheard of. Before any of that, I co-founded Lions Heart, a youth volunteer organization that facilitated over 10,000 hours of community service across metro Atlanta.",
+        "I build what works today and chase what will work tomorrow. That\u2019s the whole game."
     ]
 };
 
@@ -32,61 +33,12 @@ export default function AboutPage() {
             <div className="max-w-none">
                 <h2 className="mb-4 text-xl md:text-2xl font-bold">About</h2>
 
-                {/* Mobile layout - image first, then text */}
-                <div className="md:hidden mb-8">
-                    {/* Profile picture commented out
-                    <div className="flex justify-center mb-6 bg-secondary rounded-sm">
-                        <div className="relative w-[150px] aspect-square">
-                            <div className="group relative w-full h-full">
-                                <Image
-                                    src="/images/4.png"
-                                    alt="Jake Harris headshot"
-                                    width={150}
-                                    height={150}
-                                    className="object-cover w-full h-full rounded-full transition-all duration-150 filter grayscale group-hover:grayscale-0"
-                                    priority
-                                />
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-150 rounded-full"></div>
-                            </div>
-                        </div>
-                    </div>
-                    */}
-
-                    <div className="prose dark:prose-invert font-base text-base">
-                        {aboutContent.paragraphs.map((paragraph, index) => (
-                            <p key={index} className={index < aboutContent.paragraphs.length - 1 ? "mb-4" : ""}>
-                                {paragraph}
-                            </p>
-                        ))}
-                    </div>
-                </div>
-
-                {/* Desktop layout - text wraps around image */}
-                <div className="hidden md:block relative mb-8">
-                    {/* Profile picture commented out
-                    <div className="float-right ml-2 mb-4 relative w-full max-w-[150px] aspect-square">
-                        <div className="group relative w-full h-full">
-                            <Image
-                                src="/images/4.png"
-                                alt="Jake Harris headshot"
-                                width={150}
-                                height={150}
-                                className="object-cover w-full h-full rounded-full transition-all duration-150 filter grayscale group-hover:grayscale-0"
-                                priority
-                            />
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-150 rounded-full"></div>
-                        </div>
-                    </div>
-                    */}
-
-                    <div className="prose dark:prose-invert font-base text-base">
-                        {aboutContent.paragraphs.map((paragraph, index) => (
-                            <p key={index} className={index < aboutContent.paragraphs.length - 1 ? "mb-4" : ""}>
-                                {paragraph}
-                            </p>
-                        ))}
-                    </div>
-                    <div className="clear-both"></div>
+                <div className="prose dark:prose-invert font-base text-base mb-8">
+                    {aboutContent.paragraphs.map((paragraph, index) => (
+                        <p key={index} className={index < aboutContent.paragraphs.length - 1 ? "mb-4" : ""}>
+                            {paragraph}
+                        </p>
+                    ))}
                 </div>
 
                 <ul className="space-y-2">
