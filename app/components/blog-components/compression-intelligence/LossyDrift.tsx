@@ -10,6 +10,8 @@
 // That sounds bad until you realize: the 34% you lost was the noise."
 
 import { useEffect, useRef, useState, useCallback } from 'react';
+import { useTheme } from 'next-themes';
+import { getCanvasTheme } from './theme-colors';
 
 // --- Constants ---
 
@@ -89,7 +91,7 @@ function getParticleCount(width: number): number {
 
 // --- Particle creation ---
 
-function createParticles(count: number, width: number, height: number): Particle[] {
+function createParticles(count: number, width: number, height: number, isDark: boolean): Particle[] {
   const particles: Particle[] = [];
   const centerY = height * STREAM_CENTER_Y;
   const spread = height * STREAM_SPREAD;
@@ -120,9 +122,9 @@ function createParticles(count: number, width: number, height: number): Particle
         baseRadius: 1.2 + seededRandom(idx, 3) * 1.0,
         baseOpacity: opacityBase,
         currentOpacity: opacityBase,
-        r: lerp(180, 255, seededRandom(idx, 4)),
-        g: lerp(70, 110, seededRandom(idx, 5)),
-        b: lerp(40, 65, seededRandom(idx, 6)),
+        r: isDark ? lerp(180, 255, seededRandom(idx, 4)) : lerp(160, 220, seededRandom(idx, 4)),
+        g: isDark ? lerp(70, 110, seededRandom(idx, 5)) : lerp(50, 90, seededRandom(idx, 5)),
+        b: isDark ? lerp(40, 65, seededRandom(idx, 6)) : lerp(20, 50, seededRandom(idx, 6)),
         speed: 0.6 + seededRandom(idx, 7) * 0.3,
         phase: seededRandom(idx, 8) * Math.PI * 2,
         jitter: 2.5 + seededRandom(idx, 9) * 2.0,
@@ -150,8 +152,8 @@ function createParticles(count: number, width: number, height: number): Particle
       baseRadius: 1.8 + seededRandom(idx, 3) * 1.5,
       baseOpacity: opacityBase,
       currentOpacity: opacityBase,
-      r: lerp(90, 140, seededRandom(idx, 4)),
-      g: lerp(150, 210, seededRandom(idx, 5)),
+      r: isDark ? lerp(90, 140, seededRandom(idx, 4)) : lerp(30, 80, seededRandom(idx, 4)),
+      g: isDark ? lerp(150, 210, seededRandom(idx, 5)) : lerp(100, 170, seededRandom(idx, 5)),
       b: 255,
       speed: 0.6 + seededRandom(idx, 7) * 0.25,
       phase: seededRandom(idx, 8) * Math.PI * 2,
@@ -266,19 +268,19 @@ function updateParticles(
 
 // --- Reduced motion static frame ---
 
-function drawReducedMotion(ctx: CanvasRenderingContext2D, width: number, height: number) {
+function drawReducedMotion(ctx: CanvasRenderingContext2D, width: number, height: number, isDark: boolean, theme: ReturnType<typeof getCanvasTheme>) {
   // Background
   const bgGrad = ctx.createLinearGradient(0, 0, width, height);
-  bgGrad.addColorStop(0, '#0a0a14');
-  bgGrad.addColorStop(0.5, '#0d0d1a');
-  bgGrad.addColorStop(1, '#0a0a14');
+  bgGrad.addColorStop(0, theme.bg);
+  bgGrad.addColorStop(0.5, theme.bgMid);
+  bgGrad.addColorStop(1, theme.bg);
   ctx.fillStyle = bgGrad;
   ctx.fillRect(0, 0, width, height);
 
   // Draw 8 faded filter lines
   ctx.save();
   ctx.setLineDash([6, 6]);
-  ctx.strokeStyle = 'rgba(80, 140, 220, 0.1)';
+  ctx.strokeStyle = `rgba(${theme.filterLine}, 0.1)`;
   ctx.lineWidth = 1;
   for (let i = 0; i < 8; i++) {
     const fx = FILTER_POSITIONS[i] * width;
@@ -305,8 +307,8 @@ function drawReducedMotion(ctx: CanvasRenderingContext2D, width: number, height:
     ctx.beginPath();
     ctx.arc(px, py, r, 0, Math.PI * 2);
     ctx.fillStyle = isNoise
-      ? 'rgba(230, 90, 55, 0.35)'
-      : 'rgba(100, 170, 255, 0.7)';
+      ? `rgba(${theme.noise}, 0.35)`
+      : `rgba(${theme.signal}, 0.7)`;
     ctx.fill();
   }
 
@@ -319,14 +321,14 @@ function drawReducedMotion(ctx: CanvasRenderingContext2D, width: number, height:
     const py = centerY + Math.sin(angle) * rSpread * 1.5;
     ctx.beginPath();
     ctx.arc(px, py, 2.2, 0, Math.PI * 2);
-    ctx.fillStyle = 'rgba(120, 200, 255, 0.85)';
+    ctx.fillStyle = `rgba(${theme.blueLight}, 0.85)`;
     ctx.fill();
 
     // Glow
     const glowR = 8;
     const glow = ctx.createRadialGradient(px, py, 0, px, py, glowR);
-    glow.addColorStop(0, 'rgba(120, 200, 255, 0.25)');
-    glow.addColorStop(1, 'rgba(120, 200, 255, 0)');
+    glow.addColorStop(0, `rgba(${theme.blueLight}, 0.25)`);
+    glow.addColorStop(1, `rgba(${theme.blueLight}, 0)`);
     ctx.fillStyle = glow;
     ctx.beginPath();
     ctx.arc(px, py, glowR, 0, Math.PI * 2);
@@ -335,7 +337,7 @@ function drawReducedMotion(ctx: CanvasRenderingContext2D, width: number, height:
 
   // Arrow
   const arrowY = centerY;
-  ctx.strokeStyle = 'rgba(160, 175, 220, 0.25)';
+  ctx.strokeStyle = `rgba(${theme.labelDim}, 0.25)`;
   ctx.lineWidth = 1.5;
   ctx.setLineDash([]);
   ctx.beginPath();
@@ -351,17 +353,17 @@ function drawReducedMotion(ctx: CanvasRenderingContext2D, width: number, height:
   ctx.font = `${fontSize}px ui-monospace, SFMono-Regular, monospace`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'top';
-  ctx.fillStyle = 'rgba(180, 200, 240, 0.6)';
+  ctx.fillStyle = `rgba(${theme.labelDim}, 0.6)`;
   ctx.fillText('100%', leftCenterX, height * 0.78);
-  ctx.fillStyle = 'rgba(140, 210, 255, 0.85)';
+  ctx.fillStyle = `rgba(${theme.blueDeep}, 0.85)`;
   ctx.fillText('66.34%', rightCenterX, height * 0.78);
 
   // Subtitle labels
   const subFontSize = Math.max(8, Math.min(10, width * 0.016));
   ctx.font = `${subFontSize}px ui-monospace, SFMono-Regular, monospace`;
-  ctx.fillStyle = 'rgba(160, 175, 220, 0.35)';
+  ctx.fillStyle = `rgba(${theme.labelDim}, 0.35)`;
   ctx.fillText('signal + noise', leftCenterX, height * 0.84);
-  ctx.fillStyle = 'rgba(140, 210, 255, 0.5)';
+  ctx.fillStyle = `rgba(${theme.blueDeep}, 0.5)`;
   ctx.fillText('pure signal', rightCenterX, height * 0.84);
 }
 
@@ -385,6 +387,12 @@ export default function LossyDrift() {
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
 
+  const { resolvedTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
+  const isDark = mounted ? resolvedTheme === 'dark' : true;
+  const theme = getCanvasTheme(isDark);
+
   const draw = useCallback((ctx: CanvasRenderingContext2D, width: number, height: number) => {
     const time = timeRef.current;
     const particles = particlesRef.current;
@@ -392,9 +400,9 @@ export default function LossyDrift() {
 
     // --- Background (always full alpha) ---
     const bgGrad = ctx.createLinearGradient(0, 0, width, height);
-    bgGrad.addColorStop(0, '#0a0a14');
-    bgGrad.addColorStop(0.5, '#0d0d1a');
-    bgGrad.addColorStop(1, '#0a0a14');
+    bgGrad.addColorStop(0, theme.bg);
+    bgGrad.addColorStop(0.5, theme.bgMid);
+    bgGrad.addColorStop(1, theme.bg);
     ctx.fillStyle = bgGrad;
     ctx.fillRect(0, 0, width, height);
 
@@ -410,8 +418,8 @@ export default function LossyDrift() {
       // Dashed vertical line
       ctx.setLineDash([6, 6]);
       ctx.strokeStyle = isActive
-        ? 'rgba(80, 140, 220, 0.25)'
-        : 'rgba(80, 140, 220, 0.08)';
+        ? `rgba(${theme.filterLine}, 0.25)`
+        : `rgba(${theme.filterLine}, 0.08)`;
       ctx.lineWidth = 1;
       ctx.beginPath();
       ctx.moveTo(fx, height * 0.08);
@@ -421,9 +429,9 @@ export default function LossyDrift() {
       // Glow band when active
       if (isActive) {
         const glowGrad = ctx.createLinearGradient(fx - 10, 0, fx + 10, 0);
-        glowGrad.addColorStop(0, 'rgba(80, 140, 220, 0)');
-        glowGrad.addColorStop(0.5, 'rgba(80, 140, 220, 0.05)');
-        glowGrad.addColorStop(1, 'rgba(80, 140, 220, 0)');
+        glowGrad.addColorStop(0, `rgba(${theme.filterLine}, 0)`);
+        glowGrad.addColorStop(0.5, `rgba(${theme.filterLine}, 0.05)`);
+        glowGrad.addColorStop(1, `rgba(${theme.filterLine}, 0)`);
         ctx.fillStyle = glowGrad;
         ctx.setLineDash([]);
         ctx.fillRect(fx - 10, height * 0.08, 20, height * 0.60);
@@ -433,8 +441,8 @@ export default function LossyDrift() {
       const fontSize = Math.max(8, Math.min(11, width * 0.018));
       ctx.font = `${fontSize}px ui-monospace, SFMono-Regular, monospace`;
       ctx.fillStyle = isActive
-        ? 'rgba(160, 175, 220, 0.5)'
-        : 'rgba(160, 175, 220, 0.25)';
+        ? `rgba(${theme.labelDim}, 0.5)`
+        : `rgba(${theme.labelDim}, 0.25)`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'top';
       ctx.setLineDash([]);
@@ -463,10 +471,10 @@ export default function LossyDrift() {
       const isFinal = i === 8 && currentPhase >= 9;
 
       ctx.fillStyle = isFinal
-        ? `rgba(140, 210, 255, ${0.75 + 0.1 * Math.sin(time * 2)})`
+        ? `rgba(${theme.blueDeep}, ${0.75 + 0.1 * Math.sin(time * 2)})`
         : isReached
-          ? 'rgba(180, 200, 240, 0.55)'
-          : 'rgba(160, 175, 220, 0.15)';
+          ? `rgba(${theme.labelDim}, 0.55)`
+          : `rgba(${theme.labelDim}, 0.15)`;
 
       const pctText = i === 0 ? '100%' : `${STAGE_PERCENTAGES[i].toFixed(1)}%`;
       ctx.fillText(pctText, px, height * 0.80);
@@ -505,27 +513,27 @@ export default function LossyDrift() {
       ctx.textBaseline = 'top';
 
       // Signal legend (top-right)
-      ctx.fillStyle = 'rgba(100, 170, 255, 0.4)';
+      ctx.fillStyle = `rgba(${theme.signal}, 0.4)`;
       ctx.textAlign = 'right';
       ctx.fillText('signal', width - 10, 8);
       ctx.beginPath();
       ctx.arc(width - ctx.measureText('signal').width - 16, 13, 3, 0, Math.PI * 2);
-      ctx.fillStyle = 'rgba(100, 170, 255, 0.6)';
+      ctx.fillStyle = `rgba(${theme.signal}, 0.6)`;
       ctx.fill();
 
       // Noise legend (top-left)
-      ctx.fillStyle = 'rgba(230, 90, 55, 0.4)';
+      ctx.fillStyle = `rgba(${theme.noise}, 0.4)`;
       ctx.textAlign = 'left';
       ctx.fillText('noise', 18, 8);
       ctx.beginPath();
       ctx.arc(12, 13, 2.5, 0, Math.PI * 2);
-      ctx.fillStyle = 'rgba(230, 90, 55, 0.45)';
+      ctx.fillStyle = `rgba(${theme.noise}, 0.45)`;
       ctx.fill();
     }
 
     // Reset global alpha
     ctx.globalAlpha = 1;
-  }, []);
+  }, [theme]);
 
   // Reduced motion detection
   useEffect(() => {
@@ -565,7 +573,7 @@ export default function LossyDrift() {
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       dimensionsRef.current = { width: rect.width, height: rect.height };
       const count = getParticleCount(rect.width);
-      particlesRef.current = createParticles(count, rect.width, rect.height);
+      particlesRef.current = createParticles(count, rect.width, rect.height, isDark);
       phaseRef.current = 0;
       phaseStartTimeRef.current = 0;
       timeRef.current = 0;
@@ -579,12 +587,12 @@ export default function LossyDrift() {
 
     if (prefersReducedMotion) {
       const { width, height } = dimensionsRef.current;
-      drawReducedMotion(ctx, width, height);
+      drawReducedMotion(ctx, width, height, isDark, theme);
     } else if (isVisible) {
       // Reset for fresh play
       const { width, height } = dimensionsRef.current;
       const count = getParticleCount(width);
-      particlesRef.current = createParticles(count, width, height);
+      particlesRef.current = createParticles(count, width, height, isDark);
       phaseRef.current = 0;
       phaseStartTimeRef.current = 0;
       timeRef.current = 0;
@@ -646,7 +654,7 @@ export default function LossyDrift() {
           if (fadeElapsed >= FADE_OUT_DURATION) {
             // Reset particles and phase
             const count = getParticleCount(width);
-            particlesRef.current = createParticles(count, width, height);
+            particlesRef.current = createParticles(count, width, height, isDark);
             phaseRef.current = 0;
             phaseStartTimeRef.current = 0;
             globalAlphaRef.current = 0;
@@ -680,12 +688,12 @@ export default function LossyDrift() {
       window.removeEventListener('resize', resize);
       if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
     };
-  }, [prefersReducedMotion, isVisible, draw]);
+  }, [prefersReducedMotion, isVisible, draw, isDark, theme]);
 
   return (
     <div
       ref={containerRef}
-      className="rounded-lg overflow-hidden border border-white/10 bg-[#0a0a14]"
+      className={`rounded-lg overflow-hidden border ${theme.wrapperClass}`}
     >
       <canvas
         ref={canvasRef}
