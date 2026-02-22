@@ -12,6 +12,8 @@
 // math in the article's compression table.
 
 import { useEffect, useRef, useState, useCallback } from 'react';
+import { useTheme } from 'next-themes';
+import { getCanvasTheme } from './theme-colors';
 
 // ─── Configuration ──────────────────────────────────────────────────────────
 const POOL_SIZE = 220;
@@ -122,6 +124,12 @@ export default function CompressionPyramid() {
   const dimsRef = useRef({ w: 0, h: 0 });
   const [noMotion, setNoMotion] = useState(false);
 
+  const { resolvedTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
+  const isDark = mounted ? resolvedTheme === 'dark' : true;
+  const theme = getCanvasTheme(isDark);
+
   const paint = useCallback(
     (ctx: CanvasRenderingContext2D, w: number, h: number) => {
       if (w === 0 || h === 0) return;
@@ -133,9 +141,9 @@ export default function CompressionPyramid() {
 
       // ── Background ──
       const bg = ctx.createLinearGradient(0, 0, 0, h);
-      bg.addColorStop(0, '#0a0a14');
-      bg.addColorStop(0.5, '#0e0e1c');
-      bg.addColorStop(1, '#0a0a14');
+      bg.addColorStop(0, theme.bg);
+      bg.addColorStop(0.5, theme.bgMid);
+      bg.addColorStop(1, theme.bg);
       ctx.fillStyle = bg;
       ctx.fillRect(0, 0, w, h);
 
@@ -143,7 +151,7 @@ export default function CompressionPyramid() {
       for (let i = 0; i < 5; i++) {
         const [tL, tR] = pyrX(yMins[i]);
         const [bL, bR] = pyrX(yMaxs[i]);
-        ctx.fillStyle = `rgba(25, 45, 90, ${0.015 + i * 0.012})`;
+        ctx.fillStyle = `rgba(${theme.layerFill}, ${0.015 + i * 0.012})`;
         ctx.beginPath();
         ctx.moveTo(tL * w, yMins[i] * h);
         ctx.lineTo(tR * w, yMins[i] * h);
@@ -157,7 +165,7 @@ export default function CompressionPyramid() {
       const [topL, topR] = pyrX(PYR_Y0);
       const [botL, botR] = pyrX(PYR_Y1);
       const ea = 0.08 + 0.03 * Math.sin(t * 0.8);
-      ctx.strokeStyle = `rgba(75, 125, 200, ${ea})`;
+      ctx.strokeStyle = `rgba(${theme.outline}, ${ea})`;
       ctx.lineWidth = 1;
       ctx.beginPath();
       ctx.moveTo(topL * w, PYR_Y0 * h);
@@ -178,16 +186,16 @@ export default function CompressionPyramid() {
         const pulse = 0.055 + 0.03 * Math.sin(t * 1.3 + i * 1.1);
         const gr = (bxR - bxL) * 0.55;
         const glow = ctx.createRadialGradient(bCx, by, 0, bCx, by, Math.max(1, gr));
-        glow.addColorStop(0, `rgba(75, 135, 255, ${pulse})`);
-        glow.addColorStop(0.5, `rgba(75, 135, 255, ${pulse * 0.35})`);
-        glow.addColorStop(1, 'rgba(75, 135, 255, 0)');
+        glow.addColorStop(0, `rgba(${theme.boundary}, ${pulse})`);
+        glow.addColorStop(0.5, `rgba(${theme.boundary}, ${pulse * 0.35})`);
+        glow.addColorStop(1, `rgba(${theme.boundary}, 0)`);
         ctx.fillStyle = glow;
         ctx.beginPath();
         ctx.ellipse(bCx, by, Math.max(1, gr), 16, 0, 0, Math.PI * 2);
         ctx.fill();
 
         ctx.setLineDash([5, 7]);
-        ctx.strokeStyle = `rgba(95, 155, 255, ${0.12 + 0.04 * Math.sin(t * 1.4 + i)})`;
+        ctx.strokeStyle = `rgba(${theme.boundaryAccent}, ${0.12 + 0.04 * Math.sin(t * 1.4 + i)})`;
         ctx.lineWidth = 0.7;
         ctx.beginPath();
         ctx.moveTo(bxL, by);
@@ -209,12 +217,12 @@ export default function CompressionPyramid() {
         const hasSize = LAYERS[i].size !== '';
 
         ctx.font = `600 ${fs}px ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace`;
-        ctx.fillStyle = 'rgba(160, 178, 220, 0.48)';
+        ctx.fillStyle = `rgba(${theme.labelDim}, 0.48)`;
         ctx.fillText(compact ? LAYERS[i].short : LAYERS[i].label, cx, midY - (hasSize ? 7 : 0));
 
         if (hasSize) {
           ctx.font = `${sfs}px ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace`;
-          ctx.fillStyle = 'rgba(138, 155, 210, 0.35)';
+          ctx.fillStyle = `rgba(${theme.labelSec}, 0.35)`;
           ctx.fillText(LAYERS[i].size, cx, midY + fs * 0.55);
         }
       }
@@ -225,7 +233,7 @@ export default function CompressionPyramid() {
           const by = BOUNDS_Y[i] * h;
           const [pL, pR] = pyrX(BOUNDS_Y[i] + 0.015);
           ctx.font = `${pfs}px ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace`;
-          ctx.fillStyle = 'rgba(105, 140, 200, 0.22)';
+          ctx.fillStyle = `rgba(${theme.outline}, 0.22)`;
           ctx.textAlign = 'center';
           ctx.fillText(PROC_LABELS[i], ((pL + pR) / 2) * w, by + pfs + 5);
         }
@@ -279,7 +287,7 @@ export default function CompressionPyramid() {
           const d2 = dx * dx + dy * dy;
           if (d2 < 2500) {
             const d = Math.sqrt(d2);
-            ctx.strokeStyle = `rgba(100, 160, 255, ${(1 - d / 50) * 0.06})`;
+            ctx.strokeStyle = `rgba(${theme.blueMid}, ${(1 - d / 50) * 0.06})`;
             ctx.lineWidth = 0.4;
             ctx.beginPath();
             ctx.moveTo(a.x, a.y);
@@ -292,9 +300,9 @@ export default function CompressionPyramid() {
       // ── Draw particles ──
       for (const { x, y, p } of pos) {
         const b = Math.min(1, p.bright);
-        const cr = Math.round(lerp(120, 170, b));
-        const cg = Math.round(lerp(148, 225, b));
-        const cb = Math.round(lerp(210, 255, b));
+        const cr = isDark ? Math.round(lerp(120, 170, b)) : Math.round(lerp(40, 80, b));
+        const cg = isDark ? Math.round(lerp(148, 225, b)) : Math.round(lerp(90, 160, b));
+        const cb = isDark ? Math.round(lerp(210, 255, b)) : Math.round(lerp(180, 230, b));
         const ca = lerp(0.20, 0.90, b);
         const radius = p.r * (1 + b * 2.2);
 
@@ -337,15 +345,15 @@ export default function CompressionPyramid() {
       const oCy = PYR_Y1 * h;
       const oGr = 32 + 14 * Math.sin(t * 1.0);
       const oGlow = ctx.createRadialGradient(oCx, oCy, 0, oCx, oCy, oGr);
-      oGlow.addColorStop(0, 'rgba(110, 195, 255, 0.30)');
-      oGlow.addColorStop(0.35, 'rgba(110, 195, 255, 0.10)');
-      oGlow.addColorStop(1, 'rgba(110, 195, 255, 0)');
+      oGlow.addColorStop(0, `rgba(${theme.glow}, 0.30)`);
+      oGlow.addColorStop(0.35, `rgba(${theme.glow}, 0.10)`);
+      oGlow.addColorStop(1, `rgba(${theme.glow}, 0)`);
       ctx.fillStyle = oGlow;
       ctx.beginPath();
       ctx.arc(oCx, oCy, oGr, 0, Math.PI * 2);
       ctx.fill();
     },
-    [noMotion]
+    [noMotion, isDark, theme]
   );
 
   // Reduced-motion detection
@@ -406,7 +414,7 @@ export default function CompressionPyramid() {
   }, [noMotion, paint]);
 
   return (
-    <div className="rounded-lg overflow-hidden border border-white/10 bg-[#0a0a14]">
+    <div className={`rounded-lg overflow-hidden border ${theme.wrapperClass}`}>
       <canvas
         ref={canvasRef}
         className="w-full h-[420px] sm:h-[500px] md:h-[580px] lg:h-[660px]"

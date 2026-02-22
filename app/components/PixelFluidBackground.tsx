@@ -46,6 +46,8 @@ export default function PixelFluidBackground({ className }: PixelFluidBackground
     waveScale: 0.09,
     isGrayscale: false,
     grayscaleInverted: false,
+    contourDensity: 12,
+    contourThickness: 0.2,
   });
   const [mounted, setMounted] = useState(false);
   const { theme, resolvedTheme } = useTheme();
@@ -116,20 +118,13 @@ export default function PixelFluidBackground({ className }: PixelFluidBackground
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    const { pixelSize, baseHue, baseSaturation, isGrayscale, grayscaleInverted } = configRef.current;
+    const { pixelSize, baseHue, baseSaturation, isGrayscale, contourDensity, contourThickness } = configRef.current;
     const cols = Math.ceil(canvas.width / pixelSize);
     const rows = Math.ceil(canvas.height / pixelSize);
 
-    // Background color based on theme
-    const bgColor = isDark ? "#0a0a0a" : "#ffffff";
-
     // Fill background first
-    ctx.fillStyle = bgColor;
+    ctx.fillStyle = isDark ? "#0a0a0a" : "#ffffff";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    // Foam colors for dithering (theme-aware)
-    const foamLight1 = isDark ? "#1a1a1a" : "#f1f5f9";
-    const foamLight2 = isDark ? "#252525" : "#e2e8f0";
 
     for (let x = 0; x < cols; x++) {
       for (let y = 0; y < rows; y++) {
@@ -140,51 +135,63 @@ export default function PixelFluidBackground({ className }: PixelFluidBackground
         if (noiseVal < 0.45) {
           continue;
         }
-        // 2. Dithered transition (foam) with checkerboard pattern
-        else if (noiseVal < 0.58) {
-          const isEven = (x + y) % 2 === 0;
 
-          if (noiseVal < 0.52) {
-            // Lightest foam
-            color = isEven ? bgColor : foamLight1;
-          } else {
-            // Denser foam
-            color = isEven ? foamLight1 : foamLight2;
+        // Calculate cursor proximity illumination (Flashlight effect)
+        let illumination = 0;
+        if (pointerRef.current.active) {
+          const dx = x - pointerRef.current.x;
+          const dy = y - pointerRef.current.y;
+          // Fast bounding box check to save CPU before doing Math.sqrt
+          if (Math.abs(dx) < 25 && Math.abs(dy) < 25) {
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist < 25) {
+              illumination = Math.max(0, 1 - dist / 25); // Range 0 to 1
+            }
           }
         }
-        // 3. Water body
-        else {
-          const norm = (noiseVal - 0.58) * 2.4;
 
-          // Highlight glints on peaks
-          if (noiseVal > 0.85 && (x * y) % 17 === 0) {
-            color = isDark ? "#ffffff" : "#ffffff";
-          } else if (isGrayscale) {
-            // Grayscale rendering
-            let light: number;
-            if (grayscaleInverted) {
-              // Light mode: subtle grey shades
-              light = isDark ? 30 - norm * 20 : 88 - norm * 12;
+        // Contour line detection
+        const isContourLine = noiseVal > 0.58 && (noiseVal * contourDensity) % 1 < contourThickness;
+        // Dashed "drafting pen" effect — skip every 3rd pixel along diagonals
+        const isDashedGap = (x + y) % 3 === 0;
+
+        if (isContourLine && !isDashedGap) {
+          // Peak glints — accent color ONLY appears here
+          if (noiseVal > 0.80 && (x * y) % 13 === 0) {
+            if (isGrayscale) {
+              color = isDark ? "#ffffff" : "#000000";
             } else {
-              // Dark mode: lighter shades
-              light = isDark ? 85 - norm * 25 : 95 - norm * 20;
+              let glintLight = isDark ? 70 : 45;
+              // Add a bright flash when the cursor hovers over it
+              glintLight += isDark ? illumination * 20 : -(illumination * 20);
+              color = `hsl(${baseHue}, ${baseSaturation}%, ${glintLight}%)`;
             }
-            light = Math.floor(light / 6) * 6;
-            color = `hsl(0, 0%, ${light}%)`;
           } else {
-            // Colored rendering
-            const hue = baseHue + norm * 10;
-            const sat = 70 + norm * 25;
-            let light = 85 - norm * 55;
-            light = Math.floor(light / 6) * 6;
-
-            // Adjust for dark mode
-            if (isDark) {
-              light = Math.min(light + 15, 80);
-            }
-
-            color = `hsl(${hue}, ${sat}%, ${light}%)`;
+            // Neutral grayscale contour line (architectural look)
+            let lineLight = isDark ? 22 : 88;
+            // Highlight the line slightly under the cursor
+            lineLight += isDark ? illumination * 15 : -(illumination * 15);
+            color = `hsl(0, 0%, ${lineLight}%)`;
           }
+        } else {
+          // Checkerboard "PNG transparency" pattern
+          const isEven = (x + y) % 2 === 0;
+          let baseL = 0;
+
+          if (noiseVal < 0.52) {
+            // Fading edge — sparser checkerboard
+            baseL = isEven ? (isDark ? 4 : 100) : (isDark ? 10 : 96);
+          } else {
+            // Dense checkerboard across the full wave area
+            baseL = isEven ? (isDark ? 10 : 96) : (isDark ? 15 : 92);
+          }
+
+          // Apply flashlight illumination to the checkerboard
+          if (illumination > 0) {
+            baseL += isDark ? illumination * 8 : -(illumination * 8);
+          }
+          
+          color = `hsl(0, 0%, ${baseL}%)`;
         }
 
         if (color) {
@@ -221,9 +228,8 @@ export default function PixelFluidBackground({ className }: PixelFluidBackground
     canvas.height = window.innerHeight;
 
     // Slower animation on desktop, faster on mobile
-    // Original speed was 0.02; mobile is 30% slower, desktop is 60% slower
     const isMobile = window.innerWidth < 768;
-    configRef.current.speed = isMobile ? 0.014 : 0.008;
+    configRef.current.speed = isMobile ? 0.007 : 0.0072;
   }, []);
 
   // Pointer update handler
@@ -335,53 +341,14 @@ export default function PixelFluidBackground({ className }: PixelFluidBackground
         }}
       />
 
-      {/* Moving scanline 1 - Primary (faster sweep) */}
+      {/* Static film grain overlay (Optimized Performance Data URI) */}
       <div
-        className="absolute inset-x-0 pointer-events-none z-[12] scanline-sweep-1"
+        className="absolute inset-0 pointer-events-none z-[12]"
         style={{
-          height: "8px",
-          top: 0,
-          background: isDark
-            ? `linear-gradient(
-                to bottom,
-                rgba(255,255,255,0) 0%,
-                rgba(255,255,255,0.08) 40%,
-                rgba(255,255,255,0.12) 50%,
-                rgba(255,255,255,0.08) 60%,
-                rgba(255,255,255,0) 100%
-              )`
-            : `linear-gradient(
-                to bottom,
-                rgba(0,0,0,0) 0%,
-                rgba(0,0,0,0.05) 40%,
-                rgba(0,0,0,0.08) 50%,
-                rgba(0,0,0,0.05) 60%,
-                rgba(0,0,0,0) 100%
-              )`,
-          willChange: "transform",
-        }}
-      />
-
-      {/* Moving scanline 2 - Secondary (slower sweep, creates double-line interference) */}
-      <div
-        className="absolute inset-x-0 pointer-events-none z-[12] scanline-sweep-2"
-        style={{
-          height: "4px",
-          top: 0,
-          background: isDark
-            ? `linear-gradient(
-                to bottom,
-                rgba(255,255,255,0) 0%,
-                rgba(255,255,255,0.06) 50%,
-                rgba(255,255,255,0) 100%
-              )`
-            : `linear-gradient(
-                to bottom,
-                rgba(0,0,0,0) 0%,
-                rgba(0,0,0,0.04) 50%,
-                rgba(0,0,0,0) 100%
-              )`,
-          willChange: "transform",
+          opacity: isDark ? 0.05 : 0.08,
+          mixBlendMode: isDark ? "screen" : "multiply",
+          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='grain'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23grain)'/%3E%3C/svg%3E")`,
+          backgroundRepeat: "repeat",
         }}
       />
 

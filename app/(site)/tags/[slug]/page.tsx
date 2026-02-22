@@ -9,6 +9,7 @@ import {
   HoverCardContent,
 } from '@/app/components/hover-card';
 import ScrollToTop from '@/app/components/ScrollToTop';
+import PixelFluidBackground from '@/app/components/PixelFluidBackground';
 import TagPill from '@/app/components/TagPill';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
@@ -107,6 +108,8 @@ export default async function TagPage({
   });
 
   return (
+    <>
+    <PixelFluidBackground />
     <PageLayout>
       <ScrollToTop />
       <div className="max-w-none">
@@ -181,5 +184,6 @@ export default async function TagPage({
         )}
       </div>
     </PageLayout>
+    </>
   );
 }
