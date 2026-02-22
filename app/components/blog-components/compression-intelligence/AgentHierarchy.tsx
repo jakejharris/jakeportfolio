@@ -448,6 +448,9 @@ export default function AgentHierarchy() {
     const subFontSize = Math.max(9, fontSize - 2);
 
     for (const config of TIER_CONFIGS) {
+      // Skip labels for multi-node tiers (Haiku Readers, Sonnet Workers)
+      if (config.nodeCount > 1) continue;
+
       const tierNodes = nodes.filter(n => n.tier === config.tier);
       const tierY = tierNodes[0]?.y ?? config.yPosition * height;
 
