@@ -13,7 +13,7 @@ export default function PageLayout({
   center = false 
 }: PageLayoutProps) {
   return (
-    <div 
+    <div
       className={cn(
         "min-h-[calc(100vh-4rem)]",
         center ? "flex items-center justify-center" : "pt-6 pb-8",
@@ -21,7 +21,7 @@ export default function PageLayout({
         className
       )}
     >
-      <div className="max-w-2xl mx-auto px-4 w-full">
+      <div className={cn("max-w-2xl mx-auto w-full", center ? "p-4" : "px-4")}>
         {children}
       </div>
     </div>
