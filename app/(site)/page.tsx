@@ -36,11 +36,11 @@ export default async function HomePage() {
   return (
     <>
       <PixelFluidBackground />
-      <PageLayout>
+      <PageLayout center>
         <ScrollToTop />
       <div className="max-w-none">
         {/* <h2 className="mb-4 text-xl md:text-2xl font-bold">Recent Posts</h2> */}
-        <ul className="space-y-2 mb-8">
+        <ul className="space-y-2">
           {posts.map((post) => (
             <li key={post._id} className="relative">
               <HoverCard>
