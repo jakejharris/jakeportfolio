@@ -33,10 +33,8 @@ interface PixelFluidBackgroundProps {
 
 export default function PixelFluidBackground({ className }: PixelFluidBackgroundProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
   const animationRef = useRef<number>(0);
   const timeRef = useRef(0);
-  const hasDrawnRef = useRef(false);
   const pointerRef = useRef({ x: -1000, y: -1000, active: false });
   const configRef = useRef({
     pixelSize: 18,
@@ -206,16 +204,6 @@ export default function PixelFluidBackground({ className }: PixelFluidBackground
       }
     }
 
-    // Fade in after first frame draws
-    if (!hasDrawnRef.current) {
-      hasDrawnRef.current = true;
-      requestAnimationFrame(() => {
-        if (containerRef.current) {
-          containerRef.current.style.opacity = "1";
-        }
-      });
-    }
-
     timeRef.current += configRef.current.speed;
     animationRef.current = requestAnimationFrame(draw);
   }, [isDark, getWaveHeight]);
@@ -316,11 +304,8 @@ export default function PixelFluidBackground({ className }: PixelFluidBackground
 
   return (
     <div
-      ref={containerRef}
       className={`fixed inset-0 -z-10 ${className || ""}`}
       style={{
-        opacity: 0,
-        transition: "opacity 300ms ease-out",
         backgroundColor: isDark ? "#0a0a0a" : "#ffffff",
       }}
     >
