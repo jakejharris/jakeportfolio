@@ -6,6 +6,14 @@ import { useTheme } from "next-themes";
 // Feature flag for pixel fluid background
 const ENABLE_PIXEL_FLUID_BACKGROUND = true;
 
+// Duration (ms) for the wave amplitude to ramp from 0 → 1 on mount
+const WAVE_RAMP_DURATION = 800;
+
+// Cubic ease-out: fast through the low range, decelerates into full amplitude
+function easeOutCubic(t: number): number {
+  return 1 - (1 - t) * (1 - t) * (1 - t);
+}
+
 // Same colors as AccentPicker for consistency
 const COLORS = [
   { name: "Default", light: "0 0% 9%", dark: "0 0% 98%" },
@@ -35,6 +43,8 @@ export default function PixelFluidBackground({ className }: PixelFluidBackground
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationRef = useRef<number>(0);
   const timeRef = useRef(0);
+  const startTimeRef = useRef<number | null>(null);
+  const amplitudeRef = useRef(0);
   const pointerRef = useRef({ x: -1000, y: -1000, active: false });
   const configRef = useRef({
     pixelSize: 18,
@@ -89,17 +99,17 @@ export default function PixelFluidBackground({ className }: PixelFluidBackground
     const w2 = Math.cos(y * scale * 0.7 - t * 0.4);
     const w3 = Math.sin((x - y) * scale * 0.5 + t * 0.3);
 
-    let h = (w1 + w2 + w3 + 3) / 6;
+    let h = ((w1 + w2 + w3 + 3) / 6) * amplitudeRef.current;
 
-    // Interactive ripple effect
-    if (pointer.active) {
+    // Interactive ripple effect (also scaled by amplitude)
+    if (pointer.active && amplitudeRef.current > 0) {
       const dx = x - pointer.x;
       const dy = y - pointer.y;
       const dist = Math.sqrt(dx * dx + dy * dy);
 
       // Ripple radius: 15 blocks
       if (dist < 15) {
-        const ripple = Math.cos(dist * 0.6 - t * 4) * 0.25;
+        const ripple = Math.cos(dist * 0.6 - t * 4) * 0.25 * amplitudeRef.current;
         const decay = 1 - dist / 15;
         h -= ripple * decay;
       }
@@ -115,6 +125,16 @@ export default function PixelFluidBackground({ className }: PixelFluidBackground
 
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
+
+    // Update amplitude ramp (wall-clock time for consistent feel across devices)
+    const now = performance.now();
+    if (startTimeRef.current === null) {
+      startTimeRef.current = now;
+    }
+    if (amplitudeRef.current < 1) {
+      const elapsed = now - startTimeRef.current;
+      amplitudeRef.current = easeOutCubic(Math.min(1, elapsed / WAVE_RAMP_DURATION));
+    }
 
     const { pixelSize, baseHue, baseSaturation, isGrayscale, contourDensity, contourThickness } = configRef.current;
     const cols = Math.ceil(canvas.width / pixelSize);
