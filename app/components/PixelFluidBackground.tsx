@@ -7,7 +7,7 @@ import { useTheme } from "next-themes";
 const ENABLE_PIXEL_FLUID_BACKGROUND = true;
 
 // Duration (ms) for the wave amplitude to ramp from 0 → 1 on mount
-const WAVE_RAMP_DURATION = 800;
+const WAVE_RAMP_DURATION = 4000;
 
 // Cubic ease-out: fast through the low range, decelerates into full amplitude
 function easeOutCubic(t: number): number {
