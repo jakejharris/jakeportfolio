@@ -15,7 +15,7 @@ export default function PageLayout({
   return (
     <div
       className={cn(
-        center ? "flex items-center justify-center" : "min-h-[calc(100vh-8rem)] pt-6 pb-8",
+        center ? "flex items-center justify-center" : "min-h-[calc(100vh-4rem)] pt-6 pb-8",
         "transition-all duration-200",
         className
       )}

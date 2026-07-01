@@ -1,10 +1,10 @@
 import "./globals.css";
 import "./css/overscroll-fix.css";
-import { geistSans, geistMono } from "./lib/fonts";
+import { geistSans, geistMono, cabinetGrotesk } from "./lib/fonts";
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" suppressHydrationWarning className={`${geistSans.variable} ${geistMono.variable}`}>
+    <html lang="en" suppressHydrationWarning className={`${geistSans.variable} ${geistMono.variable} ${cabinetGrotesk.variable}`}>
       <head>
         <link rel="icon" href="/favicon.ico" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
