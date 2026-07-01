@@ -1,0 +1,194 @@
+/* Ledger masthead. Theme-aware: every color derives from the site's
+   foreground/muted/accent variables so light mode, dark mode, and all four
+   accent picks hold up without hero-specific overrides. */
+
+.hero {
+  padding: 4.25rem 0 3.4rem;
+}
+
+.hero-wordmark {
+  margin: 0;
+  color: hsl(var(--foreground));
+  font-family: var(--font-cabinet), var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  font-size: clamp(2.9rem, 12vw, 6.5rem);
+  font-weight: 700;
+  letter-spacing: -0.035em;
+  line-height: 0.9;
+  white-space: nowrap;
+}
+
+.hero-standfirst {
+  margin: 1.05rem 0 0;
+  max-width: 52ch;
+  color: color-mix(in srgb, hsl(var(--foreground)) 25%, hsl(var(--muted-foreground)));
+  font-size: 1.0625rem;
+  font-weight: 400;
+  line-height: 1.7;
+  text-wrap: pretty;
+}
+
+.hero-status {
+  position: relative;
+  display: inline-block;
+  margin: 1.15rem 0 0;
+  padding-bottom: 0.28rem;
+  color: hsl(var(--muted-foreground));
+  font-family: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.6;
+  opacity: 0.92;
+}
+
+/* Underline draws in the user's accent color (defaults stay monochrome). */
+.hero-status::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 1px;
+  background: color-mix(in srgb, var(--accent-color) 50%, transparent);
+  transform-origin: left;
+}
+
+/* The trio rule is built from segments (span, line, span, line, span) rather
+   than one masked line: the homepage background is an animated canvas, so
+   background-colored masks would read as boxes over it. */
+.hero-trio {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  margin-top: 4.2rem;
+  color: hsl(var(--muted-foreground));
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.hero-trio i {
+  flex: 1;
+  height: 1px;
+  margin: 0 0.9rem;
+  background: color-mix(in srgb, hsl(var(--foreground)) 14%, transparent);
+  transform-origin: left;
+}
+
+/* Writing section kicker under the masthead. */
+.section-kicker {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+  color: hsl(var(--muted-foreground));
+  font-family: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.6875rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.82;
+}
+
+.section-kicker::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  opacity: 0.45;
+  background-image: linear-gradient(
+    to right,
+    color-mix(in srgb, hsl(var(--foreground)) 22%, transparent) 35%,
+    transparent 0
+  );
+  background-size: 8px 1px;
+  background-repeat: repeat-x;
+}
+
+/* Entrance: one staggered settle, then still. Elements are visible by
+   default; motion only applies when the user allows it. */
+@media (prefers-reduced-motion: no-preference) {
+  .hero-wordmark,
+  .hero-standfirst {
+    opacity: 0;
+    transform: translateY(12px);
+    animation: hero-settle 700ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  }
+
+  .hero-standfirst {
+    animation-delay: 120ms;
+  }
+
+  .hero-status {
+    opacity: 0;
+    animation: hero-fade 420ms cubic-bezier(0.22, 1, 0.36, 1) 260ms forwards;
+  }
+
+  .hero-status::after {
+    transform: scaleX(0);
+    animation: hero-draw 300ms cubic-bezier(0.22, 1, 0.36, 1) 320ms forwards;
+  }
+
+  .hero-trio i {
+    transform: scaleX(0);
+    animation: hero-draw 480ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  }
+
+  .hero-trio i:nth-of-type(1) {
+    animation-delay: 140ms;
+  }
+
+  .hero-trio i:nth-of-type(2) {
+    animation-delay: 240ms;
+  }
+
+  .hero-trio span {
+    opacity: 0;
+    animation: hero-fade 240ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  }
+
+  .hero-trio span:nth-of-type(1) {
+    animation-delay: 180ms;
+  }
+
+  .hero-trio span:nth-of-type(2) {
+    animation-delay: 260ms;
+  }
+
+  .hero-trio span:nth-of-type(3) {
+    animation-delay: 340ms;
+  }
+
+  @keyframes hero-settle {
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes hero-fade {
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes hero-draw {
+    to {
+      transform: scaleX(1);
+    }
+  }
+}
+
+@media (max-width: 767px) {
+  .hero {
+    padding: 2.9rem 0 2.7rem;
+  }
+
+  .hero-trio {
+    margin-top: 3.1rem;
+    letter-spacing: 0.14em;
+  }
+
+  .hero-trio i {
+    margin: 0 0.6rem;
+  }
+}
