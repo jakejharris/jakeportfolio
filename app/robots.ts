@@ -5,7 +5,7 @@ export default function robots(): MetadataRoute.Robots {
     rules: {
       userAgent: "*",
       allow: "/",
-      disallow: ["/api/", "/viewadmin/", "/studio/"],
+      disallow: ["/api/", "/viewadmin/", "/studio/", "/drafts"],
     },
     sitemap: "https://jakejh.com/sitemap.xml",
   };
