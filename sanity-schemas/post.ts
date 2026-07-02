@@ -308,6 +308,8 @@ export default {
                   { title: 'Token Compression', value: 'TokenCompression' },
                   { title: 'Agent Hierarchy', value: 'AgentHierarchy' },
                   { title: 'Lossy Drift', value: 'LossyDrift' },
+                  { title: 'Symphony Run Timeline', value: 'SymphonyTimeline' },
+                  { title: 'Symphony Fan-Out Flow', value: 'SymphonyFlow' },
                 ],
               },
               validation: (Rule: any) => Rule.required(),
