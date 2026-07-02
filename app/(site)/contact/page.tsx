@@ -30,9 +30,9 @@ export default function ContactPage() {
     <PageLayout center={false} className="pt-6">
       <ScrollToTop />
       <div className="max-w-none">
-        <h2 className="mb-1 text-xl md:text-2xl font-bold">Get in Touch</h2>
-        <p className="text-sm text-muted-foreground mb-1">Feel free to reach out — I&apos;m always open to new opportunities and conversations.</p>
-        <ul className="space-y-2 mt-4">
+        <h2 className="page-enter mb-1 text-xl md:text-2xl font-bold">Get in Touch</h2>
+        <p className="page-enter-2 text-sm text-muted-foreground mb-1">Feel free to reach out — I&apos;m always open to new opportunities and conversations.</p>
+        <ul className="page-enter-3 space-y-2 mt-4">
           <li className="relative">
             <button
               onClick={() => copyToClipboard('Chicago, IL', 'location')}

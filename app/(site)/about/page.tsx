@@ -31,9 +31,9 @@ export default function AboutPage() {
         <PageLayout>
             <ScrollToTop />
             <div className="max-w-none">
-                <h2 className="mb-4 text-xl md:text-2xl font-bold">About</h2>
+                <h2 className="page-enter mb-4 text-xl md:text-2xl font-bold">About</h2>
 
-                <div className="prose dark:prose-invert font-base text-base mb-8">
+                <div className="page-enter-2 prose dark:prose-invert font-base text-base mb-8">
                     {aboutContent.paragraphs.map((paragraph, index) => (
                         <p key={index} className={index < aboutContent.paragraphs.length - 1 ? "mb-4" : ""}>
                             {paragraph}
@@ -41,7 +41,7 @@ export default function AboutPage() {
                     ))}
                 </div>
 
-                <ul className="space-y-2">
+                <ul className="page-enter-3 space-y-2">
                     {/* Resume download temporarily disabled — resume is out of date
                     <li className="relative">
                         <Link

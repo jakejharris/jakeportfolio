@@ -8,6 +8,7 @@ import AccentPicker from './AccentPicker';
 import { Button } from './ui/button';
 import TransitionLink from './TransitionLink';
 import HamburgerIcon from './HamburgerIcon';
+import JHMark from './JHMark';
 import {
   Drawer,
   DrawerContent,
@@ -42,8 +43,12 @@ export default function MobileNavbar({ scrolled, visible }: MobileNavbarProps) {
         ${visible ? '' : 'translate-y-[-100%]'}`}
     >
       <div className="px-4 h-16 flex justify-between items-center">
-        <div className="flex-1">
-          <TransitionLink href="/#" scroll={true} className="animated-underline normal-case text-lg md:text-xl font-bold">Jake Harris</TransitionLink>
+        {/* flex wrapper: an inline-flex link would ride the parent line box's
+            baseline, whose descender space pushes the mark ~3px above center */}
+        <div className="flex-1 flex items-center">
+          <TransitionLink href="/#" scroll={true} aria-label="Jake Harris — home" className="animated-underline inline-flex items-center py-1">
+            <JHMark className="h-5" />
+          </TransitionLink>
         </div>
         <div className="flex items-center gap-2">
           <AccentPicker />
