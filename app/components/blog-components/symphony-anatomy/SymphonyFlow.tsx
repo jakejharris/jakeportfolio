@@ -38,10 +38,28 @@ function Connector({ mode }: { mode: 'out' | 'in' }) {
   );
 }
 
-function Card({ title, sub }: { title: string; sub?: string }) {
+function Card({
+  title,
+  sub,
+  accent,
+}: {
+  title: string;
+  sub?: string;
+  accent?: boolean;
+}) {
   return (
-    <div className="rounded-md border border-foreground/15 px-1.5 py-1 text-center sm:px-3 sm:py-2">
-      <div className="text-[10px] font-semibold tracking-wide text-foreground sm:text-[11px]">
+    <div
+      className="rounded-md border px-1.5 py-1 text-center sm:px-3 sm:py-2"
+      style={{
+        borderColor: accent
+          ? 'color-mix(in srgb, var(--accent-color) 55%, transparent)'
+          : 'color-mix(in srgb, hsl(var(--foreground)) 15%, transparent)',
+      }}
+    >
+      <div
+        className="text-[10px] font-semibold tracking-wide sm:text-[11px]"
+        style={{ color: accent ? 'var(--accent-color)' : 'hsl(var(--foreground))' }}
+      >
         {title}
       </div>
       {sub && (
@@ -75,7 +93,7 @@ export default function SymphonyFlow() {
 
       <div className="flex items-stretch">
         <div className="flex items-center">
-          <Card title="PLAN" sub="locked, file-disjoint slices" />
+          <Card title="Plan" sub="Locked, File-Disjoint Slices" />
         </div>
 
         <div className="min-w-[10px] flex-1 sm:max-w-[64px]">
@@ -89,10 +107,10 @@ export default function SymphonyFlow() {
               className="rounded-md border border-foreground/15 px-1.5 py-1 text-center sm:px-3"
             >
               <span className="text-[9px] text-foreground/80 sm:text-[10px]">
-                agent {n}
+                Agent {n}
               </span>
               <span className="ml-1 hidden text-[8px] text-muted-foreground sm:inline sm:text-[9px]">
-                worktree
+                Worktree
               </span>
             </div>
           ))}
@@ -103,7 +121,7 @@ export default function SymphonyFlow() {
         </div>
 
         <div className="flex items-center">
-          <Card title="ONE PR" sub="consolidated" />
+          <Card title="One PR" sub="Consolidated" accent />
         </div>
 
         <div className="flex items-center">
@@ -117,12 +135,12 @@ export default function SymphonyFlow() {
               }}
             />
             <span className="mt-1 text-[8px] text-muted-foreground sm:text-[9px]">
-              review
+              Review
             </span>
           </div>
           <div className="h-px w-2 bg-foreground/25 sm:w-6" />
           <span className="text-[10px] font-semibold text-foreground sm:text-[11px]">
-            main
+            Main
           </span>
         </div>
       </div>
