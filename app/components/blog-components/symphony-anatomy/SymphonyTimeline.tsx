@@ -70,10 +70,10 @@ export default function SymphonyTimeline() {
         <span>16:18</span>
       </div>
 
-      <div className="grid grid-cols-[96px_1fr] gap-x-3 gap-y-2 sm:grid-cols-[190px_1fr]">
+      <div className="grid grid-cols-1 gap-y-3 sm:grid-cols-[190px_1fr] sm:gap-x-3 sm:gap-y-2">
         {rows.map((row, i) => (
-          <div key={i} className="contents">
-            <div className="flex items-center justify-between gap-1 text-[9px] leading-tight text-muted-foreground sm:text-[11px]">
+          <div key={i} className="flex flex-col gap-1 sm:contents">
+            <div className="flex items-center justify-between gap-2 text-[10px] leading-tight text-muted-foreground sm:text-[11px]">
               <span>{row.label}</span>
               <span className="shrink-0 text-foreground/40">
                 {row.minutes}m
@@ -92,7 +92,7 @@ export default function SymphonyTimeline() {
           </div>
         ))}
 
-        <div aria-hidden="true" />
+        <div aria-hidden="true" className="hidden sm:block" />
         <div className="flex justify-between border-t border-foreground/10 pt-1 text-[9px] text-foreground/40 sm:text-[10px]">
           <span>0m</span>
           <span>35m</span>
