@@ -69,8 +69,8 @@
   transition: background 220ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-/* Terminal glyph slot — fixed width so the em-dash → arrow swap never reflows
-   the line. Both glyphs are stacked and cross-fade. */
+/* Terminal mark slot — fixed width so the dash → arrow swap never reflows the
+   line. The two states are stacked and cross-fade. */
 .hero-cta-mark {
   position: relative;
   flex: none;
@@ -89,6 +89,17 @@
   transition:
     opacity 200ms cubic-bezier(0.22, 1, 0.36, 1),
     transform 200ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Rest-state dash: a literal 1px rule segment, not a text glyph. Centered the
+   same way as .hero-cta-rule, it lands on the identical subpixel line — a
+   glyph's baseline metrics would sit a pixel off. */
+.hero-cta-mark-rest::after {
+  content: "";
+  width: 100%;
+  height: 1px;
+  background: color-mix(in srgb, hsl(var(--foreground)) 18%, transparent);
+  transition: background 220ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .hero-cta-mark-go {
@@ -132,7 +143,7 @@
 /* The trio rule is built from segments (span, line, span, line, span) rather
    than one masked line: the homepage background is an animated canvas, so
    background-colored masks would read as boxes over it. Promoted to a second
-   voice: bigger, bolder words with a ledger-style counter per segment. */
+   voice: bigger, bolder words carried by the rules alone. */
 .hero-trio {
   display: flex;
   flex-wrap: nowrap;
@@ -153,19 +164,6 @@
   margin: 0 0.9rem;
   background: color-mix(in srgb, hsl(var(--foreground)) 18%, transparent);
   transform-origin: left;
-}
-
-/* Counters mirror a ledger index — quiet, superscript-adjacent. They ride the
-   word's own fade; no separate stagger. */
-.hero-trio em {
-  font-family: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-style: normal;
-  font-size: 0.62em;
-  font-weight: 400;
-  color: hsl(var(--muted-foreground));
-  letter-spacing: 0.05em;
-  margin-right: 0.55ch;
-  vertical-align: 0.18em;
 }
 
 /* Writing section kicker under the masthead. */
@@ -306,8 +304,8 @@
   }
 }
 
-/* At ≤400px the larger words + counters + tracking crowd a 320px row; tighten
-   tracking and rule margins to keep the trio on a single line. */
+/* At ≤400px the larger words + tracking crowd a 320px row; tighten tracking
+   and rule margins to keep the trio on a single line. */
 @media (max-width: 400px) {
   .hero-trio {
     letter-spacing: 0.06em;

@@ -66,12 +66,9 @@ export default async function HomePage() {
                             })}
                           </div>
                           {post.tags && post.tags.length > 0 && (
-                            <div className="flex gap-1">
-                              <TagPill linked={false} tag={post.tags[0]} key={post.tags[0].slug.current} />
-                              {post.tags.slice(1).map(tag => (
-                                <span key={tag.slug.current} className="hidden md:inline-flex">
-                                  <TagPill linked={false} tag={tag} />
-                                </span>
+                            <div className="hidden md:flex gap-1">
+                              {post.tags.map(tag => (
+                                <TagPill linked={false} tag={tag} key={tag.slug.current} />
                               ))}
                             </div>
                           )}
