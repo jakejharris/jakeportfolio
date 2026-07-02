@@ -43,7 +43,9 @@ export default function MobileNavbar({ scrolled, visible }: MobileNavbarProps) {
         ${visible ? '' : 'translate-y-[-100%]'}`}
     >
       <div className="px-4 h-16 flex justify-between items-center">
-        <div className="flex-1">
+        {/* flex wrapper: an inline-flex link would ride the parent line box's
+            baseline, whose descender space pushes the mark ~3px above center */}
+        <div className="flex-1 flex items-center">
           <TransitionLink href="/#" scroll={true} aria-label="Jake Harris — home" className="animated-underline inline-flex items-center py-1">
             <JHMark className="h-5" />
           </TransitionLink>
