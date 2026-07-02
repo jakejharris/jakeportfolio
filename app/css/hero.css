@@ -103,6 +103,9 @@
 .hero-cta-mark-go {
   opacity: 0;
   transform: translateX(-3px);
+  /* The arrow glyph's ink overhangs its advance box ~3px to the right; without
+     this inset the tip lands past the content column's right padding line. */
+  padding-right: 3px;
   color: color-mix(in srgb, var(--accent-color) 70%, hsl(var(--foreground)));
 }
 

@@ -41,7 +41,7 @@ export default async function HomePage() {
         <ScrollToTop />
       <Hero />
       <div className="max-w-none">
-        <div className="section-kicker">Writing</div>
+        <div className="section-kicker">Writing and work</div>
         <ul className="space-y-2 pb-8">
           {posts.map((post) => (
             <li key={post._id} className="relative">
