@@ -15,14 +15,14 @@ interface Phase {
 }
 
 const PHASES: Phase[] = [
-  { label: 'Wave 1, 2 agents', minutes: 10, kind: 'build' },
-  { label: 'Wave 2, 4 agents + 4 reviewers', minutes: 15, kind: 'build' },
+  { label: 'Wave 1, 2 Agents', minutes: 10, kind: 'build' },
+  { label: 'Wave 2, 4 Agents + 4 Reviewers', minutes: 15, kind: 'build' },
   { label: 'Integrate', minutes: 5, kind: 'integrate' },
-  { label: 'Wave 3, 2 agents', minutes: 10, kind: 'build' },
+  { label: 'Wave 3, 2 Agents', minutes: 10, kind: 'build' },
   { label: 'Integrate', minutes: 3, kind: 'integrate' },
-  { label: 'PR 8, largest slice', minutes: 15, kind: 'build' },
+  { label: 'PR 8, Largest Slice', minutes: 15, kind: 'build' },
   { label: 'Integrate', minutes: 3, kind: 'integrate' },
-  { label: 'Smoke test + race fix', minutes: 10, kind: 'verify' },
+  { label: 'Smoke Test + Race Fix', minutes: 10, kind: 'verify' },
 ];
 
 const TOTAL = PHASES.reduce((sum, p) => sum + p.minutes, 0);
@@ -43,9 +43,9 @@ const KIND_STYLE: Record<Kind, CSSProperties> = {
 };
 
 const LEGEND: { kind: Kind; label: string }[] = [
-  { kind: 'build', label: 'parallel build' },
-  { kind: 'integrate', label: 'integration' },
-  { kind: 'verify', label: 'verification' },
+  { kind: 'build', label: 'Parallel Build' },
+  { kind: 'integrate', label: 'Integration' },
+  { kind: 'verify', label: 'Verification' },
 ];
 
 export default function SymphonyTimeline() {
@@ -65,7 +65,7 @@ export default function SymphonyTimeline() {
       <div className="mb-4 flex items-baseline justify-between text-[10px] text-muted-foreground sm:text-[11px]">
         <span>15:08</span>
         <span className="text-foreground/70">
-          10 PRs &middot; ~6,800 LOC &middot; 34 tests
+          10 PRs &middot; ~6,800 LOC &middot; 34 Tests
         </span>
         <span>16:18</span>
       </div>
