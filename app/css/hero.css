@@ -10,7 +10,7 @@
   margin: 0;
   color: hsl(var(--foreground));
   font-family: var(--font-wordmark), ui-serif, Georgia, serif;
-  font-size: clamp(2.9rem, 12vw, 6.5rem);
+  font-size: clamp(2.9rem, 11vw, 5.5rem);
   font-weight: 700;
   letter-spacing: -0.01em;
   line-height: 0.95;
