@@ -23,7 +23,7 @@
   color: color-mix(in srgb, hsl(var(--foreground)) 25%, hsl(var(--muted-foreground)));
   font-size: 1.0625rem;
   font-weight: 400;
-  line-height: 1.7;
+  line-height: 1.45;
   text-wrap: pretty;
 }
 

@@ -10,11 +10,12 @@ export default function Hero() {
       <h1 id="hero-title" className="hero-wordmark">
         Jake&nbsp;Harris
       </h1>
-      {/* Hard break: the standfirst reads as two lines at every width. */}
+      {/* Hard break: the standfirst reads as two lines at every width, long
+          line over short. */}
       <p className="hero-standfirst">
-        Building agent orchestration systems
+        Building agent orchestration systems and
         <br />
-        and tools for high-context work.
+        tools that remember.
       </p>
       {/* The ledger's open line: same mono voice + hairline rule as the trio
           below, but interactive — the terminal dash morphs to an arrow and the
