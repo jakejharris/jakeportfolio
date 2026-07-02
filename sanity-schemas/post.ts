@@ -310,6 +310,8 @@ export default {
                   { title: 'Lossy Drift', value: 'LossyDrift' },
                   { title: 'Symphony Run Timeline', value: 'SymphonyTimeline' },
                   { title: 'Symphony Fan-Out Flow', value: 'SymphonyFlow' },
+                  { title: 'Orchestrator Rule Ledger', value: 'RuleLedger' },
+                  { title: 'Dispatch Flow', value: 'DispatchFlow' },
                 ],
               },
               validation: (Rule: any) => Rule.required(),

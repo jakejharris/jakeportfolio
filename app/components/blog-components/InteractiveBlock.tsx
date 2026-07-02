@@ -36,6 +36,14 @@ const componentRegistry: Record<string, ComponentType> = {
     () => import('./symphony-anatomy/SymphonyFlow'),
     { ssr: false }
   ),
+  RuleLedger: dynamic(
+    () => import('./orchestrator-rule/RuleLedger'),
+    { ssr: false }
+  ),
+  DispatchFlow: dynamic(
+    () => import('./orchestrator-rule/DispatchFlow'),
+    { ssr: false }
+  ),
 };
 
 interface InteractiveBlockProps {
