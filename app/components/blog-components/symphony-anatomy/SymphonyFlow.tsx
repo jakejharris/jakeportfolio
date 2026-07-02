@@ -40,7 +40,7 @@ function Connector({ mode }: { mode: 'out' | 'in' }) {
 
 function Card({ title, sub }: { title: string; sub?: string }) {
   return (
-    <div className="rounded-md border border-foreground/15 px-2 py-1.5 text-center sm:px-3 sm:py-2">
+    <div className="rounded-md border border-foreground/15 px-1.5 py-1 text-center sm:px-3 sm:py-2">
       <div className="text-[10px] font-semibold tracking-wide text-foreground sm:text-[11px]">
         {title}
       </div>
@@ -56,7 +56,7 @@ function Card({ title, sub }: { title: string; sub?: string }) {
 export default function SymphonyFlow() {
   return (
     <div
-      className="rounded-lg border border-foreground/10 p-4 font-mono sm:p-6"
+      className="rounded-lg border border-foreground/10 p-3 font-mono sm:p-6"
       role="img"
       aria-label="Flow diagram: a locked plan fans out into four parallel agents, each in its own git worktree on a file-disjoint slice; their work fans back in to one consolidated pull request, which passes a review gate before merging to main"
     >
@@ -78,15 +78,15 @@ export default function SymphonyFlow() {
           <Card title="PLAN" sub="locked, file-disjoint slices" />
         </div>
 
-        <div className="min-w-[16px] flex-1 sm:max-w-[64px]">
+        <div className="min-w-[10px] flex-1 sm:max-w-[64px]">
           <Connector mode="out" />
         </div>
 
-        <div className="flex flex-col justify-around gap-1.5 py-0.5">
+        <div className="flex flex-col justify-around gap-1 py-0.5 sm:gap-1.5">
           {LANES.map((n) => (
             <div
               key={n}
-              className="rounded-md border border-foreground/15 px-2 py-1 text-center sm:px-3"
+              className="rounded-md border border-foreground/15 px-1.5 py-1 text-center sm:px-3"
             >
               <span className="text-[9px] text-foreground/80 sm:text-[10px]">
                 agent {n}
@@ -98,7 +98,7 @@ export default function SymphonyFlow() {
           ))}
         </div>
 
-        <div className="min-w-[16px] flex-1 sm:max-w-[64px]">
+        <div className="min-w-[10px] flex-1 sm:max-w-[64px]">
           <Connector mode="in" />
         </div>
 
@@ -107,7 +107,7 @@ export default function SymphonyFlow() {
         </div>
 
         <div className="flex items-center">
-          <div className="h-px w-3 bg-foreground/25 sm:w-6" />
+          <div className="h-px w-2 bg-foreground/25 sm:w-6" />
           <div className="flex flex-col items-center">
             <div
               className="h-9 border-l border-dashed sm:h-10"
@@ -120,7 +120,7 @@ export default function SymphonyFlow() {
               review
             </span>
           </div>
-          <div className="h-px w-3 bg-foreground/25 sm:w-6" />
+          <div className="h-px w-2 bg-foreground/25 sm:w-6" />
           <span className="text-[10px] font-semibold text-foreground sm:text-[11px]">
             main
           </span>
