@@ -308,6 +308,8 @@ export default {
                   { title: 'Token Compression', value: 'TokenCompression' },
                   { title: 'Agent Hierarchy', value: 'AgentHierarchy' },
                   { title: 'Lossy Drift', value: 'LossyDrift' },
+                  { title: 'Orchestrator Rule Ledger', value: 'RuleLedger' },
+                  { title: 'Dispatch Flow', value: 'DispatchFlow' },
                 ],
               },
               validation: (Rule: any) => Rule.required(),
