@@ -1,3 +1,4 @@
+import '@/app/css/animations.css';
 import PageLayout from '@/app/components/PageLayout';
 import Image from 'next/image';
 import { sanityFetch, urlFor } from '@/app/lib/sanity.client';
@@ -446,7 +447,7 @@ export default async function PostPage({ params }: PageParams) {
         </Link> */}
 
           {post.mainImage && (
-            <div className="mb-6 relative h-[300px] md:h-[400px] rounded-sm overflow-hidden">
+            <div className="page-enter mb-6 relative h-[300px] md:h-[400px] rounded-sm overflow-hidden">
               <Image
                 src={urlFor(post.mainImage).width(1200).height(600).url()}
                 alt={post.title}
@@ -457,11 +458,11 @@ export default async function PostPage({ params }: PageParams) {
             </div>
           )}
 
-          <h1 className="text-3xl md:text-4xl font-extrabold mb-2">
+          <h1 className="page-enter text-3xl md:text-4xl font-extrabold mb-2">
             {post.title}
           </h1>
 
-          <div className="flex items-center gap-4 mb-6 text-sm text-muted-foreground">
+          <div className="page-enter flex items-center gap-4 mb-6 text-sm text-muted-foreground">
             <time dateTime={post.publishedAt}>
               {new Date(post.publishedAt).toLocaleDateString('en-US', {
                 year: 'numeric',
@@ -484,22 +485,26 @@ export default async function PostPage({ params }: PageParams) {
           </div>
 
           {post.excerpt && (
-            <div className="mb-8 text-lg font-medium text-muted-foreground">
+            <div className="page-enter mb-8 text-lg font-medium text-muted-foreground">
               {post.excerpt}
             </div>
           )}
-          
-          {/* Table of Contents */}
-          {post.content && <TableOfContents content={post.content} externalLinks={post.externalLinks} />}
 
-          <div className="max-w-none portable-text">
+          {/* Table of Contents */}
+          {post.content && (
+            <div className="page-enter">
+              <TableOfContents content={post.content} externalLinks={post.externalLinks} />
+            </div>
+          )}
+
+          <div className="page-enter-2 max-w-none portable-text">
             {post.content && (
               <PortableText value={post.content} components={components} />
             )}
           </div>
 
           {post.externalLinks && post.externalLinks.length > 0 && (
-            <div id="external-links" className="mt-12 pt-6 border-t scroll-mt-20">
+            <div id="external-links" className="page-enter-3 mt-12 pt-6 border-t scroll-mt-20">
               <h2 className="text-xl font-bold mb-4">External Links</h2>
               <div className="flex flex-wrap gap-4">
                 {post.externalLinks.map((link, index) => {
