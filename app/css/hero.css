@@ -27,43 +27,48 @@
   text-wrap: pretty;
 }
 
+/* Status chip: corporate register, no live-status gimmick. Translucent fill +
+   hairline border sit over the animated canvas without reading as a box. */
 .hero-status {
-  position: relative;
-  display: inline-block;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.45ch;
   margin: 1.15rem 0 0;
-  padding-bottom: 0.28rem;
+  padding: 0.42rem 0.9rem;
+  max-width: 100%;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, hsl(var(--foreground)) 14%, transparent);
+  background: color-mix(in srgb, hsl(var(--foreground)) 5%, transparent);
   color: hsl(var(--muted-foreground));
   font-family: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 400;
-  line-height: 1.6;
-  opacity: 0.92;
+  letter-spacing: 0.01em;
+  line-height: 1.5;
+  text-wrap: balance;
 }
 
-/* Underline draws in the user's accent color (defaults stay monochrome). */
-.hero-status::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 1px;
-  background: color-mix(in srgb, var(--accent-color) 50%, transparent);
-  transform-origin: left;
+/* Accent-awareness lives in the label, not a dead underline. Default accent is
+   monochrome, so the mix stays graceful with no accent picked. */
+.hero-status-label {
+  color: color-mix(in srgb, var(--accent-color) 78%, hsl(var(--foreground)));
+  font-weight: 500;
 }
 
 /* The trio rule is built from segments (span, line, span, line, span) rather
    than one masked line: the homepage background is an animated canvas, so
-   background-colored masks would read as boxes over it. */
+   background-colored masks would read as boxes over it. Promoted to a second
+   voice: bigger, bolder words with a ledger-style counter per segment. */
 .hero-trio {
   display: flex;
+  flex-wrap: nowrap;
   align-items: center;
   width: 100%;
   margin-top: 4.2rem;
-  color: hsl(var(--muted-foreground));
-  font-size: 0.6875rem;
-  font-weight: 500;
-  letter-spacing: 0.18em;
+  color: color-mix(in srgb, hsl(var(--foreground)) 72%, hsl(var(--muted-foreground)));
+  font-size: clamp(0.95rem, 2.4vw, 1.2rem);
+  font-weight: 600;
+  letter-spacing: 0.09em;
   line-height: 1;
   text-transform: uppercase;
 }
@@ -72,8 +77,21 @@
   flex: 1;
   height: 1px;
   margin: 0 0.9rem;
-  background: color-mix(in srgb, hsl(var(--foreground)) 14%, transparent);
+  background: color-mix(in srgb, hsl(var(--foreground)) 18%, transparent);
   transform-origin: left;
+}
+
+/* Counters mirror a ledger index — quiet, superscript-adjacent. They ride the
+   word's own fade; no separate stagger. */
+.hero-trio em {
+  font-family: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-style: normal;
+  font-size: 0.62em;
+  font-weight: 400;
+  color: hsl(var(--muted-foreground));
+  letter-spacing: 0.05em;
+  margin-right: 0.55ch;
+  vertical-align: 0.18em;
 }
 
 /* Writing section kicker under the masthead. */
@@ -118,19 +136,15 @@
     animation-delay: 120ms;
   }
 
+  /* Chip fades in quietly; the old underline draw is gone. */
   .hero-status {
     opacity: 0;
     animation: hero-fade 420ms cubic-bezier(0.22, 1, 0.36, 1) 260ms forwards;
   }
 
-  .hero-status::after {
-    transform: scaleX(0);
-    animation: hero-draw 300ms cubic-bezier(0.22, 1, 0.36, 1) 320ms forwards;
-  }
-
   .hero-trio i {
     transform: scaleX(0);
-    animation: hero-draw 480ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    animation: hero-draw 440ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
   }
 
   .hero-trio i:nth-of-type(1) {
@@ -185,10 +199,22 @@
 
   .hero-trio {
     margin-top: 3.1rem;
-    letter-spacing: 0.14em;
+    letter-spacing: 0.08em;
   }
 
   .hero-trio i {
     margin: 0 0.6rem;
+  }
+}
+
+/* At ≤400px the larger words + counters + tracking crowd a 320px row; tighten
+   tracking and rule margins to keep the trio on a single line. */
+@media (max-width: 400px) {
+  .hero-trio {
+    letter-spacing: 0.06em;
+  }
+
+  .hero-trio i {
+    margin: 0 0.5rem;
   }
 }
