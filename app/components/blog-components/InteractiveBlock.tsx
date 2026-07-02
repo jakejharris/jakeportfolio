@@ -28,6 +28,14 @@ const componentRegistry: Record<string, ComponentType> = {
     () => import('./compression-intelligence/LossyDrift'),
     { ssr: false }
   ),
+  SymphonyTimeline: dynamic(
+    () => import('./symphony-anatomy/SymphonyTimeline'),
+    { ssr: false }
+  ),
+  SymphonyFlow: dynamic(
+    () => import('./symphony-anatomy/SymphonyFlow'),
+    { ssr: false }
+  ),
 };
 
 interface InteractiveBlockProps {
