@@ -2,8 +2,11 @@ import '@/app/css/animations.css';
 import PageLayout from '@/app/components/PageLayout';
 import Image from 'next/image';
 import { sanityFetch, urlFor } from '@/app/lib/sanity.client';
+import { draftRenderPerspective, draftSanityFetch } from '@/app/lib/sanity.draft-client';
+import { getDraftsConfigStatus, isDraftsAuthed } from '@/app/lib/drafts-auth';
 import { PortableText, PortableTextReactComponents } from '@portabletext/react';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
+import { cookies, draftMode } from 'next/headers';
 import { FaGithub, FaGlobe, FaLinkedin, FaTwitter, FaYoutube, FaCodepen, FaExternalLinkAlt } from 'react-icons/fa';
 import ViewCounter from './ViewCounter';
 import { Post, InteractiveComponentValue } from '@/app/types/sanity';
@@ -15,6 +18,8 @@ import dynamic from 'next/dynamic';
 import TableOfContents from '@/app/components/TableOfContents';
 import TagPill from '@/app/components/TagPill';
 import type { Metadata } from 'next';
+
+export const revalidate = 60;
 
 // Generate dynamic metadata for each post
 export async function generateMetadata({
@@ -86,6 +91,7 @@ const CodeHighlighter = dynamic(() => import('@/app/components/CodeHighlighter')
 // Query to fetch a single post by slug
 const query = `*[_type == "post" && slug.current == $slug][0] {
   _id,
+  _updatedAt,
   title,
   slug,
   publishedAt,
@@ -324,6 +330,30 @@ type PageParams = {
   }>;
 };
 
+async function exitDraftPreview() {
+  'use server';
+
+  (await draftMode()).disable();
+  redirect('/');
+}
+
+function DraftPreviewBanner({ title }: { title: string }) {
+  return (
+    <div className="fixed left-0 right-0 top-16 z-50 border-b border-border bg-background/95 px-3 py-2 shadow-sm backdrop-blur">
+      <div className="mx-auto flex max-w-2xl items-center justify-between gap-3 text-sm">
+        <p className="min-w-0 truncate font-medium">
+          Draft preview: {title}
+        </p>
+        <form action={exitDraftPreview} className="flex-none">
+          <Button type="submit" variant="outline" size="sm">
+            Exit
+          </Button>
+        </form>
+      </div>
+    </div>
+  );
+}
+
 // Define component value types
 interface ImageValue {
   _type: 'image';
@@ -384,18 +414,31 @@ interface DividerValue {
 export default async function PostPage({ params }: PageParams) {
   // Get the slug from params - await it properly
   const { slug } = await params;
+  const { isEnabled } = await draftMode();
+  const canRenderDraft =
+    isEnabled &&
+    getDraftsConfigStatus().ready &&
+    isDraftsAuthed(await cookies());
 
   // Fetch the post data from Sanity
-  const post = await sanityFetch<Post>({
-    query,
-    params: { slug },
-    tags: [`post:${slug}`],
-  });
+  const post = canRenderDraft
+    ? await draftSanityFetch<Post | null>({
+      query,
+      params: { slug },
+      perspective: draftRenderPerspective,
+    })
+    : await sanityFetch<Post | null>({
+      query,
+      params: { slug },
+      tags: [`post:${slug}`],
+    });
 
   // If post not found, return 404
   if (!post) {
     notFound();
   }
+
+  const displayDate = post.publishedAt || post._updatedAt;
 
   // Build image URL for JSON-LD
   const imageUrl = post.mainImage?.asset
@@ -434,9 +477,10 @@ export default async function PostPage({ params }: PageParams) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
+      {canRenderDraft && <DraftPreviewBanner title={post.title} />}
       <PageLayout>
         <ScrollToTop />
-        <div className="max-w-none">
+        <div className={`max-w-none ${canRenderDraft ? 'pt-14' : ''}`}>
           {/* <Link 
           href="/" 
           className="group animated-underline !flex w-fit items-center gap-0 mb-6"
@@ -463,14 +507,16 @@ export default async function PostPage({ params }: PageParams) {
           </h1>
 
           <div className="page-enter flex items-center gap-4 mb-6 text-sm text-muted-foreground">
-            <time dateTime={post.publishedAt}>
-              {new Date(post.publishedAt).toLocaleDateString('en-US', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric',
-              })}
-            </time>
-            <ViewCounter slug={slug} initialCount={post.viewCount} />
+            {displayDate && (
+              <time dateTime={displayDate}>
+                {new Date(displayDate).toLocaleDateString('en-US', {
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric',
+                })}
+              </time>
+            )}
+            <ViewCounter slug={slug} initialCount={post.viewCount ?? 0} />
 
             {post.tags && post.tags.length > 0 && (
               <div className="flex gap-2">
@@ -535,4 +581,4 @@ export default async function PostPage({ params }: PageParams) {
       </PageLayout>
     </>
   );
-} 
+}
