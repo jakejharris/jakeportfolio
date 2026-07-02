@@ -27,32 +27,106 @@
   text-wrap: pretty;
 }
 
-/* Status chip: corporate register, no live-status gimmick. Translucent fill +
-   hairline border sit over the animated canvas without reading as a box. */
-.hero-status {
-  display: inline-flex;
-  align-items: baseline;
-  gap: 0.45ch;
-  margin: 1.15rem 0 0;
-  padding: 0.42rem 0.9rem;
-  max-width: 100%;
-  border-radius: 999px;
-  border: 1px solid color-mix(in srgb, hsl(var(--foreground)) 14%, transparent);
-  background: color-mix(in srgb, hsl(var(--foreground)) 5%, transparent);
-  color: hsl(var(--muted-foreground));
+/* Contact CTA — the ledger's open line. It borrows the trio's exact grammar
+   (mono voice, a hairline rule that spans to the edge, an entrance draw) but is
+   a real link: a full-width entry that ends not in a period but in an em-dash,
+   the ledger convention for an unfilled line. Hover completes it — the rule
+   ignites in the accent and the em-dash morphs into an arrow. No box, no pill;
+   the shape is built from a border-free rule so it never reads as a mask over
+   the animated canvas. */
+.hero-cta {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  width: 100%;
+  margin: 1.35rem 0 0;
+  padding: 0.55rem 0;
+  color: color-mix(in srgb, hsl(var(--foreground)) 52%, hsl(var(--muted-foreground)));
   font-family: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 12px;
-  font-weight: 400;
-  letter-spacing: 0.01em;
-  line-height: 1.5;
-  text-wrap: balance;
+  text-decoration: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
-/* Accent-awareness lives in the label, not a dead underline. Default accent is
-   monochrome, so the mix stays graceful with no accent picked. */
-.hero-status-label {
-  color: color-mix(in srgb, var(--accent-color) 78%, hsl(var(--foreground)));
+.hero-cta-label {
+  flex: none;
+  font-size: 12.5px;
   font-weight: 500;
+  letter-spacing: 0.12em;
+  line-height: 1;
+  text-transform: uppercase;
+  text-wrap: balance;
+  transition: color 200ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* The connective rule: same hairline weight and alpha as the trio segments so
+   the CTA reads as one ledger family with the index below it. */
+.hero-cta-rule {
+  flex: 1;
+  min-width: 1.5rem;
+  height: 1px;
+  background: color-mix(in srgb, hsl(var(--foreground)) 18%, transparent);
+  transform-origin: left;
+  transition: background 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Terminal glyph slot — fixed width so the em-dash → arrow swap never reflows
+   the line. Both glyphs are stacked and cross-fade. */
+.hero-cta-mark {
+  position: relative;
+  flex: none;
+  width: 1.4ch;
+  height: 1em;
+  font-size: 13px;
+  line-height: 1;
+}
+
+.hero-cta-mark > span {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  transition:
+    opacity 200ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 200ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.hero-cta-mark-go {
+  opacity: 0;
+  transform: translateX(-3px);
+  color: color-mix(in srgb, var(--accent-color) 70%, hsl(var(--foreground)));
+}
+
+/* Hover / focus: the open line completes. Label warms to full foreground, the
+   rule ignites in the accent, and the em-dash lifts out as an arrow. Default
+   (monochrome) accent degrades to a crisp foreground line, still a clear
+   brighten against the quiet rest state. */
+.hero-cta:hover .hero-cta-label,
+.hero-cta:focus-visible .hero-cta-label {
+  color: hsl(var(--foreground));
+}
+
+.hero-cta:hover .hero-cta-rule,
+.hero-cta:focus-visible .hero-cta-rule {
+  background: color-mix(in srgb, var(--accent-color) 55%, hsl(var(--foreground)));
+}
+
+.hero-cta:hover .hero-cta-mark-rest,
+.hero-cta:focus-visible .hero-cta-mark-rest {
+  opacity: 0;
+  transform: translateX(3px);
+}
+
+.hero-cta:hover .hero-cta-mark-go,
+.hero-cta:focus-visible .hero-cta-mark-go {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.hero-cta:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--accent-color) 60%, hsl(var(--foreground)));
+  outline-offset: 6px;
+  border-radius: 2px;
 }
 
 /* The trio rule is built from segments (span, line, span, line, span) rather
@@ -136,10 +210,23 @@
     animation-delay: 120ms;
   }
 
-  /* Chip fades in quietly; the old underline draw is gone. */
-  .hero-status {
+  /* CTA joins the settle: its rule draws in rhythm with the trio's rules below
+     (same keyframe, same easing) so the two ledger lines read as one gesture,
+     while the label and terminal glyph fade up. Visible by default; motion only
+     adds the polish. */
+  .hero-cta-label,
+  .hero-cta-mark {
     opacity: 0;
-    animation: hero-fade 420ms cubic-bezier(0.22, 1, 0.36, 1) 260ms forwards;
+    animation: hero-fade 420ms cubic-bezier(0.22, 1, 0.36, 1) 240ms forwards;
+  }
+
+  .hero-cta-mark {
+    animation-delay: 320ms;
+  }
+
+  .hero-cta-rule {
+    transform: scaleX(0);
+    animation: hero-draw 460ms cubic-bezier(0.22, 1, 0.36, 1) 200ms forwards;
   }
 
   .hero-trio i {
@@ -195,6 +282,18 @@
 @media (max-width: 767px) {
   .hero {
     padding: 2.9rem 0 2.7rem;
+  }
+
+  /* Keep the row a comfortable ≥44px tap target; content stays centered. */
+  .hero-cta {
+    gap: 0.7rem;
+    margin-top: 1.2rem;
+    min-height: 44px;
+  }
+
+  .hero-cta-label {
+    font-size: 12px;
+    letter-spacing: 0.1em;
   }
 
   .hero-trio {
