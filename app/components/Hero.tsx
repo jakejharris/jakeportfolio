@@ -15,7 +15,7 @@ export default function Hero() {
       <p className="hero-standfirst">
         Building agent orchestration systems and
         <br />
-        applications that remember.
+        the apps they make possible.
       </p>
       {/* The ledger's open line: same mono voice + hairline rule as the trio
           below, but interactive — the terminal dash morphs to an arrow and the
