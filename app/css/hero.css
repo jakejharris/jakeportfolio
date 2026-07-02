@@ -1,0 +1,239 @@
+/* Ledger masthead. Theme-aware: every color derives from the site's
+   foreground/muted/accent variables so light mode, dark mode, and all four
+   accent picks hold up without hero-specific overrides. */
+
+.hero {
+  padding: 4.25rem 0 3.4rem;
+}
+
+.hero-wordmark {
+  margin: 0;
+  color: hsl(var(--foreground));
+  font-family: var(--font-wordmark), ui-serif, Georgia, serif;
+  font-size: clamp(2.9rem, 11vw, 5.5rem);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 0.95;
+  white-space: nowrap;
+}
+
+.hero-standfirst {
+  margin: 1.05rem 0 0;
+  max-width: 52ch;
+  color: color-mix(in srgb, hsl(var(--foreground)) 25%, hsl(var(--muted-foreground)));
+  font-size: 1.0625rem;
+  font-weight: 400;
+  line-height: 1.45;
+  text-wrap: pretty;
+}
+
+/* Contact CTA — the ledger's open line. Mono voice, a hairline rule that spans
+   to the edge, an entrance draw, and a real link: a full-width entry that ends
+   not in a period but in a dash, the ledger convention for an unfilled line.
+   Hover completes it — the rule ignites in the accent and the dash morphs into
+   an arrow. No box, no pill; the shape is built from a border-free rule so it
+   never reads as a mask over the animated canvas. */
+.hero-cta {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  width: 100%;
+  margin: 1.35rem 0 0;
+  padding: 0.55rem 0;
+  color: color-mix(in srgb, hsl(var(--foreground)) 52%, hsl(var(--muted-foreground)));
+  font-family: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
+  text-decoration: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.hero-cta-label {
+  flex: none;
+  font-size: 12.5px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  line-height: 1;
+  text-transform: uppercase;
+  text-wrap: balance;
+  transition: color 200ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* The connective rule: hairline weight, low alpha, drawn not printed. */
+.hero-cta-rule {
+  flex: 1;
+  min-width: 1.5rem;
+  height: 1px;
+  background: color-mix(in srgb, hsl(var(--foreground)) 18%, transparent);
+  transform-origin: left;
+  transition: background 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Terminal mark slot — fixed width so the dash → arrow swap never reflows the
+   line. The two states are stacked and cross-fade. */
+.hero-cta-mark {
+  position: relative;
+  flex: none;
+  width: 1.4ch;
+  height: 1em;
+  font-size: 13px;
+  line-height: 1;
+}
+
+.hero-cta-mark > span {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  transition:
+    opacity 200ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 200ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Rest-state dash: a literal 1px rule segment, not a text glyph. Centered the
+   same way as .hero-cta-rule, it lands on the identical subpixel line — a
+   glyph's baseline metrics would sit a pixel off. */
+.hero-cta-mark-rest::after {
+  content: "";
+  width: 100%;
+  height: 1px;
+  background: color-mix(in srgb, hsl(var(--foreground)) 18%, transparent);
+  transition: background 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.hero-cta-mark-go {
+  opacity: 0;
+  transform: translateX(-3px);
+  /* The arrow glyph's ink overhangs its advance box ~3px to the right; without
+     this inset the tip lands past the content column's right padding line. */
+  padding-right: 3px;
+  color: color-mix(in srgb, var(--accent-color) 70%, hsl(var(--foreground)));
+}
+
+/* Hover / focus: the open line completes. Label warms to full foreground, the
+   rule ignites in the accent, and the em-dash lifts out as an arrow. Default
+   (monochrome) accent degrades to a crisp foreground line, still a clear
+   brighten against the quiet rest state. */
+.hero-cta:hover .hero-cta-label,
+.hero-cta:focus-visible .hero-cta-label {
+  color: hsl(var(--foreground));
+}
+
+.hero-cta:hover .hero-cta-rule,
+.hero-cta:focus-visible .hero-cta-rule {
+  background: color-mix(in srgb, var(--accent-color) 55%, hsl(var(--foreground)));
+}
+
+.hero-cta:hover .hero-cta-mark-rest,
+.hero-cta:focus-visible .hero-cta-mark-rest {
+  opacity: 0;
+  transform: translateX(3px);
+}
+
+.hero-cta:hover .hero-cta-mark-go,
+.hero-cta:focus-visible .hero-cta-mark-go {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.hero-cta:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--accent-color) 60%, hsl(var(--foreground)));
+  outline-offset: 6px;
+  border-radius: 2px;
+}
+
+/* Writing section kicker under the masthead. */
+.section-kicker {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+  color: hsl(var(--muted-foreground));
+  font-family: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.6875rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.82;
+}
+
+.section-kicker::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  opacity: 0.45;
+  background-image: linear-gradient(
+    to right,
+    color-mix(in srgb, hsl(var(--foreground)) 22%, transparent) 35%,
+    transparent 0
+  );
+  background-size: 8px 1px;
+  background-repeat: repeat-x;
+}
+
+/* Entrance: one staggered settle, then still. Elements are visible by
+   default; motion only applies when the user allows it. */
+@media (prefers-reduced-motion: no-preference) {
+  .hero-wordmark,
+  .hero-standfirst {
+    opacity: 0;
+    transform: translateY(12px);
+    animation: hero-settle 700ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  }
+
+  .hero-standfirst {
+    animation-delay: 120ms;
+  }
+
+  /* CTA joins the settle: the rule draws while the label and terminal mark
+     fade up. Visible by default; motion only adds the polish. */
+  .hero-cta-label,
+  .hero-cta-mark {
+    opacity: 0;
+    animation: hero-fade 420ms cubic-bezier(0.22, 1, 0.36, 1) 240ms forwards;
+  }
+
+  .hero-cta-mark {
+    animation-delay: 320ms;
+  }
+
+  .hero-cta-rule {
+    transform: scaleX(0);
+    animation: hero-draw 460ms cubic-bezier(0.22, 1, 0.36, 1) 200ms forwards;
+  }
+
+  @keyframes hero-settle {
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes hero-fade {
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes hero-draw {
+    to {
+      transform: scaleX(1);
+    }
+  }
+}
+
+@media (max-width: 767px) {
+  .hero {
+    padding: 2.9rem 0 2.7rem;
+  }
+
+  /* Keep the row a comfortable ≥44px tap target; content stays centered. */
+  .hero-cta {
+    gap: 0.7rem;
+    margin-top: 1.2rem;
+    min-height: 44px;
+  }
+
+  .hero-cta-label {
+    font-size: 12px;
+    letter-spacing: 0.1em;
+  }
+}

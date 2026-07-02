@@ -3,6 +3,7 @@
 import ThemeToggle from './ThemeToggle';
 import AccentPicker from './AccentPicker';
 import TransitionLink from './TransitionLink';
+import JHMark from './JHMark';
 
 interface DesktopNavbarProps {
   scrolled: boolean;
@@ -16,9 +17,13 @@ export default function DesktopNavbar({ scrolled, visible }: DesktopNavbarProps)
         ${scrolled ? 'scrolled' : ''}
         ${visible ? '' : 'translate-y-[-100%]'}`}
     >
-      <div className="max-w-2xl mx-auto px-4 h-32 flex justify-between items-center">
-        <div className="flex-1">
-          <TransitionLink href="/#" scroll={true} className="animated-underline normal-case text-xl font-bold">Jake Harris</TransitionLink>
+      <div className="max-w-2xl mx-auto px-4 h-16 flex justify-between items-center">
+        {/* flex wrapper: an inline-flex link would ride the parent line box's
+            baseline, whose descender space pushes the mark ~3px above center */}
+        <div className="flex-1 flex items-center">
+          <TransitionLink href="/#" scroll={true} aria-label="Jake Harris — home" className="animated-underline inline-flex items-center py-1">
+            <JHMark className="h-5" />
+          </TransitionLink>
         </div>
         <div className="flex-none">
           <ul className="flex gap-2 items-center">

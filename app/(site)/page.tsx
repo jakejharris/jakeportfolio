@@ -13,6 +13,7 @@ import {
 import ScrollToTop from '../components/ScrollToTop';
 import PixelFluidBackground from '../components/PixelFluidBackground';
 import TagPill from '../components/TagPill';
+import Hero from '../components/Hero';
 
 // Query to fetch posts from Sanity
 const query = `*[_type == "post"] | order(featured desc, publishedAt desc) {
@@ -36,11 +37,12 @@ export default async function HomePage() {
   return (
     <>
       <PixelFluidBackground />
-      <PageLayout center>
+      <PageLayout>
         <ScrollToTop />
+      <Hero />
       <div className="max-w-none">
-        {/* <h2 className="mb-4 text-xl md:text-2xl font-bold">Recent Posts</h2> */}
-        <ul className="space-y-2">
+        <div className="section-kicker">Writing &amp; work</div>
+        <ul className="space-y-2 pb-8">
           {posts.map((post) => (
             <li key={post._id} className="relative">
               <HoverCard>
@@ -64,12 +66,9 @@ export default async function HomePage() {
                             })}
                           </div>
                           {post.tags && post.tags.length > 0 && (
-                            <div className="flex gap-1">
-                              <TagPill linked={false} tag={post.tags[0]} key={post.tags[0].slug.current} />
-                              {post.tags.slice(1).map(tag => (
-                                <span key={tag.slug.current} className="hidden md:inline-flex">
-                                  <TagPill linked={false} tag={tag} />
-                                </span>
+                            <div className="hidden md:flex gap-1">
+                              {post.tags.map(tag => (
+                                <TagPill linked={false} tag={tag} key={tag.slug.current} />
                               ))}
                             </div>
                           )}
