@@ -258,7 +258,7 @@ const components: Partial<PortableTextReactComponents> = {
         <blockquote className="my-8 border-l-4 border-primary pl-4 italic">
           <p className="text-lg">{value.quote}</p>
           {value.attribution && (
-            <footer className="text-sm text-muted-foreground mt-2">{"\u2014"} {value.attribution}</footer>
+            <footer className="text-sm text-muted-foreground mt-2">— {value.attribution}</footer>
           )}
         </blockquote>
       );
@@ -342,7 +342,7 @@ function DraftPreviewBanner({ title }: { title: string }) {
     <div className="fixed left-0 right-0 top-16 z-50 border-b border-border bg-background/95 px-3 py-2 shadow-sm backdrop-blur">
       <div className="mx-auto flex max-w-2xl items-center justify-between gap-3 text-sm">
         <p className="min-w-0 truncate font-medium">
-          Draft preview {"\u2014"} {title}
+          Draft preview: {title}
         </p>
         <form action={exitDraftPreview} className="flex-none">
           <Button type="submit" variant="outline" size="sm">
