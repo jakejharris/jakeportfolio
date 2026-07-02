@@ -13,7 +13,7 @@ export default function Hero() {
         Building AI systems, autonomous agents, and tools for high-context work.
       </p>
       <p className="hero-status">
-        <span className="hero-status-label">now:</span> agent orchestration &amp; context tooling
+        agent orchestration &amp; context tooling
       </p>
       <div className="hero-trio" aria-label="Agents. Context. Systems.">
         <span><em aria-hidden="true">01</em>Agents</span>

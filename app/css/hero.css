@@ -29,6 +29,7 @@
 
 /* Status chip: corporate register, no live-status gimmick. Translucent fill +
    hairline border sit over the animated canvas without reading as a box. */
+/* Accent-awareness moved into the hairline border; default accent is monochrome, so it degrades gracefully. */
 .hero-status {
   display: inline-flex;
   align-items: baseline;
@@ -37,7 +38,7 @@
   padding: 0.42rem 0.9rem;
   max-width: 100%;
   border-radius: 999px;
-  border: 1px solid color-mix(in srgb, hsl(var(--foreground)) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent-color) 26%, color-mix(in srgb, hsl(var(--foreground)) 14%, transparent));
   background: color-mix(in srgb, hsl(var(--foreground)) 5%, transparent);
   color: hsl(var(--muted-foreground));
   font-family: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
@@ -46,13 +47,6 @@
   letter-spacing: 0.01em;
   line-height: 1.5;
   text-wrap: balance;
-}
-
-/* Accent-awareness lives in the label, not a dead underline. Default accent is
-   monochrome, so the mix stays graceful with no accent picked. */
-.hero-status-label {
-  color: color-mix(in srgb, var(--accent-color) 78%, hsl(var(--foreground)));
-  font-weight: 500;
 }
 
 /* The trio rule is built from segments (span, line, span, line, span) rather
