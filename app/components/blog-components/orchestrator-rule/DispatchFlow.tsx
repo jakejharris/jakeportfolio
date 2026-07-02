@@ -12,16 +12,16 @@
 import { Fragment } from 'react';
 
 const STEPS: { name: string; detail: string }[] = [
-  { name: 'orchestrator', detail: 'writes the prompt' },
-  { name: 'worker', detail: 'edits the code' },
-  { name: 'review', detail: 'finds what slipped' },
-  { name: 'orchestrator', detail: 'merges' },
+  { name: 'Orchestrator', detail: 'Writes the Prompt' },
+  { name: 'Worker', detail: 'Edits the Code' },
+  { name: 'Review', detail: 'Finds What Slipped' },
+  { name: 'Orchestrator', detail: 'Merges' },
 ];
 
 const lineColor = 'color-mix(in srgb, hsl(var(--foreground)) 14%, transparent)';
 const faintText = 'color-mix(in srgb, hsl(var(--foreground)) 50%, transparent)';
 const dimText = 'color-mix(in srgb, hsl(var(--foreground)) 80%, transparent)';
-const flowLine = 'color-mix(in srgb, hsl(var(--foreground)) 35%, transparent)';
+const flowLine = 'color-mix(in srgb, var(--accent-color) 55%, transparent)';
 
 export default function DispatchFlow() {
   return (
@@ -123,16 +123,16 @@ export default function DispatchFlow() {
               className="w-fit rounded border border-dashed px-3 py-1.5 text-xs"
               style={{ borderColor: lineColor, color: faintText }}
             >
-              orchestrator
+              Orchestrator
             </div>
             <div
               className="w-fit rounded border border-dashed px-3 py-1.5 text-xs line-through"
               style={{ borderColor: lineColor, color: faintText }}
             >
-              source code
+              Source Code
             </div>
             <div className="text-[10px]" style={{ color: faintText }}>
-              direct edit: forbidden by rule
+              Direct Edit: Forbidden by Rule
             </div>
           </div>
         </div>
@@ -175,7 +175,7 @@ export default function DispatchFlow() {
                 className="rounded border border-dashed px-3 py-1.5 text-xs shrink-0"
                 style={{ borderColor: lineColor, color: faintText }}
               >
-                orchestrator
+                Orchestrator
               </div>
               <div className="flex-1 mx-2 flex items-center gap-2" aria-hidden="true">
                 <div
@@ -194,11 +194,11 @@ export default function DispatchFlow() {
                 className="rounded border border-dashed px-3 py-1.5 text-xs line-through shrink-0"
                 style={{ borderColor: lineColor, color: faintText }}
               >
-                source code
+                Source Code
               </div>
             </div>
             <div className="mt-1.5 text-right text-[10px]" style={{ color: faintText }}>
-              direct edit: forbidden by rule
+              Direct Edit: Forbidden by Rule
             </div>
           </div>
         </div>
