@@ -15,22 +15,24 @@ export default function Hero() {
         Building AI systems, autonomous agents, and tools for high-context work.
       </p>
       {/* The ledger's open line: same mono voice + hairline rule as the trio
-          below, but interactive — the terminal em-dash morphs to an arrow and
-          the rule ignites on hover, an unfilled entry inviting the next line. */}
+          below, but interactive — the terminal dash morphs to an arrow and the
+          rule ignites on hover, an unfilled entry inviting the next line. The
+          rest-state dash is drawn as a rule segment (not a glyph) so it sits on
+          exactly the same line as the hairline. */}
       <TransitionLink href="/contact#" scroll={true} className="hero-cta">
         <span className="hero-cta-label">Get in touch</span>
         <i className="hero-cta-rule" aria-hidden="true" />
         <span className="hero-cta-mark" aria-hidden="true">
-          <span className="hero-cta-mark-rest">&mdash;</span>
+          <span className="hero-cta-mark-rest" />
           <span className="hero-cta-mark-go">&rarr;</span>
         </span>
       </TransitionLink>
       <div className="hero-trio" aria-label="Agents. Context. Systems.">
-        <span><em aria-hidden="true">01</em>Agents</span>
+        <span>Agents</span>
         <i aria-hidden="true" />
-        <span><em aria-hidden="true">02</em>Context</span>
+        <span>Context</span>
         <i aria-hidden="true" />
-        <span><em aria-hidden="true">03</em>Systems</span>
+        <span>Systems</span>
       </div>
     </section>
   );
