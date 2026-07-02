@@ -3,8 +3,7 @@ import TransitionLink from './TransitionLink';
 
 // "Ledger" masthead: the wordmark owns the name (navbar carries the JH mark),
 // one-sentence standfirst, then the contact CTA rendered as the ledger's open
-// line, and the AGENTS / CONTEXT / SYSTEMS trio as a typographic rule.
-// Entrance settles once, then holds still.
+// line. Entrance settles once, then holds still.
 export default function Hero() {
   return (
     <section className="hero" aria-labelledby="hero-title">
@@ -27,13 +26,6 @@ export default function Hero() {
           <span className="hero-cta-mark-go">&rarr;</span>
         </span>
       </TransitionLink>
-      <div className="hero-trio" aria-label="Agents. Context. Systems.">
-        <span>Agents</span>
-        <i aria-hidden="true" />
-        <span>Context</span>
-        <i aria-hidden="true" />
-        <span>Systems</span>
-      </div>
     </section>
   );
 }
