@@ -188,4 +188,39 @@
   animation: particle-disperse 300ms ease-out forwards;
 }
 
- 
+/* Site-wide page-load entrance: a fade-up settle that matches the hero's
+   feel exactly. Elements render fully visible by default; the opacity/
+   translate start state and the animation apply ONLY when the user allows
+   motion, so reduced-motion users see content instantly with zero
+   animation and zero layout shift (transforms + opacity only).
+
+   Apply to a GROUP (header block / content block / list container), never
+   per-paragraph or per-list-item. Stagger successive groups with -2 / -3:
+     .page-enter   -> 0ms
+     .page-enter-2 -> 120ms
+     .page-enter-3 -> 240ms
+   Mirrors the hero-settle grammar in hero.css (12px rise, same easing). */
+@media (prefers-reduced-motion: no-preference) {
+  .page-enter,
+  .page-enter-2,
+  .page-enter-3 {
+    opacity: 0;
+    transform: translateY(12px);
+    animation: page-settle 600ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  }
+
+  .page-enter-2 {
+    animation-delay: 120ms;
+  }
+
+  .page-enter-3 {
+    animation-delay: 240ms;
+  }
+
+  @keyframes page-settle {
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}

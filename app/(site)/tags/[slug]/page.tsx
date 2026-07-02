@@ -1,4 +1,5 @@
 import '@/app/css/page.css';
+import '@/app/css/animations.css';
 import PageLayout from '@/app/components/PageLayout';
 import TransitionLink from '@/app/components/TransitionLink';
 import { sanityFetch } from '@/app/lib/sanity.client';
@@ -113,7 +114,7 @@ export default async function TagPage({
     <PageLayout>
       <ScrollToTop />
       <div className="max-w-none">
-        <div className="mb-6">
+        <div className="page-enter mb-6">
           <h1 className="text-2xl md:text-3xl font-bold mb-2">{tag.title}</h1>
           {tag.description && (
             <p className="text-muted-foreground">{tag.description}</p>
@@ -121,9 +122,9 @@ export default async function TagPage({
         </div>
 
         {posts.length === 0 ? (
-          <p className="text-muted-foreground">No posts found with this tag.</p>
+          <p className="page-enter-2 text-muted-foreground">No posts found with this tag.</p>
         ) : (
-          <ul className="space-y-2 mb-8">
+          <ul className="page-enter-2 space-y-2 mb-8">
             {posts.map((post) => (
               <li key={post._id} className="relative">
                 <HoverCard>
