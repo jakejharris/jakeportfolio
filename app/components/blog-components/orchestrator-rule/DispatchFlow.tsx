@@ -602,13 +602,13 @@ export default function DispatchFlow() {
             ))}
           </div>
 
-          <div className="mt-7 flex flex-col items-start gap-3">
+          <div className="mt-7 flex flex-col items-center gap-3">
             <BlockedNode ref={mobileBlockedStartRef} className="w-[132px]">
               Orchestrator
             </BlockedNode>
             <span
               ref={mobileBarrierRef}
-              className="ml-[58px] rounded-full bg-background px-1 text-sm leading-none"
+              className="rounded-full bg-background px-1 text-sm leading-none"
               style={{ color: faintText }}
               aria-hidden="true"
             >
@@ -617,7 +617,7 @@ export default function DispatchFlow() {
             <BlockedNode ref={mobileBlockedSourceRef} strike className="w-[132px]">
               Source Code
             </BlockedNode>
-            <div className="text-[10px]" style={{ color: faintText }}>
+            <div className="text-center text-[10px]" style={{ color: faintText }}>
               Direct Edit: Forbidden by Rule
             </div>
           </div>
