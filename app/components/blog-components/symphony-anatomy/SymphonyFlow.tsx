@@ -8,6 +8,7 @@ import {
   useState,
 } from 'react';
 
+import { cn } from '@/app/lib/utils';
 import {
   rgba,
   type RgbTriplet,
@@ -18,6 +19,7 @@ const LANES = [1, 2, 3, 4];
 const LOOP_MS = 5200;
 const TRAIL_STEPS = 9;
 const TRAIL_SPACING = 4.2;
+const REVIEW_GLOW_WINDOW = 30;
 
 interface Point {
   x: number;
@@ -61,6 +63,7 @@ interface FlowGeometry {
   reviewPath: CubicPath;
   mainPath: CubicPath;
   sequences: PathSequence[];
+  reviewBoundaries: number[];
 }
 
 interface CanvasPalette {
@@ -245,15 +248,30 @@ function drawPulse(
   ctx.restore();
 }
 
+function applyReviewGlow(
+  el: HTMLElement,
+  intensity: number,
+  accent: RgbTriplet
+) {
+  if (intensity <= 0.02) {
+    el.style.boxShadow = '';
+    el.style.borderColor = '';
+    return;
+  }
+
+  el.style.boxShadow = `0 0 ${6 + 10 * intensity}px ${rgba(accent, 0.55 * intensity)}`;
+  el.style.borderColor = rgba(accent, 0.35 + 0.45 * intensity);
+}
+
 function drawFrame(
   canvas: HTMLCanvasElement,
   geometry: FlowGeometry,
   palette: CanvasPalette,
   time: number,
   animate: boolean
-) {
+): number {
   const ctx = canvas.getContext('2d');
-  if (!ctx) return;
+  if (!ctx) return 0;
 
   ctx.setTransform(geometry.dpr, 0, 0, geometry.dpr, 0, 0);
   ctx.clearRect(0, 0, geometry.width, geometry.height);
@@ -289,16 +307,24 @@ function drawFrame(
     drawArrowhead(ctx, path.end, terminalAngle(path), arrow);
   }
 
-  if (!animate) return;
+  if (!animate) return 0;
 
   const travel = (time % LOOP_MS) / LOOP_MS;
+  let reviewGlow = 0;
 
   geometry.sequences.forEach((sequence, laneIndex) => {
     for (let wave = 0; wave < 2; wave += 1) {
       const progress = (travel + laneIndex * 0.075 + wave * 0.48) % 1;
-      drawPulse(ctx, sequence, sequence.length * progress, palette.accent);
+      const headDistance = sequence.length * progress;
+      drawPulse(ctx, sequence, headDistance, palette.accent);
+
+      const diff = headDistance - geometry.reviewBoundaries[laneIndex];
+      const intensity = Math.max(0, 1 - Math.abs(diff) / REVIEW_GLOW_WINDOW);
+      reviewGlow = Math.max(reviewGlow, intensity);
     }
   });
+
+  return reviewGlow;
 }
 
 function relativeBox(element: HTMLElement, container: DOMRect): Box {
@@ -360,6 +386,9 @@ function readGeometry(
   const sequences = fanOut.map((path, index) =>
     sequenceFrom([path, fanIn[index], reviewPath, mainPath])
   );
+  const reviewBoundaries = fanOut.map(
+    (path, index) => path.length + fanIn[index].length + reviewPath.length
+  );
 
   return {
     width,
@@ -370,17 +399,21 @@ function readGeometry(
     reviewPath,
     mainPath,
     sequences,
+    reviewBoundaries,
   };
 }
 
 const NodeCard = forwardRef<
   HTMLDivElement,
-  { title: string; sub?: string; accent?: boolean }
->(function NodeCard({ title, sub, accent = false }, ref) {
+  { title: string; sub?: string; accent?: boolean; compact?: boolean }
+>(function NodeCard({ title, sub, accent = false, compact = false }, ref) {
   return (
     <div
       ref={ref}
-      className="rounded-md border bg-background/95 px-1.5 py-1 text-center shadow-[0_0_0_1px_rgba(255,255,255,0.02)] sm:px-3 sm:py-2"
+      className={cn(
+        'rounded-md border bg-background/95 text-center shadow-[0_0_0_1px_rgba(255,255,255,0.02)] transition-[box-shadow,border-color] duration-150',
+        compact ? 'px-1 py-0.5 sm:px-2 sm:py-1' : 'px-1.5 py-1 sm:px-3 sm:py-2'
+      )}
       style={{
         borderColor: accent
           ? 'color-mix(in srgb, var(--accent-color) 55%, transparent)'
@@ -388,7 +421,10 @@ const NodeCard = forwardRef<
       }}
     >
       <div
-        className="text-[10px] font-semibold leading-tight tracking-wide sm:text-[11px]"
+        className={cn(
+          'font-semibold leading-tight tracking-wide',
+          compact ? 'text-[8px] sm:text-[9px]' : 'text-[10px] sm:text-[11px]'
+        )}
         style={{
           color: accent ? 'var(--accent-color)' : 'hsl(var(--foreground))',
         }}
@@ -472,6 +508,7 @@ export default function SymphonyFlow() {
     geometryRef.current = geometry;
     setLayoutVersion((version) => version + 1);
     drawFrame(canvas, geometry, getPalette(), 0, false);
+    applyReviewGlow(review, 0, getPalette().accent);
   }, [getPalette]);
 
   const scheduleMeasure = useCallback(() => {
@@ -528,20 +565,24 @@ export default function SymphonyFlow() {
   useEffect(() => {
     const canvas = canvasRef.current;
     const geometry = geometryRef.current;
+    const review = reviewRef.current;
 
     if (!canvas || !geometry) return;
 
     drawFrame(canvas, geometry, getPalette(), 0, false);
+    if (review) applyReviewGlow(review, 0, getPalette().accent);
   }, [colors, getPalette, layoutVersion]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
     const geometry = geometryRef.current;
+    const review = reviewRef.current;
 
     if (!canvas || !geometry) return;
 
     if (reducedMotion) {
       drawFrame(canvas, geometry, getPalette(), 0, false);
+      if (review) applyReviewGlow(review, 0, getPalette().accent);
       return;
     }
 
@@ -551,9 +592,12 @@ export default function SymphonyFlow() {
     const tick = (time: number) => {
       const latestCanvas = canvasRef.current;
       const latestGeometry = geometryRef.current;
+      const latestReview = reviewRef.current;
 
       if (latestCanvas && latestGeometry) {
-        drawFrame(latestCanvas, latestGeometry, getPalette(), time, true);
+        const palette = getPalette();
+        const glow = drawFrame(latestCanvas, latestGeometry, palette, time, true);
+        if (latestReview) applyReviewGlow(latestReview, glow, palette.accent);
       }
 
       frame = window.requestAnimationFrame(tick);
@@ -577,7 +621,7 @@ export default function SymphonyFlow() {
         aria-hidden="true"
       />
 
-      <div className="relative z-10 grid min-h-[138px] grid-cols-[minmax(54px,0.9fr)_minmax(62px,1fr)_minmax(48px,0.82fr)_minmax(30px,auto)_minmax(26px,auto)] items-center gap-x-1.5 sm:min-h-[176px] sm:grid-cols-[minmax(118px,0.95fr)_minmax(138px,1.1fr)_minmax(104px,0.85fr)_minmax(58px,auto)_minmax(42px,auto)] sm:gap-x-5">
+      <div className="relative z-10 grid min-h-[138px] grid-cols-[minmax(54px,0.9fr)_minmax(62px,1fr)_minmax(48px,0.82fr)_minmax(38px,auto)_minmax(26px,auto)] items-center gap-x-1.5 sm:min-h-[176px] sm:grid-cols-[minmax(118px,0.95fr)_minmax(138px,1.1fr)_minmax(104px,0.85fr)_minmax(70px,auto)_minmax(42px,auto)] sm:gap-x-5">
         <NodeCard ref={planRef} title="Plan" sub="Locked, File-Disjoint Slices" />
 
         <div className="flex h-full flex-col justify-around gap-1 py-1 sm:gap-1.5 sm:py-2">
@@ -601,21 +645,7 @@ export default function SymphonyFlow() {
 
         <NodeCard ref={onePrRef} title="One PR" sub="Consolidated" accent />
 
-        <div
-          ref={reviewRef}
-          className="flex h-16 flex-col items-center justify-center sm:h-20"
-        >
-          <div
-            className="h-9 border-l border-dashed sm:h-10"
-            style={{
-              borderColor:
-                'color-mix(in srgb, hsl(var(--foreground)) 55%, transparent)',
-            }}
-          />
-          <span className="mt-1 text-[8px] text-muted-foreground sm:text-[9px]">
-            Review
-          </span>
-        </div>
+        <NodeCard ref={reviewRef} title="Review" compact />
 
         <span
           ref={mainRef}
