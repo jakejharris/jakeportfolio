@@ -19,7 +19,7 @@ const LANES = [1, 2, 3, 4];
 const LOOP_MS = 5200;
 const TRAIL_STEPS = 9;
 const TRAIL_SPACING = 4.2;
-const REVIEW_GLOW_WINDOW = 30;
+const REVIEW_GLOW_WINDOW = 9;
 
 interface Point {
   x: number;
@@ -259,8 +259,8 @@ function applyReviewGlow(
     return;
   }
 
-  el.style.boxShadow = `0 0 ${6 + 10 * intensity}px ${rgba(accent, 0.55 * intensity)}`;
-  el.style.borderColor = rgba(accent, 0.35 + 0.45 * intensity);
+  el.style.boxShadow = `0 0 ${4 + 8 * intensity}px ${rgba(accent, 0.5 * intensity)}`;
+  el.style.borderColor = rgba(accent, 0.2 + 0.6 * intensity);
 }
 
 function drawFrame(
@@ -412,7 +412,9 @@ const NodeCard = forwardRef<
       ref={ref}
       className={cn(
         'rounded-md border bg-background/95 text-center shadow-[0_0_0_1px_rgba(255,255,255,0.02)] transition-[box-shadow,border-color] duration-150',
-        compact ? 'px-1 py-0.5 sm:px-2 sm:py-1' : 'px-1.5 py-1 sm:px-3 sm:py-2'
+        compact
+          ? 'mx-1 px-1 py-0.5 sm:mx-2 sm:px-2 sm:py-1'
+          : 'px-1.5 py-1 sm:px-3 sm:py-2'
       )}
       style={{
         borderColor: accent
