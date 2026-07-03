@@ -11,6 +11,7 @@ import {
 } from "./ui/popover";
 
 const STORAGE_KEY = "accent-index";
+const ACCENT_VALUES = ["1", "2", "3", "4"];
 
 const COLORS = [
   { name: "Default", light: "0 0% 9%", dark: "0 0% 98%" },
@@ -26,12 +27,17 @@ export default function AccentPicker() {
   const { theme } = useTheme();
 
   useEffect(() => {
-    setMounted(true);
     const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) {
+    if (stored !== null) {
       const idx = parseInt(stored, 10);
       if (idx >= 0 && idx <= 4) setSelected(idx);
+    } else {
+      const activeAccent = document.documentElement.getAttribute("data-accent");
+      if (activeAccent && ACCENT_VALUES.includes(activeAccent)) {
+        setSelected(parseInt(activeAccent, 10));
+      }
     }
+    setMounted(true);
   }, []);
 
   const selectColor = (index: number) => {
