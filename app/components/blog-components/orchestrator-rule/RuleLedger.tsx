@@ -116,28 +116,6 @@ function Column({
 }) {
   return (
     <div className="relative p-5">
-      {accent && (
-        <span
-          className="rule-ledger-allowed-rule pointer-events-none absolute bottom-5 left-5 top-[52px] w-px overflow-hidden"
-          aria-hidden="true"
-        >
-          <span
-            className="block h-full w-px"
-            style={{
-              background:
-                'color-mix(in srgb, var(--accent-color) 28%, transparent)',
-            }}
-          />
-          <span
-            className="rule-ledger-pulse absolute left-0 top-0 block h-8 w-px"
-            style={{
-              background:
-                'linear-gradient(180deg, transparent, var(--accent-color), transparent)',
-            }}
-          />
-        </span>
-      )}
-
       <h4
         className="mb-3 text-[11px] uppercase tracking-[0.15em]"
         style={{ color: accent ? accentText : faintText }}
@@ -226,15 +204,6 @@ export default function RuleLedger() {
           stroke-dashoffset: 0;
         }
 
-        [data-settled='true'] .rule-ledger-pulse {
-          animation: rule-ledger-pulse 4.8s ease-in-out infinite;
-        }
-
-        [data-settled='false'] .rule-ledger-pulse,
-        [data-reduced-motion='true'] .rule-ledger-pulse {
-          display: none;
-        }
-
         @keyframes rule-ledger-line {
           from { stroke-dashoffset: 1; }
           to { stroke-dashoffset: 0; }
@@ -243,13 +212,6 @@ export default function RuleLedger() {
         @keyframes rule-ledger-mark {
           from { stroke-dashoffset: 1; opacity: 0.35; }
           to { stroke-dashoffset: 0; opacity: 1; }
-        }
-
-        @keyframes rule-ledger-pulse {
-          0% { transform: translateY(-36px); opacity: 0; }
-          18% { opacity: 0.22; }
-          68% { opacity: 0.22; }
-          100% { transform: translateY(160px); opacity: 0; }
         }
       `}</style>
 
