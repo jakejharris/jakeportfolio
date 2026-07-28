@@ -8,10 +8,33 @@ const ENABLE_PIXEL_FLUID_BACKGROUND = true;
 
 // Duration (ms) for the wave amplitude to ramp from 0 → 1 on mount
 const WAVE_RAMP_DURATION = 4000;
+const AMBIENT_SETTLE_DELAY = 8000;
+const AMBIENT_SETTLE_DURATION = 6000;
 
 // Cubic ease-out: fast through the low range, decelerates into full amplitude
 function easeOutCubic(t: number): number {
   return 1 - (1 - t) * (1 - t) * (1 - t);
+}
+
+function clamp01(value: number): number {
+  return Math.min(1, Math.max(0, value));
+}
+
+function lerp(from: number, to: number, amount: number): number {
+  return from + (to - from) * amount;
+}
+
+function gaussian(
+  x: number,
+  y: number,
+  centerX: number,
+  centerY: number,
+  radiusX: number,
+  radiusY: number
+): number {
+  const dx = (x - centerX) / radiusX;
+  const dy = (y - centerY) / radiusY;
+  return Math.exp(-(dx * dx + dy * dy) * 2);
 }
 
 // Same colors as AccentPicker for consistency
@@ -37,23 +60,31 @@ function parseSaturation(hslString: string): number {
 
 interface PixelFluidBackgroundProps {
   className?: string;
+  heroMode?: boolean;
 }
 
-export default function PixelFluidBackground({ className }: PixelFluidBackgroundProps) {
+export default function PixelFluidBackground({
+  className,
+  heroMode = false,
+}: PixelFluidBackgroundProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationRef = useRef<number>(0);
   const timeRef = useRef(0);
   const startTimeRef = useRef<number | null>(null);
   const amplitudeRef = useRef(0);
+  const scrollRef = useRef(0);
+  const prefersReducedMotionRef = useRef(false);
+  const isAnimatingRef = useRef(false);
+  const compositionBiasRef = useRef<Float32Array>(new Float32Array(0));
   const pointerRef = useRef({ x: -1000, y: -1000, active: false });
   const configRef = useRef({
     pixelSize: 18,
-    speed: 0.012,
+    introSpeed: 0.0072,
+    ambientSpeed: 0.003,
     baseHue: 215,
     baseSaturation: 80,
     waveScale: 0.09,
     isGrayscale: false,
-    grayscaleInverted: false,
     contourDensity: 12,
     contourThickness: 0.2,
   });
@@ -78,16 +109,14 @@ export default function PixelFluidBackground({ className }: PixelFluidBackground
 
     if (index === 0 || saturation === 0) {
       configRef.current.isGrayscale = true;
-      configRef.current.grayscaleInverted = !isDark;
       configRef.current.baseHue = 0;
       configRef.current.baseSaturation = 0;
     } else {
       configRef.current.isGrayscale = false;
-      configRef.current.grayscaleInverted = false;
       configRef.current.baseHue = hue;
       configRef.current.baseSaturation = saturation;
     }
-  }, [getAccentColor, isDark]);
+  }, [getAccentColor]);
 
   // Wave height calculation with interactive ripple
   const getWaveHeight = useCallback((x: number, y: number, t: number) => {
@@ -118,6 +147,33 @@ export default function PixelFluidBackground({ className }: PixelFluidBackground
     return h;
   }, []);
 
+  // Keep the homepage field art-directed even as the waves move: a broad
+  // formation enters from the upper left and a smaller counterweight sits at
+  // the right edge. Other pages retain the neutral procedural field.
+  const getCompositionBias = useCallback((
+    x: number,
+    y: number,
+    cols: number,
+    rows: number,
+    width: number
+  ) => {
+    if (!heroMode || cols <= 1 || rows <= 1) return 0;
+
+    const nx = x / (cols - 1);
+    const ny = y / (rows - 1);
+    const isMobile = width < 768;
+
+    if (isMobile) {
+      const upperRight = gaussian(nx, ny, 0.83, 0.12, 0.5, 0.3) * 0.09;
+      const upperLeft = gaussian(nx, ny, -0.08, 0.06, 0.34, 0.26) * 0.05;
+      return upperRight + upperLeft;
+    }
+
+    const upperLeft = gaussian(nx, ny, 0.08, 0.13, 0.34, 0.3) * 0.09;
+    const rightEdge = gaussian(nx, ny, 1.02, 0.24, 0.28, 0.3) * 0.085;
+    return upperLeft + rightEdge;
+  }, [heroMode]);
+
   // Draw function
   const draw = useCallback(() => {
     const canvas = canvasRef.current;
@@ -131,22 +187,45 @@ export default function PixelFluidBackground({ className }: PixelFluidBackground
     if (startTimeRef.current === null) {
       startTimeRef.current = now;
     }
+    const elapsed = now - startTimeRef.current;
     if (amplitudeRef.current < 1) {
-      const elapsed = now - startTimeRef.current;
       amplitudeRef.current = easeOutCubic(Math.min(1, elapsed / WAVE_RAMP_DURATION));
     }
 
-    const { pixelSize, baseHue, baseSaturation, isGrayscale, contourDensity, contourThickness } = configRef.current;
+    const {
+      pixelSize,
+      introSpeed,
+      ambientSpeed,
+      baseHue,
+      baseSaturation,
+      isGrayscale,
+      contourDensity,
+      contourThickness,
+    } = configRef.current;
     const cols = Math.ceil(canvas.width / pixelSize);
     const rows = Math.ceil(canvas.height / pixelSize);
+    const settleProgress = easeOutCubic(
+      clamp01((elapsed - AMBIENT_SETTLE_DELAY) / AMBIENT_SETTLE_DURATION)
+    );
+    const scrollProgress = clamp01(
+      scrollRef.current / Math.max(window.innerHeight * 1.1, 1)
+    );
+    const ambientPresence = lerp(1, 0.8, settleProgress) * lerp(1, 0.58, scrollProgress);
 
     // Fill background first
+    ctx.globalAlpha = 1;
     ctx.fillStyle = isDark ? "#0a0a0a" : "#ffffff";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     for (let x = 0; x < cols; x++) {
       for (let y = 0; y < rows; y++) {
-        const noiseVal = getWaveHeight(x, y, timeRef.current);
+        const cellIndex = x * rows + y;
+        const compositionBias = compositionBiasRef.current.length === cols * rows
+          ? compositionBiasRef.current[cellIndex]
+          : 0;
+        const noiseVal = clamp01(
+          getWaveHeight(x, y, timeRef.current) + compositionBias * amplitudeRef.current
+        );
         let color: string | null = null;
 
         // 1. Pure background (skip drawing for performance)
@@ -213,6 +292,7 @@ export default function PixelFluidBackground({ className }: PixelFluidBackground
         }
 
         if (color) {
+          ctx.globalAlpha = ambientPresence;
           ctx.fillStyle = color;
           ctx.fillRect(
             x * pixelSize,
@@ -224,24 +304,50 @@ export default function PixelFluidBackground({ className }: PixelFluidBackground
       }
     }
 
-    timeRef.current += configRef.current.speed;
-    animationRef.current = requestAnimationFrame(draw);
-  }, [isDark, getWaveHeight]);
+    ctx.globalAlpha = 1;
+    timeRef.current += lerp(introSpeed, ambientSpeed, settleProgress);
 
-  // Resize handler - also adjusts speed based on screen size
+    if (isAnimatingRef.current && !prefersReducedMotionRef.current) {
+      animationRef.current = requestAnimationFrame(draw);
+    }
+  }, [getWaveHeight, isDark]);
+
+  // Resize handler - mobile settles into a slightly quieter ambient drift.
   const resize = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
 
-    // Slower animation on desktop, faster on mobile
     const isMobile = window.innerWidth < 768;
-    configRef.current.speed = isMobile ? 0.007 : 0.0072;
-  }, []);
+    configRef.current.introSpeed = isMobile ? 0.0065 : 0.0072;
+    configRef.current.ambientSpeed = isMobile ? 0.0024 : 0.003;
+
+    const { pixelSize } = configRef.current;
+    const cols = Math.ceil(canvas.width / pixelSize);
+    const rows = Math.ceil(canvas.height / pixelSize);
+    const compositionBias = new Float32Array(cols * rows);
+
+    for (let x = 0; x < cols; x++) {
+      for (let y = 0; y < rows; y++) {
+        const index = x * rows + y;
+        compositionBias[index] = getCompositionBias(
+          x,
+          y,
+          cols,
+          rows,
+          canvas.width
+        );
+      }
+    }
+
+    compositionBiasRef.current = compositionBias;
+  }, [getCompositionBias]);
 
   // Pointer update handler
   const updatePointer = useCallback((e: MouseEvent | TouchEvent) => {
+    if (prefersReducedMotionRef.current) return;
+
     let x: number, y: number;
 
     if ("touches" in e && e.touches.length > 0) {
@@ -269,28 +375,90 @@ export default function PixelFluidBackground({ className }: PixelFluidBackground
   }, []);
 
   useEffect(() => {
-    // Initial setup
+    const motionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const finePointerQuery = window.matchMedia("(hover: hover) and (pointer: fine)");
+    prefersReducedMotionRef.current = motionQuery.matches;
+    scrollRef.current = window.scrollY;
+
     updateBaseHue();
     resize();
 
-    // Start animation
-    animationRef.current = requestAnimationFrame(draw);
+    const renderOnce = () => {
+      cancelAnimationFrame(animationRef.current);
+      isAnimatingRef.current = false;
+      animationRef.current = requestAnimationFrame(draw);
+    };
 
-    // Handle resize
-    window.addEventListener("resize", resize);
+    const startAnimation = () => {
+      if (document.hidden || prefersReducedMotionRef.current || isAnimatingRef.current) return;
+      isAnimatingRef.current = true;
+      animationRef.current = requestAnimationFrame(draw);
+    };
 
-    // Handle pointer/touch interaction
-    window.addEventListener("mousemove", updatePointer);
-    window.addEventListener("touchmove", updatePointer, { passive: true });
-    window.addEventListener("touchstart", updatePointer, { passive: true });
-    window.addEventListener("touchend", clearPointer);
-    window.addEventListener("mouseleave", clearPointer);
+    const stopAnimation = () => {
+      isAnimatingRef.current = false;
+      cancelAnimationFrame(animationRef.current);
+    };
+
+    if (motionQuery.matches) {
+      amplitudeRef.current = 1;
+      renderOnce();
+    } else {
+      startAnimation();
+    }
+
+    const handleResize = () => {
+      resize();
+      if (prefersReducedMotionRef.current) renderOnce();
+    };
+
+    const handleScroll = () => {
+      scrollRef.current = window.scrollY;
+      if (prefersReducedMotionRef.current) renderOnce();
+    };
+
+    const handleVisibilityChange = () => {
+      clearPointer();
+      if (document.hidden) {
+        stopAnimation();
+      } else if (prefersReducedMotionRef.current) {
+        renderOnce();
+      } else {
+        startAnimation();
+      }
+    };
+
+    const handleMotionPreference = (event: MediaQueryListEvent) => {
+      prefersReducedMotionRef.current = event.matches;
+      clearPointer();
+
+      if (event.matches) {
+        amplitudeRef.current = 1;
+        stopAnimation();
+        renderOnce();
+      } else {
+        startAnimation();
+      }
+    };
+
+    window.addEventListener("resize", handleResize);
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    motionQuery.addEventListener("change", handleMotionPreference);
+
+    // Cursor physics are a desktop enhancement. Coarse pointers keep the
+    // calmer composed field and avoid work during touch scrolling.
+    if (finePointerQuery.matches) {
+      window.addEventListener("mousemove", updatePointer);
+      window.addEventListener("mouseleave", clearPointer);
+    }
 
     // Watch for accent changes via MutationObserver
     const observer = new MutationObserver((mutations) => {
       mutations.forEach((mutation) => {
         if (mutation.attributeName === "data-accent" || mutation.attributeName === "class") {
           updateBaseHue();
+          if (prefersReducedMotionRef.current && !document.hidden) renderOnce();
         }
       });
     });
@@ -301,12 +469,12 @@ export default function PixelFluidBackground({ className }: PixelFluidBackground
     });
 
     return () => {
-      cancelAnimationFrame(animationRef.current);
-      window.removeEventListener("resize", resize);
+      stopAnimation();
+      window.removeEventListener("resize", handleResize);
+      window.removeEventListener("scroll", handleScroll);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      motionQuery.removeEventListener("change", handleMotionPreference);
       window.removeEventListener("mousemove", updatePointer);
-      window.removeEventListener("touchmove", updatePointer);
-      window.removeEventListener("touchstart", updatePointer);
-      window.removeEventListener("touchend", clearPointer);
       window.removeEventListener("mouseleave", clearPointer);
       observer.disconnect();
     };
@@ -330,6 +498,10 @@ export default function PixelFluidBackground({ className }: PixelFluidBackground
       }}
     >
       <canvas ref={canvasRef} className="block w-full h-full" />
+
+      {heroMode && (
+        <div className="pixel-fluid-hero-glow" aria-hidden="true" />
+      )}
 
       {/* Scanlines overlay (static background lines) */}
       <div
