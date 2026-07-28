@@ -16,13 +16,12 @@ export const metadata = {
 
 const aboutContent = {
     paragraphs: [
-        "I\u2019m Jake Harris, a software engineer at Docusign and the founder of JJH Digital, a software consultancy.",
-        "At Docusign I work on the Workspaces team. I built the team\u2019s cronjobs infrastructure from scratch, wrote a 200-page API parity analysis that became the reference for our global expansion initiative, and deployed Redis and CosmosDB across six production regions. I lead incident response for major releases and I\u2019ve driven AI tooling adoption across the engineering org. The stack is C#/.NET, gRPC, Kubernetes, and Azure.",
-        "Before Docusign, I co-founded AG, an AI-powered travel platform. I led frontend development, helped raise $3M in funding, and grew the platform to 50,000 monthly users. That experience is where I developed a conviction that AI isn\u2019t something you bolt on at the end. It\u2019s an architecture decision you make on day one.",
-        "Through JJH Digital I take on consulting work for businesses that need more than a template. Full stack applications, AI integrations, custom e-commerce platforms. TypeScript, React, Next.js, and whatever else the problem calls for. Clients own their code.",
-        "I spend a lot of time thinking about AI beyond just using it. Lately I\u2019ve been exploring recursive semantic compression, the idea that intelligence doesn\u2019t scale by making context windows bigger, it scales by compressing information the way biological cognition does, layer by layer. I\u2019ve built agent workflows on enterprise codebases, I write about it on this blog, and my working thesis is that the bottleneck in AI right now isn\u2019t capability. It\u2019s context.",
-        "I studied Computer Science at George Washington University, where I rowed Division I and contributed to a 7th place national finish at the IRA Championship. After college I coached my high school rowing club for a season where the team put up multiple podium finishes at Youth Nationals, which for a club out of Atlanta is kind of unheard of. Before any of that, I co-founded Lions Heart, a youth volunteer organization that facilitated over 10,000 hours of community service across metro Atlanta.",
-        "I build what works today and chase what will work tomorrow. That\u2019s the whole game."
+        "I grew up in Atlanta, where I co-founded Lions Heart, a youth volunteer organization that coordinated more than 10,000 hours of community service across the city.",
+        "I moved to Washington, DC to study computer science at George Washington University and row Division I. Our crew finished seventh at the IRA National Championship, an experience that taught me consistency, trust, and teamwork.",
+        "After college, I brought that mindset to AdventureGenie, an AI travel startup I co-founded. I led the frontend and design, helped raise $3 million, and watched the platform grow past 50,000 monthly users. It taught me to work across the whole problem, from a customer’s first impression to the infrastructure behind it, and showed me that AI works best when it shapes the product from the beginning.",
+        "That experience led me to start JJH Digital, where I build and operate software for clients who need more than a template. I’ve delivered full-stack, e-commerce, membership, and AI systems, owning projects from the first conversation through launch and long-term operation.",
+        "Today I’m a software engineer on Docusign’s Workspaces team, shipping customer-facing features and production systems while helping engineers across the company work more effectively with AI. I’m especially interested in context engineering and multi-agent systems: not just what models can do, but how we design the memory, tools, and workflows that let them do useful work reliably.",
+        "I’m most at home working on hard problems with small teams, especially when I can stay close to both the people using the product and the systems behind it."
     ]
 };
 
@@ -47,7 +46,7 @@ export default function AboutPage() {
                 </div>
 
                 <ul className="page-enter-3 space-y-2">
-                    {/* Resume download temporarily disabled — resume is out of date
+                    {/* Resume download temporarily disabled because the resume is out of date
                     <li className="relative">
                         <Link
                             href="/JH Resume 2-13-25 Fullstack.pdf"
