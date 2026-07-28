@@ -6,6 +6,23 @@
   padding: 4.25rem 0 3.4rem;
 }
 
+/* Full-viewport canvas overlay, rendered by PixelFluidBackground rather than
+   inside .hero. The gradient reaches transparency well beyond the content
+   bounds, so there is no section-edge cutoff and pointer input still reaches
+   the canvas interaction beneath it. */
+.pixel-fluid-hero-glow {
+  position: absolute;
+  inset: 0;
+  z-index: 8;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse 32rem 18rem at 50% 14.75rem,
+    hsl(var(--background) / 0.58) 0%,
+    hsl(var(--background) / 0.34) 50%,
+    transparent 100%
+  );
+}
+
 .hero-wordmark {
   margin: 0;
   color: hsl(var(--foreground));
@@ -25,120 +42,6 @@
   font-weight: 400;
   line-height: 1.45;
   text-wrap: pretty;
-}
-
-/* Contact CTA — the ledger's open line. Mono voice, a hairline rule that spans
-   to the edge, an entrance draw, and a real link: a full-width entry that ends
-   not in a period but in a dash, the ledger convention for an unfilled line.
-   Hover completes it — the rule ignites in the accent and the dash morphs into
-   an arrow. No box, no pill; the shape is built from a border-free rule so it
-   never reads as a mask over the animated canvas. */
-.hero-cta {
-  display: flex;
-  align-items: center;
-  gap: 0.9rem;
-  width: 100%;
-  margin: 1.35rem 0 0;
-  padding: 0.55rem 0;
-  color: color-mix(in srgb, hsl(var(--foreground)) 52%, hsl(var(--muted-foreground)));
-  font-family: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
-  text-decoration: none;
-  -webkit-tap-highlight-color: transparent;
-}
-
-.hero-cta-label {
-  flex: none;
-  font-size: 12.5px;
-  font-weight: 500;
-  letter-spacing: 0.12em;
-  line-height: 1;
-  text-transform: uppercase;
-  text-wrap: balance;
-  transition: color 200ms cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-/* The connective rule: hairline weight, low alpha, drawn not printed. */
-.hero-cta-rule {
-  flex: 1;
-  min-width: 1.5rem;
-  height: 1px;
-  background: color-mix(in srgb, hsl(var(--foreground)) 18%, transparent);
-  transform-origin: left;
-  transition: background 220ms cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-/* Terminal mark slot — fixed width so the dash → arrow swap never reflows the
-   line. The two states are stacked and cross-fade. */
-.hero-cta-mark {
-  position: relative;
-  flex: none;
-  width: 1.4ch;
-  height: 1em;
-  font-size: 13px;
-  line-height: 1;
-}
-
-.hero-cta-mark > span {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  transition:
-    opacity 200ms cubic-bezier(0.22, 1, 0.36, 1),
-    transform 200ms cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-/* Rest-state dash: a literal 1px rule segment, not a text glyph. Centered the
-   same way as .hero-cta-rule, it lands on the identical subpixel line — a
-   glyph's baseline metrics would sit a pixel off. */
-.hero-cta-mark-rest::after {
-  content: "";
-  width: 100%;
-  height: 1px;
-  background: color-mix(in srgb, hsl(var(--foreground)) 18%, transparent);
-  transition: background 220ms cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-.hero-cta-mark-go {
-  opacity: 0;
-  transform: translateX(-3px);
-  /* The arrow glyph's ink overhangs its advance box ~3px to the right; without
-     this inset the tip lands past the content column's right padding line. */
-  padding-right: 3px;
-  color: color-mix(in srgb, var(--accent-color) 70%, hsl(var(--foreground)));
-}
-
-/* Hover / focus: the open line completes. Label warms to full foreground, the
-   rule ignites in the accent, and the em-dash lifts out as an arrow. Default
-   (monochrome) accent degrades to a crisp foreground line, still a clear
-   brighten against the quiet rest state. */
-.hero-cta:hover .hero-cta-label,
-.hero-cta:focus-visible .hero-cta-label {
-  color: hsl(var(--foreground));
-}
-
-.hero-cta:hover .hero-cta-rule,
-.hero-cta:focus-visible .hero-cta-rule {
-  background: color-mix(in srgb, var(--accent-color) 55%, hsl(var(--foreground)));
-}
-
-.hero-cta:hover .hero-cta-mark-rest,
-.hero-cta:focus-visible .hero-cta-mark-rest {
-  opacity: 0;
-  transform: translateX(3px);
-}
-
-.hero-cta:hover .hero-cta-mark-go,
-.hero-cta:focus-visible .hero-cta-mark-go {
-  opacity: 1;
-  transform: translateX(0);
-}
-
-.hero-cta:focus-visible {
-  outline: 2px solid color-mix(in srgb, var(--accent-color) 60%, hsl(var(--foreground)));
-  outline-offset: 6px;
-  border-radius: 2px;
 }
 
 /* Writing section kicker under the masthead. */
@@ -183,39 +86,10 @@
     animation-delay: 120ms;
   }
 
-  /* CTA joins the settle: the rule draws while the label and terminal mark
-     fade up. Visible by default; motion only adds the polish. */
-  .hero-cta-label,
-  .hero-cta-mark {
-    opacity: 0;
-    animation: hero-fade 420ms cubic-bezier(0.22, 1, 0.36, 1) 240ms forwards;
-  }
-
-  .hero-cta-mark {
-    animation-delay: 320ms;
-  }
-
-  .hero-cta-rule {
-    transform: scaleX(0);
-    animation: hero-draw 460ms cubic-bezier(0.22, 1, 0.36, 1) 200ms forwards;
-  }
-
   @keyframes hero-settle {
     to {
       opacity: 1;
       transform: translateY(0);
-    }
-  }
-
-  @keyframes hero-fade {
-    to {
-      opacity: 1;
-    }
-  }
-
-  @keyframes hero-draw {
-    to {
-      transform: scaleX(1);
     }
   }
 }
@@ -225,15 +99,13 @@
     padding: 2.9rem 0 2.7rem;
   }
 
-  /* Keep the row a comfortable ≥44px tap target; content stays centered. */
-  .hero-cta {
-    gap: 0.7rem;
-    margin-top: 1.2rem;
-    min-height: 44px;
+  .pixel-fluid-hero-glow {
+    background: radial-gradient(
+      ellipse 24rem 17rem at 50% 12.75rem,
+      hsl(var(--background) / 0.76) 0%,
+      hsl(var(--background) / 0.46) 52%,
+      transparent 100%
+    );
   }
 
-  .hero-cta-label {
-    font-size: 12px;
-    letter-spacing: 0.1em;
-  }
 }

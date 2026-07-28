@@ -28,10 +28,15 @@ const aboutContent = {
 
 export default function AboutPage() {
     return (
-        <PageLayout>
+        <PageLayout className="py-20 md:py-24">
             <ScrollToTop />
             <div className="max-w-none">
-                <h2 className="page-enter mb-4 text-xl md:text-2xl font-bold">About</h2>
+                <h1
+                    className="page-enter mb-6 text-5xl font-bold leading-[0.95] tracking-[-0.01em] md:text-6xl"
+                    style={{ fontFamily: 'var(--font-wordmark), ui-serif, Georgia, serif' }}
+                >
+                    About
+                </h1>
 
                 <div className="page-enter-2 prose dark:prose-invert font-base text-base mb-8">
                     {aboutContent.paragraphs.map((paragraph, index) => (
@@ -88,4 +93,4 @@ export default function AboutPage() {
             </div>
         </PageLayout>
     );
-} 
+}
