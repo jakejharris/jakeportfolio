@@ -3,7 +3,7 @@
    accent picks hold up without hero-specific overrides. */
 
 .hero {
-  padding: 4.25rem 0 3.4rem;
+  padding: 4.25rem 0;
 }
 
 /* Full-viewport canvas overlay, rendered by PixelFluidBackground rather than
