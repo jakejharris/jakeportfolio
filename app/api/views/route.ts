@@ -12,14 +12,41 @@ const DEDUP_MAX_ENTRIES = 5_000;
 // blunts tight repeat loops but does not guarantee global deduplication.
 const recentViews = new Map<string, number>();
 
-type RejectReason = 'origin' | 'bot' | 'token' | 'dedup' | 'slug';
+type RejectReason =
+  | 'origin'
+  | 'bot'
+  | 'token'
+  | 'dedup'
+  | 'slug'
+  | 'json'
+  | 'notfound'
+  | 'error';
 
-function getIpHash(request: NextRequest): string {
-  const ip = request.headers.get('x-forwarded-for')?.split(',')[0].trim() ?? '';
-  const secret = process.env.VIEWS_TOKEN_SECRET ?? '';
+function getClientIp(request: NextRequest): string {
+  // Vercel supplies the platform-specific headers. Off-platform, the nearest
+  // trusted proxy is assumed to append its client as the final XFF hop.
+  const platformIp =
+    request.headers.get('x-vercel-forwarded-for')?.trim() ||
+    request.headers.get('x-real-ip')?.trim();
+  if (platformIp) {
+    return platformIp.split(',')[0].trim();
+  }
+
+  return request.headers
+    .get('x-forwarded-for')
+    ?.split(',')
+    .at(-1)
+    ?.trim() ?? '';
+}
+
+function getIpHash(request: NextRequest): string | null {
+  const secret = process.env.VIEWS_TOKEN_SECRET;
+  if (!secret) {
+    return null;
+  }
 
   return createHash('sha256')
-    .update(ip + secret)
+    .update(getClientIp(request) + secret)
     .digest('hex')
     .slice(0, 16);
 }
@@ -37,6 +64,9 @@ function logRequest(
     reason,
     ua: (request.headers.get('user-agent') ?? '').slice(0, 120),
     ip: getIpHash(request),
+    source: outcome === 'rej'
+      ? (request.headers.get('origin') ?? request.headers.get('referer') ?? '').slice(0, 200)
+      : undefined,
     ts: new Date().toISOString(),
   }));
 }
@@ -55,14 +85,27 @@ function isAllowedSource(value: string): boolean {
       return true;
     }
 
-    if (hostname.endsWith('.vercel.app')) {
+    const configuredPreviewHosts = [
+      process.env.VERCEL_BRANCH_URL,
+      process.env.VERCEL_PROJECT_PRODUCTION_URL,
+    ]
+      .filter((host): host is string => Boolean(host))
+      .map((host) => host.toLowerCase());
+
+    if (configuredPreviewHosts.includes(hostname)) {
       return true;
+    }
+
+    if (hostname.endsWith('.vercel.app')) {
+      return (
+        configuredPreviewHosts.length === 0 &&
+        /^jakeportfolio-[a-z0-9-]+\.vercel\.app$/.test(hostname)
+      );
     }
 
     return (
       process.env.NODE_ENV === 'development' &&
-      hostname === 'localhost' &&
-      Boolean(url.port)
+      (hostname === 'localhost' || hostname === '127.0.0.1')
     );
   } catch {
     return false;
@@ -111,7 +154,7 @@ export async function POST(request: NextRequest) {
     try {
       body = await request.json();
     } catch {
-      return reject(request, slug, 'slug');
+      return reject(request, slug, 'json');
     }
 
     if (typeof body !== 'object' || body === null) {
@@ -142,7 +185,12 @@ export async function POST(request: NextRequest) {
       return reject(request, slug, 'token');
     }
 
-    dedupKey = `${getIpHash(request)}:${slug}`;
+    const ipHash = getIpHash(request);
+    if (!ipHash) {
+      return reject(request, slug, 'token');
+    }
+
+    dedupKey = `${ipHash}:${slug}`;
     if (isDuplicate(dedupKey)) {
       return reject(request, slug, 'dedup');
     }
@@ -155,7 +203,7 @@ export async function POST(request: NextRequest) {
 
     if (!post) {
       recentViews.delete(dedupKey);
-      return reject(request, slug, 'slug');
+      return reject(request, slug, 'notfound');
     }
 
     // Increment the view count using the writeClient
@@ -172,11 +220,7 @@ export async function POST(request: NextRequest) {
     if (dedupKey) {
       recentViews.delete(dedupKey);
     }
-    logRequest(request, slug, 'rej', null);
     console.error('Error incrementing view count:', error);
-    return NextResponse.json(
-      { error: 'Failed to increment view count' },
-      { status: 500 }
-    );
+    return reject(request, slug, 'error');
   }
 }

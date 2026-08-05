@@ -440,6 +440,7 @@ export default async function PostPage({ params }: PageParams) {
   }
 
   const displayDate = post.publishedAt || post._updatedAt;
+  // cookies() above keeps this dynamic; prerendering would bake in a token that expires after 2h.
   const viewToken = mintViewToken(slug);
 
   // Build image URL for JSON-LD

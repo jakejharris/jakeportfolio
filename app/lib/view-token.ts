@@ -36,6 +36,7 @@ export function verifyViewToken(token: string, slug: string): boolean {
   const now = Date.now();
   if (
     !Number.isSafeInteger(issuedAtMs) ||
+    String(issuedAtMs) !== match[1] ||
     issuedAtMs > now ||
     now > issuedAtMs + VIEW_TOKEN_TTL_MS
   ) {
