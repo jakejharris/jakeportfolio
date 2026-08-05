@@ -5,9 +5,10 @@ import { useEffect, useState } from 'react';
 interface ViewCounterProps {
   slug: string;
   initialCount: number;
+  viewToken: string;
 }
 
-export default function ViewCounter({ slug, initialCount }: ViewCounterProps) {
+export default function ViewCounter({ slug, initialCount, viewToken }: ViewCounterProps) {
   const [viewCount, setViewCount] = useState(initialCount);
 
   useEffect(() => {
@@ -25,21 +26,23 @@ export default function ViewCounter({ slug, initialCount }: ViewCounterProps) {
             headers: {
               'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ slug }),
+            body: JSON.stringify({ slug, viewToken }),
           });
 
-          if (response.ok) {
-            const data = await response.json();
-            setViewCount(data.viewCount);
+          if (response.status !== 200) {
+            return;
           }
-        } catch (error) {
-          console.error('Failed to increment view count:', error);
+
+          const data: { viewCount: number } = await response.json();
+          setViewCount(data.viewCount);
+        } catch {
+          // View counting is best-effort; keep showing the server-rendered count.
         }
       };
 
       incrementViewCount();
     }
-  }, [slug]); // Only depend on slug
+  }, [slug, viewToken]);
 
   return <div>{viewCount} views</div>;
-} 
+}
