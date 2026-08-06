@@ -1,8 +1,36 @@
+import { timingSafeEqual } from 'node:crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { client, writeClient } from '@/app/lib/sanity.client';
 
+function getAuthFailure(request: NextRequest): NextResponse | null {
+  const token = process.env.VIEWADMIN_TOKEN;
+  if (!token) {
+    return NextResponse.json(
+      { error: 'View admin is unavailable' },
+      { status: 503 }
+    );
+  }
+
+  const expected = Buffer.from(`Bearer ${token}`);
+  const actual = Buffer.from(request.headers.get('authorization') ?? '');
+  const hasExpectedLength = actual.length === expected.length;
+  const comparable = hasExpectedLength ? actual : Buffer.alloc(expected.length);
+  const isAuthorized = timingSafeEqual(comparable, expected) && hasExpectedLength;
+
+  if (!isAuthorized) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  return null;
+}
+
 // Fetch all posts (title, slug, _id, viewCount)
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const authFailure = getAuthFailure(request);
+  if (authFailure) {
+    return authFailure;
+  }
+
   try {
     const posts = await client.fetch(
       `*[_type == \"post\"]{ _id, title, slug, viewCount } | order(title asc)`
@@ -19,6 +47,11 @@ export async function GET() {
 
 // Update view count for a specific post
 export async function POST(request: NextRequest) {
+  const authFailure = getAuthFailure(request);
+  if (authFailure) {
+    return authFailure;
+  }
+
   try {
     const { postId, changeAmount } = await request.json();
 
@@ -68,4 +101,4 @@ export async function POST(request: NextRequest) {
       { status: statusCode }
     );
   }
-} 
+}
