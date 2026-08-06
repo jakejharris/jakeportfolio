@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 
 interface Post {
   _id: string;
@@ -9,7 +9,7 @@ interface Post {
 }
 
 export default function ViewAdminPage() {
-  const [password, setPassword] = useState('');
+  const [token, setToken] = useState('');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [authError, setAuthError] = useState('');
   const [posts, setPosts] = useState<Post[]>([]);
@@ -18,28 +18,19 @@ export default function ViewAdminPage() {
   const [updateError, setUpdateError] = useState<Record<string, string>>({});
   const [updateLoading, setUpdateLoading] = useState<Record<string, boolean>>({});
 
-  useEffect(() => {
-    if (isAuthenticated) {
-      fetchPosts();
-    }
-  }, [isAuthenticated]);
-
-  const handleLogin = () => {
-    if (password === 'password') {
-      setIsAuthenticated(true);
-      setAuthError('');
-    } else {
-      setAuthError('Incorrect password');
-    }
-  };
-
   const fetchPosts = async () => {
     setLoading(true);
+    setAuthError('');
     setUpdateError({});
     try {
-      const response = await fetch('/api/viewadmin');
+      const response = await fetch('/api/viewadmin', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       if (!response.ok) {
-        throw new Error('Failed to fetch posts');
+        const result: { error?: string } = await response.json();
+        throw new Error(result.error || 'Failed to fetch posts');
       }
       const data: Post[] = await response.json();
       // Initialize viewCount to 0 if null/undefined
@@ -51,10 +42,23 @@ export default function ViewAdminPage() {
         initialAmounts[post._id] = '0';
       });
       setUpdateAmounts(initialAmounts);
-    } catch (error: any) {
-      setAuthError(error.message || 'Failed to load posts');
+      return true;
+    } catch (error) {
+      setAuthError(error instanceof Error ? error.message : 'Failed to load posts');
+      return false;
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleLogin = async () => {
+    if (!token) {
+      setAuthError('Enter the admin token');
+      return;
+    }
+
+    if (await fetchPosts()) {
+      setIsAuthenticated(true);
     }
   };
 
@@ -103,6 +107,7 @@ export default function ViewAdminPage() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ postId, changeAmount }),
       });
@@ -121,9 +126,12 @@ export default function ViewAdminPage() {
       );
       setUpdateAmounts(prev => ({ ...prev, [postId]: '0' })); // Reset input
 
-    } catch (error: any) {
+    } catch (error) {
       console.error('Update error:', error);
-      setUpdateError(prev => ({ ...prev, [postId]: error.message || 'Update failed' }));
+      setUpdateError(prev => ({
+        ...prev,
+        [postId]: error instanceof Error ? error.message : 'Update failed',
+      }));
     } finally {
       setUpdateLoading(prev => ({ ...prev, [postId]: false }));
     }
@@ -136,10 +144,10 @@ export default function ViewAdminPage() {
         <div className="flex space-x-2">
           <input
             type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            value={token}
+            onChange={(e) => setToken(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleLogin()} // Allow Enter key to login
-            placeholder="Enter password"
+            placeholder="Enter admin token"
             className="border p-2 rounded text-black"
           />
           <button
@@ -190,4 +198,4 @@ export default function ViewAdminPage() {
       )}
     </div>
   );
-} 
+}
