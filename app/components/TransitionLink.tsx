@@ -7,6 +7,7 @@ import { ReactNode, MouseEvent } from "react";
 interface TransitionLinkProps extends LinkProps {
   children: ReactNode;
   className?: string;
+  onClickCapture?: (event: MouseEvent<HTMLAnchorElement>) => void;
 }
 
 export default function TransitionLink({ children, className, href, ...props }: TransitionLinkProps) {

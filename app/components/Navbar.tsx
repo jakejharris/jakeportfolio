@@ -8,39 +8,9 @@ import '../css/mobile-navbar.css';
 import '../css/animations.css';
 import '../css/magical-button.css';
 
-// Client-only wrapper component to handle hydration mismatch
-function ClientOnly({ children }: { children: React.ReactNode }) {
-  const [hasMounted, setHasMounted] = useState(false);
-  
-  useEffect(() => {
-    setHasMounted(true);
-  }, []);
-  
-  if (!hasMounted) {
-    return <div className="h-16 bg-secondary"></div>; // Placeholder with same height
-  }
-  
-  return <>{children}</>;
-}
-
-// Debounce function to limit how often a function is called
-function debounce<T extends (...args: Parameters<T>) => ReturnType<T>>(
-  func: T,
-  wait: number
-): (...args: Parameters<T>) => void {
-  let timeout: ReturnType<typeof setTimeout> | null = null;
-  
-  return function(...args: Parameters<T>) {
-    if (timeout) clearTimeout(timeout);
-    timeout = setTimeout(() => func(...args), wait);
-  };
-}
-
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
-  const [visible, setVisible] = useState(true);
-  const [isMobile, setIsMobile] = useState(false);
-  const [isClient, setIsClient] = useState(false);
+  const [mobileVisible, setMobileVisible] = useState(true);
   const prevScrollPos = useRef(0);
   const ticking = useRef(false);
   
@@ -56,21 +26,15 @@ export default function Navbar() {
         // Set scrolled state for styling
         setScrolled(currentScrollPos > 10);
 
-        // Only apply hide/show logic on mobile
-        if (isMobile) {
-          const isScrolledDown = prevScrollPos.current < currentScrollPos;
-          const isScrollingUp = prevScrollPos.current > currentScrollPos;
-          const isAtTop = currentScrollPos < 10;
+        const isScrolledDown = prevScrollPos.current < currentScrollPos;
+        const isScrollingUp = prevScrollPos.current > currentScrollPos;
+        const isAtTop = currentScrollPos < 10;
 
-          // Only hide when scrolling down significantly and not at the top
-          if (isScrolledDown && !isAtTop && Math.abs(currentScrollPos - prevScrollPos.current) > 5) {
-            setVisible(false);
-          } else if (isScrollingUp || isAtTop) {
-            setVisible(true);
-          }
-        } else {
-          // On desktop, always keep the navbar visible
-          setVisible(true);
+        // This state is only applied to the CSS-selected mobile navbar.
+        if (isScrolledDown && !isAtTop && Math.abs(currentScrollPos - prevScrollPos.current) > 5) {
+          setMobileVisible(false);
+        } else if (isScrollingUp || isAtTop) {
+          setMobileVisible(true);
         }
 
         // Remember the scroll position for next comparison
@@ -78,55 +42,20 @@ export default function Navbar() {
         ticking.current = false;
       });
     }
-  }, [isMobile]);
-  
-  // Create a debounced version of the resize handler
-  const handleResize = useCallback(() => {
-    const isMobileView = window.innerWidth < 768;
-    setIsMobile(isMobileView);
-    
-    // Always show navbar when switching between mobile and desktop
-    setVisible(true);
   }, []);
-  
-  const debouncedHandleResize = useCallback(
-    () => debounce(handleResize, 100)(),
-    [handleResize]
-  );
 
   useEffect(() => {
-    // Set isClient to true once component mounts
-    setIsClient(true);
-    
-    // Initial check
-    handleResize();
-
-    // Add event listeners
     window.addEventListener('scroll', handleScroll, { passive: true });
-    window.addEventListener('resize', debouncedHandleResize);
     
-    // Clean up event listeners
     return () => {
       window.removeEventListener('scroll', handleScroll);
-      window.removeEventListener('resize', debouncedHandleResize);
     };
-  }, [handleScroll, debouncedHandleResize, handleResize]);
-
-  const navbarProps = {
-    scrolled,
-    visible,
-  };
-
-  // Return a placeholder during SSR or before client detection
-  if (!isClient) {
-    return <div className="h-16 bg-secondary"></div>;
-  }
+  }, [handleScroll]);
 
   return (
-    <ClientOnly>
-      {isMobile 
-        ? <MobileNavbar {...navbarProps} /> 
-        : <DesktopNavbar {...navbarProps} />}
-    </ClientOnly>
+    <>
+      <DesktopNavbar scrolled={scrolled} />
+      <MobileNavbar scrolled={scrolled} visible={mobileVisible} />
+    </>
   );
-} 
+}
