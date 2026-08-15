@@ -90,7 +90,7 @@ export default function PixelFluidBackground({
   });
   const [mounted, setMounted] = useState(false);
   const { theme, resolvedTheme } = useTheme();
-  const isDark = mounted ? resolvedTheme === "dark" : true;
+  const isDark = resolvedTheme === "dark";
 
   // Get the current accent color based on data-accent attribute
   const getAccentColor = useCallback(() => {
@@ -375,6 +375,8 @@ export default function PixelFluidBackground({
   }, []);
 
   useEffect(() => {
+    if (!mounted || !resolvedTheme) return;
+
     const motionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
     const finePointerQuery = window.matchMedia("(hover: hover) and (pointer: fine)");
     prefersReducedMotionRef.current = motionQuery.matches;
@@ -478,12 +480,14 @@ export default function PixelFluidBackground({
       window.removeEventListener("mouseleave", clearPointer);
       observer.disconnect();
     };
-  }, [draw, resize, updateBaseHue, updatePointer, clearPointer]);
+  }, [mounted, resolvedTheme, draw, resize, updateBaseHue, updatePointer, clearPointer]);
 
   // Re-update hue when theme changes
   useEffect(() => {
+    if (!mounted || !resolvedTheme) return;
+
     updateBaseHue();
-  }, [theme, resolvedTheme, updateBaseHue]);
+  }, [mounted, theme, resolvedTheme, updateBaseHue]);
 
   // Return null if feature is disabled
   if (!ENABLE_PIXEL_FLUID_BACKGROUND) {
@@ -492,10 +496,7 @@ export default function PixelFluidBackground({
 
   return (
     <div
-      className={`fixed inset-0 -z-10 ${className || ""}`}
-      style={{
-        backgroundColor: isDark ? "#0a0a0a" : "#ffffff",
-      }}
+      className={`pixel-fluid-background fixed inset-0 -z-10 ${className || ""}`}
     >
       <canvas ref={canvasRef} className="block w-full h-full" />
 
@@ -520,10 +521,8 @@ export default function PixelFluidBackground({
 
       {/* Static film grain overlay (Optimized Performance Data URI) */}
       <div
-        className="absolute inset-0 pointer-events-none z-[12]"
+        className="pixel-fluid-grain absolute inset-0 pointer-events-none z-[12]"
         style={{
-          opacity: isDark ? 0.05 : 0.08,
-          mixBlendMode: isDark ? "screen" : "multiply",
           backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='grain'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23grain)'/%3E%3C/svg%3E")`,
           backgroundRepeat: "repeat",
         }}
