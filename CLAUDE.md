@@ -73,7 +73,7 @@ This is a Next.js 15 portfolio and blog site using the App Router with Sanity CM
 
 - **Hydration mismatch prevention** — Components use `mounted` state pattern, opacity-based icon switching, or `ClientOnly` wrappers to avoid SSR/client mismatches
 - **Feature flags** — Top-of-file constants toggle features: `ENABLE_PAGE_TRANSITIONS = false` (TransitionOverlay), `ENABLE_PIXEL_FLUID_BACKGROUND = true` (canvas background)
-- **Navigation** — All internal links use `TransitionLink` (wraps Next.js `Link`). Internal hrefs use trailing `#` (e.g., `href="/about#"`) with `scroll={true}` for scroll-to-top on same-page navigation
+- **Navigation** — Internal links use `TransitionLink` (wraps Next.js `Link`) with `scroll={true}`. Navbar and drawer hrefs use clean paths (for example, `href="/about"`); post-card links retain the legacy trailing-`#` pattern
 - **Scroll management** — `ScrollToTop` component handles scroll reset on navigation; `experimental.scrollRestoration` is disabled in next.config.js
 - **Portable Text headings** — Bold (`strong`-marked) text in normal paragraphs is treated as section headings (not Sanity's built-in h1–h4). Both `TableOfContents` and the custom block renderer generate heading IDs in format `section-{block._key}`
 - **Metadata** — Static pages export `metadata` directly. Dynamic posts use `generateMetadata()`. All include canonical URLs, OpenGraph, and Twitter cards. JSON-LD structured data in root layout (WebSite, Person) and post pages (BlogPosting)

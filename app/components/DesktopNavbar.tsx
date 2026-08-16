@@ -5,20 +5,14 @@ import ThemeToggle from './ThemeToggle';
 import AccentPicker from './AccentPicker';
 import TransitionLink from './TransitionLink';
 import JHMark from './JHMark';
+import { getActiveNav } from '../lib/navbar';
 
 interface DesktopNavbarProps {
   scrolled: boolean;
 }
 
-function normalizePathname(pathname: string) {
-  return pathname === '/' ? pathname : pathname.replace(/\/+$/, '');
-}
-
 export default function DesktopNavbar({ scrolled }: DesktopNavbarProps) {
-  const pathname = normalizePathname(usePathname());
-  const isHome = pathname === '/';
-  const isAbout = pathname === '/about';
-  const isContact = pathname === '/contact';
+  const { isHome, isAbout, isContact } = getActiveNav(usePathname());
 
   return (
     <nav

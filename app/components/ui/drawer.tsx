@@ -7,10 +7,12 @@ import { cn } from "../../lib/utils"
 
 const Drawer = ({
   shouldScaleBackground = true,
+  preventScrollRestoration = true,
   ...props
 }: React.ComponentProps<typeof DrawerPrimitive.Root>) => (
   <DrawerPrimitive.Root
     shouldScaleBackground={shouldScaleBackground}
+    preventScrollRestoration={preventScrollRestoration}
     {...props}
   />
 )
@@ -115,4 +117,4 @@ export {
   DrawerFooter,
   DrawerTitle,
   DrawerDescription,
-} 
+}

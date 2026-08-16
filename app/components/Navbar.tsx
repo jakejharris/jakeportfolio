@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import DesktopNavbar from './DesktopNavbar';
 import MobileNavbar from './MobileNavbar';
+import { NAVBAR_DESKTOP_MEDIA_QUERY } from '../lib/navbar';
 import '../css/navbar.css';
 import '../css/mobile-navbar.css';
 import '../css/animations.css';
@@ -45,10 +46,15 @@ export default function Navbar() {
   }, []);
 
   useEffect(() => {
+    const desktopQuery = window.matchMedia(NAVBAR_DESKTOP_MEDIA_QUERY);
+    const handleBreakpointChange = () => setMobileVisible(true);
+
     window.addEventListener('scroll', handleScroll, { passive: true });
+    desktopQuery.addEventListener('change', handleBreakpointChange);
     
     return () => {
       window.removeEventListener('scroll', handleScroll);
+      desktopQuery.removeEventListener('change', handleBreakpointChange);
     };
   }, [handleScroll]);
 
