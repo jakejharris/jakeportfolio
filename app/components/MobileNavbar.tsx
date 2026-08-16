@@ -26,18 +26,8 @@ interface MobileNavbarProps {
 
 export default function MobileNavbar({ scrolled, visible }: MobileNavbarProps) {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const [closingForNav, setClosingForNav] = useState(false);
-  const { isHome, isAbout, isContact } = getActiveNav(usePathname());
-
-  const handleDrawerOpenChange = (open: boolean) => {
-    if (open) setClosingForNav(false);
-    setIsDrawerOpen(open);
-  };
-
-  const closeDrawerForNavigation = () => {
-    setClosingForNav(true);
-    setIsDrawerOpen(false);
-  };
+  const pathname = usePathname();
+  const { isHome, isAbout, isContact } = getActiveNav(pathname);
 
   useEffect(() => {
     const desktopQuery = window.matchMedia(NAVBAR_DESKTOP_MEDIA_QUERY);
@@ -73,9 +63,10 @@ export default function MobileNavbar({ scrolled, visible }: MobileNavbarProps) {
           <AccentPicker />
           <ThemeToggle />
           <Drawer
+            key={pathname}
             open={isDrawerOpen}
-            preventScrollRestoration={closingForNav}
-            onOpenChange={handleDrawerOpenChange}
+            preventScrollRestoration
+            onOpenChange={setIsDrawerOpen}
           >
             <DrawerTrigger asChild>
               <Button
@@ -96,7 +87,7 @@ export default function MobileNavbar({ scrolled, visible }: MobileNavbarProps) {
                   href="/"
                   scroll={true}
                   aria-current={isHome ? 'page' : undefined}
-                  onClickCapture={closeDrawerForNavigation}
+                  onClickCapture={() => setIsDrawerOpen(false)}
                   className="border border-border w-full text-center text-xl py-3 px-6 rounded-md transition-all duration-150 hover:bg-accent active:scale-95 active:bg-accent/80"
                 >
                   <span className={`animated-underline ${isHome ? 'nav-active' : ''}`}>Home</span>
@@ -105,7 +96,7 @@ export default function MobileNavbar({ scrolled, visible }: MobileNavbarProps) {
                   href="/about"
                   scroll={true}
                   aria-current={isAbout ? 'page' : undefined}
-                  onClickCapture={closeDrawerForNavigation}
+                  onClickCapture={() => setIsDrawerOpen(false)}
                   className="border border-border w-full text-center text-xl py-3 px-6 rounded-md transition-all duration-150 hover:bg-accent active:scale-95 active:bg-accent/80"
                 >
                   <span className={`animated-underline ${isAbout ? 'nav-active' : ''}`}>About</span>
@@ -114,7 +105,7 @@ export default function MobileNavbar({ scrolled, visible }: MobileNavbarProps) {
                   href="/contact"
                   scroll={true}
                   aria-current={isContact ? 'page' : undefined}
-                  onClickCapture={closeDrawerForNavigation}
+                  onClickCapture={() => setIsDrawerOpen(false)}
                   className="border border-border w-full text-center text-xl py-3 px-6 rounded-md transition-all duration-150 hover:bg-accent active:scale-95 active:bg-accent/80"
                 >
                   <span className={`animated-underline ${isContact ? 'nav-active' : ''}`}>Contact</span>
