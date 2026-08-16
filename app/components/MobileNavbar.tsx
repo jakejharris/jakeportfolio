@@ -27,7 +27,12 @@ interface MobileNavbarProps {
 export default function MobileNavbar({ scrolled, visible }: MobileNavbarProps) {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const pathname = usePathname();
+  const [drawerKey, setDrawerKey] = useState(pathname);
   const { isHome, isAbout, isContact } = getActiveNav(pathname);
+
+  useEffect(() => {
+    setDrawerKey(pathname);
+  }, [pathname]);
 
   useEffect(() => {
     const desktopQuery = window.matchMedia(NAVBAR_DESKTOP_MEDIA_QUERY);
@@ -63,7 +68,7 @@ export default function MobileNavbar({ scrolled, visible }: MobileNavbarProps) {
           <AccentPicker />
           <ThemeToggle />
           <Drawer
-            key={pathname}
+            key={drawerKey}
             open={isDrawerOpen}
             preventScrollRestoration
             onOpenChange={setIsDrawerOpen}
