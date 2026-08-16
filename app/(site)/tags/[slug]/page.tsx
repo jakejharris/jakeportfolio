@@ -134,6 +134,7 @@ export default async function TagPage({
                       className={`pageLinkContainer flex justify-between items-center border p-3 cursor-pointer group ${post.featured ? 'pinnedLinkBorder' : ''}`}
                       aria-label={`View ${post.title}`}
                       scroll={true}
+                      prefetch={false}
                     >
                       <div className="flex items-center gap-3">
                         <div>
@@ -173,7 +174,7 @@ export default async function TagPage({
                           {post.excerpt}
                         </p>
                       )}
-                      <TransitionLink href={`/posts/${post.slug.current}#`} scroll={true} className="animated-underline-small-muted pt-2 text-xs text-muted-foreground">
+                      <TransitionLink href={`/posts/${post.slug.current}#`} scroll={true} prefetch={false} className="animated-underline-small-muted pt-2 text-xs text-muted-foreground">
                         Click to read full post
                       </TransitionLink>
                     </div>
