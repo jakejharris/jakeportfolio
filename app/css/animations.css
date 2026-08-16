@@ -18,7 +18,10 @@
   transition: transform 0.3s ease-out;
 }
 
-.animated-underline:hover::after {
+.animated-underline:hover::after,
+.animated-underline:focus-visible::after,
+a:focus-visible > .animated-underline::after,
+.animated-underline.nav-active::after {
   transform: scaleX(1);
   transform-origin: bottom left;
 }
