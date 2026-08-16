@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { FaGithub } from 'react-icons/fa';
 import ThemeToggle from './ThemeToggle';
@@ -9,6 +9,7 @@ import { Button } from './ui/button';
 import TransitionLink from './TransitionLink';
 import HamburgerIcon from './HamburgerIcon';
 import JHMark from './JHMark';
+import { getActiveNav, NAVBAR_DESKTOP_MEDIA_QUERY } from '../lib/navbar';
 import {
   Drawer,
   DrawerContent,
@@ -23,16 +24,19 @@ interface MobileNavbarProps {
   visible: boolean;
 }
 
-function normalizePathname(pathname: string) {
-  return pathname === '/' ? pathname : pathname.replace(/\/+$/, '');
-}
-
 export default function MobileNavbar({ scrolled, visible }: MobileNavbarProps) {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const pathname = normalizePathname(usePathname());
-  const isHome = pathname === '/';
-  const isAbout = pathname === '/about';
-  const isContact = pathname === '/contact';
+  const { isHome, isAbout, isContact } = getActiveNav(usePathname());
+
+  useEffect(() => {
+    const desktopQuery = window.matchMedia(NAVBAR_DESKTOP_MEDIA_QUERY);
+    const handleBreakpointChange = (event: MediaQueryListEvent) => {
+      if (event.matches) setIsDrawerOpen(false);
+    };
+
+    desktopQuery.addEventListener('change', handleBreakpointChange);
+    return () => desktopQuery.removeEventListener('change', handleBreakpointChange);
+  }, []);
 
   return (
     <nav
@@ -59,7 +63,12 @@ export default function MobileNavbar({ scrolled, visible }: MobileNavbarProps) {
           <ThemeToggle />
           <Drawer open={isDrawerOpen} onOpenChange={setIsDrawerOpen}>
             <DrawerTrigger asChild>
-              <Button variant="ghost" size="icon" className="relative flex items-center justify-center">
+              <Button
+                variant="ghost"
+                size="icon"
+                aria-label={isDrawerOpen ? 'Close menu' : 'Open menu'}
+                className="relative flex items-center justify-center"
+              >
                 <HamburgerIcon isOpen={isDrawerOpen} />
               </Button>
             </DrawerTrigger>
