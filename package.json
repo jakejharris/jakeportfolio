@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
-    "test": "tsx --test app/lib/post-views.test.ts",
+    "test": "tsx --test app/lib/post-views.test.ts scripts/seed-view-baseline.test.mjs",
     "seed:view-baseline": "node scripts/seed-view-baseline.mjs"
   },
   "dependencies": {

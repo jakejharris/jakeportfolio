@@ -1,4 +1,5 @@
 import { createClient } from 'next-sanity';
+import { planViewBaselineSeeds } from './seed-view-baseline-lib.mjs';
 
 const shouldCommit = process.argv.includes('--commit');
 const projectId = process.env.NEXT_PUBLIC_SANITY_PROJECT_ID;
@@ -27,23 +28,43 @@ const posts = await sanity.fetch(
     _id,
     title,
     "slug": slug.current,
-    viewCount
+    viewCount,
+    viewCountBase,
+    viewsCutoverAt
   } | order(title asc)`
 );
 const viewsCutoverAt = new Date().toISOString();
+const { postsToSeed, skippedPosts } = planViewBaselineSeeds(
+  posts,
+  viewsCutoverAt
+);
 
 console.log(JSON.stringify({
   mode: shouldCommit ? 'commit' : 'dry-run',
   postCount: posts.length,
-  viewsCutoverAt,
+  seedPostCount: postsToSeed.length,
+  skippedPostCount: skippedPosts.length,
+  candidateViewsCutoverAt: viewsCutoverAt,
 }, null, 2));
 
-for (const post of posts) {
+for (const post of skippedPosts) {
   console.log(JSON.stringify({
     _id: post._id,
     slug: post.slug,
-    viewCountBase: post.viewCount ?? 0,
-    viewsCutoverAt,
+    action: 'skip',
+    reason: 'already-seeded',
+    viewCountBase: post.viewCountBase ?? null,
+    viewsCutoverAt: post.viewsCutoverAt ?? null,
+  }));
+}
+
+for (const post of postsToSeed) {
+  console.log(JSON.stringify({
+    _id: post._id,
+    slug: post.slug,
+    action: shouldCommit ? 'seed' : 'would-seed',
+    viewCountBase: post.seedValues.viewCountBase,
+    viewsCutoverAt: post.seedValues.viewsCutoverAt,
   }));
 }
 
@@ -52,20 +73,29 @@ if (!shouldCommit) {
   process.exit(0);
 }
 
+if (postsToSeed.length === 0) {
+  console.log(JSON.stringify({
+    committed: false,
+    noOp: true,
+    seededPostCount: 0,
+    skippedPostCount: skippedPosts.length,
+    reason: 'no-unseeded-posts',
+  }, null, 2));
+  process.exit(0);
+}
+
 let transaction = sanity.transaction();
-for (const post of posts) {
+for (const post of postsToSeed) {
   transaction = transaction.patch(post._id, {
-    set: {
-      viewCountBase: post.viewCount ?? 0,
-      viewsCutoverAt,
-    },
+    setIfMissing: post.seedValues,
   });
 }
 
 const result = await transaction.commit();
 console.log(JSON.stringify({
   committed: true,
-  postCount: posts.length,
+  seededPostCount: postsToSeed.length,
+  skippedPostCount: skippedPosts.length,
   transactionId: result.transactionId,
   viewsCutoverAt,
 }, null, 2));

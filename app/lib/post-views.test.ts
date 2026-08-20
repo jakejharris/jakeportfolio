@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
   fetchPostViewCounts,
+  refreshPostViewsSnapshot,
   type GaDataClient,
   type GaRunReportRequest,
 } from './post-views';
@@ -96,6 +97,91 @@ test('returns an empty map when the GA client fails', async (t) => {
     evt: 'viewcount',
     outcome: 'stale',
     reason: 'mock GA outage',
+    ts: JSON.parse(logs[0]).ts,
+  });
+});
+
+test('cached refresh logs a stale event before rethrowing a GA failure', async (t) => {
+  const logs: string[] = [];
+  t.mock.method(console, 'log', (message: string) => logs.push(message));
+
+  const previousPropertyId = process.env.GA_PROPERTY_ID;
+  const previousServiceAccountJson = process.env.GA_SERVICE_ACCOUNT_JSON;
+  process.env.GA_PROPERTY_ID = '123456789';
+  process.env.GA_SERVICE_ACCOUNT_JSON = JSON.stringify({
+    client_email: 'views@example.com',
+    private_key: 'test-private-key',
+  });
+  t.after(() => {
+    if (previousPropertyId === undefined) {
+      delete process.env.GA_PROPERTY_ID;
+    } else {
+      process.env.GA_PROPERTY_ID = previousPropertyId;
+    }
+    if (previousServiceAccountJson === undefined) {
+      delete process.env.GA_SERVICE_ACCOUNT_JSON;
+    } else {
+      process.env.GA_SERVICE_ACCOUNT_JSON = previousServiceAccountJson;
+    }
+  });
+
+  const client: GaDataClient = {
+    async runReport() {
+      throw new Error('cached GA outage');
+    },
+  };
+
+  await assert.rejects(
+    refreshPostViewsSnapshot(
+      '2026-08-20T19:42:00.000Z',
+      () => client
+    ),
+    /cached GA outage/
+  );
+
+  assert.equal(logs.length, 1);
+  assert.deepEqual(JSON.parse(logs[0]), {
+    evt: 'viewcount',
+    outcome: 'stale',
+    reason: 'cached GA outage',
+    ts: JSON.parse(logs[0]).ts,
+  });
+});
+
+test('cached refresh classifies invalid GA configuration as misconfig', async (t) => {
+  const logs: string[] = [];
+  t.mock.method(console, 'log', (message: string) => logs.push(message));
+
+  const previousPropertyId = process.env.GA_PROPERTY_ID;
+  const previousServiceAccountJson = process.env.GA_SERVICE_ACCOUNT_JSON;
+  process.env.GA_PROPERTY_ID = 'not-a-property-id';
+  process.env.GA_SERVICE_ACCOUNT_JSON = JSON.stringify({
+    client_email: 'views@example.com',
+    private_key: 'test-private-key',
+  });
+  t.after(() => {
+    if (previousPropertyId === undefined) {
+      delete process.env.GA_PROPERTY_ID;
+    } else {
+      process.env.GA_PROPERTY_ID = previousPropertyId;
+    }
+    if (previousServiceAccountJson === undefined) {
+      delete process.env.GA_SERVICE_ACCOUNT_JSON;
+    } else {
+      process.env.GA_SERVICE_ACCOUNT_JSON = previousServiceAccountJson;
+    }
+  });
+
+  await assert.rejects(
+    refreshPostViewsSnapshot('2026-08-20T19:42:00.000Z'),
+    /GA_PROPERTY_ID must be a numeric property ID/
+  );
+
+  assert.equal(logs.length, 1);
+  assert.deepEqual(JSON.parse(logs[0]), {
+    evt: 'viewcount',
+    outcome: 'misconfig',
+    reason: 'GA_PROPERTY_ID must be a numeric property ID',
     ts: JSON.parse(logs[0]).ts,
   });
 });

@@ -64,11 +64,22 @@ const lastSuccessfulSnapshots = new Map<string, {
   counts: PostViewCounts;
   lastSuccessfulFetchAt: string;
 }>();
+const loggedViewCountFailures = new WeakSet<object>();
 
 function logViewCountFailure(
   outcome: 'stale' | 'misconfig',
   error: unknown
 ) {
+  if (
+    (typeof error === 'object' && error !== null) ||
+    typeof error === 'function'
+  ) {
+    if (loggedViewCountFailures.has(error)) {
+      return;
+    }
+    loggedViewCountFailures.add(error);
+  }
+
   console.log(JSON.stringify({
     evt: 'viewcount',
     outcome,
@@ -232,8 +243,12 @@ export async function fetchPostViewCounts(
   }
 }
 
-const getCachedPostViewsSnapshot = unstable_cache(
-  async (cutoverAt: string) => {
+export async function refreshPostViewsSnapshot(
+  cutoverAt: string,
+  clientFactory: (credentials: ServiceAccountCredentials) => GaDataClient =
+    createGaClient
+) {
+  try {
     const propertyId = process.env.GA_PROPERTY_ID;
     const serviceAccountJson = process.env.GA_SERVICE_ACCOUNT_JSON;
 
@@ -245,7 +260,7 @@ const getCachedPostViewsSnapshot = unstable_cache(
 
     const credentials = parseServiceAccountJson(serviceAccountJson);
     const counts = await runPostViewReport(
-      createGaClient(credentials),
+      clientFactory(credentials),
       propertyId,
       cutoverAt
     );
@@ -254,7 +269,17 @@ const getCachedPostViewsSnapshot = unstable_cache(
       counts,
       lastSuccessfulFetchAt: new Date().toISOString(),
     };
-  },
+  } catch (error) {
+    logViewCountFailure(
+      error instanceof ViewCountMisconfiguration ? 'misconfig' : 'stale',
+      error
+    );
+    throw error;
+  }
+}
+
+const getCachedPostViewsSnapshot = unstable_cache(
+  refreshPostViewsSnapshot,
   ['view-counts'],
   { revalidate: GA_REVALIDATE_SECONDS, tags: ['views'] }
 );
