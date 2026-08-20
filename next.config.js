@@ -1,4 +1,15 @@
 /** @type {import('next').NextConfig} */
+if (process.env.VERCEL_ENV === 'production') {
+  const missingGaEnv = ['GA_PROPERTY_ID', 'GA_SERVICE_ACCOUNT_JSON']
+    .filter((name) => !process.env[name]);
+
+  if (missingGaEnv.length > 0) {
+    throw new Error(
+      `Missing required GA4 production environment variables: ${missingGaEnv.join(', ')}`
+    );
+  }
+}
+
 const nextConfig = {
   /* config options here */
   trailingSlash: true,
@@ -24,4 +35,4 @@ const nextConfig = {
   },
 };
 
-module.exports = nextConfig; 
+module.exports = nextConfig;

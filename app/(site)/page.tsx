@@ -3,6 +3,7 @@ import '../css/animations.css'
 import PageLayout from '../components/PageLayout';
 import TransitionLink from '../components/TransitionLink';
 import { sanityFetch } from '../lib/sanity.client';
+import { getPostViewCounts } from '../lib/post-views';
 import { PostSummary } from '../types/sanity';
 import { Eye } from "lucide-react";
 import {
@@ -21,7 +22,8 @@ const query = `*[_type == "post"] | order(featured desc, publishedAt desc) {
   title,
   slug,
   publishedAt,
-  viewCount,
+  viewCountBase,
+  viewsCutoverAt,
   featured,
   excerpt,
   "tags": tags[]->{ _id, title, slug }
@@ -33,6 +35,8 @@ export default async function HomePage() {
     query,
     tags: ['post'],
   });
+  const cutoverAt = posts.find((post) => post.viewsCutoverAt)?.viewsCutoverAt;
+  const gaViewCounts = await getPostViewCounts(cutoverAt);
 
   return (
     <>
@@ -43,7 +47,12 @@ export default async function HomePage() {
       <div className="max-w-none">
         <div className="section-kicker">Writing &amp; work</div>
         <ul className="space-y-2 pb-8">
-          {posts.map((post) => (
+          {posts.map((post) => {
+            const displayedViewCount =
+              (post.viewCountBase ?? 0) +
+              (post.viewsCutoverAt ? (gaViewCounts[post.slug.current] ?? 0) : 0);
+
+            return (
             <li key={post._id} className="relative">
               <HoverCard>
                 <HoverCardTrigger asChild>
@@ -77,7 +86,7 @@ export default async function HomePage() {
                       </div>
                     </div>
                     <div className="ms-4 text-sm text-muted-foreground whitespace-nowrap flex items-center gap-1">
-                      {post.viewCount} <Eye className="h-4 w-4" />
+                      {displayedViewCount} <Eye className="h-4 w-4" />
                     </div>
                   </TransitionLink>
                 </HoverCardTrigger>
@@ -102,7 +111,8 @@ export default async function HomePage() {
                 </HoverCardContent>
               </HoverCard>
             </li>
-          ))}
+            );
+          })}
           {/* <li className="relative w-full !mt-4">
             <div className="text-sm text-muted-foreground w-full text-center">
               <span>More Posts Coming Soon</span>
@@ -114,12 +124,3 @@ export default async function HomePage() {
     </>
   );
 }
-
-/*
-Note on the view counter:
-To make the view counter actually work, we could build a backend API route in Next.js that:
-  1. Receives a request when a blog post is viewed.
-  2. Increments the view count stored in a database (e.g., MongoDB, PostgreSQL, or even a serverless solution like Firebase).
-  3. Returns the updated view count which can be fetched either at page load (using getServerSideProps) or on the client-side (using useEffect).
-This approach ensures that each view is recorded accurately and the counter updates accordingly.
-*/
