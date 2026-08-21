@@ -5,7 +5,19 @@ import { useState } from 'react';
 interface Post {
   _id: string;
   title: string;
-  viewCount: number | null;
+  viewCountBase: number;
+  gaDelta: number;
+  displayedViewCount: number;
+  lastSuccessfulGaFetchAt: string | null;
+  lastSuccessfulGaFetchAgeMs: number | null;
+  stale: boolean;
+}
+
+function formatAge(ageMs: number | null) {
+  if (ageMs === null) return 'never';
+  if (ageMs < 60_000) return `${Math.floor(ageMs / 1000)}s ago`;
+  if (ageMs < 3_600_000) return `${Math.floor(ageMs / 60_000)}m ago`;
+  return `${Math.floor(ageMs / 3_600_000)}h ago`;
 }
 
 export default function ViewAdminPage() {
@@ -33,12 +45,10 @@ export default function ViewAdminPage() {
         throw new Error(result.error || 'Failed to fetch posts');
       }
       const data: Post[] = await response.json();
-      // Initialize viewCount to 0 if null/undefined
-      const postsWithViews = data.map(post => ({ ...post, viewCount: post.viewCount ?? 0 }));
-      setPosts(postsWithViews);
+      setPosts(data);
       // Initialize update amounts
       const initialAmounts: Record<string, string> = {};
-      postsWithViews.forEach(post => {
+      data.forEach(post => {
         initialAmounts[post._id] = '0';
       });
       setUpdateAmounts(initialAmounts);
@@ -82,7 +92,7 @@ export default function ViewAdminPage() {
     const post = posts.find(p => p._id === postId);
     if (!post) return;
 
-    const currentViews = post.viewCount ?? 0;
+    const currentViews = post.viewCountBase;
     const newViewCount = currentViews + changeAmount;
 
     if (newViewCount < 0) {
@@ -90,8 +100,8 @@ export default function ViewAdminPage() {
       return;
     }
 
-    const confirmationMessage = 
-      `This will change the view count for \"${post.title}\" ` +
+    const confirmationMessage =
+      `This will change the view-count baseline for \"${post.title}\" ` +
       `from ${currentViews} to ${newViewCount} (change: ${changeAmount > 0 ? '+' : ''}${changeAmount}). ` +
       `Are you sure?`;
 
@@ -121,7 +131,13 @@ export default function ViewAdminPage() {
       // Update local state on success
       setPosts(prevPosts =>
         prevPosts.map(p =>
-          p._id === postId ? { ...p, viewCount: result.viewCount } : p
+          p._id === postId
+            ? {
+              ...p,
+              viewCountBase: result.viewCountBase,
+              displayedViewCount: result.viewCountBase + p.gaDelta,
+            }
+            : p
         )
       );
       setUpdateAmounts(prev => ({ ...prev, [postId]: '0' })); // Reset input
@@ -172,7 +188,22 @@ export default function ViewAdminPage() {
           {posts.map(post => (
             <li key={post._id} className="border p-4 rounded shadow">
               <h2 className="text-xl font-semibold mb-2">{post.title}</h2>
-              <p className="mb-2">Current Views: {post.viewCount ?? 'N/A'}</p>
+              <dl className="mb-3 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+                <dt>Baseline</dt>
+                <dd>{post.viewCountBase}</dd>
+                <dt>GA4 delta</dt>
+                <dd>{post.gaDelta}</dd>
+                <dt>Displayed views</dt>
+                <dd>{post.displayedViewCount}</dd>
+                <dt>Last successful GA fetch</dt>
+                <dd title={post.lastSuccessfulGaFetchAt ?? undefined}>
+                  {formatAge(post.lastSuccessfulGaFetchAgeMs)}
+                </dd>
+                <dt>GA status</dt>
+                <dd className={post.stale ? 'text-amber-600' : 'text-green-600'}>
+                  {post.stale ? 'stale' : 'healthy'}
+                </dd>
+              </dl>
               <div className="flex items-center space-x-2">
                 <label htmlFor={`amount-${post._id}`} className="sr-only">Amount to change</label>
                 <input

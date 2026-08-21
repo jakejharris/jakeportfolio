@@ -404,6 +404,19 @@ export default {
       readOnly: true
     },
     {
+      name: 'viewCountBase',
+      title: 'View Count Baseline',
+      type: 'number',
+      description: 'Sanity view count captured at the GA4 cutover.',
+      validation: (Rule: any) => Rule.integer().min(0)
+    },
+    {
+      name: 'viewsCutoverAt',
+      title: 'Views Cutover At',
+      type: 'datetime',
+      description: 'Boundary between the Sanity baseline and GA4 pageviews.'
+    },
+    {
       name: 'seo',
       title: 'SEO',
       type: 'object',
@@ -467,4 +480,4 @@ export default {
       ]
     }
   ]
-} 
+}

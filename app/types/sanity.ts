@@ -33,6 +33,8 @@ export interface PostSummary extends SanityDocument {
   slug: Slug;
   publishedAt: string;
   viewCount: number;
+  viewCountBase?: number;
+  viewsCutoverAt?: string;
   featured?: boolean;
   excerpt?: string;
   tags?: Tag[];
@@ -66,4 +68,4 @@ export interface SEO {
   metaTitle?: string;
   metaDescription?: string;
   shareImage?: SanityImageSource; // Share image using proper image type
-} 
+}
