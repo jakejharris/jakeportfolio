@@ -2,6 +2,7 @@ import '@/app/css/animations.css';
 import PageLayout from '@/app/components/PageLayout';
 import Image from 'next/image';
 import { sanityFetch, urlFor } from '@/app/lib/sanity.client';
+import { getLivePostViewCounts } from '@/app/lib/live-post-views';
 import { draftRenderPerspective, draftSanityFetch } from '@/app/lib/sanity.draft-client';
 import { getDraftsConfigStatus, isDraftsAuthed } from '@/app/lib/drafts-auth';
 import { PortableText, PortableTextReactComponents } from '@portabletext/react';
@@ -14,12 +15,12 @@ import InteractiveBlock from '@/app/components/blog-components/InteractiveBlock'
 import { Button } from '@/app/components/ui/button';
 import React from 'react';
 import ScrollToTop from '@/app/components/ScrollToTop';
-import dynamic from 'next/dynamic';
+import nextDynamic from 'next/dynamic';
 import TableOfContents from '@/app/components/TableOfContents';
 import TagPill from '@/app/components/TagPill';
 import type { Metadata } from 'next';
 
-export const revalidate = 60;
+export const dynamic = 'force-dynamic';
 
 // Generate dynamic metadata for each post
 export async function generateMetadata({
@@ -86,7 +87,7 @@ export async function generateMetadata({
 }
 
 // Create a separate client component for the syntax highlighter
-const CodeHighlighter = dynamic(() => import('@/app/components/CodeHighlighter'), { ssr: true });
+const CodeHighlighter = nextDynamic(() => import('@/app/components/CodeHighlighter'), { ssr: true });
 
 // Query to fetch a single post by slug
 const query = `*[_type == "post" && slug.current == $slug][0] {
@@ -99,6 +100,7 @@ const query = `*[_type == "post" && slug.current == $slug][0] {
   content,
   excerpt,
   viewCount,
+  viewCountBase,
   externalLinks,
   seo { metaTitle, metaDescription, shareImage },
   "tags": tags[]->{ _id, title, slug }
@@ -439,6 +441,9 @@ export default async function PostPage({ params }: PageParams) {
   }
 
   const displayDate = post.publishedAt || post._updatedAt;
+  const liveViewCounts = await getLivePostViewCounts([slug]);
+  const displayedViewCount =
+    liveViewCounts[slug] ?? post.viewCountBase ?? post.viewCount ?? 0;
 
   // Build image URL for JSON-LD
   const imageUrl = post.mainImage?.asset
@@ -516,7 +521,7 @@ export default async function PostPage({ params }: PageParams) {
                 })}
               </time>
             )}
-            <ViewCounter slug={slug} initialCount={post.viewCount ?? 0} />
+            <ViewCounter slug={slug} initialCount={displayedViewCount} />
 
             {post.tags && post.tags.length > 0 && (
               <div className="flex gap-2">
