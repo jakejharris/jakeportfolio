@@ -88,16 +88,56 @@ function logViewCountFailure(
   }));
 }
 
-function getGaStartDate(cutoverAt: string): string {
+const DEFAULT_GA_PROPERTY_TIME_ZONE = 'America/Chicago';
+
+type GaDateRange = { startDate: string; endDate: string };
+
+function getGaDateRange(
+  cutoverAt: string,
+  now: Date,
+  timeZone: string
+): GaDateRange | null {
   const cutover = new Date(cutoverAt);
   if (!Number.isFinite(cutover.getTime())) {
     throw new ViewCountMisconfiguration('viewsCutoverAt is missing or invalid');
   }
 
+  let formatter: Intl.DateTimeFormat;
+  try {
+    formatter = new Intl.DateTimeFormat('en-US', {
+      timeZone,
+      year: 'numeric',
+      month: 'numeric',
+      day: 'numeric',
+    });
+  } catch (error) {
+    if (error instanceof RangeError) {
+      throw new ViewCountMisconfiguration('GA_PROPERTY_TIME_ZONE is invalid');
+    }
+    throw error;
+  }
+
+  const localDay = (date: Date) => {
+    const parts = formatter.formatToParts(date);
+    const read = (type: Intl.DateTimeFormatPartTypes) =>
+      Number(parts.find((part) => part.type === type)?.value);
+    return { year: read('year'), month: read('month'), day: read('day') };
+  };
+
+  const formatDay = (year: number, month: number, day: number) => {
+    const utc = new Date(Date.UTC(year, month - 1, day));
+    const pad = (value: number) => String(value).padStart(2, '0');
+    return `${utc.getUTCFullYear()}-${pad(utc.getUTCMonth() + 1)}-${pad(utc.getUTCDate())}`;
+  };
+
   // The baseline includes all views through the seed day. GA starts on the
-  // following day so that the cutover day cannot be counted twice.
-  cutover.setUTCDate(cutover.getUTCDate() + 1);
-  return cutover.toISOString().slice(0, 10);
+  // following property-local calendar day so the cutover day is not double counted.
+  const cutoverDay = localDay(cutover);
+  const startDate = formatDay(cutoverDay.year, cutoverDay.month, cutoverDay.day + 1);
+  const todayDay = localDay(now);
+  const endDate = formatDay(todayDay.year, todayDay.month, todayDay.day);
+
+  return startDate > endDate ? null : { startDate, endDate };
 }
 
 function normalizePropertyId(propertyId: string): string {
@@ -155,11 +195,11 @@ function createGaClient(credentials: ServiceAccountCredentials): GaDataClient {
 
 function buildRunReportRequest(
   propertyId: string,
-  cutoverAt: string
+  range: GaDateRange
 ): GaRunReportRequest {
   return {
     property: `properties/${normalizePropertyId(propertyId)}`,
-    dateRanges: [{ startDate: getGaStartDate(cutoverAt), endDate: 'today' }],
+    dateRanges: [{ startDate: range.startDate, endDate: range.endDate }],
     dimensions: [{ name: 'hostName' }, { name: 'pagePath' }],
     metrics: [{ name: 'screenPageViews' }],
     dimensionFilter: {
@@ -219,10 +259,10 @@ export function parsePostViewCounts(response: GaRunReportResponse): PostViewCoun
 async function runPostViewReport(
   client: GaDataClient,
   propertyId: string,
-  cutoverAt: string
+  range: GaDateRange
 ): Promise<PostViewCounts> {
   const response = await client.runReport(
-    buildRunReportRequest(propertyId, cutoverAt)
+    buildRunReportRequest(propertyId, range)
   );
   return parsePostViewCounts(response);
 }
@@ -230,10 +270,19 @@ async function runPostViewReport(
 export async function fetchPostViewCounts(
   client: GaDataClient,
   propertyId: string,
-  cutoverAt: string
+  cutoverAt: string,
+  now: Date = new Date()
 ): Promise<PostViewCounts> {
   try {
-    return await runPostViewReport(client, propertyId, cutoverAt);
+    const range = getGaDateRange(
+      cutoverAt,
+      now,
+      process.env.GA_PROPERTY_TIME_ZONE || DEFAULT_GA_PROPERTY_TIME_ZONE
+    );
+    if (!range) {
+      return {};
+    }
+    return await runPostViewReport(client, propertyId, range);
   } catch (error) {
     logViewCountFailure(
       error instanceof ViewCountMisconfiguration ? 'misconfig' : 'stale',
@@ -246,7 +295,8 @@ export async function fetchPostViewCounts(
 export async function refreshPostViewsSnapshot(
   cutoverAt: string,
   clientFactory: (credentials: ServiceAccountCredentials) => GaDataClient =
-    createGaClient
+    createGaClient,
+  now: Date = new Date()
 ) {
   try {
     const propertyId = process.env.GA_PROPERTY_ID;
@@ -259,15 +309,31 @@ export async function refreshPostViewsSnapshot(
     }
 
     const credentials = parseServiceAccountJson(serviceAccountJson);
+    normalizePropertyId(propertyId);
+    const range = getGaDateRange(
+      cutoverAt,
+      now,
+      process.env.GA_PROPERTY_TIME_ZONE || DEFAULT_GA_PROPERTY_TIME_ZONE
+    );
+
+    // The cutover's next property-local day has not arrived yet: a successful,
+    // fresh zero-delta refresh rather than a GA call or a stale warning.
+    if (!range) {
+      return {
+        counts: {},
+        lastSuccessfulFetchAt: now.toISOString(),
+      };
+    }
+
     const counts = await runPostViewReport(
       clientFactory(credentials),
       propertyId,
-      cutoverAt
+      range
     );
 
     return {
       counts,
-      lastSuccessfulFetchAt: new Date().toISOString(),
+      lastSuccessfulFetchAt: now.toISOString(),
     };
   } catch (error) {
     logViewCountFailure(

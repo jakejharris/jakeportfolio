@@ -3,7 +3,7 @@ import '../css/animations.css'
 import PageLayout from '../components/PageLayout';
 import TransitionLink from '../components/TransitionLink';
 import { sanityFetch } from '../lib/sanity.client';
-import { getPostViewCounts } from '../lib/post-views';
+import { getLivePostViewCounts } from '../lib/live-post-views';
 import { PostSummary } from '../types/sanity';
 import { Eye } from "lucide-react";
 import {
@@ -22,8 +22,8 @@ const query = `*[_type == "post"] | order(featured desc, publishedAt desc) {
   title,
   slug,
   publishedAt,
+  viewCount,
   viewCountBase,
-  viewsCutoverAt,
   featured,
   excerpt,
   "tags": tags[]->{ _id, title, slug }
@@ -35,8 +35,9 @@ export default async function HomePage() {
     query,
     tags: ['post'],
   });
-  const cutoverAt = posts.find((post) => post.viewsCutoverAt)?.viewsCutoverAt;
-  const gaViewCounts = await getPostViewCounts(cutoverAt);
+  const liveViewCounts = await getLivePostViewCounts(
+    posts.map((post) => post.slug.current)
+  );
 
   return (
     <>
@@ -49,8 +50,10 @@ export default async function HomePage() {
         <ul className="space-y-2 pb-8">
           {posts.map((post) => {
             const displayedViewCount =
-              (post.viewCountBase ?? 0) +
-              (post.viewsCutoverAt ? (gaViewCounts[post.slug.current] ?? 0) : 0);
+              liveViewCounts[post.slug.current] ??
+              post.viewCountBase ??
+              post.viewCount ??
+              0;
 
             return (
             <li key={post._id} className="relative">

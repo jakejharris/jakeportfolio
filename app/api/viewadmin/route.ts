@@ -2,11 +2,13 @@ import { timingSafeEqual } from 'node:crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { client, writeClient } from '@/app/lib/sanity.client';
 import { getPostViewsSnapshot } from '@/app/lib/post-views';
+import { getLivePostViewCounts, getPostViewId } from '@/app/lib/live-post-views';
 
 type ViewAdminPost = {
   _id: string;
   title: string;
   slug: { current: string };
+  viewCount?: number;
   viewCountBase?: number;
   viewsCutoverAt?: string;
 };
@@ -45,12 +47,16 @@ export async function GET(request: NextRequest) {
         _id,
         title,
         slug,
+        viewCount,
         viewCountBase,
         viewsCutoverAt
       } | order(title asc)`
     );
     const cutoverAt = posts.find((post) => post.viewsCutoverAt)?.viewsCutoverAt;
-    const gaSnapshot = await getPostViewsSnapshot(cutoverAt);
+    const [gaSnapshot, liveViewCounts] = await Promise.all([
+      getPostViewsSnapshot(cutoverAt),
+      getLivePostViewCounts(posts.map((post) => post.slug.current)),
+    ]);
 
     return NextResponse.json(posts.map((post) => {
       const viewCountBase = post.viewCountBase ?? 0;
@@ -61,8 +67,9 @@ export async function GET(request: NextRequest) {
       return {
         ...post,
         viewCountBase,
+        liveViewCount:
+          liveViewCounts[post.slug.current] ?? post.viewCountBase ?? post.viewCount ?? 0,
         gaDelta,
-        displayedViewCount: viewCountBase + gaDelta,
         lastSuccessfulGaFetchAt: gaSnapshot.lastSuccessfulFetchAt,
         lastSuccessfulGaFetchAgeMs: gaSnapshot.lastSuccessfulFetchAgeMs,
         stale: gaSnapshot.stale,
@@ -93,17 +100,24 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const post = await client.fetch<{ viewCountBase?: number } | null>(
-      `*[_type == "post" && _id == $postId][0]{ viewCountBase }`,
+    const post = await client.fetch<{
+      slug?: { current: string };
+      viewCount?: number;
+      viewCountBase?: number;
+    } | null>(
+      `*[_type == "post" && _id == $postId][0]{ slug, viewCount, viewCountBase }`,
       { postId }
     );
 
-    if (!post) {
+    if (!post?.slug?.current) {
       return NextResponse.json({ error: 'Post not found' }, { status: 404 });
     }
 
-    const currentViews = post.viewCountBase ?? 0;
-    const newViewCount = currentViews + changeAmount;
+    const slug = post.slug.current;
+    const id = getPostViewId(slug);
+    const baseline = post.viewCountBase ?? post.viewCount ?? 0;
+    const liveViewCounts = await getLivePostViewCounts([slug]);
+    const newViewCount = (liveViewCounts[slug] ?? baseline) + changeAmount;
 
     if (newViewCount < 0) {
       return NextResponse.json(
@@ -112,13 +126,21 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const updatedPost = await writeClient
-      .patch(postId)
-      .set({ viewCountBase: newViewCount })
-      .commit();
+    const documents = (await writeClient
+      .transaction()
+      .createIfNotExists({ _id: id, _type: 'postView', count: baseline })
+      .patch(id, (patch) => patch.inc({ count: changeAmount }))
+      .commit({ visibility: 'sync', returnDocuments: true })) as Array<{
+      _id: string;
+      count?: number;
+    }>;
+
+    const committed = documents
+      .filter((doc) => doc._id === id && typeof doc.count === 'number')
+      .at(-1)?.count;
 
     return NextResponse.json({
-      viewCountBase: updatedPost.viewCountBase,
+      viewCount: typeof committed === 'number' ? committed : newViewCount,
     });
   } catch (error: unknown) {
     console.error('Error updating view count:', error);

@@ -6,8 +6,8 @@ interface Post {
   _id: string;
   title: string;
   viewCountBase: number;
+  liveViewCount: number;
   gaDelta: number;
-  displayedViewCount: number;
   lastSuccessfulGaFetchAt: string | null;
   lastSuccessfulGaFetchAgeMs: number | null;
   stale: boolean;
@@ -92,7 +92,7 @@ export default function ViewAdminPage() {
     const post = posts.find(p => p._id === postId);
     if (!post) return;
 
-    const currentViews = post.viewCountBase;
+    const currentViews = post.liveViewCount;
     const newViewCount = currentViews + changeAmount;
 
     if (newViewCount < 0) {
@@ -101,7 +101,7 @@ export default function ViewAdminPage() {
     }
 
     const confirmationMessage =
-      `This will change the view-count baseline for \"${post.title}\" ` +
+      `This will change the live view count for \"${post.title}\" ` +
       `from ${currentViews} to ${newViewCount} (change: ${changeAmount > 0 ? '+' : ''}${changeAmount}). ` +
       `Are you sure?`;
 
@@ -132,11 +132,7 @@ export default function ViewAdminPage() {
       setPosts(prevPosts =>
         prevPosts.map(p =>
           p._id === postId
-            ? {
-              ...p,
-              viewCountBase: result.viewCountBase,
-              displayedViewCount: result.viewCountBase + p.gaDelta,
-            }
+            ? { ...p, liveViewCount: result.viewCount }
             : p
         )
       );
@@ -191,10 +187,10 @@ export default function ViewAdminPage() {
               <dl className="mb-3 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
                 <dt>Baseline</dt>
                 <dd>{post.viewCountBase}</dd>
-                <dt>GA4 delta</dt>
+                <dt>Live displayed count</dt>
+                <dd>{post.liveViewCount}</dd>
+                <dt>GA4 views since cutover</dt>
                 <dd>{post.gaDelta}</dd>
-                <dt>Displayed views</dt>
-                <dd>{post.displayedViewCount}</dd>
                 <dt>Last successful GA fetch</dt>
                 <dd title={post.lastSuccessfulGaFetchAt ?? undefined}>
                   {formatAge(post.lastSuccessfulGaFetchAgeMs)}

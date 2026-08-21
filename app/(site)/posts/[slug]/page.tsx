@@ -2,7 +2,7 @@ import '@/app/css/animations.css';
 import PageLayout from '@/app/components/PageLayout';
 import Image from 'next/image';
 import { sanityFetch, urlFor } from '@/app/lib/sanity.client';
-import { getPostViewCounts } from '@/app/lib/post-views';
+import { getLivePostViewCounts } from '@/app/lib/live-post-views';
 import { draftRenderPerspective, draftSanityFetch } from '@/app/lib/sanity.draft-client';
 import { getDraftsConfigStatus, isDraftsAuthed } from '@/app/lib/drafts-auth';
 import { PortableText, PortableTextReactComponents } from '@portabletext/react';
@@ -99,6 +99,7 @@ const query = `*[_type == "post" && slug.current == $slug][0] {
   mainImage,
   content,
   excerpt,
+  viewCount,
   viewCountBase,
   viewsCutoverAt,
   externalLinks,
@@ -441,9 +442,9 @@ export default async function PostPage({ params }: PageParams) {
   }
 
   const displayDate = post.publishedAt || post._updatedAt;
-  const gaViewCounts = await getPostViewCounts(post.viewsCutoverAt);
-  const displayedViewCount =
-    (post.viewCountBase ?? 0) + (gaViewCounts[slug] ?? 0);
+  const liveViewCounts = await getLivePostViewCounts([slug]);
+  const seedViewCount = post.viewCountBase ?? post.viewCount ?? 0;
+  const displayedViewCount = liveViewCounts[slug] ?? seedViewCount;
 
   // Build image URL for JSON-LD
   const imageUrl = post.mainImage?.asset
@@ -521,7 +522,7 @@ export default async function PostPage({ params }: PageParams) {
                 })}
               </time>
             )}
-            <ViewCounter count={displayedViewCount} />
+            <ViewCounter slug={slug} initialCount={displayedViewCount} seedCount={seedViewCount} />
 
             {post.tags && post.tags.length > 0 && (
               <div className="flex gap-2">

@@ -21,4 +21,10 @@ Complete these steps before merging the GA4 view-counter change.
 5. Before merging, use GA4 Query Explorer with dimensions `hostName` and `pagePath` and metric `screenPageViews`. Confirm which trailing-slash form GA records, confirm preview hosts are excluded, and verify a non-zero GA delta for at least three established posts. The implementation accepts and sums both `/posts/<slug>` and `/posts/<slug>/`.
 6. Merge only after the credentials, retention setting, seed, and Query Explorer checks are complete. Without working GA credentials the read path safely renders the Sanity baseline and logs a stale/misconfiguration event; credentials are set first so a deployment cannot silently remain baseline-only.
 
-GA4 processing can lag by hours and the site caches the batched report for five minutes, so the displayed number is not expected to increment immediately on refresh.
+GA4 processing can lag by hours and the site caches the batched report for five minutes, so the GA delta is not expected to increment immediately on refresh.
+
+## Live counter and timezone notes
+
+- GA4 is analytics/diagnostic-only: public pages never add the GA delta to displayed counts. Displayed counts come from `postView` documents (`views.<slug>`), falling back to `viewCountBase` then `viewCount`; view-admin shows live and GA4 values side by side.
+- GA date ranges use the property's IANA timezone, defaulting to `America/Chicago`; set `GA_PROPERTY_TIME_ZONE` only if the property differs. The next-day boundary is computed in property-local time, so a late-evening Central cutover starts GA querying the following local day.
+- Roll out the live counter with `VIEW_WRITES_ENABLED=0` (POST /api/views returns 204), then set `1` after cold reads are verified to fall back to the baseline. Set back to `0`/unset to stop writes instantly; reads keep showing the last committed totals.

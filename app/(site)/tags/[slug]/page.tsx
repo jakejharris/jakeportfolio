@@ -3,7 +3,7 @@ import '@/app/css/animations.css';
 import PageLayout from '@/app/components/PageLayout';
 import TransitionLink from '@/app/components/TransitionLink';
 import { sanityFetch } from '@/app/lib/sanity.client';
-import { getPostViewCounts } from '@/app/lib/post-views';
+import { getLivePostViewCounts } from '@/app/lib/live-post-views';
 import { Eye } from 'lucide-react';
 import {
   HoverCard,
@@ -32,8 +32,8 @@ type TagPost = {
   excerpt?: string;
   featured?: boolean;
   mainImage?: { asset: { _ref: string } };
+  viewCount?: number;
   viewCountBase?: number;
-  viewsCutoverAt?: string;
   tags?: { title: string; slug: { current: string } }[];
 };
 
@@ -103,15 +103,16 @@ export default async function TagPage({
       excerpt,
       featured,
       mainImage,
+      viewCount,
       viewCountBase,
-      viewsCutoverAt,
       "tags": tags[]->{title, slug, color}
     }`,
     params: { tagId: tag._id },
     tags: ['post'],
   });
-  const cutoverAt = posts.find((post) => post.viewsCutoverAt)?.viewsCutoverAt;
-  const gaViewCounts = await getPostViewCounts(cutoverAt);
+  const liveViewCounts = await getLivePostViewCounts(
+    posts.map((post) => post.slug.current)
+  );
 
   return (
     <>
@@ -132,8 +133,10 @@ export default async function TagPage({
           <ul className="page-enter-2 space-y-2 mb-8">
             {posts.map((post) => {
               const displayedViewCount =
-                (post.viewCountBase ?? 0) +
-                (post.viewsCutoverAt ? (gaViewCounts[post.slug.current] ?? 0) : 0);
+                liveViewCounts[post.slug.current] ??
+                post.viewCountBase ??
+                post.viewCount ??
+                0;
 
               return (
               <li key={post._id} className="relative">
