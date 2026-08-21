@@ -56,9 +56,8 @@ This is a Next.js 15 portfolio and blog site using the App Router with Sanity CM
 ### API Routes
 
 - `POST /api/revalidate` - Sanity webhook handler. Validates `x-webhook-secret` header, then calls `revalidateTag` and `revalidatePath`
-- `POST /api/views` - Increments `viewCount` on a post by slug using `writeClient.patch().inc()`
-- `GET /api/viewadmin` - Lists all posts with view counts (no auth)
-- `POST /api/viewadmin` - Adjusts a specific post's view count by a delta amount (no auth, relies on obscurity)
+- `GET /api/viewadmin` - Authenticated view-count baseline and GA4 health report
+- `POST /api/viewadmin` - Authenticated correction of a post's `viewCountBase`
 
 ### Styling
 
@@ -85,7 +84,8 @@ This is a Next.js 15 portfolio and blog site using the App Router with Sanity CM
 - `tags` — array of references to `tag` documents
 - `content` — Portable Text supporting: block text (h1–h4, blockquote, code), inline images, youtube embeds, codeSnippet (10 languages), imageCarousel, callToAction, quoteBlock, divider
 - `externalLinks` — array of `{title, url, icon}` where icon is from: FaGithub, FaGlobe, FaYoutube, FaLinkedin, FaNpm, FaCodepen, FaFigma, FaDribbble, FaStackOverflow, FaMedium
-- `viewCount` — number, read-only in Studio, incremented via `/api/views`
+- `viewCount` — legacy read-only number retained as the pre-cutover audit trail
+- `viewCountBase` / `viewsCutoverAt` — Sanity baseline and GA4 cutover boundary
 - `seo` — object with `metaTitle` (max 60), `metaDescription` (max 160), `shareImage`
 
 **Tag** (`tag` document type):
@@ -105,9 +105,11 @@ This is a Next.js 15 portfolio and blog site using the App Router with Sanity CM
 NEXT_PUBLIC_SANITY_PROJECT_ID    # Sanity project ID (required)
 NEXT_PUBLIC_SANITY_DATASET       # Dataset (default: 'production')
 NEXT_PUBLIC_SANITY_API_VERSION   # API version (default: '2023-05-03')
-SANITY_API_WRITE_TOKEN           # Write token for mutations (required for view counting)
+SANITY_API_WRITE_TOKEN           # Write token for admin baseline corrections and seeding
 SANITY_WEBHOOK_SECRET            # Webhook validation secret (required for revalidation)
 NEXT_PUBLIC_GOOGLE_ANALYTICS_ID  # Google Analytics GA4 measurement ID
+GA_PROPERTY_ID                   # Numeric GA4 Data API property ID
+GA_SERVICE_ACCOUNT_JSON          # Service-account JSON with Viewer access to the property
 ```
 
 ## Sanity Integration Notes
