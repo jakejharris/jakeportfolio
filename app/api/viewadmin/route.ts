@@ -1,6 +1,17 @@
 import { timingSafeEqual } from 'node:crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { client, writeClient } from '@/app/lib/sanity.client';
+import { getPostViewsSnapshot } from '@/app/lib/post-views';
+import { getLivePostViewCounts, getPostViewId } from '@/app/lib/live-post-views';
+
+type ViewAdminPost = {
+  _id: string;
+  title: string;
+  slug: { current: string };
+  viewCount?: number;
+  viewCountBase?: number;
+  viewsCutoverAt?: string;
+};
 
 function getAuthFailure(request: NextRequest): NextResponse | null {
   const token = process.env.VIEWADMIN_TOKEN;
@@ -24,7 +35,6 @@ function getAuthFailure(request: NextRequest): NextResponse | null {
   return null;
 }
 
-// Fetch all posts (title, slug, _id, viewCount)
 export async function GET(request: NextRequest) {
   const authFailure = getAuthFailure(request);
   if (authFailure) {
@@ -32,10 +42,39 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const posts = await client.fetch(
-      `*[_type == \"post\"]{ _id, title, slug, viewCount } | order(title asc)`
+    const posts = await client.fetch<ViewAdminPost[]>(
+      `*[_type == "post"]{
+        _id,
+        title,
+        slug,
+        viewCount,
+        viewCountBase,
+        viewsCutoverAt
+      } | order(title asc)`
     );
-    return NextResponse.json(posts);
+    const cutoverAt = posts.find((post) => post.viewsCutoverAt)?.viewsCutoverAt;
+    const [gaSnapshot, liveViewCounts] = await Promise.all([
+      getPostViewsSnapshot(cutoverAt),
+      getLivePostViewCounts(posts.map((post) => post.slug.current)),
+    ]);
+
+    return NextResponse.json(posts.map((post) => {
+      const viewCountBase = post.viewCountBase ?? 0;
+      const gaDelta = post.viewsCutoverAt
+        ? (gaSnapshot.counts[post.slug.current] ?? 0)
+        : 0;
+
+      return {
+        ...post,
+        viewCountBase,
+        liveViewCount:
+          liveViewCounts[post.slug.current] ?? post.viewCountBase ?? post.viewCount ?? 0,
+        gaDelta,
+        lastSuccessfulGaFetchAt: gaSnapshot.lastSuccessfulFetchAt,
+        lastSuccessfulGaFetchAgeMs: gaSnapshot.lastSuccessfulFetchAgeMs,
+        stale: gaSnapshot.stale,
+      };
+    }));
   } catch (error) {
     console.error('Error fetching posts:', error);
     return NextResponse.json(
@@ -45,7 +84,6 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// Update view count for a specific post
 export async function POST(request: NextRequest) {
   const authFailure = getAuthFailure(request);
   if (authFailure) {
@@ -55,25 +93,31 @@ export async function POST(request: NextRequest) {
   try {
     const { postId, changeAmount } = await request.json();
 
-    if (!postId || typeof changeAmount !== 'number') {
+    if (!postId || !Number.isInteger(changeAmount)) {
       return NextResponse.json(
-        { error: 'postId and changeAmount (number) are required' },
+        { error: 'postId and changeAmount (integer) are required' },
         { status: 400 }
       );
     }
 
-    // Fetch the current view count first to prevent going negative
-    const post = await client.fetch(
-      `*[_type == \"post\" && _id == $postId][0]{ viewCount }`,
+    const post = await client.fetch<{
+      slug?: { current: string };
+      viewCount?: number;
+      viewCountBase?: number;
+    } | null>(
+      `*[_type == "post" && _id == $postId][0]{ slug, viewCount, viewCountBase }`,
       { postId }
     );
 
-    if (!post) {
+    if (!post?.slug?.current) {
       return NextResponse.json({ error: 'Post not found' }, { status: 404 });
     }
 
-    const currentViews = post.viewCount || 0;
-    const newViewCount = currentViews + changeAmount;
+    const slug = post.slug.current;
+    const id = getPostViewId(slug);
+    const baseline = post.viewCountBase ?? post.viewCount ?? 0;
+    const liveViewCounts = await getLivePostViewCounts([slug]);
+    const newViewCount = (liveViewCounts[slug] ?? baseline) + changeAmount;
 
     if (newViewCount < 0) {
       return NextResponse.json(
@@ -82,20 +126,27 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Increment/decrement the view count using the writeClient
-    const updatedPost = await writeClient
-      .patch(postId)
-      .set({ viewCount: newViewCount }) // Use set for precise control
-      .commit();
+    const documents = (await writeClient
+      .transaction()
+      .createIfNotExists({ _id: id, _type: 'postView', count: baseline })
+      .patch(id, (patch) => patch.inc({ count: changeAmount }))
+      .commit({ visibility: 'sync', returnDocuments: true })) as Array<{
+      _id: string;
+      count?: number;
+    }>;
+
+    const committed = documents
+      .filter((doc) => doc._id === id && typeof doc.count === 'number')
+      .at(-1)?.count;
 
     return NextResponse.json({
-      viewCount: updatedPost.viewCount,
+      viewCount: typeof committed === 'number' ? committed : newViewCount,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error updating view count:', error);
-    // Provide more specific Sanity error if available
-    const errorMessage = error.responseBody || 'Failed to update view count';
-    const statusCode = error.statusCode || 500;
+    const sanityError = error as { responseBody?: string; statusCode?: number };
+    const errorMessage = sanityError.responseBody || 'Failed to update view count';
+    const statusCode = sanityError.statusCode || 500;
     return NextResponse.json(
       { error: errorMessage },
       { status: statusCode }

@@ -3,6 +3,7 @@ import '../css/animations.css'
 import PageLayout from '../components/PageLayout';
 import TransitionLink from '../components/TransitionLink';
 import { sanityFetch } from '../lib/sanity.client';
+import { getLivePostViewCounts } from '../lib/live-post-views';
 import { PostSummary } from '../types/sanity';
 import { Eye } from "lucide-react";
 import {
@@ -15,6 +16,8 @@ import PixelFluidBackground from '../components/PixelFluidBackground';
 import TagPill from '../components/TagPill';
 import Hero from '../components/Hero';
 
+export const dynamic = 'force-dynamic';
+
 // Query to fetch posts from Sanity
 const query = `*[_type == "post"] | order(featured desc, publishedAt desc) {
   _id,
@@ -22,6 +25,7 @@ const query = `*[_type == "post"] | order(featured desc, publishedAt desc) {
   slug,
   publishedAt,
   viewCount,
+  viewCountBase,
   featured,
   excerpt,
   "tags": tags[]->{ _id, title, slug }
@@ -33,6 +37,9 @@ export default async function HomePage() {
     query,
     tags: ['post'],
   });
+  const liveViewCounts = await getLivePostViewCounts(
+    posts.map((post) => post.slug.current)
+  );
 
   return (
     <>
@@ -43,7 +50,14 @@ export default async function HomePage() {
       <div className="max-w-none">
         <div className="section-kicker">Writing &amp; work</div>
         <ul className="space-y-2 pb-8">
-          {posts.map((post) => (
+          {posts.map((post) => {
+            const displayedViewCount =
+              liveViewCounts[post.slug.current] ??
+              post.viewCountBase ??
+              post.viewCount ??
+              0;
+
+            return (
             <li key={post._id} className="relative">
               <HoverCard>
                 <HoverCardTrigger asChild>
@@ -77,7 +91,7 @@ export default async function HomePage() {
                       </div>
                     </div>
                     <div className="ms-4 text-sm text-muted-foreground whitespace-nowrap flex items-center gap-1">
-                      {post.viewCount ?? 0} <Eye className="h-4 w-4" />
+                      {displayedViewCount} <Eye className="h-4 w-4" />
                     </div>
                   </TransitionLink>
                 </HoverCardTrigger>
@@ -102,7 +116,8 @@ export default async function HomePage() {
                 </HoverCardContent>
               </HoverCard>
             </li>
-          ))}
+            );
+          })}
           {/* <li className="relative w-full !mt-4">
             <div className="text-sm text-muted-foreground w-full text-center">
               <span>More Posts Coming Soon</span>

@@ -3,6 +3,7 @@ import '@/app/css/animations.css';
 import PageLayout from '@/app/components/PageLayout';
 import TransitionLink from '@/app/components/TransitionLink';
 import { sanityFetch } from '@/app/lib/sanity.client';
+import { getLivePostViewCounts } from '@/app/lib/live-post-views';
 import { Eye } from 'lucide-react';
 import {
   HoverCard,
@@ -14,6 +15,8 @@ import PixelFluidBackground from '@/app/components/PixelFluidBackground';
 import TagPill from '@/app/components/TagPill';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
+
+export const dynamic = 'force-dynamic';
 
 type TagData = {
   _id: string;
@@ -32,6 +35,7 @@ type TagPost = {
   featured?: boolean;
   mainImage?: { asset: { _ref: string } };
   viewCount?: number;
+  viewCountBase?: number;
   tags?: { title: string; slug: { current: string } }[];
 };
 
@@ -102,11 +106,15 @@ export default async function TagPage({
       featured,
       mainImage,
       viewCount,
+      viewCountBase,
       "tags": tags[]->{title, slug, color}
     }`,
     params: { tagId: tag._id },
     tags: ['post'],
   });
+  const liveViewCounts = await getLivePostViewCounts(
+    posts.map((post) => post.slug.current)
+  );
 
   return (
     <>
@@ -125,7 +133,14 @@ export default async function TagPage({
           <p className="page-enter-2 text-muted-foreground">No posts found with this tag.</p>
         ) : (
           <ul className="page-enter-2 space-y-2 mb-8">
-            {posts.map((post) => (
+            {posts.map((post) => {
+              const displayedViewCount =
+                liveViewCounts[post.slug.current] ??
+                post.viewCountBase ??
+                post.viewCount ??
+                0;
+
+              return (
               <li key={post._id} className="relative">
                 <HoverCard>
                   <HoverCardTrigger asChild>
@@ -159,7 +174,7 @@ export default async function TagPage({
                         </div>
                       </div>
                       <div className="ms-4 text-sm text-muted-foreground whitespace-nowrap flex items-center gap-1">
-                        {post.viewCount ?? 0} <Eye className="h-4 w-4" />
+                        {displayedViewCount} <Eye className="h-4 w-4" />
                       </div>
                     </TransitionLink>
                   </HoverCardTrigger>
@@ -181,7 +196,8 @@ export default async function TagPage({
                   </HoverCardContent>
                 </HoverCard>
               </li>
-            ))}
+              );
+            })}
           </ul>
         )}
       </div>
