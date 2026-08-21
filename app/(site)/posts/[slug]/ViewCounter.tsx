@@ -5,10 +5,9 @@ import { useEffect, useState } from 'react';
 interface ViewCounterProps {
   slug: string;
   initialCount: number;
-  seedCount: number;
 }
 
-export default function ViewCounter({ slug, initialCount, seedCount }: ViewCounterProps) {
+export default function ViewCounter({ slug, initialCount }: ViewCounterProps) {
   const [count, setCount] = useState(initialCount);
 
   useEffect(() => {
@@ -33,10 +32,10 @@ export default function ViewCounter({ slug, initialCount, seedCount }: ViewCount
     fetch('/api/views/', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ slug, seedCount }),
+      body: JSON.stringify({ slug }),
     })
       .then(async (response) => {
-        if (cancelled || response.status === 204) {
+        if (response.status === 204) {
           return;
         }
         if (!response.ok) {
@@ -61,7 +60,7 @@ export default function ViewCounter({ slug, initialCount, seedCount }: ViewCount
     return () => {
       cancelled = true;
     };
-  }, [slug, initialCount, seedCount]);
+  }, [slug, initialCount]);
 
   return <div>{count} views</div>;
 }

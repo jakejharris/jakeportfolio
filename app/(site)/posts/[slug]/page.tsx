@@ -443,8 +443,8 @@ export default async function PostPage({ params }: PageParams) {
 
   const displayDate = post.publishedAt || post._updatedAt;
   const liveViewCounts = await getLivePostViewCounts([slug]);
-  const seedViewCount = post.viewCountBase ?? post.viewCount ?? 0;
-  const displayedViewCount = liveViewCounts[slug] ?? seedViewCount;
+  const displayedViewCount =
+    liveViewCounts[slug] ?? post.viewCountBase ?? post.viewCount ?? 0;
 
   // Build image URL for JSON-LD
   const imageUrl = post.mainImage?.asset
@@ -522,7 +522,7 @@ export default async function PostPage({ params }: PageParams) {
                 })}
               </time>
             )}
-            <ViewCounter slug={slug} initialCount={displayedViewCount} seedCount={seedViewCount} />
+            <ViewCounter slug={slug} initialCount={displayedViewCount} />
 
             {post.tags && post.tags.length > 0 && (
               <div className="flex gap-2">

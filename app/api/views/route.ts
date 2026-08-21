@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { writeClient } from '@/app/lib/sanity.client';
+import { client, writeClient } from '@/app/lib/sanity.client';
 import { getPostViewId } from '@/app/lib/live-post-views';
 
 const SLUG_PATTERN = /^[a-z0-9][a-z0-9-]{0,127}$/;
@@ -16,19 +16,20 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Request body must be JSON' }, { status: 400 });
   }
 
-  const { slug, seedCount } = (body ?? {}) as { slug?: unknown; seedCount?: unknown };
+  const { slug } = (body ?? {}) as { slug?: unknown };
   if (typeof slug !== 'string' || !SLUG_PATTERN.test(slug)) {
     return NextResponse.json({ error: 'Invalid slug' }, { status: 400 });
-  }
-  if (typeof seedCount !== 'number' || !Number.isSafeInteger(seedCount) || seedCount < 0) {
-    return NextResponse.json(
-      { error: 'seedCount must be a non-negative integer' },
-      { status: 400 }
-    );
   }
 
   const id = getPostViewId(slug);
   try {
+    const post = await client.fetch<{ viewCount?: number } | null>(
+      `*[_type == "post" && slug.current == $slug && !(_id in path("drafts.**"))][0]{ viewCount }`,
+      { slug }, { cache: 'no-store' }
+    );
+    if (!post) return NextResponse.json({ error: 'Post not found' }, { status: 404 });
+    const seedCount = post.viewCount ?? 0;
+
     const documents = (await writeClient
       .transaction()
       .createIfNotExists({ _id: id, _type: 'postView', count: seedCount })
