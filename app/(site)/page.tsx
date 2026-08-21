@@ -3,7 +3,6 @@ import '../css/animations.css'
 import PageLayout from '../components/PageLayout';
 import TransitionLink from '../components/TransitionLink';
 import { sanityFetch } from '../lib/sanity.client';
-import { getPostViewCounts } from '../lib/post-views';
 import { PostSummary } from '../types/sanity';
 import { Eye } from "lucide-react";
 import {
@@ -22,8 +21,7 @@ const query = `*[_type == "post"] | order(featured desc, publishedAt desc) {
   title,
   slug,
   publishedAt,
-  viewCountBase,
-  viewsCutoverAt,
+  viewCount,
   featured,
   excerpt,
   "tags": tags[]->{ _id, title, slug }
@@ -35,8 +33,6 @@ export default async function HomePage() {
     query,
     tags: ['post'],
   });
-  const cutoverAt = posts.find((post) => post.viewsCutoverAt)?.viewsCutoverAt;
-  const gaViewCounts = await getPostViewCounts(cutoverAt);
 
   return (
     <>
@@ -47,12 +43,7 @@ export default async function HomePage() {
       <div className="max-w-none">
         <div className="section-kicker">Writing &amp; work</div>
         <ul className="space-y-2 pb-8">
-          {posts.map((post) => {
-            const displayedViewCount =
-              (post.viewCountBase ?? 0) +
-              (post.viewsCutoverAt ? (gaViewCounts[post.slug.current] ?? 0) : 0);
-
-            return (
+          {posts.map((post) => (
             <li key={post._id} className="relative">
               <HoverCard>
                 <HoverCardTrigger asChild>
@@ -86,7 +77,7 @@ export default async function HomePage() {
                       </div>
                     </div>
                     <div className="ms-4 text-sm text-muted-foreground whitespace-nowrap flex items-center gap-1">
-                      {displayedViewCount} <Eye className="h-4 w-4" />
+                      {post.viewCount ?? 0} <Eye className="h-4 w-4" />
                     </div>
                   </TransitionLink>
                 </HoverCardTrigger>
@@ -111,8 +102,7 @@ export default async function HomePage() {
                 </HoverCardContent>
               </HoverCard>
             </li>
-            );
-          })}
+          ))}
           {/* <li className="relative w-full !mt-4">
             <div className="text-sm text-muted-foreground w-full text-center">
               <span>More Posts Coming Soon</span>

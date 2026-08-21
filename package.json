@@ -7,9 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "typecheck": "tsc --noEmit",
-    "test": "tsx --test app/lib/post-views.test.ts scripts/seed-view-baseline.test.mjs",
-    "seed:view-baseline": "node scripts/seed-view-baseline.mjs"
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@hookform/resolvers": "^4.1.3",
@@ -54,7 +52,6 @@
     "eslint": "8.56.0",
     "eslint-config-next": "13.5.6",
     "geist": "^1.7.0",
-    "google-auth-library": "^9.15.1",
     "input-otp": "^1.4.2",
     "lucide-react": "^0.476.0",
     "next": "^15.5.12",
@@ -90,7 +87,6 @@
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "@types/react-syntax-highlighter": "^15.5.13",
-    "tslib": "^2.6.2",
-    "tsx": "^4.23.12"
+    "tslib": "^2.6.2"
   }
 }
