@@ -53,6 +53,8 @@ export async function POST(request: NextRequest) {
 
     const updatedPost = await writeClient
       .patch(post._id)
+      // viewCount may be null/absent on older docs; seed it so inc() can't fail.
+      .setIfMissing({ viewCount: 0 })
       .inc({ viewCount: 1 })
       .commit();
 
