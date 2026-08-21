@@ -33,6 +33,8 @@ export interface PostSummary extends SanityDocument {
   slug: Slug;
   publishedAt: string;
   viewCount?: number;
+  viewCountBase?: number;
+  viewsCutoverAt?: string;
   featured?: boolean;
   excerpt?: string;
   tags?: Tag[];
