@@ -27,4 +27,5 @@ GA4 processing can lag by hours and the site caches the batched report for five 
 
 - GA4 is analytics/diagnostic-only: public pages never add the GA delta to displayed counts. Displayed counts come from `postView` documents (`views.<slug>`), falling back to `viewCountBase` then `viewCount`; view-admin shows live and GA4 values side by side.
 - GA date ranges use the property's IANA timezone, defaulting to `America/Chicago`; set `GA_PROPERTY_TIME_ZONE` only if the property differs. The next-day boundary is computed in property-local time, so a late-evening Central cutover starts GA querying the following local day.
-- Roll out the live counter with `VIEW_WRITES_ENABLED=0` (POST /api/views returns 204), then set `1` after cold reads are verified to fall back to the baseline. Set back to `0`/unset to stop writes instantly; reads keep showing the last committed totals.
+- Roll out the live counter with `VIEW_WRITES_ENABLED=0` (POST /api/views returns 204), then set `1`, trigger a redeploy, and await it after cold reads are verified. To stop writes, set `0`/unset, trigger a redeploy, and await it; reads keep showing the last committed totals.
+- Two concurrent authenticated admin corrections could theoretically pass the same non-negative precheck and drive the count below zero; this is an accepted v1 risk for a single-admin tool.

@@ -8,7 +8,7 @@ Store live totals in dedicated, API-owned Sanity documents, not in editable `pos
 
 The public site stops adding GA4 deltas to displayed counts. GA4 continues firing through `app/(site)/layout.tsx` for Jake's analytics dashboard, and view-admin keeps the GA4 delta as a separate diagnostic. GA4 is not part of the public count's read or failure path.
 
-After hydration, the post header sends one session-deduped POST. The route atomically creates the counter from the server-rendered historical seed if it is absent, increments it, and returns Sanity's committed total. The current browser updates within one request; another browser sees the shared value on its next cold load or refresh. There is no polling, websocket, SSE, optimistic increment, or hybrid GA/live formula in v1.
+After hydration, the post header sends one session-deduped POST. The route reads the published post's immutable legacy count server-side, atomically creates the counter from it if absent, increments it, and returns Sanity's committed total. The current browser updates within one request; another browser sees the shared value on its next cold load or refresh. There is no polling, websocket, SSE, optimistic increment, or hybrid GA/live formula in v1.
 
 ## Repository evidence reviewed
 
@@ -33,7 +33,7 @@ No Redis/KV client or other counter store is installed. The existing server-only
 | Value | Meaning after this change | Publicly displayed? |
 |---|---|---:|
 | `postView.count` | Durable raw live total for one slug | Yes; first choice |
-| `post.viewCountBase` | One-time historical seed captured at the GA4 cutover | Only if `postView` is absent/unavailable |
+| `post.viewCountBase` | Historical fallback captured at the GA4 cutover | Only if `postView` is absent/unavailable |
 | `post.viewCount` | Untouched legacy audit trail | Only if both newer values are absent |
 | `post.viewsCutoverAt` | Original GA4 reporting boundary | No; GA diagnostic only |
 | GA4 `screenPageViews` delta | Analytics/readership comparison since cutover | No; view-admin/GA dashboard only |
@@ -82,25 +82,26 @@ Add `POST /api/views/` in `app/api/views/route.ts`. The trailing slash is intent
 Contract:
 
 - First instruction: if `process.env.VIEW_WRITES_ENABLED !== '1'`, return `204` without parsing or writing.
-- Request JSON: `{ "slug": string, "seedCount": number }`.
-- Validate slug with `/^[a-z0-9][a-z0-9-]{0,127}$/` and require a non-negative safe-integer seed.
-- Derive `_id` as `views.${slug}`; do not query the post merely to discover a document ID.
-- In one transaction, `createIfNotExists({_id, _type: 'postView', count: seedCount})`, then patch that ID with `.inc({count: 1})`.
+- Request JSON: `{ "slug": string }`.
+- Validate slug with `/^[a-z0-9][a-z0-9-]{0,127}$/`.
+- Query the published/non-draft post by slug through the published Sanity client and read `viewCount`; use `0` when it is absent. Do not use a draft perspective.
+- Derive `_id` as `views.${slug}` without looking up the post document ID.
+- In one transaction, `createIfNotExists({_id, _type: 'postView', count: post.viewCount ?? 0})`, then patch that ID with `.inc({count: 1})`.
 - Commit with `visibility: 'sync'` and return `200 {"viewCount": committedCount}` from the returned document. Verify the installed client transaction response shape during implementation; use `returnDocuments: true` rather than adding a pre-increment read.
 - Malformed requests return useful `400` JSON; mutation failures return `500` JSON. The kill switch is the only intentional `204`.
 
-The server-rendered `seedCount` is `post.viewCountBase ?? post.viewCount ?? 0` when no live document exists. It is client-visible and deliberately not treated as proof of readership; `createIfNotExists` means only the first initializer can set it, while every accepted transaction increments once. Optional pre-seeding can eliminate even that one-time client-supplied initialization, but it is not required for rollout.
+The seed comes only from the published post on the server. Draft previews and clients cannot choose it. `createIfNotExists` means only the first transaction initializes the document, while every accepted transaction increments once. Optional pre-seeding is still allowed but not required for rollout.
 
 Do not add HMAC tokens, origin/referer checks, IP hashing, user-agent/bot gates, server dedup, silent rejection responses, middleware, or WAF logic. The normal write originates from a post-hydration effect, so crawlers that do not execute client JavaScript do not increment. Scripted callers still can: this is an engaging raw counter, not a fraud-resistant analytics system.
 
 ### Client behavior
 
-Restore `ViewCounter` as a client component with `slug`, `initialCount`, and `seedCount` props.
+Restore `ViewCounter` as a client component with `slug` and `initialCount` props.
 
 1. In an effect keyed on `slug` and `initialCount`, reset component state to `initialCount` so App Router reuse cannot show the previous post's value.
 2. Read and write `sessionStorage` key `viewed:${slug}` only inside `try/catch`. If storage is unavailable (Safari private mode or a sandboxed iframe), continue without dedup rather than breaking render.
 3. If the key is absent, set it before the request so normal remounts cannot double-submit.
-4. POST `{slug, seedCount}` directly to `/api/views/`.
+4. POST `{slug}` directly to `/api/views/`.
 5. A `204` means writes are disabled: retain the rendered count and session marker.
 6. On a valid `200`, set state to the returned committed count. Do not optimistically add one; concurrent viewers may mean the result is greater than `initialCount + 1`.
 7. On network, other non-2xx, or malformed-response failure, retain `initialCount` and try to remove the session key inside `try/catch`, permitting a later navigation to try again. There is no in-place retry loop.
@@ -116,6 +117,7 @@ No polling is included. The current viewer updates immediately after commit; ano
 - Keep `gaDelta` and GA freshness as separate diagnostics; never add GA to the live displayed count.
 - Relabel the UI to "Live displayed count" and "GA4 views since cutover" and remove the old GA-derived displayed formula.
 - Manual corrections mutate `postView.count`, not either post field. The authenticated POST may keep its existing post lookup to obtain slug and baseline, then atomically `createIfNotExists` and `inc(changeAmount)` so it cannot overwrite a concurrent public increment.
+- Two concurrent authenticated corrections could theoretically pass the same non-negative precheck and their atomic decrements could drive the count below zero. This is an accepted v1 risk because view-admin is authenticated and has one administrator.
 - `app/(site)/layout.tsx` is unchanged; Google Analytics continues firing.
 
 ## Failure behavior and kill switch
@@ -123,7 +125,7 @@ No polling is included. The current viewer updates immediately after commit; ano
 - A failed live read returns no counter override and renders `viewCountBase ?? viewCount ?? 0`; it never manufactures a zero when historical data exists.
 - A failed increment keeps the server-rendered value and never shows an uncommitted optimistic count.
 - GA credentials, latency, or outage cannot affect public counts.
-- `VIEW_WRITES_ENABLED` defaults disabled unless exactly `1`. Set it to `0`/unset for an immediate server-side write stop; reads and historical totals continue working.
+- `VIEW_WRITES_ENABLED` defaults disabled unless exactly `1`. Changing it affects only a new Vercel deployment; after setting it to `0`/unset, trigger and await a redeploy to stop writes. Reads and historical totals continue working.
 - Route errors log only slug plus a bounded error message—no user agent, IP, origin, or token data.
 
 ## Seed and migration plan
@@ -131,10 +133,10 @@ No polling is included. The current viewer updates immediately after commit; ano
 No bulk `postView` migration is required.
 
 1. The existing `seed:view-baseline` script remains a post-baseline audit tool only. Its dry run should confirm `viewCountBase` is present where expected; it must not overwrite existing values.
-2. On the first accepted live view, the transaction creates `postView.count` from `viewCountBase ?? viewCount ?? 0` and increments it. `createIfNotExists` makes concurrent first views seed once and each increment once.
+2. On the first accepted live view, the route reads the published post and the transaction creates `postView.count` from `viewCount ?? 0`, then increments it. `createIfNotExists` makes concurrent first views seed once and each increment once.
 3. `viewCount`, `viewCountBase`, and `viewsCutoverAt` remain unchanged forever by live-counter traffic.
 4. New posts may lack a baseline; their existing `viewCount` (normally `0`) supplies the fallback seed.
-5. Optional pre-seeding may create `views.${slug}` documents with `count: viewCountBase ?? viewCount ?? 0` before enabling writes. It is operationally safer if desired but is not implementation or merge scope.
+5. Optional pre-seeding may create `views.${slug}` documents from each published post's `viewCount ?? 0` before enabling writes. It is operationally safer if desired but is not implementation or merge scope.
 
 Because the counter lives outside `post`, creating a draft, accumulating views, and publishing that draft cannot reset it.
 
@@ -163,9 +165,9 @@ Estimates are net LOC, not formatted diff churn. The implementation should stay 
 | File | Change | Net LOC estimate |
 |---|---|---:|
 | `app/lib/live-post-views.ts` | Deterministic IDs + uncached batch read/map/fallback | +18 |
-| `app/api/views/route.ts` | Kill gate + one create/increment transaction | +31 |
-| `app/(site)/posts/[slug]/ViewCounter.tsx` | Safe storage, prop reset, trailing-slash POST, committed update | +27 |
-| `app/(site)/posts/[slug]/page.tsx` | Add fallbacks/live read; remove GA display read | -3 |
+| `app/api/views/route.ts` | Kill gate + published seed read + create/increment transaction | +35 |
+| `app/(site)/posts/[slug]/ViewCounter.tsx` | Safe storage, prop reset, trailing-slash POST, committed update | +23 |
+| `app/(site)/posts/[slug]/page.tsx` | Add fallbacks/live read; remove GA display read | -5 |
 | `app/(site)/page.tsx` | Batch live read; remove GA batch/formula | -6 |
 | `app/(site)/tags/[slug]/page.tsx` | Batch live read; remove GA batch/formula | -5 |
 | `app/api/viewadmin/route.ts` | Read/correct `postView`; keep GA separate | -4 |
@@ -175,9 +177,9 @@ Estimates are net LOC, not formatted diff churn. The implementation should stay 
 | `app/lib/post-views.test.ts` | Clocked Central-boundary/range/zone tests | +18 |
 | `.env.example` | Kill switch + optional GA timezone override | +4 |
 | `docs/views-ga4-runbook.md` | Analytics-only role, timezone, counter rollout notes | +5 |
-| **Total** | **Both fixes, all display surfaces coherent** | **about +97 net LOC** |
+| **Total** | **Both fixes, all display surfaces coherent** | **about +95 net LOC** |
 
-About +70 net LOC is runtime/types code; the rest is tests and operations documentation. `next.config.js`, `package.json`, the lockfile, post schema, seed scripts, and GA layout should not change.
+About +68 net LOC is runtime/types code; the rest is tests and operations documentation. `next.config.js`, `package.json`, the lockfile, post schema, seed scripts, and GA layout should not change.
 
 ## Environment and rollout
 
@@ -187,12 +189,12 @@ No Vercel storage provisioning is needed.
 2. Add `VIEW_WRITES_ENABLED=0` initially in Vercel Production, Preview, and Development. Preview increments are accepted as part of this deliberately raw counter.
 3. Confirm the GA property timezone; add `GA_PROPERTY_TIME_ZONE` only if it differs from the `America/Chicago` default.
 4. Deploy with writes disabled and verify cold reads fall back to the historical baseline.
-5. Set `VIEW_WRITES_ENABLED=1`, then run the live smoke. Do not add origin gates to distinguish Preview.
+5. Set `VIEW_WRITES_ENABLED=1`, trigger and await a Vercel redeploy, then run the live smoke. Do not add origin gates to distinguish Preview.
 6. Watch route errors and Sanity mutation volume for one day. Move storage behind the same contract only if measured traffic warrants it.
 
 The counter and every public/admin display switch in one deployment. Never deploy a formula that adds GA after `postView` writes begin.
 
-Rollback: set `VIEW_WRITES_ENABLED=0`/unset. The route returns `204`, public reads continue showing the last committed `postView` total, and no count data is rewritten. A code rollback may follow later, but disabling writes does not require restoring GA or subtracting increments.
+Rollback: set `VIEW_WRITES_ENABLED=0`/unset, trigger a Vercel redeploy, and await it. The newly deployed route returns `204`, public reads continue showing the last committed `postView` total, and no count data is rewritten. A code rollback may follow later, but disabling writes does not require restoring GA or subtracting increments.
 
 ## Test plan
 
