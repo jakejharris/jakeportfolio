@@ -1,9 +1,23 @@
-import { client } from './sanity.client';
+import 'server-only';
+
+import { createClient } from 'next-sanity';
+import { apiVersion, dataset, projectId } from './sanity.config';
 
 const POST_VIEW_ID_PREFIX = 'views.';
 
 export function getPostViewId(slug: string): string {
   return `${POST_VIEW_ID_PREFIX}${slug}`;
+}
+
+function createPostViewReadClient(token: string) {
+  return createClient({
+    projectId,
+    dataset,
+    apiVersion,
+    useCdn: false,
+    perspective: 'published',
+    token,
+  });
 }
 
 export async function getLivePostViewCounts(
@@ -13,8 +27,15 @@ export async function getLivePostViewCounts(
     return {};
   }
 
+  const token = process.env.SANITY_API_READ_TOKEN;
+  if (!token) {
+    return {};
+  }
+
   try {
-    const docs = await client.fetch<Array<{ _id: string; count?: number }>>(
+    const docs = await createPostViewReadClient(token).fetch<
+      Array<{ _id: string; count?: number }>
+    >(
       `*[_type == "postView" && _id in $ids]{ _id, count }`,
       { ids: slugs.map(getPostViewId) },
       { cache: 'no-store' }
