@@ -1,15 +1,6 @@
 import { timingSafeEqual } from 'node:crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { client, writeClient } from '@/app/lib/sanity.client';
-import { getPostViewsSnapshot } from '@/app/lib/post-views';
-
-type ViewAdminPost = {
-  _id: string;
-  title: string;
-  slug: { current: string };
-  viewCountBase?: number;
-  viewsCutoverAt?: string;
-};
 
 function getAuthFailure(request: NextRequest): NextResponse | null {
   const token = process.env.VIEWADMIN_TOKEN;
@@ -33,6 +24,7 @@ function getAuthFailure(request: NextRequest): NextResponse | null {
   return null;
 }
 
+// Fetch all posts (title, slug, _id, viewCount)
 export async function GET(request: NextRequest) {
   const authFailure = getAuthFailure(request);
   if (authFailure) {
@@ -40,34 +32,10 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const posts = await client.fetch<ViewAdminPost[]>(
-      `*[_type == "post"]{
-        _id,
-        title,
-        slug,
-        viewCountBase,
-        viewsCutoverAt
-      } | order(title asc)`
+    const posts = await client.fetch(
+      `*[_type == \"post\"]{ _id, title, slug, viewCount } | order(title asc)`
     );
-    const cutoverAt = posts.find((post) => post.viewsCutoverAt)?.viewsCutoverAt;
-    const gaSnapshot = await getPostViewsSnapshot(cutoverAt);
-
-    return NextResponse.json(posts.map((post) => {
-      const viewCountBase = post.viewCountBase ?? 0;
-      const gaDelta = post.viewsCutoverAt
-        ? (gaSnapshot.counts[post.slug.current] ?? 0)
-        : 0;
-
-      return {
-        ...post,
-        viewCountBase,
-        gaDelta,
-        displayedViewCount: viewCountBase + gaDelta,
-        lastSuccessfulGaFetchAt: gaSnapshot.lastSuccessfulFetchAt,
-        lastSuccessfulGaFetchAgeMs: gaSnapshot.lastSuccessfulFetchAgeMs,
-        stale: gaSnapshot.stale,
-      };
-    }));
+    return NextResponse.json(posts);
   } catch (error) {
     console.error('Error fetching posts:', error);
     return NextResponse.json(
@@ -77,6 +45,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
+// Update view count for a specific post
 export async function POST(request: NextRequest) {
   const authFailure = getAuthFailure(request);
   if (authFailure) {
@@ -86,15 +55,16 @@ export async function POST(request: NextRequest) {
   try {
     const { postId, changeAmount } = await request.json();
 
-    if (!postId || !Number.isInteger(changeAmount)) {
+    if (!postId || typeof changeAmount !== 'number') {
       return NextResponse.json(
-        { error: 'postId and changeAmount (integer) are required' },
+        { error: 'postId and changeAmount (number) are required' },
         { status: 400 }
       );
     }
 
-    const post = await client.fetch<{ viewCountBase?: number } | null>(
-      `*[_type == "post" && _id == $postId][0]{ viewCountBase }`,
+    // Fetch the current view count first to prevent going negative
+    const post = await client.fetch(
+      `*[_type == \"post\" && _id == $postId][0]{ viewCount }`,
       { postId }
     );
 
@@ -102,7 +72,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Post not found' }, { status: 404 });
     }
 
-    const currentViews = post.viewCountBase ?? 0;
+    const currentViews = post.viewCount || 0;
     const newViewCount = currentViews + changeAmount;
 
     if (newViewCount < 0) {
@@ -112,19 +82,20 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Increment/decrement the view count using the writeClient
     const updatedPost = await writeClient
       .patch(postId)
-      .set({ viewCountBase: newViewCount })
+      .set({ viewCount: newViewCount }) // Use set for precise control
       .commit();
 
     return NextResponse.json({
-      viewCountBase: updatedPost.viewCountBase,
+      viewCount: updatedPost.viewCount,
     });
-  } catch (error: unknown) {
+  } catch (error: any) {
     console.error('Error updating view count:', error);
-    const sanityError = error as { responseBody?: string; statusCode?: number };
-    const errorMessage = sanityError.responseBody || 'Failed to update view count';
-    const statusCode = sanityError.statusCode || 500;
+    // Provide more specific Sanity error if available
+    const errorMessage = error.responseBody || 'Failed to update view count';
+    const statusCode = error.statusCode || 500;
     return NextResponse.json(
       { error: errorMessage },
       { status: statusCode }
