@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * TEMPORARY PREVIEW / DEV PAGE — NOT FOR PRODUCTION. SAFE TO DELETE.
+ * TEMPORARY PREVIEW / DEV PAGE. NOT FOR PRODUCTION. SAFE TO DELETE.
  * ============================================================================
  *
  * Route: /dgx-preview/
@@ -10,8 +10,8 @@
  * The DGX Spark article lives in Sanity as Portable Text, and its four
  * interactive components (DgxHeroStat, DgxPriceChart, DgxScenarioMatrix,
  * DgxSpeculationLab) are embedded via `interactiveComponent` blocks. That means
- * there is no way to eyeball the *finished* article — prose + components, in
- * real site chrome — until the post is actually drafted/published in the CMS.
+ * there is no way to eyeball the *finished* article (prose + components, in
+ * real site chrome) until the post is actually drafted/published in the CMS.
  *
  * This page short-circuits that: it hard-codes the article prose as JSX inside
  * the exact same `.portable-text` wrapper and `PageLayout` container that
@@ -21,14 +21,14 @@
  *
  * NON-PRODUCTION GUARDRAILS
  * -------------------------
- *  - `robots: { index: false, follow: false }` below — never indexed.
+ *  - `robots: { index: false, follow: false }` below: never indexed.
  *  - A visible "PREVIEW" banner at the top of the page body.
  *  - No Sanity fetch, no view counter, no JSON-LD, no sitemap entry
  *    (app/sitemap.ts only enumerates static pages + Sanity posts, so this route
  *    is absent from it by construction).
  *
  * DELETE ME once the article is live in Sanity. Deleting this single directory
- * is sufficient — nothing else in the app imports from it.
+ * is sufficient; nothing else in the app imports from it.
  * ============================================================================
  */
 
@@ -37,7 +37,7 @@ import PageLayout from '@/app/components/PageLayout';
 import ScrollToTop from '@/app/components/ScrollToTop';
 
 // The four interactive components under review. They are all `'use client'`,
-// default-export, and take no props — so a server component can import them
+// default-export, and take no props, so a server component can import them
 // directly (Next.js inserts the client boundary). We import them statically
 // rather than going through InteractiveBlock's `next/dynamic` registry so the
 // preview fails loudly at build time if any of them is broken.
@@ -50,7 +50,7 @@ export const metadata: Metadata = {
   title: 'DGX Spark article preview (dev only)',
   description:
     'Non-production preview of the DGX Spark article with its four interactive components. Not for public consumption.',
-  // Hard noindex/nofollow — this must never reach search results.
+  // Hard noindex/nofollow: this must never reach search results.
   robots: {
     index: false,
     follow: false,
@@ -107,7 +107,7 @@ export default function DgxPreviewPage() {
       {/* page can never be mistaken for the real article, even if it somehow  */}
       {/* gets deployed to a preview/production build.                        */}
       <div className="mb-6 rounded-lg bg-muted px-3 py-2 text-xs text-muted-foreground">
-        PREVIEW — not production. Article + interactive components for review
+        PREVIEW: not production. Article + interactive components for review
         only.
       </div>
 
@@ -128,8 +128,8 @@ export default function DgxPreviewPage() {
         <article className="page-enter-2 max-w-none portable-text">
           {/* ---- INTRO -------------------------------------------------- */}
           <p>
-            Right now, 128GB of bare DDR5 desktop memory — no processor, no
-            case, no power supply —{' '}
+            Right now, 128GB of bare DDR5 desktop memory (no processor, no
+            case, no power supply){' '}
             <L href="https://www.tomshardware.com/pc-components/ram/memory-prices-climb-500-percent-in-12-months-up-to-10x-the-lowest-ever-tracked-prices-128gb-of-ddr5-now-usd3-399">
               retails for about $3,399
             </L>
@@ -139,15 +139,15 @@ export default function DgxPreviewPage() {
           </p>
 
           <p>
-            That single comparison is the whole thesis. A GB10-class box —{' '}
+            That single comparison is the whole thesis. A GB10-class box, whether{' '}
             <L href="https://forums.developer.nvidia.com/t/2-23-2026-price-change-announcement/361713">
               NVIDIA&rsquo;s DGX Spark at $4,699
             </L>{' '}
             or the{' '}
             <L href="https://forums.developer.nvidia.com/t/gx10-price-increase-3499-3999/373025">
               GX10 at $3,999
-            </L>{' '}
-            — is not really a computer. It is 128GB of LPDDR5X, bid against the
+            </L>
+            , is not really a computer. It is 128GB of LPDDR5X, bid against the
             AI servers drawing on the same pool, with a Blackwell GPU attached.
             The silicon ages on the ordinary schedule. The memory does not.
           </p>
@@ -161,7 +161,7 @@ export default function DgxPreviewPage() {
           {/* Placed immediately after the intro: it is the at-a-glance key-  */}
           {/* facts card, so it front-loads every number the body then argues */}
           {/* from (reprice, MSRPs, resale hurdles, street range, sold comp). */}
-          <Embed caption="The fixed figures the rest of the piece argues from — repriced MSRPs, the end-2028 real-flat hurdles, today's street range, and the first verified sold comp.">
+          <Embed caption="The fixed figures the rest of the piece argues from: repriced MSRPs, the end-2028 real-flat hurdles, today's street range, and the first verified sold comp.">
             <DgxHeroStat />
           </Embed>
 
@@ -176,8 +176,8 @@ export default function DgxPreviewPage() {
             followed on the GX10 in June, +14.3%. In July, NVIDIA quietly{' '}
             <L href="https://hwbusters.com/news/nvidia-jetson-prices-jump-up-to-101-the-249-orin-nano-super-is-now-399/">
               raised Jetson prices by up to 101%
-            </L>{' '}
-            — the $249 Orin Nano Super became $399.
+            </L>
+            : the $249 Orin Nano Super became $399.
           </p>
 
           <p>
@@ -193,7 +193,7 @@ export default function DgxPreviewPage() {
 
           <p>
             The Spark&rsquo;s true class analog is the Jetson AGX Orin developer
-            kit — NVIDIA-branded, fixed memory, developer-targeted. It{' '}
+            kit: NVIDIA-branded, fixed memory, developer-targeted. It{' '}
             <L href="https://www.engadget.com/nvidia-jetson-agx-orin-price-release-date-163327815.html">
               launched at $1,999 in March 2022
             </L>
@@ -201,7 +201,7 @@ export default function DgxPreviewPage() {
             <L href="https://marketplace.nvidia.com/en-us/enterprise/robotics-edge/jetson-agx-orin-developer-kit/">
               own marketplace
             </L>{' '}
-            now lists it at <strong>$3,499 — up 75% nominal at year four</strong>
+            now lists it at <strong>$3,499, up 75% nominal at year four</strong>
             . Used kits ask $1,500 to $3,000 on eBay, roughly 75 to 150% of
             launch, against the 20 to 30% a textbook workstation retains by year
             four.
@@ -209,7 +209,7 @@ export default function DgxPreviewPage() {
 
           <p>
             The control case names the failure mode exactly. DGX Station V100
-            went from $69,000 in 2018 to roughly 25% retention by year seven —
+            went from $69,000 in 2018 to roughly 25% retention by year seven,
             because a faster successor shipped at a comparable price, twice. Age
             is not what kills these boxes. A successor is. And through 2028
             there isn&rsquo;t one: the RTX Spark N1X is the same GB10 compute
@@ -218,10 +218,10 @@ export default function DgxPreviewPage() {
           </p>
 
           {/* ---- EMBED 2/4: DgxPriceChart ------------------------------- */}
-          {/* Sits in the supply/price-trajectory discussion — right after the */}
+          {/* Sits in the supply/price-trajectory discussion, right after the  */}
           {/* successor-risk argument, where the reader wants to see the price */}
           {/* path over time rather than read another paragraph about it.      */}
-          <Embed caption="Modelled price paths for the GB10 class against the memory cycle — the successor gap through 2028 is the flat stretch.">
+          <Embed caption="Modelled price paths for the GB10 class against the memory cycle. The successor gap through 2028 is the flat stretch.">
             <DgxPriceChart />
           </Embed>
 
@@ -232,7 +232,7 @@ export default function DgxPreviewPage() {
             <L href="https://www.cbo.gov/publication/62105">CBO&rsquo;s</L>{' '}
             projected 2.4% (2027) and 2.3% (2028) inflation, real-flat through
             end-2028 means recovering about{' '}
-            <strong>$4,923 for a Spark and $4,189 for a GX10</strong> — 4.76%
+            <strong>$4,923 for a Spark and $4,189 for a GX10</strong>, or 4.76%
             above end-2026 cost. Slightly better than cash. That&rsquo;s it.
           </p>
 
@@ -249,12 +249,12 @@ export default function DgxPreviewPage() {
           {/* Anchored to the scenario/hurdle section: the reader has just been */}
           {/* given one bar (end-2028 real-flat); the matrix lets them walk the  */}
           {/* same question across every scenario family and checkpoint year.   */}
-          <Embed caption="The same question across every scenario family and December checkpoint — toggle between the GB10-class low and the NVIDIA flagship street price.">
+          <Embed caption="The same question across every scenario family and December checkpoint. Toggle between the GB10-class low and the NVIDIA flagship street price.">
             <DgxScenarioMatrix />
           </Embed>
 
           <h2 className="scroll-mt-20">
-            Appreciation is already realized — just not in dollars
+            Appreciation is already realized, just not in dollars
           </h2>
 
           <p>
@@ -266,8 +266,8 @@ export default function DgxPreviewPage() {
             </L>
             . The lowest tracked street price for that identical 1TB
             configuration in August 2026 is{' '}
-            <L href="https://kakaku.com/item/K0001792529/">about ¥929,830</L> —{' '}
-            <strong>+22.5% on the same box in ten months.</strong>
+            <L href="https://kakaku.com/item/K0001792529/">about ¥929,830</L>. That
+            is <strong>+22.5% on the same box in ten months.</strong>
           </p>
 
           <p>
@@ -276,7 +276,7 @@ export default function DgxPreviewPage() {
             <L href="https://auctions.yahoo.co.jp/jp/auction/t1235818029">
               Yahoo Auctions Japan
             </L>{' '}
-            between June and July 2026 at ¥682,900, ¥681,000 and ¥730,000 — 90
+            between June and July 2026 at ¥682,900, ¥681,000 and ¥730,000, or 90
             to 96% of tax-inclusive launch list. Strip the 10% consumption tax
             that a private auction sale does not carry, and the July 12 close
             printed{' '}
@@ -289,7 +289,7 @@ export default function DgxPreviewPage() {
 
           <p>
             Two honest debits. At sale-date FX (~¥161/$, not the ¥150 the study
-            first used) those closes are $4,207 to $4,510 — around the GX10 bar,
+            first used) those closes are $4,207 to $4,510, around the GX10 bar and
             below the Spark&rsquo;s. And the PGX units carried Lenovo Premier
             Support into 2029, so they are not bare-Spark proxies. But the USD
             shortfall is a weak-yen artifact, not a weak market. The
@@ -306,7 +306,7 @@ export default function DgxPreviewPage() {
               $2,500 figure
             </L>{' '}
             and Morgan Stanley&rsquo;s ~$2,899 &ldquo;floor&rdquo; were both set
-            in early June, before two more months of DRAM inflation — and the
+            in early June, before two more months of DRAM inflation. And the
             memory BOM alone runs{' '}
             <L href="https://wccftech.com/mobile-dram-prices-expected-to-increase-by-100-quarter-over-quarter-as-long-term-agreements-now-getting-signed-at-prices-as-high-as-21-gb/">
               $21/GB on long-term agreements
@@ -321,18 +321,18 @@ export default function DgxPreviewPage() {
           </p>
 
           <p>
-            <strong>&ldquo;DRAM normalizes.&rdquo;</strong> The bear forecast —{' '}
+            <strong>&ldquo;DRAM normalizes.&rdquo;</strong> The bear forecast,{' '}
             <L href="https://www.notebookcheck.net/DRAM-crisis-Analysts-expect-drastic-price-drop-in-2028.1337992.0.html">
               Bernstein and Jefferies at 15 to 20% off in 2028
-            </L>{' '}
-            — is a sell-side projection, and it falls from a far higher end-2027
+            </L>
+            , is a sell-side projection, and it falls from a far higher end-2027
             peak; Goldman has the{' '}
             <L href="https://www.benzinga.com/markets/tech/26/06/52907425/goldman-memory-shortage-2028-samsung-hynix-kioxia-sandisk-micron">
               squeeze running to 2028
             </L>
             . Device prices lag DRAM by one to two quarters, dragging the
-            device-price peak into 2028 itself. The fabs that end this — Micron
-            New York, SK hynix M17, Samsung P5 — arrive 2029 to 2031. Relief
+            device-price peak into 2028 itself. The fabs that end this (Micron
+            New York, SK hynix M17, Samsung P5) arrive 2029 to 2031. Relief
             lands after the measurement date.
           </p>
 
@@ -352,7 +352,7 @@ export default function DgxPreviewPage() {
 
           <p>
             <strong>&ldquo;Institutions will dump theirs.&rdquo;</strong> On
-            five-to-six-year book lives, that wave lands 2029 to 2031 — after
+            five-to-six-year book lives, that wave lands 2029 to 2031, after
             the window shuts.
           </p>
 
@@ -361,14 +361,14 @@ export default function DgxPreviewPage() {
           {/* can break, the reader can now price the branches themselves. This */}
           {/* is the EV tree, so it belongs after the objections, before the     */}
           {/* recommendation it feeds.                                          */}
-          <Embed caption="The resale-only expected-value tree — drag the assumptions and watch the five branches reprice. Usage value is deliberately excluded.">
+          <Embed caption="The resale-only expected-value tree: drag the assumptions and watch the five branches reprice. Usage value is deliberately excluded.">
             <DgxSpeculationLab />
           </Embed>
 
           <h2 className="scroll-mt-20">The recommendation</h2>
 
           <p>
-            Buy the GX10 at $3,999 for the cleanest expression — the same scarce
+            Buy the GX10 at $3,999 for the cleanest expression: the same scarce
             memory, $700 less exposure, a list that has already moved +14.3% on
             its own. Buy the Spark if you can catch a first-party print at
             $3,999 to $4,699.
@@ -379,7 +379,7 @@ export default function DgxPreviewPage() {
             capped by a use-value floor: you own the machine, you run the models
             locally, and the compute is consumed whether or not a resale bid
             ever shows up. The worst print in the corpus is one US liquidator
-            listing a used GX10 at $2,000 — a single surplus-dealer ask, against
+            listing a used GX10 at $2,000, a single surplus-dealer ask, against
             a class whose new price keeps rising. The upside needs only one of:
             a second hike, a stockout, an EOL notice, or Japan&rsquo;s +22.5%
             pace merely continuing.
@@ -389,7 +389,7 @@ export default function DgxPreviewPage() {
             Two observables settle it, both checkable in minutes: the first
             official RTX Spark price against that $2,899 floor, and any second
             US Spark hike or EOL notice. NVIDIA reprices developer hardware
-            mid-cycle when memory forces it — Jetson proved that twice inside
+            mid-cycle when memory forces it. Jetson proved that twice inside
             three weeks.
           </p>
 

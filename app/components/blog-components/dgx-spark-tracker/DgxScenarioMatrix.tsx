@@ -7,7 +7,7 @@
 // data module. A small toggle flips the displayed series between the DGX
 // Spark-class lowest price and the NVIDIA flagship street price; "—" marks a
 // null (the consumer hardware market has ended in that scenario). All values
-// are static scenario projections ported from the original tracker — nothing
+// are static scenario projections ported from the original tracker: nothing
 // here is invented, fetched, or computed beyond interpolation already done in
 // ./data. Pure semantic-token styling, so dark/light needs no theme read.
 
@@ -44,6 +44,30 @@ const FAM_LABEL: Record<Fam, string> = {
   '40': 'AI 2040',
 };
 
+// One restrained hue per family so the three blocks separate at a glance:
+// muted slate for the no-takeoff control case, indigo for the near-term
+// takeoff family, amber for the long-horizon one. Fills are soft HSL alphas
+// to stay refined on this near-monochrome site, and the dark: variants hold
+// contrast on the dark card. Color only ever rides along with the text
+// label, it never replaces it.
+const FAM_STYLE: Record<Fam, { badge: string; edge: string }> = {
+  base: {
+    badge:
+      'border-slate-500/30 bg-slate-500/10 text-slate-600 dark:border-slate-400/25 dark:bg-slate-400/10 dark:text-slate-300',
+    edge: 'border-l-slate-500/40 dark:border-l-slate-400/35',
+  },
+  '27': {
+    badge:
+      'border-indigo-500/30 bg-indigo-500/10 text-indigo-700 dark:border-indigo-400/30 dark:bg-indigo-400/10 dark:text-indigo-300',
+    edge: 'border-l-indigo-500/45 dark:border-l-indigo-400/35',
+  },
+  '40': {
+    badge:
+      'border-amber-600/35 bg-amber-500/10 text-amber-700 dark:border-amber-400/30 dark:bg-amber-400/10 dark:text-amber-300',
+    edge: 'border-l-amber-500/50 dark:border-l-amber-400/35',
+  },
+};
+
 const SERIES_LABEL: Record<MatrixSeries, string> = {
   spark: 'DGX Spark',
   nvidia: 'NVIDIA flagship',
@@ -62,9 +86,15 @@ const ymLabel = (ym: string): string => {
 const fmtDollars = (v: number): string =>
   '$' + Math.round(v).toLocaleString('en-US');
 
+// Purchase price of the tracked DGX Spark (its street price from March 2026
+// in the historical series). Cells at or above it get a light emphasis so
+// the appreciation story reads at a glance, while market-ended ("—") cells
+// stay muted.
+const PURCHASE_PRICE = 4699;
+
 // Row label: the scenario name with the family prefix stripped (the badge
 // carries it), mirroring the original tracker's matrix. Derived from the
-// data's own strings — nothing new.
+// data's own strings: nothing new.
 function planLabel(name: string): string {
   if (name === 'Baseline (no takeoff)') return 'No takeoff';
   return name.replace(/^AI 20\d\d · /, '');
@@ -129,7 +159,7 @@ export default function DgxScenarioMatrix() {
 
         {/* Table (shadcn Table wraps in an overflow-auto div → scrolls on mobile) */}
         <Table
-          className="min-w-[640px]"
+          className="min-w-[560px]"
           aria-label={`Projected ${SERIES_LABEL[series]} price by scenario at each December checkpoint`}
         >
           <TableHeader>
@@ -141,9 +171,10 @@ export default function DgxScenarioMatrix() {
                 <TableHead
                   key={cp.ym}
                   scope="col"
-                  className="whitespace-nowrap p-2 text-right font-mono text-xs text-muted-foreground"
+                  title={ymLabel(cp.ym)}
+                  className="whitespace-nowrap px-2 py-1.5 text-right font-mono text-xs text-muted-foreground"
                 >
-                  {ymLabel(cp.ym)}
+                  {cp.ym.slice(0, 4)}
                 </TableHead>
               ))}
             </TableRow>
@@ -158,7 +189,7 @@ export default function DgxScenarioMatrix() {
               >
                 <TableCell
                   scope="row"
-                  className="sticky left-0 z-10 whitespace-nowrap bg-card p-2 group-hover/row:bg-muted/50"
+                  className={`sticky left-0 z-10 whitespace-nowrap border-l-2 bg-card p-2 group-hover/row:bg-muted/50 ${FAM_STYLE[row.fam].edge}`}
                 >
                   <span
                     className="inline-flex items-baseline gap-2"
@@ -166,7 +197,7 @@ export default function DgxScenarioMatrix() {
                   >
                     <Badge
                       variant="outline"
-                      className="px-1.5 py-0 font-mono text-[10px] font-medium uppercase tracking-wider text-muted-foreground"
+                      className={`px-1.5 py-0 font-mono text-[10px] font-medium uppercase tracking-wider ${FAM_STYLE[row.fam].badge}`}
                     >
                       {FAM_LABEL[row.fam]}
                     </Badge>
@@ -180,17 +211,30 @@ export default function DgxScenarioMatrix() {
                   return (
                     <TableCell
                       key={cp.ym}
-                      className="whitespace-nowrap p-2 text-right font-mono text-sm tabular-nums text-foreground"
+                      className="whitespace-nowrap px-2 py-1.5 text-right font-mono text-[13px] tabular-nums"
                     >
                       {v == null ? (
                         <span
                           className="text-muted-foreground/60"
-                          title="No market — the series has ended in this scenario"
+                          title="No market: the series has ended in this scenario"
                         >
                           —
                         </span>
                       ) : (
-                        fmtDollars(v)
+                        <span
+                          className={
+                            v >= PURCHASE_PRICE
+                              ? 'font-medium text-foreground'
+                              : 'text-foreground/75'
+                          }
+                          title={
+                            v >= PURCHASE_PRICE
+                              ? `At or above the ${fmtDollars(PURCHASE_PRICE)} purchase price`
+                              : undefined
+                          }
+                        >
+                          {fmtDollars(v)}
+                        </span>
                       )}
                     </TableCell>
                   );
@@ -203,7 +247,7 @@ export default function DgxScenarioMatrix() {
         {/* Footnote */}
         <div className="border-t border-border px-4 py-3">
           <p className="text-xs leading-relaxed text-muted-foreground">
-            Every value shown is a scenario projection — recorded history ends{' '}
+            Every value shown is a scenario projection. Recorded history ends{' '}
             {ymLabel(HIST_END)}. “—” means the consumer hardware market has
             ended in that scenario by that date. Hover a scenario for the
             mechanism behind its path.

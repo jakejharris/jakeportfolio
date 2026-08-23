@@ -25,7 +25,13 @@ import {
   CardHeader,
   CardTitle,
 } from '@/app/components/ui/card';
-import { Tabs, TabsList, TabsTrigger } from '@/app/components/ui/tabs';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/app/components/ui/select';
 
 import {
   FC_END,
@@ -184,26 +190,36 @@ export default function DgxPriceChart() {
           </span>
         </div>
 
-        <Tabs
-          value={scenarioKey}
-          onValueChange={(value) => setScenarioKey(value as ScenarioKey)}
-          className="w-full"
-        >
-          <TabsList
-            className="flex h-auto w-full flex-wrap justify-start gap-1 rounded-lg bg-muted p-1"
-            aria-label="Price projection scenario"
+        <div className="w-full sm:max-w-sm">
+          <label
+            htmlFor="price-projection-scenario"
+            className="mb-1.5 block font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground"
           >
-            {SCENARIOS.map((item) => (
-              <TabsTrigger
-                key={item.key}
-                value={item.key}
-                className="h-8 flex-auto px-2 text-xs shadow-none sm:flex-none"
-              >
-                {item.short}
-              </TabsTrigger>
-            ))}
-          </TabsList>
-        </Tabs>
+            Price projection scenario
+          </label>
+          <Select
+            value={scenarioKey}
+            onValueChange={(value) => setScenarioKey(value as ScenarioKey)}
+          >
+            <SelectTrigger
+              id="price-projection-scenario"
+              className="w-full border-border bg-card text-foreground shadow-none"
+            >
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent className="border-border bg-card text-foreground">
+              {SCENARIOS.map((item) => (
+                <SelectItem
+                  key={item.key}
+                  value={item.key}
+                  className="focus:bg-muted focus:text-foreground"
+                >
+                  {item.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
 
         <p className="max-w-4xl text-sm leading-relaxed text-muted-foreground">
           {scenario.desc}
