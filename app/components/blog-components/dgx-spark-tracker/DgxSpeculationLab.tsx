@@ -213,14 +213,14 @@ export default function DgxSpeculationLab() {
 
   return (
     <div className="my-8 rounded-lg border border-border bg-card text-card-foreground">
-      <div className="border-b border-border px-5 py-4">
+      <div className="border-b border-border px-4 py-4 sm:px-5">
         <div className="flex flex-wrap items-baseline justify-between gap-3">
           <h3 className="text-base font-semibold tracking-tight">Speculation lab</h3>
           <button
             type="button"
             onClick={() => setValues(DEFAULTS)}
             disabled={isDefault}
-            className="rounded-lg border border-border px-2.5 py-1 text-xs text-muted-foreground transition-colors hover:bg-muted disabled:pointer-events-none disabled:opacity-40"
+            className="w-full rounded-lg border border-border px-3 py-2 text-xs text-muted-foreground transition-colors hover:bg-muted disabled:pointer-events-none disabled:opacity-40 sm:w-auto sm:px-2.5 sm:py-1"
           >
             Reset to report defaults
           </button>
@@ -232,9 +232,9 @@ export default function DgxSpeculationLab() {
         </p>
       </div>
 
-      <div className="grid gap-6 p-5 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+      <div className="grid gap-6 p-4 sm:p-5 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
         {/* Dials */}
-        <div className="space-y-4">
+        <div className="min-w-0 space-y-4">
           {DIALS.map((d) => (
             <div key={d.key}>
               <div className="flex items-baseline justify-between gap-3">
@@ -251,7 +251,7 @@ export default function DgxSpeculationLab() {
               <Slider
                 aria-label={d.label}
                 aria-labelledby={`dgx-dial-${d.key}-label`}
-                className="mt-2"
+                className="mt-2 py-2 sm:py-0 [&_[role=slider]]:h-5 [&_[role=slider]]:w-5 sm:[&_[role=slider]]:h-4 sm:[&_[role=slider]]:w-4"
                 min={d.min}
                 max={d.max}
                 step={d.step}
@@ -268,10 +268,10 @@ export default function DgxSpeculationLab() {
         </div>
 
         {/* Outputs */}
-        <div>
+        <div className="min-w-0">
           <div className="rounded-lg bg-muted/50 p-4">
             <div
-              className="font-mono text-4xl font-semibold tabular-nums"
+              className="break-words font-mono text-3xl font-semibold tabular-nums sm:text-4xl"
               style={{ color: ev >= 0 ? 'var(--accent-color)' : 'hsl(var(--destructive))' }}
             >
               {signedUsd(ev)}
@@ -295,8 +295,8 @@ export default function DgxSpeculationLab() {
               {branches.map((b) => (
                 <div key={b.name}>
                   <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5">
-                    <span className="text-sm text-foreground">{b.name}</span>
-                    <span className="font-mono text-xs tabular-nums text-muted-foreground">
+                    <span className="min-w-0 text-sm text-foreground">{b.name}</span>
+                    <span className="whitespace-nowrap font-mono text-xs tabular-nums text-muted-foreground">
                       {Math.round(b.p * 100)}% → {usd(b.exit)} ·{' '}
                       <span
                         style={{

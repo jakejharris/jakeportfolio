@@ -47,9 +47,9 @@ import DgxScenarioMatrix from '@/app/components/blog-components/dgx-spark-tracke
 import DgxSpeculationLab from '@/app/components/blog-components/dgx-spark-tracker/DgxSpeculationLab';
 
 export const metadata: Metadata = {
-  title: 'DGX Spark article preview (dev only)',
+  title: 'DGX Spark Worth It? Why 128GB Holds Value Through 2028',
   description:
-    'Non-production preview of the DGX Spark article with its four interactive components. Not for public consumption.',
+    'NVIDIA raised the DGX Spark to $4,699 as memory surged: 128GB of desktop DDR5 alone costs $3,399. Why memory, not the chip, sets resale value through 2028.',
   // Hard noindex/nofollow: this must never reach search results.
   robots: {
     index: false,
@@ -113,9 +113,18 @@ export default function DgxPreviewPage() {
 
       <div className="max-w-none">
         {/* Post title + byline row, matching the real post header treatment. */}
-        <h1 className="page-enter text-3xl md:text-4xl font-extrabold mb-2">
+        <p className="page-enter mb-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
           The Chip Is Depreciating. The 128GB Is Not.
+        </p>
+        <h1 className="page-enter text-3xl md:text-4xl font-extrabold mb-2">
+          DGX Spark Worth It? Why 128GB Holds Value Through 2028
         </h1>
+
+        <p className="page-enter mb-4 text-lg leading-relaxed text-muted-foreground md:text-xl">
+          NVIDIA raised the DGX Spark to $4,699 as memory surged: 128GB of
+          desktop DDR5 alone costs $3,399. Why memory, not the chip, sets resale
+          value through 2028.
+        </p>
 
         <div className="page-enter flex items-center gap-4 mb-6 text-sm text-muted-foreground">
           {/* Static stand-in for the real <time> / ViewCounter / TagPill row. */}
@@ -135,7 +144,8 @@ export default function DgxPreviewPage() {
             </L>
             . That is most of the price of an entire ASUS Ascent GX10, a
             complete 128GB AI workstation. Spot memory is up roughly 500% in
-            twelve months.
+            twelve months, and DRAM contract prices jumped about 63% quarter
+            over quarter in Q2 2026.
           </p>
 
           <p>
@@ -154,7 +164,7 @@ export default function DgxPreviewPage() {
 
           <p>
             Buy one now. Through end-2028 this holds real value with genuine
-            upside, and the downside is well-floored. Here is the case.
+            upside, and the downside is well-floored.
           </p>
 
           {/* ---- EMBED 1/4: DgxHeroStat --------------------------------- */}
@@ -171,9 +181,12 @@ export default function DgxPreviewPage() {
           </h2>
 
           <p>
-            Computers get cheaper. These got more expensive. NVIDIA raised the
-            Spark 17.5% in February 2026 and named memory as the reason. ASUS
-            followed on the GX10 in June, +14.3%. In July, NVIDIA quietly{' '}
+            Computers get cheaper. These got more expensive. NVIDIA{' '}
+            <L href="https://www.tomshardware.com/desktops/mini-pcs/nvidia-dgx-spark-gets-18-percent-price-increase-as-memory-shortages-bite-founders-edition-now-usd4-699-up-from-usd3-999">
+              raised the Spark 17.5% in February 2026
+            </L>{' '}
+            and named memory as the reason. ASUS followed on the GX10 in June,
+            +14.3%. In July, NVIDIA{' '}
             <L href="https://hwbusters.com/news/nvidia-jetson-prices-jump-up-to-101-the-249-orin-nano-super-is-now-399/">
               raised Jetson prices by up to 101%
             </L>
@@ -181,7 +194,26 @@ export default function DgxPreviewPage() {
           </p>
 
           <p>
-            When a list price tracks a commodity&rsquo;s cost upward, you hold a
+            Nor is the ratchet confined to the cheap end of the ladder.
+            MSI&rsquo;s XpertStation WS300, the GB300 deskside twin,{' '}
+            <L href="https://www.techradar.com/pro/msi-re-launches-usd85-000-nvidia-dgx-station-workstation-with-the-nvidia-gb300-ultra-a-pair-of-400gbe-lan-ports-and-768gb-of-ram">
+              launched at $85,000 in March 2026
+            </L>{' '}
+            and now lists at{' '}
+            <L href="https://www.centralcomputer.com/msi-xpertstation-ws300-ai-workstation-nvidia-gb300-grace-72-core-cpu-496gb-lpddr5x-ram-blackwell-gpu-252gb-hbm3e.html">
+              $99,999.99
+            </L>
+            , or{' '}
+            <L href="https://www.avadirect.com/MSI-XpertStation-WS300-AI-Workstation-NVIDIA-DGX-Station-Architecture/Configure/20211619">
+              $113,299 with delayed shipping
+            </L>
+            . Its 748GB is 496GB of LPDDR5X plus 252GB of HBM3e, the same
+            squeezed class the Spark is built from. One BOM shock is repricing
+            the whole ladder.
+          </p>
+
+          <p>
+            When a list price tracks a commodity upward, you hold a
             pass-through instrument, not a depreciating good. Replacement cost
             is the floor under any resale, and the manufacturer keeps raising
             it.
@@ -202,25 +234,53 @@ export default function DgxPreviewPage() {
               own marketplace
             </L>{' '}
             now lists it at <strong>$3,499, up 75% nominal at year four</strong>
-            . Used kits ask $1,500 to $3,000 on eBay, roughly 75 to 150% of
-            launch, against the 20 to 30% a textbook workstation retains by year
-            four.
+            , and used kits ask $1,500 to $3,000 on eBay, 75 to 150% of launch,
+            against the 20 to 30% a textbook workstation retains at year four.
           </p>
 
           <p>
-            The control case names the failure mode exactly. DGX Station V100
-            went from $69,000 in 2018 to roughly 25% retention by year seven,
-            because a faster successor shipped at a comparable price, twice. Age
-            is not what kills these boxes. A successor is. And through 2028
-            there isn&rsquo;t one: the RTX Spark N1X is the same GB10 compute
-            class with the same 128GB ceiling, and the announced 2027 roadmap
-            parts add bandwidth, not capacity.
+            The control case names the failure mode. DGX Station V100 went from
+            $69,000 in 2018 to roughly 25% retention by year seven, because a
+            faster successor shipped at a comparable price, twice. Age is not
+            what kills these boxes. A successor is. Through 2028 there
+            isn&rsquo;t one: the RTX Spark N1X is the same GB10 compute class
+            with the same 128GB ceiling, and the announced 2027 roadmap parts
+            add bandwidth, not capacity.
+          </p>
+
+          <p>
+            State the bear anchor first. The H100 is the closest fully observed
+            case of holding scarce NVIDIA silicon four years: against a roughly
+            $30,000 list it{' '}
+            <L href="https://pantheon.run/research/h100-cliff-gpu-secondary-market">
+              peaked near $50,000 in mid-2024
+            </L>{' '}
+            and traded{' '}
+            <L href="https://compute.exchange/blogs/h100-gpu-price-2026">
+              $15,000 to $28,000 used by August 2026
+            </L>
+            , a drawdown north of 50% inside two years for whoever bought that
+            top.
+          </p>
+
+          <p>
+            But the H100 was a compute-tier part, and its scarcity was compute
+            scarcity, which normalized. Watch the older A100 in the same
+            window: GPU Poet&rsquo;s low-average series{' '}
+            <L href="https://gpupoet.com/gpu/learn/price/august-2026/nvidia-a100-pcie">
+              moved from $9,089 in March 2026 to $11,837 in August 2026
+            </L>
+            , up roughly 30% in five months on a five-year-old part. That is
+            the memory squeeze lifting stale inventory. Parts constrained by
+            memory and allocation rather than raw compute rise late in life.
+            Spark is a memory-tier product, and the datacenter record supports
+            that distinction rather than contradicting it.
           </p>
 
           {/* ---- EMBED 2/4: DgxPriceChart ------------------------------- */}
           {/* Sits in the supply/price-trajectory discussion, right after the  */}
-          {/* successor-risk argument, where the reader wants to see the price */}
-          {/* path over time rather than read another paragraph about it.      */}
+          {/* successor-risk and depreciation-curve arguments, where the reader */}
+          {/* wants to see the price path over time rather than read about it.  */}
           <Embed caption="Modelled price paths for the GB10 class against the memory cycle. The successor gap through 2028 is the flat stretch.">
             <DgxPriceChart />
           </Embed>
@@ -228,7 +288,7 @@ export default function DgxPreviewPage() {
           <h2 className="scroll-mt-20">The bar is lower than people assume</h2>
 
           <p>
-            Holding real value here is not a demand for a collectible run. Using{' '}
+            Holding real value here is not a demand for a collectible run. On{' '}
             <L href="https://www.cbo.gov/publication/62105">CBO&rsquo;s</L>{' '}
             projected 2.4% (2027) and 2.3% (2028) inflation, real-flat through
             end-2028 means recovering about{' '}
@@ -245,6 +305,62 @@ export default function DgxPreviewPage() {
             years early.
           </p>
 
+          <p>
+            The mechanism is arithmetic. Used proceeds equal a condition ratio
+            times the contemporaneous new price, and that ratio for scarce
+            consumer compute runs far above workstation intuition. A used RTX
+            4090 marks{' '}
+            <L href="https://www.getpcparts.com/market-prices/gpu-graphics-cards/rtx-4090">
+              around $2,200
+            </L>{' '}
+            against roughly{' '}
+            <L href="https://bestvaluegpu.com/history/new-and-used-rtx-4090-price-history-and-specs/">
+              $2,755 for remaining new stock
+            </L>
+            , a ratio near 0.80 with both far above the $1,599 launch MSRP;{' '}
+            <L href="https://www.newegg.com/p/pl?d=refurbished+rtx+4090">
+              refurbished 4090s run $2,199 to $2,899
+            </L>
+            , 0.80 to 1.05 of new. Withdraw a config with no same-memory
+            replacement and the ratio passes one: Apple&rsquo;s refurbished
+            channel priced the retired{' '}
+            <L href="https://www.reddit.com/r/MacStudio/comments/1ufabhh/refurb_m3_ultra_512gb_now_starts_at_14609_m5/">
+              M3 Ultra 512GB Mac Studio at $14,609
+            </L>{' '}
+            against a roughly $9,499 to $10,499 original. The 0.3 to 0.6
+            discount regime people expect is an enterprise-workstation
+            phenomenon, absent from every consumer scarce-compute channel on
+            record.
+          </p>
+
+          <p>
+            Run the bar through that. At a withdrawn-config 0.95x ratio the
+            GX10 clears once new reaches about $4,640, roughly where the class
+            already trades; the Spark needs about $5,490, or $6,520 at 0.80x.
+            Neither requires a mania.
+          </p>
+
+          <p>
+            Thin float is why those ratios print. In August 2026 the 4090
+            showed roughly{' '}
+            <L href="https://rigprice.com/gpu/rtx-4090/">
+              65 active used listings
+            </L>{' '}
+            against about{' '}
+            <L href="https://www.pcprice.watch/search/RTX4090/US/GPU">
+              59 sold per month
+            </L>
+            , one month of visible inventory for a card that shipped in the
+            hundreds of thousands. The GB10 class is thinner: a handful of
+            listings across Kleinanzeigen, OfferUp, Joongna and one Swiss
+            retailer, with{' '}
+            <L href="https://swappa.com/prices/nvidia-dgx-spark">
+              Swappa still averaging $0 because no sale has completed
+            </L>
+            . Ten months post-launch the visible worldwide float is countable
+            on two hands. The modal owner is keeping the box.
+          </p>
+
           {/* ---- EMBED 3/4: DgxScenarioMatrix --------------------------- */}
           {/* Anchored to the scenario/hurdle section: the reader has just been */}
           {/* given one bar (end-2028 real-flat); the matrix lets them walk the  */}
@@ -259,12 +375,12 @@ export default function DgxPreviewPage() {
 
           <p>
             Japan gives a clean read, with no exposure to the US MSRP decision.
-            Lenovo&rsquo;s ThinkStation PGX, a GB10 twin, launched there
+            Lenovo&rsquo;s ThinkStation PGX, a GB10 twin, launched there on
             2025-10-15 at{' '}
             <L href="https://news.mynavi.jp/article/20251015-3552457/">
               ¥759,000 tax-included
             </L>
-            . The lowest tracked street price for that identical 1TB
+            ; the lowest tracked street price for that identical 1TB
             configuration in August 2026 is{' '}
             <L href="https://kakaku.com/item/K0001792529/">about ¥929,830</L>. That
             is <strong>+22.5% on the same box in ten months.</strong>
@@ -278,7 +394,7 @@ export default function DgxPreviewPage() {
             </L>{' '}
             between June and July 2026 at ¥682,900, ¥681,000 and ¥730,000, or 90
             to 96% of tax-inclusive launch list. Strip the 10% consumption tax
-            that a private auction sale does not carry, and the July 12 close
+            a private auction sale does not carry, and the July 12 close
             printed{' '}
             <strong>
               5.8% above ex-tax launch list, nine months after launch
@@ -288,34 +404,82 @@ export default function DgxPreviewPage() {
           </p>
 
           <p>
-            Two honest debits. At sale-date FX (~¥161/$, not the ¥150 the study
-            first used) those closes are $4,207 to $4,510, around the GX10 bar and
-            below the Spark&rsquo;s. And the PGX units carried Lenovo Premier
-            Support into 2029, so they are not bare-Spark proxies. But the USD
+            Two honest debits. At sale-date FX (~¥161/$, not the ¥150 first
+            used) those closes are $4,207 to $4,510: around the GX10 bar, below
+            the Spark&rsquo;s. And the PGX units carried Lenovo Premier Support
+            into 2029, so they are not bare-Spark proxies. But the USD
             shortfall is a weak-yen artifact, not a weak market. The
-            local-currency read is the real one, and it points up in two
-            independent geographies at once.
+            local-currency read is the real one, and it points up.
+          </p>
+
+          <h2 className="scroll-mt-20">The demand side has dates on it too</h2>
+
+          <p>
+            Local inference is a compounding base, not a vibe.{' '}
+            <L href="https://www.techtimes.com/articles/320061/20260710/ollama-closes-65m-series-b-reaches-89m-developers-local-open-weight-ai.htm">
+              Ollama reported 8.9 million developers and a $65M Series B in July
+              2026
+            </L>
+            , its Python client logs{' '}
+            <L href="https://pypistats.org/packages/ollama">
+              about 19.1 million downloads a month
+            </L>
+            , and the Qwen family has passed{' '}
+            <L href="https://valueaddvc.com/blog/alibaba-qwen-download-statistics-2026-3-billion-downloads-ranked-against-every-open-weight-model">
+              3 billion cumulative downloads
+            </L>
+            . Renting moved the other way: Anthropic{' '}
+            <L href="https://www.techtimes.com/articles/317625/20260602/anthropic-ends-subscription-subsidy-agents-june-15-credit-pool-replaces-flat-rate-access.htm">
+              ended flat-rate subscription use for third-party agent workloads
+              on June 15, 2026
+            </L>{' '}
+            and shifted Claude Enterprise to token billing that April. Casual
+            API use stayed cheap; the squeeze landed on heavy, agentic,
+            residency-bound workloads, precisely the buyer with the arithmetic
+            to justify a $4,699 box.
+          </p>
+
+          <p>
+            The forecast that matters has the right terminal year:
+            Deloitte&rsquo;s March 2026 survey has enterprise AI-at-the-edge
+            adoption rising from 36% to <strong>72% by 2028</strong>, with
+            infrastructure budgets more than tripling, and ABI has on-premises
+            AI servers compounding 18% annually to roughly 3.5M units by 2028.
+            Expectations, not bookings, but they set the direction of the pool
+            a used Spark sells into.
+          </p>
+
+          <p>
+            The utility ratchet is the concrete part. A 2026 buyer&rsquo;s box
+            got materially more capable with no hardware change: GPT-OSS-120B,
+            MiniMax M2.7 and DeepSeek V4 Flash (284B parameters, roughly 80 to
+            103GB quantized) all landed inside the 128GB line, and a
+            Qwen3.5-122B run was demonstrated on a single Spark. The honest
+            limit: a 400B-class MoE still needs about 240GB at INT4, against
+            roughly 109 to 115GB usable on a Spark. Quantization gains and
+            model growth run neck and neck at the 128GB line. Neck and neck is
+            enough.
           </p>
 
           <h2 className="scroll-mt-20">The objections, and why they lose</h2>
 
           <p>
             <strong>&ldquo;The cheap RTX Spark resets the class.&rdquo;</strong>{' '}
-            Twelve weeks after Computex it still has no price. The{' '}
+            Twelve weeks after Computex it has no price, no MSRP and no
+            consumer pre-order page. The{' '}
             <L href="https://www.pcworld.com/article/3156219/the-price-of-nvidia-rtx-spark-pcs-is-going-to-hurt.html">
               $2,500 figure
             </L>{' '}
             and Morgan Stanley&rsquo;s ~$2,899 &ldquo;floor&rdquo; were both set
-            in early June, before two more months of DRAM inflation. And the
-            memory BOM alone runs{' '}
+            in early June, before two more months of DRAM inflation. The memory
+            BOM alone runs{' '}
             <L href="https://wccftech.com/mobile-dram-prices-expected-to-increase-by-100-quarter-over-quarter-as-long-term-agreements-now-getting-signed-at-prices-as-high-as-21-gb/">
               $21/GB on long-term agreements
             </L>
-            , about $2,688 per 128GB, or ~$1,880 at July spot. Those leaks price
-            the memory at nearly the whole machine. And ASUS&rsquo;s first
-            allocation is{' '}
+            , about $2,688 per 128GB: those leaks price the memory at nearly
+            the whole machine. And ASUS&rsquo;s first allocation is already{' '}
             <L href="https://videocardz.com/newz/asus-says-its-first-rtx-spark-allocation-is-already-fully-pre-ordered-by-channel-partners">
-              fully preordered by channel partners
+              preordered by channel partners
             </L>
             . The flood has no supply behind it.
           </p>
@@ -325,35 +489,57 @@ export default function DgxPreviewPage() {
             <L href="https://www.notebookcheck.net/DRAM-crisis-Analysts-expect-drastic-price-drop-in-2028.1337992.0.html">
               Bernstein and Jefferies at 15 to 20% off in 2028
             </L>
-            , is a sell-side projection, and it falls from a far higher end-2027
+            , is a sell-side projection falling from a far higher end-2027
             peak; Goldman has the{' '}
             <L href="https://www.benzinga.com/markets/tech/26/06/52907425/goldman-memory-shortage-2028-samsung-hynix-kioxia-sandisk-micron">
               squeeze running to 2028
             </L>
-            . Device prices lag DRAM by one to two quarters, dragging the
-            device-price peak into 2028 itself. The fabs that end this (Micron
-            New York, SK hynix M17, Samsung P5) arrive 2029 to 2031. Relief
-            lands after the measurement date.
+            . Then there is the lag. DRAM contract prices peaked in Q3 2018,
+            yet the RTX 2080 still sold above MSRP that October and the first
+            18% street cut took until February 2019. Apply that
+            one-to-two-quarter lag to an end-2027 memory peak and the
+            device-price peak lands in Q1 to Q2 2028, on the measurement date,
+            with only shallow declines by December. The fabs that end this
+            (Micron New York, SK hynix M17, Samsung P5) arrive 2029 to 2031.
+            Relief lands after the bar is measured.
           </p>
 
           <p>
             <strong>
               &ldquo;First-party still sells at $3,999.&rdquo;
             </strong>{' '}
-            True, and it is the sharpest objection:{' '}
+            The sharpest objection:{' '}
             <L href="https://forums.developer.nvidia.com/t/deal-alert-dgx-spark-for-3-999-at-micro-center-best-buy-price-match-works-too-if-not-in-area/374387">
               Micro Center held that price
             </L>{' '}
-            months after the hike, and Best Buy ran a limited-quantity sale in
-            August. But notice what the objection concedes: the pre-hike price
-            is still occasionally available. That is not a reason to pass. That
-            is the entry.
+            months after the hike, and Best Buy ran a limited-quantity August
+            sale. It matters, because the anchor a 2028 buyer references is the
+            first-party price when stock exists, not the marketplace ask. But
+            notice what it concedes: the pre-hike price is still available.
+            That is not a reason to pass. That is the entry.
           </p>
 
           <p>
-            <strong>&ldquo;Institutions will dump theirs.&rdquo;</strong> On
-            five-to-six-year book lives, that wave lands 2029 to 2031, after
-            the window shuts.
+            <strong>&ldquo;Institutions will dump theirs.&rdquo;</strong> Book
+            lives run five to six years and are being extended, not shortened:
+            Meta moved servers from four years to 5.5, cutting 2025
+            depreciation by $2.9B. That refresh wave lands 2031 to 2032, 2029
+            at the very earliest. Either way, after the window shuts.
+          </p>
+
+          <p>
+            <strong>&ldquo;Something above resets the class.&rdquo;</strong> The
+            tier above Spark is not a $10,000 box, it is an $85,000 to $113,299
+            one, 18 to 22 times the price. Nobody cross-shops that. And the
+            alternative below it evaporated: Apple withdrew the 512GB Mac
+            Studio in March 2026, then{' '}
+            <L href="https://www.tomshardware.com/desktops/apple-quietly-axes-128gb-mac-studio-amid-supply-constraints-and-local-ai-frenzy-highest-memory-capacity-reduced-to-96gb-two-months-after-discontinuation-of-512gb-model">
+              quietly axed the 128GB option in May
+            </L>
+            , capping that line at 96GB. The cheapest path past 128GB is two
+            Sparks clustered over ConnectX-7 at about $9,400; between there and
+            $85,000 sits a void nothing on the 2026 to 2027 roadmap fills.
+            128GB is the reachable personal ceiling through end-2028.
           </p>
 
           {/* ---- EMBED 4/4: DgxSpeculationLab --------------------------- */}
@@ -369,36 +555,38 @@ export default function DgxPreviewPage() {
 
           <p>
             Buy the GX10 at $3,999 for the cleanest expression: the same scarce
-            memory, $700 less exposure, a list that has already moved +14.3% on
-            its own. Buy the Spark if you can catch a first-party print at
-            $3,999 to $4,699.
+            memory, $700 less exposure, a list already up +14.3% on its own.
+            Buy the Spark if you can catch a first-party print at $3,999 to
+            $4,699.
           </p>
 
           <p>
             The asymmetry makes this sound rather than clever. Downside is
             capped by a use-value floor: you own the machine, you run the models
             locally, and the compute is consumed whether or not a resale bid
-            ever shows up. The worst print in the corpus is one US liquidator
-            listing a used GX10 at $2,000, a single surplus-dealer ask, against
-            a class whose new price keeps rising. The upside needs only one of:
-            a second hike, a stockout, an EOL notice, or Japan&rsquo;s +22.5%
-            pace merely continuing.
+            ever shows up. The box earns that floor daily, holding a roughly
+            3.6x cold prompt-processing edge over the $1,999 AMD 128GB anchor
+            at 32K context, a gap that widens as contexts grow. The worst print
+            in the corpus is one US liquidator asking $2,000 for a used GX10, a
+            single surplus dealer against a class whose new price keeps rising.
+            The upside needs only one of: a second hike, a stockout, an EOL
+            notice, or Japan&rsquo;s +22.5% pace merely continuing.
           </p>
 
           <p>
             Two observables settle it, both checkable in minutes: the first
             official RTX Spark price against that $2,899 floor, and any second
             US Spark hike or EOL notice. NVIDIA reprices developer hardware
-            mid-cycle when memory forces it. Jetson proved that twice inside
-            three weeks.
+            mid-cycle when memory forces it, and Jetson proved that twice
+            inside three weeks.
           </p>
 
           <p>
             Push the horizon to 2030 and the bar rises to about $5,151 while
             normalization, successors and institutional supply all arrive at
-            once. Different bet, harder one. Through 2028 the shape is simple,
-            and it is already visible in the tape: the silicon ages, but the
-            memory sets the price.
+            once. Harder bet. Through 2028 the shape is simple, and already
+            visible in the tape: the silicon ages, but the memory sets the
+            price.
           </p>
         </article>
 

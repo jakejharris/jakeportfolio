@@ -155,7 +155,7 @@ export default function DgxHeroStat() {
         <CardContent className="space-y-4">
           {/* Featured stat: Spark FE reprice */}
           <div className="rounded-lg border border-border bg-muted/40 p-4 sm:p-5">
-            <div className="flex flex-wrap items-start justify-between gap-3">
+            <div className="flex flex-wrap items-start justify-between gap-x-3 gap-y-2">
               <div>
                 <p className="text-[11px] font-medium uppercase tracking-widest text-muted-foreground">
                   DGX Spark Founders Edition · current MSRP
@@ -199,14 +199,19 @@ export default function DgxHeroStat() {
               <dt className="text-[11px] font-medium uppercase tracking-widest text-muted-foreground">
                 End-2028 real-flat hurdle
               </dt>
-              <dd className="mt-1 font-mono text-xl font-semibold tabular-nums text-foreground sm:text-2xl">
-                ~{fmtUsd(hurdleSpark)}{' '}
-                <span className="text-sm font-normal text-muted-foreground">
-                  Spark
-                </span>{' '}
-                / ~{fmtUsd(hurdleGx10)}{' '}
-                <span className="text-sm font-normal text-muted-foreground">
-                  GX10
+              <dd className="mt-1 flex flex-wrap items-baseline gap-x-2 gap-y-1 font-mono text-xl font-semibold tabular-nums text-foreground sm:text-2xl">
+                <span className="whitespace-nowrap">
+                  ~{fmtUsd(hurdleSpark)}{' '}
+                  <span className="text-sm font-normal text-muted-foreground">
+                    Spark
+                  </span>
+                </span>
+                <span className="text-muted-foreground">/</span>
+                <span className="whitespace-nowrap">
+                  ~{fmtUsd(hurdleGx10)}{' '}
+                  <span className="text-sm font-normal text-muted-foreground">
+                    GX10
+                  </span>
                 </span>
               </dd>
               <dd className="mt-1 text-xs text-muted-foreground">

@@ -72,6 +72,8 @@ const X_TICKS: Ym[] = [
   FC_END,
 ];
 
+const COMPACT_X_TICKS: Ym[] = ['2018-01', HIST_END, '2035-01', FC_END];
+
 const MONTH_NAMES = [
   'Jan',
   'Feb',
@@ -124,6 +126,7 @@ export default function DgxPriceChart() {
   });
   const [mounted, setMounted] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
+  const [isCompactChart, setIsCompactChart] = useState(false);
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
   const { resolvedTheme } = useTheme();
 
@@ -157,6 +160,21 @@ export default function DgxPriceChart() {
     return () => observer.disconnect();
   }, []);
 
+  useEffect(() => {
+    const element = rootRef.current;
+    if (!element) return;
+
+    const updateCompactState = (width: number) => setIsCompactChart(width < 520);
+    updateCompactState(element.getBoundingClientRect().width);
+
+    const observer = new ResizeObserver(([entry]) => {
+      updateCompactState(entry.contentRect.width);
+    });
+
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, []);
+
   const data = useMemo(() => seriesForScenario(scenarioKey), [scenarioKey]);
   const scenario = SCENARIOS.find((item) => item.key === scenarioKey) ?? SCENARIOS[0];
   const isDark = mounted && resolvedTheme === 'dark';
@@ -170,15 +188,15 @@ export default function DgxPriceChart() {
   return (
     <Card
       ref={rootRef}
-      className="my-8 overflow-hidden rounded-lg border-border bg-card shadow-none"
+      className="my-8 w-full max-w-full overflow-hidden rounded-lg border-border bg-card shadow-none"
     >
       <CardHeader className="gap-4 border-b border-border p-4 sm:p-5">
         <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
-          <div>
+          <div className="min-w-0">
             <CardTitle className="text-base text-foreground sm:text-lg">
               DGX Spark price paths
             </CardTitle>
-            <CardDescription className="mt-1">
+            <CardDescription className="mt-1 leading-relaxed">
               US street prices in real 2025 dollars · historical through Aug 2026
             </CardDescription>
           </div>
@@ -190,7 +208,7 @@ export default function DgxPriceChart() {
           </span>
         </div>
 
-        <div className="w-full sm:max-w-sm">
+        <div className="min-w-0 w-full sm:max-w-sm">
           <label
             htmlFor="price-projection-scenario"
             className="mb-1.5 block font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground"
@@ -203,11 +221,11 @@ export default function DgxPriceChart() {
           >
             <SelectTrigger
               id="price-projection-scenario"
-              className="w-full border-border bg-card text-foreground shadow-none"
+              className="h-11 w-full min-w-0 border-border bg-card text-foreground shadow-none [&>span]:truncate sm:h-10"
             >
               <SelectValue />
             </SelectTrigger>
-            <SelectContent className="border-border bg-card text-foreground">
+            <SelectContent className="max-w-[calc(100vw-2rem)] border-border bg-card text-foreground">
               {SCENARIOS.map((item) => (
                 <SelectItem
                   key={item.key}
@@ -226,10 +244,13 @@ export default function DgxPriceChart() {
         </p>
       </CardHeader>
 
-      <CardContent className="p-4 sm:p-5">
-        <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex flex-wrap items-center gap-2" aria-label="Visible price series">
-            <span className="mr-1 font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground">
+      <CardContent className="min-w-0 p-4 sm:p-5">
+        <div className="mb-4 flex min-w-0 flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+          <div
+            className="grid min-w-0 grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center"
+            aria-label="Visible price series"
+          >
+            <span className="col-span-2 font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground sm:col-auto sm:mr-1">
               Series
             </span>
             {SERIES.map((item) => {
@@ -240,7 +261,7 @@ export default function DgxPriceChart() {
                   type="button"
                   aria-pressed={active}
                   onClick={() => toggleSeries(item.key)}
-                  className={`inline-flex h-8 items-center gap-2 rounded-lg border px-2.5 text-xs font-medium transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card ${
+                  className={`inline-flex h-11 min-w-0 items-center justify-center gap-2 rounded-lg border px-3 text-xs font-medium transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card sm:h-8 sm:w-auto sm:px-2.5 ${
                     active
                       ? 'border-border bg-muted text-foreground'
                       : 'border-border bg-card text-muted-foreground opacity-60'
@@ -257,11 +278,11 @@ export default function DgxPriceChart() {
             })}
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex w-full items-center justify-between gap-3 sm:w-auto sm:justify-start">
             <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground">
               Y scale
             </span>
-            <div className="inline-flex rounded-lg border border-border bg-card p-0.5">
+            <div className="grid min-w-0 flex-1 grid-cols-2 rounded-lg border border-border bg-card p-0.5 sm:inline-flex sm:flex-none">
               {(['linear', 'log'] as const).map((mode) => {
                 const active = scaleMode === mode;
                 return (
@@ -270,7 +291,7 @@ export default function DgxPriceChart() {
                     type="button"
                     aria-pressed={active}
                     onClick={() => setScaleMode(mode)}
-                    className={`h-7 rounded-md px-2.5 text-xs font-medium capitalize transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+                    className={`h-11 rounded-md px-3 text-xs font-medium capitalize transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:h-7 sm:px-2.5 ${
                       active
                         ? 'bg-[var(--accent-color)] text-background'
                         : 'text-muted-foreground hover:text-foreground'
@@ -284,15 +305,19 @@ export default function DgxPriceChart() {
           </div>
         </div>
 
-        <div className="relative rounded-lg border border-border bg-card p-2 sm:p-3">
+        <div className="relative min-w-0 rounded-lg border border-border bg-card p-1 sm:p-3">
           <ChartContainer
             config={CHART_CONFIG}
-            className="h-[360px] w-full aspect-auto sm:h-[440px]"
+            className="h-[360px] min-w-0 w-full aspect-auto text-[10px] sm:h-[440px] sm:text-xs"
           >
             <LineChart
               accessibilityLayer
               data={data}
-              margin={{ top: 24, right: 12, bottom: 4, left: 4 }}
+              margin={
+                isCompactChart
+                  ? { top: 20, right: 16, bottom: 0, left: 0 }
+                  : { top: 24, right: 12, bottom: 4, left: 4 }
+              }
             >
               <CartesianGrid vertical={false} strokeDasharray="2 4" />
               <ReferenceArea
@@ -302,12 +327,14 @@ export default function DgxPriceChart() {
                 fillOpacity={isDark ? 0.5 : 0.8}
                 ifOverflow="extendDomain"
                 label={{
-                  value: `PROJECTION — ${scenario.short.toUpperCase()}`,
+                  value: isCompactChart
+                    ? 'PROJECTION'
+                    : `PROJECTION — ${scenario.short.toUpperCase()}`,
                   position: 'insideTopRight',
                   fill: 'var(--accent-color)',
-                  fontSize: 10,
+                  fontSize: isCompactChart ? 9 : 10,
                   fontFamily: 'var(--font-geist-mono)',
-                  letterSpacing: 1,
+                  letterSpacing: isCompactChart ? 0.7 : 1,
                 }}
               />
               <ReferenceLine
@@ -318,40 +345,49 @@ export default function DgxPriceChart() {
               />
               <XAxis
                 dataKey="ym"
-                ticks={X_TICKS}
+                ticks={isCompactChart ? COMPACT_X_TICKS : X_TICKS}
                 tickFormatter={formatXAxis}
+                interval={isCompactChart ? 0 : 'preserveStartEnd'}
+                tick={{ fontSize: isCompactChart ? 10 : 12 }}
                 tickLine={false}
                 axisLine={false}
-                minTickGap={20}
-                tickMargin={10}
+                minTickGap={isCompactChart ? 8 : 20}
+                tickMargin={isCompactChart ? 8 : 10}
                 className="font-mono"
               />
               <YAxis
                 scale={scaleMode === 'log' ? 'log' : 'linear'}
                 domain={scaleMode === 'log' ? [10, 'auto'] : [0, 'auto']}
                 tickFormatter={formatAxisPrice}
+                tick={{ fontSize: isCompactChart ? 10 : 12 }}
                 tickLine={false}
                 axisLine={false}
-                width={54}
+                tickMargin={isCompactChart ? 4 : 5}
+                width={isCompactChart ? 46 : 54}
                 className="font-mono"
               />
               <ChartTooltip
-                cursor={{ stroke: 'hsl(var(--muted-foreground))', strokeOpacity: 0.45 }}
+                cursor={{
+                  stroke: 'hsl(var(--muted-foreground))',
+                  strokeOpacity: 0.45,
+                }}
+                allowEscapeViewBox={{ x: false, y: false }}
                 content={
                   <ChartTooltipContent
                     indicator="line"
+                    className="max-w-[calc(100vw-3rem)] px-2 py-1.5 text-[11px] sm:px-2.5 sm:text-xs"
                     labelFormatter={(label) => formatMonth(String(label))}
                     formatter={(value, name, item) => (
-                      <div className="flex min-w-[9rem] items-center justify-between gap-4">
-                        <span className="flex items-center gap-2 text-muted-foreground">
+                      <div className="flex w-full min-w-[8rem] max-w-[calc(100vw-5rem)] items-center justify-between gap-3 sm:min-w-[9rem] sm:gap-4">
+                        <span className="flex min-w-0 items-center gap-2 text-muted-foreground">
                           <span
-                            className="h-2 w-2 rounded-[2px]"
+                            className="h-2 w-2 shrink-0 rounded-[2px]"
                             style={{ backgroundColor: item.color }}
                             aria-hidden="true"
                           />
                           {String(name)}
                         </span>
-                        <span className="font-mono font-medium tabular-nums text-foreground">
+                        <span className="shrink-0 font-mono font-medium tabular-nums text-foreground">
                           {typeof value === 'number' ? formatCurrency(value) : String(value)}
                         </span>
                       </div>
@@ -381,7 +417,7 @@ export default function DgxPriceChart() {
 
           {!hasVisibleSeries && (
             <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-              <span className="rounded-lg border border-border bg-card px-3 py-2 text-sm text-muted-foreground">
+              <span className="mx-4 max-w-xs rounded-lg border border-border bg-card px-3 py-2 text-center text-sm text-muted-foreground">
                 Select at least one series to draw a price path.
               </span>
             </div>

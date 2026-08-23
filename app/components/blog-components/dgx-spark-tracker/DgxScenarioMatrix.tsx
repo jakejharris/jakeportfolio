@@ -49,22 +49,26 @@ const FAM_LABEL: Record<Fam, string> = {
 // takeoff family, amber for the long-horizon one. Fills are soft HSL alphas
 // to stay refined on this near-monochrome site, and the dark: variants hold
 // contrast on the dark card. Color only ever rides along with the text
-// label, it never replaces it.
-const FAM_STYLE: Record<Fam, { badge: string; edge: string }> = {
+// label, it never replaces it. The family accent is an absolutely-
+// positioned 2px bar inside the first cell rather than a border-l on the
+// cell itself: cell borders count toward the table's width, and the old
+// border was just enough to tip the card into horizontal scroll at desktop
+// sizes. The bar paints the same edge with zero layout width.
+const FAM_STYLE: Record<Fam, { badge: string; bar: string }> = {
   base: {
     badge:
       'border-slate-500/30 bg-slate-500/10 text-slate-600 dark:border-slate-400/25 dark:bg-slate-400/10 dark:text-slate-300',
-    edge: 'border-l-slate-500/40 dark:border-l-slate-400/35',
+    bar: 'bg-slate-500/40 dark:bg-slate-400/35',
   },
   '27': {
     badge:
       'border-indigo-500/30 bg-indigo-500/10 text-indigo-700 dark:border-indigo-400/30 dark:bg-indigo-400/10 dark:text-indigo-300',
-    edge: 'border-l-indigo-500/45 dark:border-l-indigo-400/35',
+    bar: 'bg-indigo-500/45 dark:bg-indigo-400/35',
   },
   '40': {
     badge:
       'border-amber-600/35 bg-amber-500/10 text-amber-700 dark:border-amber-400/30 dark:bg-amber-400/10 dark:text-amber-300',
-    edge: 'border-l-amber-500/50 dark:border-l-amber-400/35',
+    bar: 'bg-amber-500/50 dark:bg-amber-400/35',
   },
 };
 
@@ -128,14 +132,9 @@ export default function DgxScenarioMatrix() {
         {/* Header + series toggle */}
         <div className="flex flex-col gap-3 border-b border-border p-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <div className="flex items-center gap-2">
-              <h3 className="text-sm font-semibold text-foreground">
-                Scenario matrix
-              </h3>
-              <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-                Projection
-              </span>
-            </div>
+            <h3 className="text-sm font-semibold text-foreground">
+              Scenario matrix
+            </h3>
             <p className="mt-1 max-w-xl text-xs leading-relaxed text-muted-foreground">
               Projected price at each December checkpoint under all seven
               scenarios, in real 2025 dollars. Flip the series between the DGX
@@ -157,14 +156,18 @@ export default function DgxScenarioMatrix() {
           </Tabs>
         </div>
 
-        {/* Table (shadcn Table wraps in an overflow-auto div → scrolls on mobile) */}
+        {/* Table. Gutters and type are sized compactly (px-1 cells, text-xs
+            mono values, 13px labels) so the full 7-column matrix fits inside
+            the card with ZERO horizontal scroll at desktop widths; the shadcn
+            overflow-auto wrapper around it only ever engages as a clean,
+            contained scroll on narrow mobile, where the first column stays
+            sticky and its label wraps instead of hogging width. */}
         <Table
-          className="min-w-[560px]"
           aria-label={`Projected ${SERIES_LABEL[series]} price by scenario at each December checkpoint`}
         >
           <TableHeader>
             <TableRow className="hover:bg-transparent">
-              <TableHead className="sticky left-0 z-10 bg-card text-xs text-muted-foreground">
+              <TableHead className="sticky left-0 z-10 bg-card pl-2 pr-3 text-xs text-muted-foreground">
                 Scenario
               </TableHead>
               {CHECKPOINTS.map((cp) => (
@@ -172,7 +175,7 @@ export default function DgxScenarioMatrix() {
                   key={cp.ym}
                   scope="col"
                   title={ymLabel(cp.ym)}
-                  className="whitespace-nowrap px-2 py-1.5 text-right font-mono text-xs text-muted-foreground"
+                  className="whitespace-nowrap px-1 py-1 text-right font-mono text-xs text-muted-foreground"
                 >
                   {cp.ym.slice(0, 4)}
                 </TableHead>
@@ -189,19 +192,25 @@ export default function DgxScenarioMatrix() {
               >
                 <TableCell
                   scope="row"
-                  className={`sticky left-0 z-10 whitespace-nowrap border-l-2 bg-card p-2 group-hover/row:bg-muted/50 ${FAM_STYLE[row.fam].edge}`}
+                  className="sticky left-0 z-10 bg-card py-1.5 pl-2 pr-3 group-hover/row:bg-muted/50 md:whitespace-nowrap"
                 >
+                  {/* Family accent bar — absolutely positioned (the sticky
+                      cell is its containing block), so it adds no width. */}
                   <span
-                    className="inline-flex items-baseline gap-2"
+                    aria-hidden="true"
+                    className={`absolute inset-y-0 left-0 w-0.5 ${FAM_STYLE[row.fam].bar}`}
+                  />
+                  <span
+                    className="inline-flex max-w-[13rem] flex-wrap items-baseline gap-x-1.5 md:max-w-none md:flex-nowrap"
                     title={row.driver}
                   >
                     <Badge
                       variant="outline"
-                      className={`px-1.5 py-0 font-mono text-[10px] font-medium uppercase tracking-wider ${FAM_STYLE[row.fam].badge}`}
+                      className={`px-1 py-0 font-mono text-[10px] font-medium uppercase tracking-wider ${FAM_STYLE[row.fam].badge}`}
                     >
                       {FAM_LABEL[row.fam]}
                     </Badge>
-                    <span className="text-sm font-medium text-foreground">
+                    <span className="text-[13px] font-medium leading-snug text-foreground">
                       {row.label}
                     </span>
                   </span>
@@ -211,7 +220,7 @@ export default function DgxScenarioMatrix() {
                   return (
                     <TableCell
                       key={cp.ym}
-                      className="whitespace-nowrap px-2 py-1.5 text-right font-mono text-[13px] tabular-nums"
+                      className="whitespace-nowrap px-1 py-1 text-right font-mono text-xs tabular-nums"
                     >
                       {v == null ? (
                         <span
