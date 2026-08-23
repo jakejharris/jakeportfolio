@@ -44,6 +44,22 @@ const componentRegistry: Record<string, ComponentType> = {
     () => import('./orchestrator-rule/DispatchFlow'),
     { ssr: false }
   ),
+  DgxPriceChart: dynamic(
+    () => import('./dgx-spark-tracker/DgxPriceChart'),
+    { ssr: false }
+  ),
+  DgxSpeculationLab: dynamic(
+    () => import('./dgx-spark-tracker/DgxSpeculationLab'),
+    { ssr: false }
+  ),
+  DgxScenarioMatrix: dynamic(
+    () => import('./dgx-spark-tracker/DgxScenarioMatrix'),
+    { ssr: false }
+  ),
+  DgxHeroStat: dynamic(
+    () => import('./dgx-spark-tracker/DgxHeroStat'),
+    { ssr: false }
+  ),
 };
 
 interface InteractiveBlockProps {

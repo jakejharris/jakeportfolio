@@ -312,6 +312,11 @@ export default {
                   { title: 'Symphony Fan-Out Flow', value: 'SymphonyFlow' },
                   { title: 'Orchestrator Rule Ledger', value: 'RuleLedger' },
                   { title: 'Dispatch Flow', value: 'DispatchFlow' },
+                  // Keep these DGX entries mirrored in the jakeportfolio-studio schema.
+                  { title: 'DGX Spark Price Chart', value: 'DgxPriceChart' },
+                  { title: 'DGX Spark Speculation Lab', value: 'DgxSpeculationLab' },
+                  { title: 'DGX Spark Scenario Matrix', value: 'DgxScenarioMatrix' },
+                  { title: 'DGX Spark Hero Stats', value: 'DgxHeroStat' },
                 ],
               },
               validation: (Rule: any) => Rule.required(),
