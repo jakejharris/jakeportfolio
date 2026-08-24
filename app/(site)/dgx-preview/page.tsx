@@ -186,6 +186,27 @@ export default function DgxPreviewPage() {
             63 percent quarter over quarter.
           </p>
 
+          <figure className="my-10">
+            <Image
+              src="/dgx-cc-oblique.jpg"
+              alt="NVIDIA DGX Spark shown from an oblique angle"
+              width={1920}
+              height={1185}
+              sizes="(min-width: 1024px) 896px, calc(100vw - 2rem)"
+              className="h-auto w-full rounded-lg"
+            />
+            <figcaption className="mt-2 text-center text-xs text-muted-foreground">
+              Photo:{' '}
+              <L href="https://commons.wikimedia.org/wiki/File:Nvidia_DGX_Spark_oblique_view_dllu.jpg">
+                &quot;Nvidia DGX Spark oblique view dllu&quot;
+              </L>{' '}
+              by Daniel Lu (User:dllu),{' '}
+              <L href="https://creativecommons.org/licenses/by-sa/4.0/">
+                CC BY-SA 4.0
+              </L>, via Wikimedia Commons. Resized.
+            </figcaption>
+          </figure>
+
           <p>
             The pressure runs up the ladder too. MSI&apos;s GB300-based
             XpertStation WS300{' '}
@@ -450,6 +471,27 @@ export default function DgxPreviewPage() {
             to justify a $4,699 box.
           </p>
 
+          <figure className="my-10">
+            <Image
+              src="/dgx-cc-metalfoam.jpg"
+              alt="Close-up of the NVIDIA DGX metal-foam front texture"
+              width={1920}
+              height={959}
+              sizes="(min-width: 1024px) 896px, calc(100vw - 2rem)"
+              className="h-auto w-full rounded-lg"
+            />
+            <figcaption className="mt-2 text-center text-xs text-muted-foreground">
+              Photo:{' '}
+              <L href="https://commons.wikimedia.org/wiki/File:Nvidia_DGX_metal_foam_dllu.jpg">
+                &quot;Nvidia DGX metal foam dllu&quot;
+              </L>{' '}
+              by Daniel Lu (User:dllu),{' '}
+              <L href="https://creativecommons.org/licenses/by-sa/4.0/">
+                CC BY-SA 4.0
+              </L>, via Wikimedia Commons. Resized.
+            </figcaption>
+          </figure>
+
           <p>
             Deloitte&apos;s 2026 infrastructure survey recorded respondents
             expecting edge-AI adoption to rise from 36 percent to 72 percent by
@@ -476,6 +518,27 @@ export default function DgxPreviewPage() {
           </p>
 
           <h2 className="scroll-mt-20">What could break the 2028 thesis?</h2>
+
+          <figure className="my-10">
+            <Image
+              src="/dgx-cc-front.jpg"
+              alt="Straight-on front view of the NVIDIA DGX Spark"
+              width={1920}
+              height={1080}
+              sizes="(min-width: 1024px) 896px, calc(100vw - 2rem)"
+              className="h-auto w-full rounded-lg"
+            />
+            <figcaption className="mt-2 text-center text-xs text-muted-foreground">
+              Photo:{' '}
+              <L href="https://commons.wikimedia.org/wiki/File:Nvidia_DGX_front_view_dllu.jpg">
+                &quot;Nvidia DGX front view dllu&quot;
+              </L>{' '}
+              by Daniel Lu (User:dllu),{' '}
+              <L href="https://creativecommons.org/licenses/by-sa/4.0/">
+                CC BY-SA 4.0
+              </L>, via Wikimedia Commons. Resized.
+            </figcaption>
+          </figure>
 
           <h3 className="scroll-mt-20">
             A cheap successor or abundant first-party stock
