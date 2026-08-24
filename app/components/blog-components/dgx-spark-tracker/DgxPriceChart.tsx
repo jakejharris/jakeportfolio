@@ -63,6 +63,23 @@ const CHART_CONFIG = {
   spark: { label: 'DGX Spark', color: 'hsl(var(--chart-4))' },
 } satisfies ChartConfig;
 
+const PLAIN_SCENARIO_DESCRIPTIONS: Record<ScenarioKey, string> = {
+  baseline:
+    'AI demand settles down and hardware prices return to a normal upgrade cycle.',
+  race:
+    'An all-out AI race makes hardware scarce, then this scenario says the market ends.',
+  slowdown:
+    'Governments tighten control of AI hardware, prices jump, then cheap automated production pulls them down.',
+  planA:
+    'A US-China AI deal limits new computing hardware, making these boxes scarce and expensive before supply catches up.',
+  planS:
+    'Countries pause advanced AI, freeing chip supply while small AI boxes stay limited and valuable.',
+  planC:
+    'The US regulates on its own while the AI race continues, pushing prices higher for longer before they fall.',
+  planD:
+    'The fastest, least controlled AI race causes the sharpest price spike, then this scenario says the market ends.',
+};
+
 const X_TICKS: Ym[] = [
   '2018-01',
   '2022-01',
@@ -196,7 +213,12 @@ export default function DgxPriceChart() {
             <CardTitle className="text-base text-foreground sm:text-lg">
               DGX Spark price paths
             </CardTitle>
-            <CardDescription className="mt-1 leading-relaxed">
+            <CardDescription className="mt-2 max-w-3xl text-sm leading-relaxed text-foreground">
+              <span className="font-medium">What this shows:</span> This chart follows
+              DGX Spark prices under several possible futures for AI. The shaded area is
+              a guess, not a fact; if a line stops, that scenario says the market ended.
+            </CardDescription>
+            <CardDescription className="mt-1.5 leading-relaxed">
               US street prices in real 2025 dollars · historical through Aug 2026
             </CardDescription>
           </div>
@@ -239,9 +261,19 @@ export default function DgxPriceChart() {
           </Select>
         </div>
 
-        <p className="max-w-4xl text-sm leading-relaxed text-muted-foreground">
-          {scenario.desc}
+        <p className="max-w-4xl text-sm leading-relaxed text-foreground">
+          <span className="font-medium">{scenario.name}:</span>{' '}
+          {PLAIN_SCENARIO_DESCRIPTIONS[scenarioKey]}
         </p>
+
+        <details className="group max-w-4xl text-xs text-muted-foreground">
+          <summary className="w-fit cursor-pointer rounded-sm font-medium underline decoration-border underline-offset-4 transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+            Technical scenario details
+          </summary>
+          <p className="mt-2 leading-relaxed">
+            {scenario.desc.replaceAll('\u2014', '-')}
+          </p>
+        </details>
       </CardHeader>
 
       <CardContent className="min-w-0 p-4 sm:p-5">
@@ -278,30 +310,35 @@ export default function DgxPriceChart() {
             })}
           </div>
 
-          <div className="flex w-full items-center justify-between gap-3 sm:w-auto sm:justify-start">
-            <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground">
-              Y scale
-            </span>
-            <div className="grid min-w-0 flex-1 grid-cols-2 rounded-lg border border-border bg-card p-0.5 sm:inline-flex sm:flex-none">
-              {(['linear', 'log'] as const).map((mode) => {
-                const active = scaleMode === mode;
-                return (
-                  <button
-                    key={mode}
-                    type="button"
-                    aria-pressed={active}
-                    onClick={() => setScaleMode(mode)}
-                    className={`h-11 rounded-md px-3 text-xs font-medium capitalize transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:h-7 sm:px-2.5 ${
-                      active
-                        ? 'bg-[var(--accent-color)] text-background'
-                        : 'text-muted-foreground hover:text-foreground'
-                    }`}
-                  >
-                    {mode}
-                  </button>
-                );
-              })}
+          <div className="flex w-full flex-col gap-1.5 sm:w-auto sm:items-end">
+            <div className="flex w-full items-center justify-between gap-3 sm:w-auto sm:justify-start">
+              <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground">
+                Y scale
+              </span>
+              <div className="grid min-w-0 flex-1 grid-cols-2 rounded-lg border border-border bg-card p-0.5 sm:inline-flex sm:flex-none">
+                {(['linear', 'log'] as const).map((mode) => {
+                  const active = scaleMode === mode;
+                  return (
+                    <button
+                      key={mode}
+                      type="button"
+                      aria-pressed={active}
+                      onClick={() => setScaleMode(mode)}
+                      className={`h-11 rounded-md px-3 text-xs font-medium capitalize transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:h-7 sm:px-2.5 ${
+                        active
+                          ? 'bg-[var(--accent-color)] text-background'
+                          : 'text-muted-foreground hover:text-foreground'
+                      }`}
+                    >
+                      {mode}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
+            <p className="text-xs leading-snug text-muted-foreground">
+              Log scale compresses big price spikes.
+            </p>
           </div>
         </div>
 
@@ -329,7 +366,7 @@ export default function DgxPriceChart() {
                 label={{
                   value: isCompactChart
                     ? 'PROJECTION'
-                    : `PROJECTION — ${scenario.short.toUpperCase()}`,
+                    : `PROJECTION: ${scenario.short.toUpperCase()}`,
                   position: 'insideTopRight',
                   fill: 'var(--accent-color)',
                   fontSize: isCompactChart ? 9 : 10,
@@ -425,8 +462,8 @@ export default function DgxPriceChart() {
         </div>
 
         <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
-          Lines left of the dashed boundary are recorded or interpolated historical street prices.
-          Values to the right are scenario projections; a missing line means that scenario’s market has ended.
+          Left of the dashed line is price history. The shaded area to the right is a
+          projection, and a missing line means that scenario says the market ended.
         </p>
       </CardContent>
     </Card>

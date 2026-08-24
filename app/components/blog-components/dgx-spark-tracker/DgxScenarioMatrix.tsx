@@ -10,6 +10,10 @@
 // are static scenario projections ported from the original tracker: nothing
 // here is invented, fetched, or computed beyond interpolation already done in
 // ./data. Pure semantic-token styling, so dark/light needs no theme read.
+// A plain-language layer keeps it readable for non-technical visitors: a
+// "How to read this" primer in the header, a one-line English subtitle under
+// each scenario name, and a dagger plus footnote on the extreme spike cells
+// so the scariest numbers cannot be mistaken for predictions.
 
 import { useState } from 'react';
 import { Badge } from '@/app/components/ui/badge';
@@ -96,6 +100,28 @@ const fmtDollars = (v: number): string =>
 // stay muted.
 const PURCHASE_PRICE = 4699;
 
+// Cells at or above three times the purchase price are extreme spike cells.
+// They only occur in the stretch years of the two most aggressive scenarios
+// (Plan A's rationed-compute deal and Plan D's no-brakes race), so they carry
+// a small dagger and a footnote rather than standing alone as scary numbers.
+const EXTREME_MARK = PURCHASE_PRICE * 3;
+
+// One-line, jargon-free description of each scenario, shown as a small
+// subtitle under the row label. Written for a reader who has never heard of
+// AI 2027 or AI 2040: each says what kind of world the row imagines and what
+// generally happens to prices in it. The scenario names stay as-is; this is
+// the translation, not a replacement.
+const PLAIN: Record<ScenarioKey, string> = {
+  baseline: 'AI cools off and the normal upgrade cycle resumes',
+  race: 'Runaway AI race: prices spike through 2027, then crash',
+  slowdown: 'The boom stalls: a longer squeeze, then very cheap hardware',
+  planA:
+    'A US-China deal rations computing power; boxes get very expensive, then crash',
+  planS: 'AI research halts worldwide; prices level off instead of crashing',
+  planC: 'No deal, just regulation; a longer squeeze, then cheap hardware again',
+  planD: 'An all-out race: the wildest spike of all, then the market ends in 2034',
+};
+
 // Row label: the scenario name with the family prefix stripped (the badge
 // carries it), mirroring the original tracker's matrix. Derived from the
 // data's own strings: nothing new.
@@ -136,9 +162,14 @@ export default function DgxScenarioMatrix() {
               Scenario matrix
             </h3>
             <p className="mt-1 max-w-xl text-xs leading-relaxed text-muted-foreground">
-              Projected price at each December checkpoint under all seven
-              scenarios, in real 2025 dollars. Flip the series between the DGX
-              Spark-class lowest price and the NVIDIA flagship street price.
+              <span className="font-medium text-foreground">
+                How to read this:{' '}
+              </span>
+              each of the seven rows is a different guess about how AI plays
+              out, and each number is what a DGX Spark might cost in that
+              world at that December, in today’s dollars. Everything past 2026
+              is a projection, not a fact. The toggle switches the numbers to
+              NVIDIA’s flagship card.
             </p>
           </div>
           <Tabs
@@ -200,20 +231,33 @@ export default function DgxScenarioMatrix() {
                     aria-hidden="true"
                     className={`absolute inset-y-0 left-0 w-0.5 ${FAM_STYLE[row.fam].bar}`}
                   />
-                  <span
-                    className="inline-flex max-w-[13rem] flex-wrap items-baseline gap-x-1.5 md:max-w-none md:flex-nowrap"
+                  {/* Label stack: the badge + name line behaves exactly as
+                      before (wraps on mobile, one line on desktop), with a
+                      plain-language subtitle beneath it. The subtitle is
+                      whitespace-normal and width-capped so it wraps to a
+                      second line instead of widening the sticky column; the
+                      15rem cap matches the widest existing label line, so
+                      desktop column width is unchanged. Hover anywhere in
+                      the stack for the scenario mechanism. */}
+                  <div
+                    className="flex max-w-[13rem] flex-col items-start gap-y-0.5 md:max-w-none"
                     title={row.driver}
                   >
-                    <Badge
-                      variant="outline"
-                      className={`px-1 py-0 font-mono text-[10px] font-medium uppercase tracking-wider ${FAM_STYLE[row.fam].badge}`}
-                    >
-                      {FAM_LABEL[row.fam]}
-                    </Badge>
-                    <span className="text-[13px] font-medium leading-snug text-foreground">
-                      {row.label}
+                    <span className="inline-flex flex-wrap items-baseline gap-x-1.5 md:flex-nowrap">
+                      <Badge
+                        variant="outline"
+                        className={`px-1 py-0 font-mono text-[10px] font-medium uppercase tracking-wider ${FAM_STYLE[row.fam].badge}`}
+                      >
+                        {FAM_LABEL[row.fam]}
+                      </Badge>
+                      <span className="text-[13px] font-medium leading-snug text-foreground">
+                        {row.label}
+                      </span>
                     </span>
-                  </span>
+                    <span className="max-w-[13rem] whitespace-normal text-[11px] leading-snug text-muted-foreground md:max-w-[15rem]">
+                      {PLAIN[row.key]}
+                    </span>
+                  </div>
                 </TableCell>
                 {CHECKPOINTS.map((cp) => {
                   const v = checkpointValue(row.key, series, cp.ym);
@@ -230,20 +274,35 @@ export default function DgxScenarioMatrix() {
                           —
                         </span>
                       ) : (
-                        <span
-                          className={
-                            v >= PURCHASE_PRICE
-                              ? 'font-medium text-foreground'
-                              : 'text-foreground/75'
-                          }
-                          title={
-                            v >= PURCHASE_PRICE
-                              ? `At or above the ${fmtDollars(PURCHASE_PRICE)} purchase price`
-                              : undefined
-                          }
-                        >
-                          {fmtDollars(v)}
-                        </span>
+                        <>
+                          <span
+                            className={
+                              v >= PURCHASE_PRICE
+                                ? 'font-medium text-foreground'
+                                : 'text-foreground/75'
+                            }
+                            title={
+                              v >= EXTREME_MARK
+                                ? 'Extreme scenario value: the outer edge of these projections, not a prediction'
+                                : v >= PURCHASE_PRICE
+                                  ? `At or above the ${fmtDollars(PURCHASE_PRICE)} purchase price`
+                                  : undefined
+                            }
+                          >
+                            {fmtDollars(v)}
+                          </span>
+                          {/* Extreme-spike dagger: same amber hue as the AI
+                              2040 family these cells belong to, explained in
+                              the footnote. */}
+                          {v >= EXTREME_MARK && (
+                            <sup
+                              aria-hidden="true"
+                              className="ml-0.5 text-[9px] font-medium text-amber-700 dark:text-amber-300"
+                            >
+                              †
+                            </sup>
+                          )}
+                        </>
                       )}
                     </TableCell>
                   );
@@ -260,6 +319,17 @@ export default function DgxScenarioMatrix() {
             {ymLabel(HIST_END)}. “—” means the consumer hardware market has
             ended in that scenario by that date. Hover a scenario for the
             mechanism behind its path.
+          </p>
+          <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">
+            <span className="font-medium text-amber-700 dark:text-amber-300">
+              †
+            </span>{' '}
+            Marks the extreme spike cells. They come from the stretch years of
+            the most aggressive scenarios, like the deal world where computing
+            power is rationed and a Spark briefly costs as much as a car. Even
+            inside those stories, prices crash back down soon after. These
+            numbers are the outer edge of what the scenarios imagine, not a
+            prediction.
           </p>
         </div>
       </div>
