@@ -33,6 +33,7 @@
  */
 
 import type { Metadata } from 'next';
+import Image from 'next/image';
 import PageLayout from '@/app/components/PageLayout';
 import ScrollToTop from '@/app/components/ScrollToTop';
 import DgxHeroStat from '@/app/components/blog-components/dgx-spark-tracker/DgxHeroStat';
@@ -74,6 +75,21 @@ export default function DgxPreviewPage() {
       </div>
 
       <div className="max-w-none">
+        <figure className="page-enter mb-8">
+          <Image
+            src="/dgx-spark-hero.jpg"
+            alt="The NVIDIA DGX Spark on a desk"
+            width={1280}
+            height={720}
+            priority
+            sizes="(min-width: 1024px) 896px, calc(100vw - 2rem)"
+            className="h-auto w-full rounded-lg"
+          />
+          <figcaption className="mt-2 text-xs text-muted-foreground">
+            The NVIDIA DGX Spark. Photo by the author.
+          </figcaption>
+        </figure>
+
         <p className="page-enter mb-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
           The Chip Is Depreciating. The 128GB Is Not.
         </p>
