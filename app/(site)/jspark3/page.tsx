@@ -266,7 +266,7 @@ export default function JSpark3Page() {
                 .
               </figcaption>
             </figure>
-            <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="mt-6 grid gap-4 sm:grid-cols-2">
               {ARCHITECTURE_CARDS.map((card) => (
                 <Card key={card.title} className="p-4">
                   <h3 className="text-[15px] font-semibold">{card.title}</h3>
@@ -297,7 +297,7 @@ export default function JSpark3Page() {
             <p className="mt-2 max-w-[82ch] text-sm leading-relaxed text-muted-foreground">
               {LOCAL_RUNS_METHOD}
             </p>
-            <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="mt-4 grid gap-4 sm:grid-cols-2">
               {LOCAL_RUNS.map((run) => (
                 <Card
                   key={run.title}

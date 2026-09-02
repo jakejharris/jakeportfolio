@@ -11,7 +11,9 @@ export default function SectionNav() {
       aria-label="On this page"
       className="sticky top-16 z-30 -mx-4 mt-10 border-y border-border bg-background/80 px-4 backdrop-blur"
     >
-      <ul className="flex items-center gap-1 overflow-x-auto py-2">
+      {/* Below md the row can outrun the viewport, so its right edge fades to say so.
+          The mask is on the list itself, so it works over the nav's translucent ground. */}
+      <ul className="flex items-center gap-1 overflow-x-auto py-2 max-md:[mask-image:linear-gradient(to_right,#000_calc(100%_-_28px),transparent)]">
         {SECTIONS.map((section) => (
           <li key={section.id}>
             <a
