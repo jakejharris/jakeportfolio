@@ -1,0 +1,28 @@
+import { SECTIONS } from './content';
+
+/**
+ * In-page section nav. TableOfContents is built for Portable Text blocks, so this
+ * page uses a small sticky nav in the same visual language instead: plain anchors,
+ * no client JavaScript, and its own horizontal scroll on narrow screens.
+ */
+export default function SectionNav() {
+  return (
+    <nav
+      aria-label="On this page"
+      className="sticky top-16 z-30 -mx-4 mt-10 border-y border-border bg-background/80 px-4 backdrop-blur"
+    >
+      <ul className="flex items-center gap-1 overflow-x-auto py-2">
+        {SECTIONS.map((section) => (
+          <li key={section.id}>
+            <a
+              href={`#${section.id}`}
+              className="inline-block whitespace-nowrap rounded-md px-2.5 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:text-sm"
+            >
+              {section.label}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </nav>
+  );
+}
