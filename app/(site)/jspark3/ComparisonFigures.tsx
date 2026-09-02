@@ -7,7 +7,12 @@ import {
   TableHeader,
   TableRow,
 } from '@/app/components/ui/table';
-import { AUTHOR_BENCHMARKS, SAME_TASK, SCREEN_COMPARISON } from './content';
+import {
+  AUTHOR_BENCHMARKS,
+  REFERENCE_SCROLL_HINT,
+  SAME_TASK,
+  SCREEN_COMPARISON,
+} from './content';
 
 /**
  * The headline comparison figures at the top of the evidence section.
@@ -203,6 +208,10 @@ export function AuthorBenchmarks() {
           </TableBody>
         </Table>
       </div>
+      {/* Same hint, style and narrow-screen visibility as the published reference table. */}
+      <p className="mt-1.5 text-xs text-muted-foreground min-[560px]:hidden">
+        {REFERENCE_SCROLL_HINT}
+      </p>
       <div className="mt-3 space-y-1.5">
         {sparkdash.notes.map((note) => (
           <p key={note} className="text-[13px] leading-relaxed text-muted-foreground">
