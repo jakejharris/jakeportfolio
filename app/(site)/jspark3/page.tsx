@@ -201,17 +201,19 @@ export default function JSpark3Page() {
                 <a href={link.href} target="_blank" rel="noopener">
                   <span className="flex flex-wrap items-center gap-2">
                     {link.label}
-                    <span
-                      className={cn(
-                        badgeVariants({ variant: 'outline' }),
-                        'rounded-full border px-1.5 py-0 text-[10px] font-bold uppercase leading-[1.4] tracking-[0.08em]',
-                        link.primary
-                          ? 'border-current bg-transparent text-primary-foreground opacity-90'
-                          : 'border-transparent bg-amber-500/15 text-amber-700 dark:text-amber-300'
-                      )}
-                    >
-                      {NOT_YET_LIVE}
-                    </span>
+                    {!link.live && (
+                      <span
+                        className={cn(
+                          badgeVariants({ variant: 'outline' }),
+                          'rounded-full border px-1.5 py-0 text-[10px] font-bold uppercase leading-[1.4] tracking-[0.08em]',
+                          link.primary
+                            ? 'border-current bg-transparent text-primary-foreground opacity-90'
+                            : 'border-transparent bg-amber-500/15 text-amber-700 dark:text-amber-300'
+                        )}
+                      >
+                        {NOT_YET_LIVE}
+                      </span>
+                    )}
                   </span>
                 </a>
               </Button>

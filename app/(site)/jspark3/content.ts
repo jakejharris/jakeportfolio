@@ -18,15 +18,16 @@ export const HERO = {
     "JSpark3 runs GLM-5.3 Flash across three DGX Sparks as a single OpenAI-compatible endpoint: tensor parallel 3 and expert parallel 3 over a RoCE-v2 triangle, a DFlash2 speculative draft, an FP8 KV cache, and a selective INT8 overlay for the model trunk. It pins every input, refuses to start anything it did not measure, and publishes its numbers with the misses left in.",
 } as const;
 
-/** The three repositories are not published yet; every link keeps its NOT YET LIVE badge. */
+/** Links marked live resolve publicly; the rest keep the NOT YET LIVE badge until the object exists. */
 export const HERO_LINKS: ReadonlyArray<{
   label: string;
   href: string;
   primary?: boolean;
+  live?: boolean;
 }> = [
-  { label: "GitHub repository", href: "https://github.com/jakejharris/jspark3", primary: true },
+  { label: "GitHub repository", href: "https://github.com/jakejharris/jspark3", primary: true, live: true },
   { label: "Release v1.0.0", href: "https://github.com/jakejharris/jspark3/releases/tag/v1.0.0" },
-  { label: "Hugging Face: card and weights", href: "https://huggingface.co/jakejh/jspark3" },
+  { label: "Hugging Face: model card and provenance", href: "https://huggingface.co/jakejharris/jspark3", live: true },
 ];
 
 export const NOT_YET_LIVE = "not yet live";
