@@ -107,6 +107,115 @@ export const EVIDENCE_LEDE =
   "The public comparison is against recipes that were publicly available before JSpark3. Their numbers are author-reported; ours come from our own fleet. Prompts, instruments, and envelopes differ, and the node count is on every row, so read the table as context, not a ranking. No percentage is computed between rows.";
 
 /**
+ * Results measured on the upstream authors' own benchmark scripts. Every value, and the
+ * five ratios, are printed exactly as supplied; nothing here is derived on the page.
+ */
+export const AUTHOR_BENCHMARKS = {
+  title: "On their own benchmarks",
+  subtitle:
+    "The authors' pinned benchmark scripts, run unchanged against the JSpark3 release build except for the endpoint address and model name. Author values are the numbers they published.",
+  flycockpit: {
+    heading: "FlyCockpit's benchmark, the same three Sparks",
+    unit: "Decode, tok/s (mean of three runs)",
+    rows: [
+      {
+        metric: "Hello (17-token stop)",
+        ours: {
+          label: "JSpark3 v1",
+          sparks: "3",
+          value: "46.110",
+          runs: "46.106 / 46.405 / 45.820",
+        },
+        other: {
+          label: "FlyCockpit TP3",
+          sparks: "3",
+          value: "37.367",
+          runs: "37.9 / 36.9 / 37.3",
+        },
+        ratio: "1.23x",
+      },
+      {
+        metric: "Structured count 1 to 200",
+        ours: {
+          label: "JSpark3 v1",
+          sparks: "3",
+          value: "84.243",
+          runs: "83.988 / 84.580 / 84.161",
+        },
+        other: {
+          label: "FlyCockpit TP3",
+          sparks: "3",
+          value: "69.567",
+          runs: "69.0 / 68.5 / 71.2",
+        },
+        ratio: "1.21x",
+      },
+      {
+        metric: "is_prime code",
+        ours: {
+          label: "JSpark3 v1",
+          sparks: "3",
+          value: "66.543",
+          runs: "65.840 / 68.246 / 65.544",
+        },
+        other: {
+          label: "FlyCockpit TP3",
+          sparks: "3",
+          value: "56.400",
+          runs: "52.3 / 58.7 / 58.2",
+        },
+        ratio: "1.18x",
+      },
+    ],
+    note: "Draft acceptance 0.8324 against FlyCockpit's 0.815. FlyCockpit's runs were first-serve at GPU memory utilization 0.87; these were warm-server runs at 0.83, the release envelope.",
+  },
+  mia: {
+    heading: "Mia's bench_decode, their two Sparks against our three",
+    unit: "Median of five 400-token runs, tok/s",
+    rows: [
+      {
+        metric: "Structured count 1 to 200",
+        ours: { label: "JSpark3 v1", sparks: "3", value: "88.17" },
+        other: { label: "Mia TP2", sparks: "2", value: "65.1" },
+        ratio: "1.35x",
+      },
+      {
+        metric: "Prose hash-map",
+        ours: { label: "JSpark3 v1", sparks: "3", value: "36.78" },
+        other: { label: "Mia TP2", sparks: "2", value: "27.1" },
+        ratio: "1.36x",
+      },
+    ],
+    note: "Accepted-per-draft ratios match theirs almost exactly: 0.9533 against 0.959 on structured, 0.3357 against 0.341 on prose. The draft behaves the same; the engine is faster.",
+  },
+  sparkdash: {
+    heading: "Mia's sparkDash decode protocol",
+    /** The two JSpark3 columns carry a node-count chip; the Mia column names its own. */
+    columns: [
+      { label: "Concurrency" },
+      { label: "Estimator" },
+      { label: "Mia TP2, 2 Sparks" },
+      { label: "JSpark3, structured count", sparks: "3" },
+      { label: "JSpark3, clamp code", sparks: "3" },
+    ],
+    rows: [
+      { concurrency: "C1", estimator: "per-stream decode tok/s", mia: "62.9", structured: "86.56", clamp: "84.47" },
+      { concurrency: "C1", estimator: "time to first token", mia: "719 ms", structured: "461 ms", clamp: "391 ms" },
+      { concurrency: "C2", estimator: "per-stream decode tok/s", mia: "51.7", structured: "79.26", clamp: "70.56" },
+      { concurrency: "C2", estimator: "aggregate decode tok/s", mia: "103.3", structured: "76.95", clamp: "139.77" },
+      { concurrency: "C4", estimator: "per-stream decode tok/s", mia: "37.1", structured: "50.08", clamp: "62.80" },
+      { concurrency: "C4", estimator: "aggregate decode tok/s", mia: "146.5", structured: "200.29", clamp: "251.13" },
+    ],
+    notes: [
+      "Mia publishes one value for its high-accept prompt family without saying which prompt, so both of ours are shown.",
+      "At two streams the structured aggregate falls below Mia's published figure: the release build serializes low-concurrency work below its eight-sequence graph floor, the same artifact the internal ablation shows at three streams.",
+    ],
+  },
+  condition:
+    "Measured on 2026-09-02 against the release build held immutable, three Sparks, warm server. FlyCockpit T0 script at commit 9093765c; Mia tests/bench_decode.py at commit c190db1a; sparkDash release 1.8.5 at commit e93fc87d.",
+} as const;
+
+/**
  * Headline comparison: the same frozen screen, run on this fleet, three Sparks against two.
  * The three ratios are the only computed figures on the page; they are printed exactly as
  * supplied and nothing else here is derived.

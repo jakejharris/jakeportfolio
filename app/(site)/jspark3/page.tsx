@@ -13,7 +13,7 @@ import {
 } from '@/app/components/ui/table';
 import '@/app/css/animations.css';
 import ArchitectureDiagram from './ArchitectureDiagram';
-import { SameTaskComparison, ScreenComparison } from './ComparisonFigures';
+import { AuthorBenchmarks, SameTaskComparison, ScreenComparison } from './ComparisonFigures';
 import OverlayDeltaFigure from './OverlayDeltaFigure';
 import Rich from './Rich';
 import SectionNav from './SectionNav';
@@ -283,9 +283,10 @@ export default function JSpark3Page() {
             eyebrow="Evidence"
             title="Measured, and compared with what you could already get"
           >
-            {/* Headline: the same frozen screen on this fleet, three Sparks against two,
-                then the same agent prompt across all four builds. */}
+            {/* Headline: the authors' own benchmark scripts first, then the same frozen
+                screen on this fleet, then the same agent prompt across all four builds. */}
             <div className="mt-6 space-y-4">
+              <AuthorBenchmarks />
               <ScreenComparison />
               <SameTaskComparison />
             </div>
