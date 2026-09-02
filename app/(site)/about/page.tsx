@@ -4,7 +4,6 @@ import { FaDownload, FaGithub } from 'react-icons/fa';
 import '../../css/page.css';
 import '../../css/animations.css';
 import { MdArrowForward } from 'react-icons/md';
-import ScrollToTop from '../../components/ScrollToTop';
 
 export const metadata = {
     title: "About",
@@ -28,7 +27,6 @@ const aboutContent = {
 export default function AboutPage() {
     return (
         <PageLayout className="py-20 md:py-24">
-            <ScrollToTop />
             <div className="max-w-none">
                 <h1
                     className="page-enter mb-6 text-5xl font-bold leading-[0.95] tracking-[-0.01em] md:text-6xl"
