@@ -10,7 +10,6 @@ import {
   HoverCardTrigger,
   HoverCardContent,
 } from '@/app/components/hover-card';
-import ScrollToTop from '@/app/components/ScrollToTop';
 import PixelFluidBackground from '@/app/components/PixelFluidBackground';
 import TagPill from '@/app/components/TagPill';
 import { notFound } from 'next/navigation';
@@ -120,7 +119,6 @@ export default async function TagPage({
     <>
     <PixelFluidBackground />
     <PageLayout>
-      <ScrollToTop />
       <div className="max-w-none">
         <div className="page-enter mb-6">
           <h1 className="text-2xl md:text-3xl font-bold mb-2">{tag.title}</h1>

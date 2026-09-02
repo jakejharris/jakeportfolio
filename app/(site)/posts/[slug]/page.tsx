@@ -14,7 +14,6 @@ import { Post, InteractiveComponentValue } from '@/app/types/sanity';
 import InteractiveBlock from '@/app/components/blog-components/InteractiveBlock';
 import { Button } from '@/app/components/ui/button';
 import React from 'react';
-import ScrollToTop from '@/app/components/ScrollToTop';
 import nextDynamic from 'next/dynamic';
 import TableOfContents from '@/app/components/TableOfContents';
 import TagPill from '@/app/components/TagPill';
@@ -484,7 +483,6 @@ export default async function PostPage({ params }: PageParams) {
       />
       {canRenderDraft && <DraftPreviewBanner title={post.title} />}
       <PageLayout>
-        <ScrollToTop />
         <div className={`max-w-none ${canRenderDraft ? 'pt-14' : ''}`}>
           {/* <Link 
           href="/" 
