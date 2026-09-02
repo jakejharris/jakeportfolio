@@ -106,6 +106,51 @@ export const ARCHITECTURE_CARDS: ReadonlyArray<{ title: string; body: string }> 
 export const EVIDENCE_LEDE =
   "The public comparison is against recipes that were publicly available before JSpark3. Their numbers are author-reported; ours come from our own fleet. Prompts, instruments, and envelopes differ, and the node count is on every row, so read the table as context, not a ranking. No percentage is computed between rows.";
 
+/**
+ * Headline comparison: the same frozen screen, run on this fleet, three Sparks against two.
+ * The three ratios are the only computed figures on the page; they are printed exactly as
+ * supplied and nothing else here is derived.
+ */
+export const SCREEN_COMPARISON = {
+  title: "Same screen, two Sparks against three",
+  unit: "Single-stream decode, tok/s",
+  rows: [
+    {
+      metric: "Structured count",
+      ours: { label: "JSpark3 v1", sparks: "3", value: "81.962" },
+      other: { label: "Mia TP2, current recipe", sparks: "2", flag: "compatibility adapted", value: "57.970" },
+      ratio: "1.41x",
+    },
+    {
+      metric: "Code",
+      ours: { label: "JSpark3 v1", sparks: "3", value: "66.257" },
+      other: { label: "Mia TP2, current recipe", sparks: "2", flag: "compatibility adapted", value: "44.563" },
+      ratio: "1.49x",
+    },
+    {
+      metric: "Prose",
+      ours: { label: "JSpark3 v1", sparks: "3", value: "29.049" },
+      other: { label: "Mia TP2, current recipe", sparks: "2", flag: "compatibility adapted", value: "20.039" },
+      ratio: "1.45x",
+    },
+  ],
+  condition:
+    "Same frozen 24-request screen on the same fleet, thinking off, temperature 0, 400 max tokens. The Mia recipe is the current two-Spark release at commit c190db1a, run here with one compatibility repair.",
+} as const;
+
+/** The same agent prompt, four independent runs. Node counts are in every label; no percentages. */
+export const SAME_TASK = {
+  title: "Same task, same prompt",
+  unit: "Aggregate decode, tok/s",
+  rows: [
+    { label: "JSpark3 v1", sparks: "3", value: "44.583", ours: true },
+    { label: "FlyCockpit-derived build", sparks: "3", value: "29.042" },
+    { label: "Mia TP2, historical recipe", sparks: "2", value: "24.913" },
+    { label: "Mia TP2, current recipe", sparks: "2", value: "24.728" },
+  ],
+  note: "One agent prompt, independent runs; each agent chose its own path.",
+} as const;
+
 /** Evidence class one: the published reference recipes, quoted as their authors reported them. */
 export interface ReferenceRow {
   recipe: string;
@@ -217,9 +262,6 @@ export const LOCAL_RUNS: ReadonlyArray<{
     ],
   },
 ];
-
-export const LOCAL_RUNS_NOTE =
-  "The adapted current-Mia run also has a 24-request engineering screen (structured count 57.970, code 44.563, prose 20.039 tok/s) whose own plan marks rate claims ineligible; it is in the technical report, not here.";
 
 /** Evidence class three: the internal ablation, against the matched three-Spark control. */
 export const ABLATION_CONTROL: ReadonlyArray<RichPart> = [

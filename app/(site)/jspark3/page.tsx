@@ -13,6 +13,7 @@ import {
 } from '@/app/components/ui/table';
 import '@/app/css/animations.css';
 import ArchitectureDiagram from './ArchitectureDiagram';
+import { SameTaskComparison, ScreenComparison } from './ComparisonFigures';
 import OverlayDeltaFigure from './OverlayDeltaFigure';
 import Rich from './Rich';
 import SectionNav from './SectionNav';
@@ -40,7 +41,6 @@ import {
   LICENSING_NOTE,
   LOCAL_RUNS,
   LOCAL_RUNS_METHOD,
-  LOCAL_RUNS_NOTE,
   NOT_YET_LIVE,
   PINNED_INPUTS,
   PROVENANCE_LEDE,
@@ -282,10 +282,56 @@ export default function JSpark3Page() {
             legacyId="js3-evidence"
             eyebrow="Evidence"
             title="Measured, and compared with what you could already get"
-            lede={EVIDENCE_LEDE}
           >
-            {/* Evidence class one: published reference recipes. */}
-            <h3 className="mt-8 text-lg font-semibold md:text-xl">Published reference recipes</h3>
+            {/* Headline: the same frozen screen on this fleet, three Sparks against two,
+                then the same agent prompt across all four builds. */}
+            <div className="mt-6 space-y-4">
+              <ScreenComparison />
+              <SameTaskComparison />
+            </div>
+
+            {/* Evidence class two: local runs, the detail behind the same-task figure. */}
+            <h3 className="mt-10 text-lg font-semibold md:text-xl">
+              Local runs of published recipes
+            </h3>
+            <p className="mt-2 max-w-[82ch] text-sm leading-relaxed text-muted-foreground">
+              {LOCAL_RUNS_METHOD}
+            </p>
+            <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {LOCAL_RUNS.map((run) => (
+                <Card
+                  key={run.title}
+                  className={`p-4 ${
+                    run.ours
+                      ? 'border-[color-mix(in_srgb,var(--accent-color)_40%,hsl(var(--border)))]'
+                      : ''
+                  }`}
+                >
+                  <h4 className="text-[15px] font-semibold">{run.title}</h4>
+                  <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                    <SparkCount count={run.sparks} />
+                    <span
+                      className={`inline-block rounded-full px-2 py-0.5 text-[10.5px] font-bold uppercase tracking-[0.06em] ${
+                        run.ours
+                          ? 'bg-[color-mix(in_srgb,var(--accent-color)_16%,transparent)] text-foreground'
+                          : 'bg-amber-500/15 text-amber-700 dark:text-amber-300'
+                      }`}
+                    >
+                      {run.flag}
+                    </span>
+                  </div>
+                  <p className="mt-2.5 text-sm leading-relaxed text-muted-foreground">
+                    <Rich parts={run.body} />
+                  </p>
+                </Card>
+              ))}
+            </div>
+
+            {/* Evidence class one: the published reference table, author-reported. */}
+            <h3 className="mt-10 text-lg font-semibold md:text-xl">Published reference recipes</h3>
+            <p className="mt-2 max-w-[82ch] text-sm leading-relaxed text-muted-foreground">
+              {EVIDENCE_LEDE}
+            </p>
             <div className="mt-4 overflow-hidden rounded-lg border border-border bg-card">
               <Table className="min-w-[980px] text-[13.5px] tabular-nums">
                 <TableHeader>
@@ -354,44 +400,6 @@ export default function JSpark3Page() {
               {REFERENCE_SCROLL_HINT}
             </p>
             <p className="mt-2.5 max-w-3xl text-sm text-muted-foreground">{REFERENCE_NOTE}</p>
-
-            {/* Evidence class two: local runs of published recipes. */}
-            <h3 className="mt-10 text-lg font-semibold md:text-xl">
-              Local runs of published recipes
-            </h3>
-            <p className="mt-2 max-w-[82ch] text-sm leading-relaxed text-muted-foreground">
-              {LOCAL_RUNS_METHOD}
-            </p>
-            <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {LOCAL_RUNS.map((run) => (
-                <Card
-                  key={run.title}
-                  className={`p-4 ${
-                    run.ours
-                      ? 'border-[color-mix(in_srgb,var(--accent-color)_40%,hsl(var(--border)))]'
-                      : ''
-                  }`}
-                >
-                  <h4 className="text-[15px] font-semibold">{run.title}</h4>
-                  <div className="mt-2 flex flex-wrap items-center gap-1.5">
-                    <SparkCount count={run.sparks} />
-                    <span
-                      className={`inline-block rounded-full px-2 py-0.5 text-[10.5px] font-bold uppercase tracking-[0.06em] ${
-                        run.ours
-                          ? 'bg-[color-mix(in_srgb,var(--accent-color)_16%,transparent)] text-foreground'
-                          : 'bg-amber-500/15 text-amber-700 dark:text-amber-300'
-                      }`}
-                    >
-                      {run.flag}
-                    </span>
-                  </div>
-                  <p className="mt-2.5 text-sm leading-relaxed text-muted-foreground">
-                    <Rich parts={run.body} />
-                  </p>
-                </Card>
-              ))}
-            </div>
-            <p className="mt-2.5 max-w-3xl text-sm text-muted-foreground">{LOCAL_RUNS_NOTE}</p>
 
             {/* Evidence class three: the internal ablation. Deliberately compact and
                 secondary: it is an internal control, not the page's headline. */}
