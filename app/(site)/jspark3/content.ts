@@ -24,8 +24,8 @@ export const HERO_LINKS: ReadonlyArray<{
   href: string;
   primary?: boolean;
 }> = [
-  { label: "GitHub repository", href: "https://github.com/jakejh/jspark3", primary: true },
-  { label: "Release v1.0.0", href: "https://github.com/jakejh/jspark3/releases/tag/v1.0.0" },
+  { label: "GitHub repository", href: "https://github.com/jakejharris/jspark3", primary: true },
+  { label: "Release v1.0.0", href: "https://github.com/jakejharris/jspark3/releases/tag/v1.0.0" },
   { label: "Hugging Face: card and weights", href: "https://huggingface.co/jakejh/jspark3" },
 ];
 
@@ -645,7 +645,7 @@ export const CITE = {
     ". Cite the release by name, version, and repository.",
   ] as ReadonlyArray<RichPart>,
   citation: `JSpark3 v1, version 1.0.0 (2026)
-https://github.com/jakejh/jspark3`,
+https://github.com/jakejharris/jspark3`,
 };
 
 export const BLOCK_FOOTER: ReadonlyArray<string> = [
