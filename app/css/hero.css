@@ -23,10 +23,30 @@
   );
 }
 
+/* Stand-in for the wordmark while Sentient-Bold.woff2 is still in flight
+   (font-display: swap paints the fallback first on a cold cache). Local Georgia
+   Bold, scaled and metric-overridden to Sentient Bold so "Jake Harris" occupies
+   the same width and sits on the same baseline before and after the swap.
+   size-adjust is the advance-width ratio of the literal string "Jake Harris"
+   (Sentient 5.599em / Georgia Bold 6.064em); the overrides are Sentient's
+   hhea ascent 960, descent 320, line gap 80 (per 1000 upm) divided by that
+   ratio. Georgia ships on iOS, macOS, and Windows; elsewhere the stack falls
+   through unchanged. */
+@font-face {
+  font-family: "Sentient Fallback";
+  src: local("Georgia Bold"), local("Georgia-Bold"), local("Georgia");
+  font-weight: 700;
+  font-style: normal;
+  size-adjust: 92.34%;
+  ascent-override: 103.96%;
+  descent-override: 34.65%;
+  line-gap-override: 8.66%;
+}
+
 .hero-wordmark {
   margin: 0;
   color: hsl(var(--foreground));
-  font-family: var(--font-wordmark), ui-serif, Georgia, serif;
+  font-family: var(--font-wordmark), "Sentient Fallback", ui-serif, Georgia, serif;
   font-size: clamp(2.9rem, 11vw, 5.5rem);
   font-weight: 700;
   letter-spacing: -0.01em;
