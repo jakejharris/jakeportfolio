@@ -30,16 +30,10 @@ export const HERO_LINKS: ReadonlyArray<{
 ];
 
 export const HERO_FACTS: ReadonlyArray<{ value: string; label: string }> = [
-  { value: "3", label: "DGX Sparks serving as one endpoint, TP3 + EP3" },
-  {
-    value: "4.46 GiB",
-    label: "weight memory freed across the cluster: 1,595,392,320 bytes per rank",
-  },
-  { value: "1,000,000", label: "tokens of configured context, FP8 KV cache, prefix caching" },
-  {
-    value: "120 shards",
-    label: "of the pinned target checkpoint, each verified by hash before a token is served",
-  },
+  { value: "1.49x", label: "faster single-stream code decode than the two-Spark recipe: 66.3 vs 44.6 tok/s" },
+  { value: "391 ms", label: "time to first token on the sparkDash prompt, down from 719 ms on two Sparks" },
+  { value: "251 tok/s", label: "aggregate decode at four streams, up from 146.5 on two Sparks" },
+  { value: "1.8x", label: "the throughput of the two-Spark recipe on the same agent task: 44.6 vs 24.7 tok/s" },
 ];
 
 /** Section ids required by the route, with the site block's original anchor ids kept as aliases. */
