@@ -1,0 +1,153 @@
+/*
+ * Motion for the JSpark3 architecture figure (ArchitectureDiagram.tsx).
+ *
+ * One request, told once every four seconds, on one clock:
+ *   0%  to 24%   a packet goes down the HTTP link from the client to Rank 0
+ *   24% to 60%   a halo leaves Rank 0: the head has taken the request
+ *   26% to 62%   packets cross every fabric leg both ways: the TP3/EP3 exchange
+ *   66% to 90%   a packet goes back up the HTTP link: the answer
+ *   90% to 100%  quiet
+ *
+ * Every animation touches only stroke-dashoffset, transform and opacity, so
+ * nothing here lays out or repaints the surrounding page. The figure's wrapper
+ * (MotionScope) sets data-js3-motion="paused" while it is off screen, and
+ * prefers-reduced-motion removes the moving parts entirely.
+ */
+
+.js3-motion {
+  --js3-cycle: 4s;
+}
+
+/* Packets ride a path normalised to 100 units. The dash pattern is longer than
+   the path, so a single dash enters at the start, crosses, leaves at the end,
+   and the line is empty until the next cycle. */
+.js3-fabric-packet,
+.js3-link-packet {
+  stroke: var(--accent-color);
+  opacity: 0;
+  animation-duration: var(--js3-cycle);
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+.js3-fabric-packet {
+  stroke-dasharray: 7 193;
+  stroke-dashoffset: 7;
+  animation-name: js3-fabric-travel;
+}
+
+/* The return packet sets out a little later so the pair cross off centre,
+   clear of the leg label. */
+.js3-fabric-packet-back {
+  animation-delay: 0.3s;
+}
+
+.js3-link-packet {
+  stroke-dasharray: 22 178;
+  stroke-dashoffset: 22;
+}
+
+.js3-link-packet-down {
+  animation-name: js3-link-down;
+}
+
+.js3-link-packet-up {
+  animation-name: js3-link-up;
+}
+
+.js3-halo {
+  stroke: var(--accent-color);
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: js3-halo var(--js3-cycle) ease-out infinite;
+}
+
+@keyframes js3-link-down {
+  0% {
+    stroke-dashoffset: 22;
+    opacity: 0;
+  }
+  3% {
+    opacity: 0.95;
+  }
+  21% {
+    opacity: 0.95;
+  }
+  24%,
+  100% {
+    stroke-dashoffset: -100;
+    opacity: 0;
+  }
+}
+
+@keyframes js3-fabric-travel {
+  0%,
+  26% {
+    stroke-dashoffset: 7;
+    opacity: 0;
+  }
+  29% {
+    opacity: 0.95;
+  }
+  59% {
+    opacity: 0.95;
+  }
+  62%,
+  100% {
+    stroke-dashoffset: -100;
+    opacity: 0;
+  }
+}
+
+@keyframes js3-link-up {
+  0%,
+  66% {
+    stroke-dashoffset: 22;
+    opacity: 0;
+  }
+  69% {
+    opacity: 0.95;
+  }
+  87% {
+    opacity: 0.95;
+  }
+  90%,
+  100% {
+    stroke-dashoffset: -100;
+    opacity: 0;
+  }
+}
+
+@keyframes js3-halo {
+  0%,
+  24% {
+    transform: scale(1);
+    opacity: 0.75;
+  }
+  60%,
+  100% {
+    transform: scale(1.9);
+    opacity: 0;
+  }
+}
+
+/* Off screen: hold every animation where it is. */
+.js3-motion[data-js3-motion='paused'] .js3-fabric-packet,
+.js3-motion[data-js3-motion='paused'] .js3-link-packet,
+.js3-motion[data-js3-motion='paused'] .js3-halo {
+  animation-play-state: paused;
+}
+
+/* Reduced motion: the still figure, and no sentence that describes movement. */
+@media (prefers-reduced-motion: reduce) {
+  .js3-fabric-packet,
+  .js3-link-packet,
+  .js3-halo {
+    animation: none;
+    opacity: 0;
+  }
+  .js3-motion-note {
+    display: none;
+  }
+}
