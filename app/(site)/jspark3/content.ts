@@ -12,9 +12,9 @@ export type RichPart = string | { code: string } | { strong: string };
 
 export const HERO = {
   title: "JSpark3",
-  tagline: "One endpoint, three Sparks, every byte pinned.",
+  tagline: "Three DGX Sparks, one model server.",
   lede:
-    "JSpark3 runs GLM-5.3 Flash across three DGX Sparks as a single OpenAI-compatible endpoint: tensor parallel 3 and expert parallel 3 over a RoCE-v2 triangle, a DFlash2 speculative draft, an FP8 KV cache, and a selective INT8 overlay for the model trunk. It pins every input, refuses to start anything it did not measure, and publishes its numbers with the misses left in.",
+    "I had three DGX Sparks and every recipe out there was written for two or four. JSpark3 is the setup that makes three work: GLM-5.3 Flash running across all of them as one endpoint, about 1.4x faster than the two-box recipe. Every piece is pinned so you can rebuild it exactly, and the numbers are published with the misses left in.",
 } as const;
 
 /** Public links for the v1.0.0 release. */
