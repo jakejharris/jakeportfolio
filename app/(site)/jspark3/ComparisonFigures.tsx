@@ -26,7 +26,6 @@ interface Entry {
   sparks: string;
   value: string;
   runs?: string;
-  flag?: string;
 }
 
 interface PairedRow {
@@ -45,20 +44,24 @@ function SparkChip({ count }: { count: string }) {
   );
 }
 
-function Bar({ label, sparks, flag, value, runs, max, ours }: Entry & { max: number; ours?: boolean }) {
+function Bar({
+  label,
+  sparks,
+  value,
+  runs,
+  max,
+  ours,
+  inlineSparkCount,
+}: Entry & { max: number; ours?: boolean; inlineSparkCount?: boolean }) {
   return (
     <div>
       <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
         <span className="flex flex-wrap items-center gap-1.5 text-xs">
           <span className={ours ? 'font-semibold' : 'font-medium text-muted-foreground'}>
             {label}
+            {inlineSparkCount ? `, ${sparks} Sparks` : null}
           </span>
-          <SparkChip count={sparks} />
-          {flag ? (
-            <span className="whitespace-nowrap rounded-full bg-amber-500/15 px-1.5 py-px text-[10px] font-bold uppercase tracking-[0.06em] text-amber-700 dark:text-amber-300">
-              {flag}
-            </span>
-          ) : null}
+          {!inlineSparkCount ? <SparkChip count={sparks} /> : null}
         </span>
         <span
           className={`ml-auto text-sm font-semibold tabular-nums ${
@@ -87,7 +90,15 @@ function Bar({ label, sparks, flag, value, runs, max, ours }: Entry & { max: num
 }
 
 /** One metric: its name, the supplied ratio, and the two bars on a shared scale. */
-function MetricBlock({ row, max }: { row: PairedRow; max: number }) {
+function MetricBlock({
+  row,
+  max,
+  inlineSparkCount,
+}: {
+  row: PairedRow;
+  max: number;
+  inlineSparkCount?: boolean;
+}) {
   return (
     <div className="border-t border-border pt-4 first:border-t-0 first:pt-0">
       <div className="flex items-end justify-between gap-3">
@@ -102,8 +113,8 @@ function MetricBlock({ row, max }: { row: PairedRow; max: number }) {
         </p>
       </div>
       <div className="mt-2.5 space-y-2.5">
-        <Bar {...row.ours} max={max} ours />
-        <Bar {...row.other} max={max} />
+        <Bar {...row.ours} max={max} ours inlineSparkCount={inlineSparkCount} />
+        <Bar {...row.other} max={max} inlineSparkCount={inlineSparkCount} />
       </div>
     </div>
   );
@@ -236,7 +247,7 @@ export function ScreenComparison() {
       <UnitLabel>{SCREEN_COMPARISON.unit}</UnitLabel>
       <div className="mt-4 space-y-4">
         {SCREEN_COMPARISON.rows.map((row) => (
-          <MetricBlock key={row.metric} row={row} max={max} />
+          <MetricBlock key={row.metric} row={row} max={max} inlineSparkCount />
         ))}
       </div>
       <p className="mt-4 text-[13px] leading-relaxed text-muted-foreground">
