@@ -4,6 +4,7 @@ import { Card } from '@/app/components/ui/card';
 import PageLayout from '@/app/components/PageLayout';
 import '@/app/css/animations.css';
 import ArchitectureDiagram from './ArchitectureDiagram';
+import Fold from './Fold';
 import { AuthorBenchmarks, SameTaskComparison, ScreenComparison } from './ComparisonFigures';
 import JSpark3Mark from './JSpark3Mark';
 import OverlayDeltaFigure from './OverlayDeltaFigure';
@@ -186,14 +187,21 @@ export default function JSpark3Page() {
               .
             </figcaption>
           </figure>
-          <div className="mt-5 grid gap-3.5 sm:grid-cols-2">
-            {ARCHITECTURE_CARDS.map((card) => (
-              <Card key={card.title} className="p-4">
-                <h3 className="text-[15px] font-semibold">{card.title}</h3>
-                <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">{card.body}</p>
-              </Card>
-            ))}
-          </div>
+          <Fold
+            className="mt-6 border-t border-border pt-5"
+            level={3}
+            title="The four parts, in detail"
+            summary="Topology, fabric, overlay and lifecycle, with the exact counts, sizes and start order."
+          >
+            <div className="grid gap-3.5 sm:grid-cols-2">
+              {ARCHITECTURE_CARDS.map((card) => (
+                <Card key={card.title} className="p-4">
+                  <h4 className="text-[15px] font-semibold">{card.title}</h4>
+                  <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">{card.body}</p>
+                </Card>
+              ))}
+            </div>
+          </Fold>
         </Section>
 
         {/* ------------------------------------------------------- benchmarks --- */}
@@ -234,7 +242,13 @@ export default function JSpark3Page() {
           </div>
 
           {/* Evidence class two: local runs, the detail behind the same-task figure. */}
-          <Subsection title="Local runs of published recipes" note={LOCAL_RUNS_METHOD} />
+          <Fold
+            className="mt-8 border-t border-border pt-5"
+            level={3}
+            title="Local runs of published recipes"
+            summary="The four runs behind the same-task figure, each with its adaptation disclosed."
+          >
+          <p className="text-sm leading-relaxed text-muted-foreground">{LOCAL_RUNS_METHOD}</p>
           <div className="mt-4 grid gap-3.5 sm:grid-cols-2">
             {LOCAL_RUNS.map((run) => (
               <Card
@@ -264,13 +278,21 @@ export default function JSpark3Page() {
               </Card>
             ))}
           </div>
+          </Fold>
 
           {/* Evidence class one: the published reference table, author-reported. */}
-          <Subsection title="Published reference recipes" note={EVIDENCE_LEDE} />
-          <div className="mt-4">
-            <ReferenceRecipes />
-          </div>
-          <p className="mt-3 text-sm text-muted-foreground">{REFERENCE_NOTE}</p>
+          <Fold
+            className="mt-8 border-t border-border pt-5"
+            level={3}
+            title="Published reference recipes"
+            summary="Four recipes as their authors reported them: node count, lane, context, decode and basis. Context, not a ranking."
+          >
+            <p className="text-sm leading-relaxed text-muted-foreground">{EVIDENCE_LEDE}</p>
+            <div className="mt-4">
+              <ReferenceRecipes />
+            </div>
+            <p className="mt-3 text-sm text-muted-foreground">{REFERENCE_NOTE}</p>
+          </Fold>
 
           {/* Evidence class three: the internal ablation. Deliberately compact and
               secondary: it is an internal control, not the page's headline. */}
@@ -278,8 +300,13 @@ export default function JSpark3Page() {
             <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
               Internal ablation
             </p>
-            <h3 className="mt-1 text-base font-semibold">What the overlay alone changed</h3>
-            <p className="mt-2.5 text-[13px] leading-relaxed text-muted-foreground">
+            <Fold
+              className="mt-1.5"
+              level={3}
+              title="What the overlay alone changed"
+              summary="JSpark3 against itself with the trunk overlay switched off: single-stream decode up, long prefill down, two internal gates missed."
+            >
+            <p className="text-[13px] leading-relaxed text-muted-foreground">
               <Rich parts={ABLATION_CONTROL} />
             </p>
             <p className="mt-2.5 text-[13px] leading-relaxed text-muted-foreground">
@@ -302,6 +329,7 @@ export default function JSpark3Page() {
                 </p>
               ))}
             </div>
+            </Fold>
           </div>
 
           <p className="mt-4 text-sm text-muted-foreground">{EVIDENCE_GRADE}</p>
@@ -333,17 +361,24 @@ export default function JSpark3Page() {
             ))}
           </div>
 
-          <Subsection title="It refuses to drift" note={REFUSE_LEDE} />
-          <div className="mt-4 grid gap-3.5 sm:grid-cols-2">
-            {REFUSE_CARDS.map((card) => (
-              <Card key={card.title} className="p-4">
-                <h3 className="text-[15px] font-semibold">{card.title}</h3>
-                <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
-                  <Rich parts={card.body} />
-                </p>
-              </Card>
-            ))}
-          </div>
+          <Fold
+            className="mt-8 border-t border-border pt-5"
+            level={3}
+            title="It refuses to drift"
+            summary="Unpinned inputs, a changed environment, a mismatched identity or drifted bytes, and it does not start."
+          >
+            <p className="text-sm leading-relaxed text-muted-foreground">{REFUSE_LEDE}</p>
+            <div className="mt-4 grid gap-3.5 sm:grid-cols-2">
+              {REFUSE_CARDS.map((card) => (
+                <Card key={card.title} className="p-4">
+                  <h4 className="text-[15px] font-semibold">{card.title}</h4>
+                  <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
+                    <Rich parts={card.body} />
+                  </p>
+                </Card>
+              ))}
+            </div>
+          </Fold>
         </Section>
 
         {/* ------------------------------------------------------- provenance --- */}
@@ -354,7 +389,13 @@ export default function JSpark3Page() {
           title="Pinned inputs"
           lede={PROVENANCE_LEDE}
         >
-          <dl className="mt-5 overflow-hidden rounded-lg border border-border bg-card text-sm">
+          <Fold
+            className="mt-5 border-t border-border pt-5"
+            level={3}
+            title="What is pinned, and to what"
+            summary={PINNED_INPUTS.map((row) => row.label).join(', ') + '.'}
+          >
+          <dl className="overflow-hidden rounded-lg border border-border bg-card text-sm">
             {PINNED_INPUTS.map((row, index) => (
               <div
                 key={row.label}
@@ -369,6 +410,7 @@ export default function JSpark3Page() {
               </div>
             ))}
           </dl>
+          </Fold>
         </Section>
 
         {/* -------------------------------------------------------- licensing --- */}
