@@ -84,6 +84,12 @@ footer .site{flex:none;color:var(--fg)}
 .grid .cell .label{font-size:var(--grid-label);margin-top:0.45em;font-weight:500}
 .tagline{font-size:var(--label);font-weight:500;line-height:1.15;margin-bottom:var(--grid-gap)}
 
+/* hero copy experiments: card-scoped so the original series does not move */
+.card[data-card="07-hero-card-vb"] .eyebrow{font-size:22px;margin-bottom:12px}
+.card[data-card="07-hero-card-vb"] .comparison{margin-top:10px;font-size:24px;line-height:1.2;color:var(--muted)}
+.card[data-card="07-hero-card-vc"] footer{justify-content:flex-end}
+.card[data-card="07-hero-card-vc"] footer .receipt{display:none}
+
 /* landscape 1600x900 */
 .card[data-orient="landscape"]{--w:1600px;--h:900px;--pad:88px 96px 80px;--mark:46px;--word:36px;--brand-gap:14px;
   --receipt:21px;--num:330px;--label:46px;--caption:28px;--bar-h:88px;--bar-gap:44px;--bar-val:150px;
@@ -109,9 +115,9 @@ export function markSvg() {
     .join('')}</svg>`;
 }
 
-export function shell({ orient, body, receipt }) {
+export function shell({ cardId, orient, body, receipt }) {
   return `<!doctype html><html><head><meta charset="utf-8"><style>${fontCss()}${baseCss()}</style></head>
-<body><div class="card" data-orient="${orient}">
+<body><div class="card" data-card="${cardId}" data-orient="${orient}">
 <header class="brand">${markSvg()}<span class="word">JSpark3</span></header>
 <main>${body}</main>
 <footer><span class="receipt">${receipt}</span><span class="site">jakejh.com/jspark3</span></footer>

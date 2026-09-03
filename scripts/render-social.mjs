@@ -58,7 +58,7 @@ const SIZES = { landscape: [1600, 900], portrait: [1080, 1350] };
 
 async function render(page, card, orient) {
   const [w, h] = SIZES[orient];
-  const html = shell({ orient, body: card.body({ orient }), receipt: card.receipt });
+  const html = shell({ cardId: card.id, orient, body: card.body({ orient }), receipt: card.receipt });
   const file = join(out, `${card.id}${orient === 'portrait' ? '-portrait' : ''}.png`);
   await page.setViewportSize({ width: w, height: h });
   await page.setContent(html, { waitUntil: 'load' });

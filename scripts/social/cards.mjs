@@ -92,6 +92,51 @@ ${bar({ ours: false, value: '44.6', unit: 'tok/s', who: 'Mia TP2 recipe, two DGX
 </div>`,
   },
   {
+    id: '07-hero-card-va',
+    idea: 'Terse four-number hero card with one-line labels',
+    source: 'HERO_FACTS[0..3]',
+    sources: ['"1.49x"', '"391 ms"', '"251 tok/s"', '"1.8x"'],
+    receipt: 'Measured: 3 DGX Sparks · GLM-5.3 Flash',
+    body: () => `
+<div class="tagline">GLM-5.3 Flash: 3 DGX Sparks, one endpoint, 1.49x faster.</div>
+<div class="grid">
+<div class="cell"><div class="num">1.49<span class="unit">x</span></div><div class="label">single-stream code decode</div></div>
+<div class="cell"><div class="num">391<span class="unit">ms</span></div><div class="label">sparkDash first-token latency</div></div>
+<div class="cell"><div class="num">251<span class="unit">tok/s</span></div><div class="label">four-stream aggregate decode</div></div>
+<div class="cell"><div class="num">1.8<span class="unit">x</span></div><div class="label">same-task agent throughput</div></div>
+</div>`,
+  },
+  {
+    id: '07-hero-card-vb',
+    idea: 'Four-number hero card with eyebrow labels and muted comparisons',
+    source: 'HERO_FACTS[0..3]',
+    sources: ['"1.49x"', '"391 ms"', '"251 tok/s"', '"1.8x"', '66.3 vs 44.6 tok/s', '719 ms', '146.5', '44.6 vs 24.7 tok/s'],
+    receipt: '',
+    body: () => `
+<div class="tagline">One GLM-5.3 Flash endpoint: 3 DGX Sparks, 1M context.</div>
+<div class="grid">
+<div class="cell"><div class="eyebrow">Single-stream code decode</div><div class="num">1.49<span class="unit">x</span></div><div class="comparison">66.3 vs 44.6 tok/s on two Sparks</div></div>
+<div class="cell"><div class="eyebrow">sparkDash first-token latency</div><div class="num">391<span class="unit">ms</span></div><div class="comparison">391 vs 719 ms on two Sparks</div></div>
+<div class="cell"><div class="eyebrow">Four-stream aggregate decode</div><div class="num">251<span class="unit">tok/s</span></div><div class="comparison">251 vs 146.5 tok/s on two Sparks</div></div>
+<div class="cell"><div class="eyebrow">Same-task agent throughput</div><div class="num">1.8<span class="unit">x</span></div><div class="comparison">44.6 vs 24.7 tok/s on two Sparks</div></div>
+</div>`,
+  },
+  {
+    id: '07-hero-card-vc',
+    idea: 'Four-number hero card framed by its headline with URL-only footer',
+    source: 'HERO_FACTS[0..3]',
+    sources: ['"1.49x"', '"391 ms"', '"251 tok/s"', '"1.8x"'],
+    receipt: '',
+    body: () => `
+<div class="tagline">3 DGX Sparks. One GLM-5.3 Flash endpoint. 1M context.</div>
+<div class="grid">
+<div class="cell"><div class="num">1.49<span class="unit">x</span></div><div class="label">single-stream decode vs two Sparks</div></div>
+<div class="cell"><div class="num">391<span class="unit">ms</span></div><div class="label">first-token latency vs two Sparks</div></div>
+<div class="cell"><div class="num">251<span class="unit">tok/s</span></div><div class="label">four-stream decode vs two Sparks</div></div>
+<div class="cell"><div class="num">1.8<span class="unit">x</span></div><div class="label">same-task throughput vs two Sparks</div></div>
+</div>`,
+  },
+  {
     id: '08-same-task-1.8x',
     idea: '1.8x throughput on the same agent task, 44.6 vs 24.7 tok/s',
     source: 'HERO_FACTS[3]; SAME_TASK rows',
