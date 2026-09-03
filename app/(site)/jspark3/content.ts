@@ -78,7 +78,7 @@ export const ARCHITECTURE_LEDE =
   "Each Spark holds one tensor-parallel shard and one third of the routed experts. The three fabric legs form a triangle so every rank reaches each peer directly.";
 
 export const ARCHITECTURE_CAPTION =
-  "The shipped architecture diagram. Rank 0 exposes the API; ranks 1 and 2 are headless peers. Scrolls sideways on narrow screens.";
+  "The shipped architecture diagram. Rank 0 exposes the API; ranks 1 and 2 are headless peers.";
 
 export const ARCHITECTURE_CARDS: ReadonlyArray<{ title: string; body: string }> = [
   {
