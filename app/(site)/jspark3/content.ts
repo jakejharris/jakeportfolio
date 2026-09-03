@@ -225,19 +225,19 @@ export const SCREEN_COMPARISON = {
     {
       metric: "Structured count",
       ours: { label: "JSpark3 v1", sparks: "3", value: "81.962" },
-      other: { label: "Mia TP2, current recipe", sparks: "2", flag: "compatibility adapted", value: "57.970" },
+      other: { label: "Mia TP2", sparks: "2", value: "57.970" },
       ratio: "1.41x",
     },
     {
       metric: "Code",
       ours: { label: "JSpark3 v1", sparks: "3", value: "66.257" },
-      other: { label: "Mia TP2, current recipe", sparks: "2", flag: "compatibility adapted", value: "44.563" },
+      other: { label: "Mia TP2", sparks: "2", value: "44.563" },
       ratio: "1.49x",
     },
     {
       metric: "Prose",
       ours: { label: "JSpark3 v1", sparks: "3", value: "29.049" },
-      other: { label: "Mia TP2, current recipe", sparks: "2", flag: "compatibility adapted", value: "20.039" },
+      other: { label: "Mia TP2", sparks: "2", value: "20.039" },
       ratio: "1.45x",
     },
   ],
