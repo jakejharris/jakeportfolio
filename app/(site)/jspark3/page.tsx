@@ -47,6 +47,7 @@ import {
 
 const DESCRIPTION =
   'One GLM-5.3 Flash endpoint across three NVIDIA DGX Sparks, pinned to the byte and measured in the open.';
+const SOCIAL_IMAGE = '/og/jspark3.png';
 
 export const metadata: Metadata = {
   title: 'JSpark3',
@@ -59,13 +60,15 @@ export const metadata: Metadata = {
     description: DESCRIPTION,
     type: 'website',
     url: 'https://jakejh.com/jspark3/',
+    images: [{ url: SOCIAL_IMAGE, width: 1200, height: 630 }],
   },
   twitter: {
-    card: 'summary',
+    card: 'summary_large_image',
     title: 'JSpark3',
     description: DESCRIPTION,
     site: '@jakeharrisdev',
     creator: '@jakeharrisdev',
+    images: [SOCIAL_IMAGE],
   },
 };
 
