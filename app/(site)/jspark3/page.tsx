@@ -193,7 +193,7 @@ export default function JSpark3Page() {
       <div className="mt-8 space-y-8 md:mt-10 md:space-y-10">
         {/* ------------------------------------------------------------ scope --- */}
         <Section id="scope" legacyId="js3-scope" eyebrow="Scope" title="What it is, and what it is not">
-          <div className="mt-5 grid gap-3.5 sm:grid-cols-2">
+          <div className="mt-5 grid gap-3.5">
             <ScopeCard title="It is" items={SCOPE_IS} tone="is" />
             <ScopeCard title="It is not" items={SCOPE_IS_NOT} tone="isnot" />
           </div>
