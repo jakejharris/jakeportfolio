@@ -2,11 +2,6 @@
 const nextConfig = {
   /* config options here */
   trailingSlash: true,
-  async redirects() {
-    return [
-      { source: '/jspark3', destination: '/posts/jspark3/', permanent: true },
-    ];
-  },
   experimental: {
     scrollRestoration: false,
   },
