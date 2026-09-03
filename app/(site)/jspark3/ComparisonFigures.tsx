@@ -7,12 +7,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/app/components/ui/table';
-import {
-  AUTHOR_BENCHMARKS,
-  REFERENCE_SCROLL_HINT,
-  SAME_TASK,
-  SCREEN_COMPARISON,
-} from './content';
+import { AUTHOR_BENCHMARKS, SAME_TASK, SCREEN_COMPARISON } from './content';
 
 /**
  * The headline comparison figures at the top of the evidence section.
@@ -161,7 +156,7 @@ export function AuthorBenchmarks() {
 
   return (
     <Panel ariaLabel={AUTHOR_BENCHMARKS.title} lead>
-      <h3 className="text-xl font-bold tracking-tight md:text-2xl">{AUTHOR_BENCHMARKS.title}</h3>
+      <h3 className="text-lg font-bold tracking-tight md:text-xl">{AUTHOR_BENCHMARKS.title}</h3>
       <p className="mt-2 max-w-[82ch] text-sm leading-relaxed text-muted-foreground">
         {AUTHOR_BENCHMARKS.subtitle}
       </p>
@@ -187,18 +182,23 @@ export function AuthorBenchmarks() {
       <h4 className="mt-7 border-t border-border pt-6 text-[15px] font-semibold">
         {sparkdash.heading}
       </h4>
+      {/* Five source columns, regrouped by concurrency so the three value columns fit a
+          phone: the estimator names the row, the concurrency heads each group. */}
       <div className="mt-3 overflow-hidden rounded-lg border border-border">
-        <Table className="min-w-[720px] text-[13px] tabular-nums">
+        <Table className="w-full table-fixed text-[13px] tabular-nums">
           <TableHeader>
             <TableRow className="hover:bg-transparent">
-              {sparkdash.columns.map((column) => (
+              <TableHead className="w-[31%] px-2.5 py-2 align-bottom text-[11px] uppercase leading-snug tracking-[0.05em] sm:w-[34%] sm:px-3">
+                {sparkdash.columns[1].label}
+              </TableHead>
+              {sparkdash.columns.slice(2).map((column) => (
                 <TableHead
                   key={column.label}
-                  className="px-3 py-2.5 align-bottom text-xs uppercase tracking-[0.05em]"
+                  className="px-2 py-2 align-bottom text-[11px] normal-case leading-snug tracking-normal sm:px-3"
                 >
                   {column.label}
                   {'sparks' in column ? (
-                    <span className="mt-1 block normal-case tracking-normal">
+                    <span className="mt-1 block">
                       <SparkChip count={column.sparks} />
                     </span>
                   ) : null}
@@ -207,22 +207,30 @@ export function AuthorBenchmarks() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {sparkdash.rows.map((row) => (
-              <TableRow key={`${row.concurrency} ${row.estimator}`}>
-                <TableCell className="px-3 py-2 font-semibold">{row.concurrency}</TableCell>
-                <TableCell className="px-3 py-2 text-muted-foreground">{row.estimator}</TableCell>
-                <TableCell className="px-3 py-2">{row.mia}</TableCell>
-                <TableCell className="px-3 py-2">{row.structured}</TableCell>
-                <TableCell className="px-3 py-2">{row.clamp}</TableCell>
-              </TableRow>
+            {Array.from(new Set(sparkdash.rows.map((row) => row.concurrency))).map((concurrency) => (
+              <React.Fragment key={concurrency}>
+                <TableRow className="bg-muted/50 hover:bg-muted/50">
+                  <TableCell colSpan={4} className="px-2.5 py-1.5 text-[11px] font-bold uppercase tracking-[0.06em] sm:px-3">
+                    {sparkdash.columns[0].label} {concurrency}
+                  </TableCell>
+                </TableRow>
+                {sparkdash.rows
+                  .filter((row) => row.concurrency === concurrency)
+                  .map((row) => (
+                    <TableRow key={`${row.concurrency} ${row.estimator}`}>
+                      <TableCell className="px-2.5 py-2 text-[12px] leading-snug text-muted-foreground sm:px-3 sm:text-[13px]">
+                        {row.estimator}
+                      </TableCell>
+                      <TableCell className="px-2 py-2 sm:px-3">{row.mia}</TableCell>
+                      <TableCell className="px-2 py-2 font-semibold sm:px-3">{row.structured}</TableCell>
+                      <TableCell className="px-2 py-2 font-semibold sm:px-3">{row.clamp}</TableCell>
+                    </TableRow>
+                  ))}
+              </React.Fragment>
             ))}
           </TableBody>
         </Table>
       </div>
-      {/* Same hint, style and narrow-screen visibility as the published reference table. */}
-      <p className="mt-1.5 text-xs text-muted-foreground min-[560px]:hidden">
-        {REFERENCE_SCROLL_HINT}
-      </p>
       <div className="mt-3 space-y-1.5">
         {sparkdash.notes.map((note) => (
           <p key={note} className="text-[13px] leading-relaxed text-muted-foreground">
@@ -243,7 +251,7 @@ export function ScreenComparison() {
 
   return (
     <Panel ariaLabel={SCREEN_COMPARISON.title}>
-      <h3 className="text-xl font-bold tracking-tight md:text-2xl">{SCREEN_COMPARISON.title}</h3>
+      <h3 className="text-lg font-bold tracking-tight md:text-xl">{SCREEN_COMPARISON.title}</h3>
       <UnitLabel>{SCREEN_COMPARISON.unit}</UnitLabel>
       <div className="mt-4 space-y-4">
         {SCREEN_COMPARISON.rows.map((row) => (
