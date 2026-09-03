@@ -35,13 +35,13 @@ export default function SectionNav() {
     >
       {/* Below md the row can outrun the viewport, so its right edge fades to say so.
           The mask is on the list itself, so it works over the nav's translucent ground. */}
-      <ul className="flex items-center gap-1 overflow-x-auto py-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden max-md:[mask-image:linear-gradient(to_right,#000_calc(100%_-_28px),transparent)] md:flex-wrap md:overflow-visible">
+      <ul className="flex items-center gap-1 overflow-x-auto py-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden max-md:[mask-image:linear-gradient(to_right,#000_calc(100%_-_28px),transparent)] md:justify-between md:gap-0">
         {SECTIONS.map((section) => (
           <li key={section.id}>
             <a
               href={`#${section.id}`}
               onClick={(event) => scrollToSection(event, section.id)}
-              className="inline-block whitespace-nowrap rounded-md px-2.5 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:text-sm"
+              className="inline-block whitespace-nowrap rounded-md px-2.5 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:px-2 md:text-[13px]"
             >
               {section.label}
             </a>
