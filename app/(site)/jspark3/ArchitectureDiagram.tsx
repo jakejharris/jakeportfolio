@@ -1,13 +1,22 @@
 import * as React from 'react';
+import './architecture.css';
+import FabricTriangle from './FabricTriangle';
+import MotionScope from './MotionScope';
 
 /**
  * The JSpark3 architecture, laid out for the site's reading column.
  *
  * The shipped figure (docs/diagrams/architecture.svg, also at
  * /jspark3/architecture.svg) is a 1000px-wide canvas. Here its boxes become
- * cards that stack on a phone and pair up when there is room, and only the
- * part that is truly a picture, the RoCE-v2 triangle between the three ranks,
- * stays an SVG. Every line of text is the figure's own; only the layout moved.
+ * cards that stack on a phone and pair up when there is room, joined by
+ * connectors that are drawn as lines, and only the part that is truly a
+ * picture, the RoCE-v2 triangle between the three ranks, stays an SVG. Every
+ * line of text is the figure's own; only the layout moved.
+ *
+ * The figure moves as one system on one clock (architecture.css): a request
+ * comes down the HTTP link, Rank 0 takes it, the ranks exchange on every
+ * fabric leg, and the answer goes back up. Nothing in the management path
+ * moves, because nothing on it is in the serving path.
  */
 
 const MONO = 'font-mono text-[12px] leading-relaxed text-foreground';
@@ -50,91 +59,72 @@ function NodeCard({
   );
 }
 
-/** A dashed management link between two stacked cards, with its label alongside. */
-function ManagementLink({ label }: { label: string }) {
+const LINK_HEIGHT = 52;
+
+/**
+ * A connector between two stacked cards, drawn as a real line with its label
+ * beside it. The HTTP link is the serving path: solid, in the accent colour of
+ * the client card, arrowed both ways, and carrying the request and the answer.
+ * The management link is dashed and still, like the control card it leads to.
+ */
+function Link({ label, kind }: { label: string; kind: 'http' | 'management' }) {
+  const h = LINK_HEIGHT;
   return (
-    <div className="flex items-center gap-3 py-1 pl-5" aria-hidden="true">
-      <span className="h-6 w-0 border-l-[1.5px] border-dashed border-muted-foreground" />
-      <span className="text-[11px] leading-tight text-muted-foreground">{label}</span>
+    <div className="flex items-center gap-3 pl-6" aria-hidden="true">
+      <svg width="14" height={h} viewBox={`0 0 14 ${h}`} className="shrink-0 overflow-visible">
+        {kind === 'http' ? (
+          <>
+            <line x1="7" y1="0" x2="7" y2={h} stroke="var(--accent-color)" strokeWidth={2} />
+            <polygon points="2,7 12,7 7,0" fill="var(--accent-color)" />
+            <polygon points={`2,${h - 7} 12,${h - 7} 7,${h}`} fill="var(--accent-color)" />
+            <g fill="none" strokeWidth={3} strokeLinecap="round">
+              <line className="js3-link-packet js3-link-packet-down" pathLength={100} x1="7" y1="0" x2="7" y2={h} />
+              <line className="js3-link-packet js3-link-packet-up" pathLength={100} x1="7" y1={h} x2="7" y2="0" />
+            </g>
+          </>
+        ) : (
+          <line
+            x1="7"
+            y1="0"
+            x2="7"
+            y2={h}
+            className="stroke-muted-foreground"
+            strokeWidth={1.5}
+            strokeDasharray="4 3"
+          />
+        )}
+      </svg>
+      <span
+        className={
+          kind === 'http'
+            ? 'rounded-md border border-[color:var(--accent-color)] bg-background px-2 py-0.5 text-[11px] font-semibold leading-tight text-foreground'
+            : 'rounded-md border border-dashed border-muted-foreground/70 px-2 py-0.5 text-[11px] font-medium leading-tight text-muted-foreground'
+        }
+      >
+        {label}
+      </span>
     </div>
   );
 }
 
-/** The three fabric legs, one per pair of ranks; the only part that needs a picture. */
-function FabricTriangle() {
-  const legs = 'stroke-amber-600 dark:stroke-amber-400';
-  const legInk = 'fill-amber-800 dark:fill-amber-300';
-  const legBox = 'fill-background stroke-amber-600 dark:stroke-amber-400';
-  return (
-    <svg
-      viewBox="0 0 320 252"
-      role="img"
-      aria-labelledby="js3-fabric-title"
-      className="mx-auto h-auto w-full max-w-[400px]"
-      style={{ fontFamily: 'var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif' }}
-    >
-      <title id="js3-fabric-title">
-        Three RoCE-v2 fabric legs: leg A joins rank 0 and rank 1, leg B joins rank 0 and rank 2,
-        leg C joins rank 1 and rank 2
-      </title>
-      <g className={legs} strokeWidth={3} fill="none">
-        <line x1="160" y1="52" x2="52" y2="200" />
-        <line x1="160" y1="52" x2="268" y2="200" />
-        <line x1="52" y1="200" x2="268" y2="200" />
-      </g>
-      {[
-        { x: 160, y: 52, title: 'rank 0', sub: 'API head' },
-        { x: 52, y: 200, title: 'rank 1', sub: 'headless' },
-        { x: 268, y: 200, title: 'rank 2', sub: 'headless' },
-      ].map((node) => (
-        <g key={node.title}>
-          <circle cx={node.x} cy={node.y} r="16" className="fill-background stroke-foreground/35" strokeWidth={1.5} />
-          <circle cx={node.x} cy={node.y} r="5" fill="var(--accent-color)" />
-          <text
-            x={node.x}
-            y={node.y < 100 ? node.y - 33 : node.y + 32}
-            textAnchor="middle"
-            className="fill-foreground"
-            style={{ fontSize: 12, fontWeight: 700 }}
-          >
-            {node.title}
-          </text>
-          <text
-            x={node.x}
-            y={node.y < 100 ? node.y - 20 : node.y + 45}
-            textAnchor="middle"
-            className="fill-muted-foreground"
-            style={{ fontSize: 10.5 }}
-          >
-            {node.sub}
-          </text>
-        </g>
-      ))}
-      {[
-        { x: 92, y: 122, label: 'leg A · rank 0 ⇄ rank 1' },
-        { x: 228, y: 122, label: 'leg B · rank 0 ⇄ rank 2' },
-        { x: 160, y: 200, label: 'leg C · rank 1 ⇄ rank 2' },
-      ].map((leg) => (
-        <g key={leg.label}>
-          <rect x={leg.x - 62} y={leg.y - 10} width="124" height="20" rx="5" className={legBox} strokeWidth={1} />
-          <text
-            x={leg.x}
-            y={leg.y + 4}
-            textAnchor="middle"
-            className={legInk}
-            style={{ fontSize: 10.5, fontWeight: 600 }}
-          >
-            {leg.label}
-          </text>
-        </g>
-      ))}
-    </svg>
-  );
-}
+const RANK_LINES = {
+  head: [
+    'GB10 (SM 12.1), aarch64 · vLLM mp worker',
+    'TP 1/3: attention, KDA, shared expert, LM head · EP: 96 of 288 routed experts',
+    'DFlash2 draft, TP 3 · FP8 KV · prefix cache',
+    '64 GiB cgroup · CUDA graphs 8/16/24/32/48',
+  ],
+  peer: (shard: string) => [
+    'GB10 (SM 12.1), aarch64 · vLLM mp worker',
+    `TP shard ${shard} · EP: 96 of 288 routed experts`,
+    'DFlash2 draft, TP 3 · FP8 KV · prefix cache',
+    '64 GiB cgroup · CUDA graphs 8/16/24/32/48',
+  ],
+} as const;
 
 export default function ArchitectureDiagram() {
   return (
-    <div className="rounded-lg border border-border bg-card p-4 sm:p-5">
+    <MotionScope className="js3-motion rounded-lg border border-border bg-card p-4 sm:p-5">
       <p className="text-base font-bold leading-snug">
         JSpark3 v1: one GLM-5.3 Flash endpoint across three NVIDIA DGX Sparks
       </p>
@@ -150,21 +140,16 @@ export default function ArchitectureDiagram() {
           lines={['OpenAI-compatible HTTP']}
           mono={['POST /v1/chat/completions', 'model: glm-5.3-flash']}
         />
-        <ManagementLink label="HTTP :8000 · rank 0 only" />
+        <Link kind="http" label="HTTP :8000 · Rank 0 Only" />
         <NodeCard
-          title="DGX Spark · rank 0 · API head"
-          lines={[
-            'GB10 (SM 12.1), aarch64 · vLLM mp worker',
-            'TP 1/3: attention, KDA, shared expert, LM head · EP: 96 of 288 routed experts',
-            'DFlash2 draft, TP 3 · FP8 KV · prefix cache',
-            '64 GiB cgroup · CUDA graphs 8/16/24/32/48',
-          ]}
+          title="DGX Spark · Rank 0 · API Head"
+          lines={RANK_LINES.head}
           mono={['W8A16 overlay: 169 modules / 225 tensors']}
         />
-        <ManagementLink label="Management LAN" />
+        <Link kind="management" label="Management LAN" />
         <NodeCard
           tone="control"
-          title="Control and identity"
+          title="Control and Identity"
           lines={[
             'Management LAN: SSH, Gloo/TP sockets, API',
             'Per-rank preflight: GID, MTU, routes, image digest, checkpoint bytes, manifest, memory',
@@ -176,37 +161,36 @@ export default function ArchitectureDiagram() {
       </div>
 
       <div className="mt-5 border-t border-border pt-4">
-        <FabricTriangle />
+        <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-amber-700 dark:text-amber-300">
+          RoCE-v2 Fabric · TP 3 / EP 3
+        </p>
+        <div className="mt-3">
+          <FabricTriangle />
+        </div>
       </div>
 
       <div className="mt-4 grid gap-3 sm:grid-cols-2">
         <NodeCard
-          title="DGX Spark · rank 1 · headless"
-          lines={[
-            'GB10 (SM 12.1), aarch64 · vLLM mp worker',
-            'TP shard 2/3 · EP: 96 of 288 routed experts',
-            'DFlash2 draft, TP 3 · FP8 KV · prefix cache',
-            '64 GiB cgroup · CUDA graphs 8/16/24/32/48',
-          ]}
+          title="DGX Spark · Rank 1 · Headless"
+          lines={RANK_LINES.peer('2/3')}
           mono={['same overlay, same hash-gated transforms']}
         />
         <NodeCard
-          title="DGX Spark · rank 2 · headless"
-          lines={[
-            'GB10 (SM 12.1), aarch64 · vLLM mp worker',
-            'TP shard 3/3 · EP: 96 of 288 routed experts',
-            'DFlash2 draft, TP 3 · FP8 KV · prefix cache',
-            '64 GiB cgroup · CUDA graphs 8/16/24/32/48',
-          ]}
+          title="DGX Spark · Rank 2 · Headless"
+          lines={RANK_LINES.peer('3/3')}
           mono={['same overlay, same hash-gated transforms']}
         />
       </div>
 
       <div className="mt-4 rounded-lg border border-border bg-muted p-3.5 text-[13px] leading-relaxed text-muted-foreground">
-        <p className="text-xs font-bold text-foreground">Reading the diagram</p>
+        <p className="text-xs font-bold text-foreground">Reading the Diagram</p>
         <p className="mt-1.5">
           Orange lines: three RoCE-v2 fabric legs, each on its own network at MTU 9000; every Spark
-          owns two. Dashed: management.
+          owns two. Solid arrowed line: the HTTP serving path, Rank 0 only. Dashed: management.
+        </p>
+        <p className="js3-motion-note mt-1.5">
+          In motion: one request. It comes down the HTTP link, Rank 0 takes it, the three ranks
+          exchange on every leg, and the answer goes back up the same link.
         </p>
         <p className="mt-1.5">
           Model bytes are never inside the image or the recipe; each rank bind-mounts the pinned
@@ -218,6 +202,6 @@ export default function ArchitectureDiagram() {
           over all three ranks (draft TP 1 in the profile is ignored).
         </p>
       </div>
-    </div>
+    </MotionScope>
   );
 }
