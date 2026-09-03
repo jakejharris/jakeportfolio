@@ -1,5 +1,4 @@
 import "./globals.css";
-import "./css/overscroll-fix.css";
 import { geistSans, geistMono, sentient } from "./lib/fonts";
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
