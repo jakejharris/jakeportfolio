@@ -35,7 +35,7 @@ export default function SectionNav() {
     >
       {/* Below md the row can outrun the viewport, so its right edge fades to say so.
           The mask is on the list itself, so it works over the nav's translucent ground. */}
-      <ul className="flex items-center gap-1 overflow-x-auto py-2 max-md:[mask-image:linear-gradient(to_right,#000_calc(100%_-_28px),transparent)]">
+      <ul className="flex items-center gap-1 overflow-x-auto py-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden max-md:[mask-image:linear-gradient(to_right,#000_calc(100%_-_28px),transparent)] md:flex-wrap md:overflow-visible">
         {SECTIONS.map((section) => (
           <li key={section.id}>
             <a
