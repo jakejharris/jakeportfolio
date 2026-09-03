@@ -170,10 +170,7 @@ export default function JSpark3Page() {
           architecture diagram are the point of the page and need the measure. */}
       <div className="mx-auto w-full max-w-5xl px-4">
         <header className="page-enter pt-10 md:pt-14">
-          <p className={`text-xs font-semibold uppercase tracking-[0.12em] ${ACCENT_TEXT}`}>
-            {HERO.eyebrow}
-          </p>
-          <div className="mt-3 flex items-center gap-3">
+          <div className="flex items-center gap-3">
             <JSpark3Mark className={`h-8 w-8 shrink-0 md:h-10 md:w-10 ${ACCENT_TEXT}`} />
             <h1
               className="text-5xl font-bold leading-[0.95] tracking-[-0.01em] md:text-6xl"
