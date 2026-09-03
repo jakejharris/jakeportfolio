@@ -8,6 +8,7 @@ import {
   TableRow,
 } from '@/app/components/ui/table';
 import { AUTHOR_BENCHMARKS, SAME_TASK, SCREEN_COMPARISON } from './content';
+import Fold from './Fold';
 
 /**
  * The headline comparison figures at the top of the evidence section.
@@ -161,7 +162,12 @@ export function AuthorBenchmarks() {
         {AUTHOR_BENCHMARKS.subtitle}
       </p>
 
-      <h4 className="mt-6 text-[15px] font-semibold">{flycockpit.heading}</h4>
+      <Fold
+        className="mt-5 border-t border-border pt-5"
+        title="The three tables"
+        summary="FlyCockpit's benchmark, Mia's bench_decode and Mia's sparkDash protocol, where the hero's 391 ms and 251 tok/s come from."
+      >
+      <h4 className="text-[15px] font-semibold">{flycockpit.heading}</h4>
       <UnitLabel>{flycockpit.unit}</UnitLabel>
       <div className="mt-3 space-y-4">
         {flycockpit.rows.map((row) => (
@@ -242,6 +248,7 @@ export function AuthorBenchmarks() {
       <p className="mt-5 border-t border-border pt-4 text-[13px] leading-relaxed text-muted-foreground">
         {AUTHOR_BENCHMARKS.condition}
       </p>
+      </Fold>
     </Panel>
   );
 }
