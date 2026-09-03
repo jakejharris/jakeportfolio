@@ -1,7 +1,22 @@
 "use client";
 
+import type { MouseEvent } from 'react';
 import { useNavbarScroll } from '../../components/NavbarScrollContext';
 import { SECTIONS } from './content';
+
+/**
+ * Scroll to the section without leaving a hash in the URL. A lingering hash makes
+ * a refresh jump straight to the section, which reads as a snap on load.
+ */
+function scrollToSection(event: MouseEvent<HTMLAnchorElement>, id: string) {
+  const target = document.getElementById(id);
+  if (!target) return;
+  event.preventDefault();
+  target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  if (window.location.hash) {
+    window.history.replaceState(null, '', window.location.pathname + window.location.search);
+  }
+}
 
 /**
  * In-page section nav. TableOfContents is built for Portable Text blocks, so this
@@ -25,6 +40,7 @@ export default function SectionNav() {
           <li key={section.id}>
             <a
               href={`#${section.id}`}
+              onClick={(event) => scrollToSection(event, section.id)}
               className="inline-block whitespace-nowrap rounded-md px-2.5 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:text-sm"
             >
               {section.label}
