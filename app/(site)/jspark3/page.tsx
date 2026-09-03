@@ -15,6 +15,9 @@ import {
   ABLATION_NOTES,
   ABLATION_READING,
   ARCHITECTURE_CAPTION,
+  BENCHMARK_FACTS,
+  BENCHMARK_FACTS_CONDITION,
+  BENCHMARKS_LEDE,
   ARCHITECTURE_CARDS,
   ARCHITECTURE_LEDE,
   BLOCK_FOOTER,
@@ -27,8 +30,6 @@ import {
   HERO,
   HERO_FACTS,
   HERO_LINKS,
-  INSTALL_COMMANDS,
-  INSTALL_NOTE,
   LICENSES,
   LICENSING_LEDE,
   LICENSING_NOTE,
@@ -38,9 +39,9 @@ import {
   PROVENANCE_LEDE,
   REFERENCE_NOTE,
   REFUSE_CARDS,
-  REPRODUCIBILITY_LEDE,
-  SCOPE_IS,
-  SCOPE_IS_NOT,
+  REFUSE_LEDE,
+  RUN_LEDE,
+  RUN_LINKS,
 } from './content';
 
 const DESCRIPTION =
@@ -72,14 +73,14 @@ const ACCENT_TEXT = 'text-[color:var(--accent-color)]';
 
 function Section({
   id,
-  legacyId,
+  legacyIds,
   eyebrow,
   title,
   lede,
   children,
 }: {
   id: string;
-  legacyId: string;
+  legacyIds: ReadonlyArray<string>;
   eyebrow: string;
   title: string;
   lede?: string;
@@ -87,8 +88,10 @@ function Section({
 }) {
   return (
     <section id={id} className="scroll-mt-32 border-t border-border pt-8 md:pt-10">
-      {/* The site block published these anchor ids; keep them working for inbound links. */}
-      <span id={legacyId} aria-hidden="true" className="block scroll-mt-32" />
+      {/* Earlier anchor ids for this section, kept so inbound links still land. */}
+      {legacyIds.map((legacyId) => (
+        <span key={legacyId} id={legacyId} aria-hidden="true" className="block scroll-mt-32" />
+      ))}
       <p className={`text-xs font-semibold uppercase tracking-[0.12em] ${ACCENT_TEXT}`}>{eyebrow}</p>
       <h2 className="mt-2 text-2xl font-bold tracking-tight md:text-3xl">{title}</h2>
       {lede ? <p className="mt-3 leading-relaxed text-muted-foreground">{lede}</p> : null}
@@ -113,35 +116,6 @@ function SparkCount({ count }: { count: string }) {
     <span className="inline-flex items-center gap-1 rounded-full border border-border bg-muted px-2 py-0.5 text-[10.5px] font-semibold uppercase tracking-[0.06em] text-muted-foreground">
       <span className="tabular-nums">{count}</span> Sparks
     </span>
-  );
-}
-
-function ScopeCard({
-  title,
-  items,
-  tone,
-}: {
-  title: string;
-  items: ReadonlyArray<string>;
-  tone: 'is' | 'isnot';
-}) {
-  return (
-    <Card className="p-4 sm:p-5">
-      <h3 className="flex items-center gap-2.5 text-lg font-semibold">
-        <span
-          aria-hidden="true"
-          className={`h-2.5 w-2.5 shrink-0 rounded-full ${
-            tone === 'is' ? 'bg-emerald-600 dark:bg-emerald-400' : 'bg-rose-600 dark:bg-rose-400'
-          }`}
-        />
-        {title}
-      </h3>
-      <ul className="mt-3 list-disc space-y-1.5 pl-5 text-[15px] leading-relaxed marker:text-muted-foreground">
-        {items.map((item) => (
-          <li key={item}>{item}</li>
-        ))}
-      </ul>
-    </Card>
   );
 }
 
@@ -191,18 +165,10 @@ export default function JSpark3Page() {
       <SectionNav />
 
       <div className="mt-8 space-y-8 md:mt-10 md:space-y-10">
-        {/* ------------------------------------------------------------ scope --- */}
-        <Section id="scope" legacyId="js3-scope" eyebrow="Scope" title="What it is, and what it is not">
-          <div className="mt-5 grid gap-3.5">
-            <ScopeCard title="It is" items={SCOPE_IS} tone="is" />
-            <ScopeCard title="It is not" items={SCOPE_IS_NOT} tone="isnot" />
-          </div>
-        </Section>
-
         {/* ----------------------------------------------------- architecture --- */}
         <Section
           id="architecture"
-          legacyId="js3-architecture"
+          legacyIds={["js3-architecture"]}
           eyebrow="Architecture"
           title="How three Sparks become one endpoint"
           lede={ARCHITECTURE_LEDE}
@@ -230,16 +196,38 @@ export default function JSpark3Page() {
           </div>
         </Section>
 
-        {/* --------------------------------------------------------- evidence --- */}
+        {/* ------------------------------------------------------- benchmarks --- */}
         <Section
-          id="evidence"
-          legacyId="js3-evidence"
-          eyebrow="Evidence"
-          title="Measured, and compared with what you could already get"
+          id="benchmarks"
+          legacyIds={["evidence", "js3-evidence"]}
+          eyebrow="Benchmarks"
+          title="The numbers, then the comparisons"
+          lede={BENCHMARKS_LEDE}
         >
-          {/* Headline: the authors' own benchmark scripts first, then the same frozen
+          {/* The absolute story: four measurements of the release build with nothing
+              else in the frame. The hero facts carry the comparisons. */}
+          <dl className="mt-5 grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-border bg-border">
+            {BENCHMARK_FACTS.map((fact) => (
+              <div key={fact.label} className="bg-card p-3.5 sm:p-4">
+                <dt className="flex flex-wrap items-baseline gap-x-1.5">
+                  <span className={`text-[26px] font-bold leading-[1.05] tabular-nums sm:text-[32px] ${ACCENT_TEXT}`}>
+                    {fact.value}
+                  </span>
+                  <span className="text-sm font-semibold text-muted-foreground">{fact.unit}</span>
+                </dt>
+                <dd className="mt-1.5 text-[13px] leading-snug text-muted-foreground">{fact.label}</dd>
+              </div>
+            ))}
+          </dl>
+          <p className="mt-2.5 text-sm text-muted-foreground">{BENCHMARK_FACTS_CONDITION}</p>
+
+          {/* The comparisons: the authors' own benchmark scripts first, then the same frozen
               screen on this fleet, then the same agent prompt across all four builds. */}
-          <div className="mt-5 space-y-3.5">
+          <Subsection
+            title="Compared with what you could already get"
+            note="Every row names its node count. The hero figures come from these tables."
+          />
+          <div className="mt-4 space-y-3.5">
             <AuthorBenchmarks />
             <ScreenComparison />
             <SameTaskComparison />
@@ -319,15 +307,34 @@ export default function JSpark3Page() {
           <p className="mt-4 text-sm text-muted-foreground">{EVIDENCE_GRADE}</p>
         </Section>
 
-        {/* -------------------------------------------------- reproducibility --- */}
+        {/* ----------------------------------------------------------- run it --- */}
         <Section
-          id="reproducibility"
-          legacyId="js3-reproducibility"
-          eyebrow="Reproducibility"
-          title="It refuses to drift"
-          lede={REPRODUCIBILITY_LEDE}
+          id="run"
+          legacyIds={["reproducibility", "js3-reproducibility"]}
+          eyebrow="Run it yourself"
+          title="Get the recipe and the weights"
+          lede={RUN_LEDE}
         >
-          <div className="mt-5 grid gap-3.5 sm:grid-cols-2">
+          <div className="mt-5 grid gap-3.5">
+            {RUN_LINKS.map((link) => (
+              <a
+                key={link.href}
+                href={link.href}
+                target="_blank"
+                rel="noopener"
+                className="group block rounded-lg border border-border bg-card p-4 transition-colors hover:border-[color-mix(in_srgb,var(--accent-color)_50%,hsl(var(--border)))] hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <h3 className="text-[15px] font-semibold">{link.title}</h3>
+                <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">{link.body}</p>
+                <p className={`mt-2.5 break-all font-mono text-[12.5px] underline decoration-border underline-offset-2 transition-colors group-hover:decoration-current ${ACCENT_TEXT}`}>
+                  {link.cta}
+                </p>
+              </a>
+            ))}
+          </div>
+
+          <Subsection title="It refuses to drift" note={REFUSE_LEDE} />
+          <div className="mt-4 grid gap-3.5 sm:grid-cols-2">
             {REFUSE_CARDS.map((card) => (
               <Card key={card.title} className="p-4">
                 <h3 className="text-[15px] font-semibold">{card.title}</h3>
@@ -337,19 +344,12 @@ export default function JSpark3Page() {
               </Card>
             ))}
           </div>
-          {/* Shell lines are kept whole; the block scrolls inside its own frame. */}
-          <pre className="mt-5 max-w-full overflow-x-auto rounded-lg border border-border bg-muted p-3.5 text-[12.5px] leading-relaxed sm:p-4 sm:text-[13px]">
-            <code className="font-mono">{INSTALL_COMMANDS}</code>
-          </pre>
-          <p className="mt-2.5 text-sm text-muted-foreground">
-            <Rich parts={INSTALL_NOTE} />
-          </p>
         </Section>
 
         {/* ------------------------------------------------------- provenance --- */}
         <Section
           id="provenance"
-          legacyId="js3-provenance"
+          legacyIds={["js3-provenance"]}
           eyebrow="Provenance"
           title="Pinned inputs"
           lede={PROVENANCE_LEDE}
@@ -374,7 +374,7 @@ export default function JSpark3Page() {
         {/* -------------------------------------------------------- licensing --- */}
         <Section
           id="licensing"
-          legacyId="js3-licensing"
+          legacyIds={["js3-licensing"]}
           eyebrow="Licensing"
           title="Three licenses, plainly"
           lede={LICENSING_LEDE}
@@ -403,7 +403,7 @@ export default function JSpark3Page() {
         </Section>
 
         {/* ---------------------------------------------------------- credits --- */}
-        <Section id="credits" legacyId="js3-credits" eyebrow="Credits" title="Built on other people's work">
+        <Section id="credits" legacyIds={["js3-credits"]} eyebrow="Credits" title="Built on other people's work">
           <div className="mt-5 space-y-2.5 leading-relaxed">
             <p>{CREDITS_INTRO}</p>
             <p>

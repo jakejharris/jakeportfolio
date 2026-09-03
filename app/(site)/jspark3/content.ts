@@ -36,34 +36,17 @@ export const HERO_FACTS: ReadonlyArray<{ value: string; label: string }> = [
   { value: "1.8x", label: "the throughput of the two-Spark recipe on the same agent task: 44.6 vs 24.7 tok/s" },
 ];
 
-/** Section ids required by the route, with the site block's original anchor ids kept as aliases. */
-export const SECTIONS: ReadonlyArray<{ id: string; legacyId: string; label: string }> = [
-  { id: "scope", legacyId: "js3-scope", label: "Scope" },
-  { id: "architecture", legacyId: "js3-architecture", label: "Architecture" },
-  { id: "evidence", legacyId: "js3-evidence", label: "Evidence" },
-  { id: "reproducibility", legacyId: "js3-reproducibility", label: "Reproducibility" },
-  { id: "provenance", legacyId: "js3-provenance", label: "Pinned inputs" },
-  { id: "licensing", legacyId: "js3-licensing", label: "Licensing" },
-  { id: "credits", legacyId: "js3-credits", label: "Credits" },
-];
-
-/* ---------------------------------------------------------------- scope --- */
-
-export const SCOPE_IS: ReadonlyArray<string> = [
-  "A reproducible serving and runtime recipe: 39 files an operator copies to three Sparks.",
-  "A fail-closed lifecycle controller. Preflight, start, health, verify, stop, each with a dry run.",
-  "A measured operating envelope: 32 sequences, 8,192 batched tokens, CUDA graphs at 8/16/24/32/48, GPU memory utilization 0.83.",
-  "A selective W8A16 Marlin overlay for the BF16 trunk, applied at load, with the routed experts left in EXL3.",
-  "Machine-readable evidence with receipts, including the regressions and the two internal gates it missed.",
-  "A public comparison table: author-reported figures for the recipes that came before it, with the fields needed to read them.",
-];
-
-export const SCOPE_IS_NOT: ReadonlyArray<string> = [
-  "A new model, a fine-tune, or a new quantization. Nothing was trained or quantized here.",
-  "A new checkpoint. The weights are Brandon Music's EXL3/TR3 4-bpw quantization as re-hosted by Mia-AiLab, pinned by revision and hash. The Hugging Face repository re-hosts that exact revision byte for byte, under its own license, so nobody assembles the checkpoint by hand.",
-  "A patched vLLM. Five hash-gated transforms are applied inside the pinned container at start and verified by hash.",
-  "Unrestricted open source or commercial-ready as an assembled stack. The draft is non-commercial and the checkpoint is attribution-required.",
-  "Independently reproduced yet. Evidence comes from one project-operated fleet.",
+/**
+ * Section ids required by the route. Earlier ids for the same section (the site block's
+ * `js3-` anchors and the pre-reorder page ids) are kept as aliases so inbound links land.
+ */
+export const SECTIONS: ReadonlyArray<{ id: string; legacyIds: ReadonlyArray<string>; label: string }> = [
+  { id: "architecture", legacyIds: ["js3-architecture"], label: "Architecture" },
+  { id: "benchmarks", legacyIds: ["evidence", "js3-evidence"], label: "Benchmarks" },
+  { id: "run", legacyIds: ["reproducibility", "js3-reproducibility"], label: "Run it yourself" },
+  { id: "provenance", legacyIds: ["js3-provenance"], label: "Pinned inputs" },
+  { id: "licensing", legacyIds: ["js3-licensing"], label: "Licensing" },
+  { id: "credits", legacyIds: ["js3-credits"], label: "Credits" },
 ];
 
 /* --------------------------------------------------------- architecture --- */
@@ -93,7 +76,41 @@ export const ARCHITECTURE_CARDS: ReadonlyArray<{ title: string; body: string }> 
   },
 ];
 
-/* ------------------------------------------------------------- evidence --- */
+/* ----------------------------------------------------------- benchmarks --- */
+
+export const BENCHMARKS_LEDE =
+  "Four numbers from this fleet, on their own terms, with no other recipe in the frame. The comparisons follow.";
+
+/**
+ * The absolute story. Each value is a measurement of the release build alone; the hero
+ * facts above carry the comparisons. Sources are the sparkDash protocol table and the
+ * frozen screen below, and the repository's results.json for the prefill row.
+ */
+export const BENCHMARK_FACTS: ReadonlyArray<{ value: string; unit: string; label: string }> = [
+  {
+    value: "82",
+    unit: "tok/s",
+    label: "single-stream decode on structured output, median of three batteries: 81.962. Code 66.257, prose 29.049.",
+  },
+  {
+    value: "251",
+    unit: "tok/s",
+    label: "aggregate decode at four streams on code, 62.80 per stream: sparkDash protocol, 251.13.",
+  },
+  {
+    value: "1,234",
+    unit: "tok/s",
+    label: "prefill on a 113,908-token prompt, one request, 92.3 s to first token.",
+  },
+  {
+    value: "1,000,000",
+    unit: "tokens",
+    label: "configured context with an FP8 KV cache. The longest single prompt in the evidence set is the 113,908-token prefill run.",
+  },
+];
+
+export const BENCHMARK_FACTS_CONDITION =
+  "Three Sparks, warm server, thinking off, temperature 0. Every value is printed as measured; the repository's benchmarks page has the estimators and receipts.";
 
 export const EVIDENCE_LEDE =
   "The public comparison is against recipes that were publicly available before JSpark3. Their numbers are author-reported; ours come from our own fleet. Prompts, instruments, and envelopes differ, and the node count is on every row, so read the table as context, not a ranking. No percentage is computed between rows.";
@@ -449,10 +466,35 @@ export const ABLATION_NOTES: ReadonlyArray<{
 export const EVIDENCE_GRADE =
   "Evidence grade: engineering evidence. One fleet, operated by the project, with no third-party reproduction yet. No correctness, stability, or safety failure was observed in any run. Estimators, sample sizes, receipts, and the three evidence classes are on the repository's benchmarks page.";
 
-/* ------------------------------------------------------ reproducibility --- */
+/* ---------------------------------------------------------- run it --- */
 
-export const REPRODUCIBILITY_LEDE =
-  "The construction is exact or the recipe does not start. The measurements are fully specified but the numbers are not guaranteed; your fleet will differ, the bytes will not.";
+export const RUN_LEDE =
+  "The recipe is 39 files you copy to three Sparks. Start with the README quick start, pull the weights from Hugging Face, and the lifecycle scripts take it from there.";
+
+/** The three places a visitor needs, in the order they will use them. */
+export const RUN_LINKS: ReadonlyArray<{ title: string; body: string; href: string; cta: string }> = [
+  {
+    title: "The recipe on GitHub",
+    body: "Quick start is the first thing in the README: clone at v1.0.0, verify the checksums, copy the recipe to each rank.",
+    href: "https://github.com/jakejharris/jspark3#readme",
+    cta: "github.com/jakejharris/jspark3",
+  },
+  {
+    title: "The weights on Hugging Face",
+    body: "The exact target checkpoint revision, re-hosted shard for shard with the same hashes, with the model card and provenance.",
+    href: "https://huggingface.co/jakejharris/jspark3",
+    cta: "huggingface.co/jakejharris/jspark3",
+  },
+  {
+    title: "The full install",
+    body: "Nine steps from bare Docker hosts to a verified endpoint: fabric, pinned inputs, preflight, start, health, verify.",
+    href: "https://github.com/jakejharris/jspark3/blob/v1.0.0/docs/INSTALL.md",
+    cta: "docs/INSTALL.md",
+  },
+];
+
+export const REFUSE_LEDE =
+  "The construction is exact or the recipe does not start. The measurements are fully specified but the numbers are not guaranteed; your fleet will differ, the bytes will not. Every command has a dry run, and confirmation tokens are typed, never defaulted. It refuses on any of these:";
 
 export const REFUSE_CARDS: ReadonlyArray<{ title: string; body: ReadonlyArray<RichPart> }> = [
   {
@@ -485,22 +527,6 @@ export const REFUSE_CARDS: ReadonlyArray<{ title: string; body: ReadonlyArray<Ri
       "Overlay, loader-hook, and transform before/after hash drift; a missing or duplicated seam. Every rank validates every serving byte before start.",
     ],
   },
-];
-
-export const INSTALL_COMMANDS = `cp .env.example .env
-./scripts/clean-room-setup.sh --env-file .env --output preflight.json
-preflight_sha=$(sha256sum preflight.json | cut -d' ' -f1)
-./scripts/start.sh --env-file .env \\
-  --preflight preflight.json --preflight-sha256 "$preflight_sha" \\
-  --confirm START-JSPARK3
-./scripts/health.sh --env-file .env --manifest jspark3-release-manifest.json
-./scripts/verify.sh --env-file .env --manifest jspark3-release-manifest.json \\
-  --output verify.json --log-output verify-rank0.log`;
-
-export const INSTALL_NOTE: ReadonlyArray<RichPart> = [
-  "Every command has ",
-  { code: "--dry-run" },
-  ". Confirmation tokens are typed, never defaulted. The full nine-step installation, from bare Docker hosts to a verified endpoint, is in the repository's install page.",
 ];
 
 /* ----------------------------------------------------------- provenance --- */
