@@ -169,10 +169,10 @@ export default function TableOfContents({ content, externalLinks }: TableOfConte
                           <Button 
                             variant="ghost" 
                             size="sm"
-                            className="w-full justify-start text-left text-sm hover:bg-transparent hover:text-primary p-1 h-auto font-normal flex items-center gap-2"
+                            className="w-full justify-start text-left text-sm hover:bg-transparent hover:text-primary p-1 h-auto font-normal whitespace-normal flex items-center gap-2"
                             onClick={() => scrollToHeading(heading.id, heading.url)}
                           >
-                            <ExternalLink className="h-3 w-3" />
+                            <ExternalLink className="h-4 w-4 shrink-0" />
                             {heading.text}
                           </Button>
                         </li>
