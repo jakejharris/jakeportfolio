@@ -11,7 +11,6 @@
 export type RichPart = string | { code: string } | { strong: string };
 
 export const HERO = {
-  eyebrow: "A serving recipe for three NVIDIA DGX Sparks · release v1.0.0",
   title: "JSpark3",
   tagline: "One endpoint, three Sparks, every byte pinned.",
   lede:

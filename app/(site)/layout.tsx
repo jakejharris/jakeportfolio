@@ -1,4 +1,5 @@
 import Navbar from "../components/Navbar";
+import { NavbarScrollProvider } from "../components/NavbarScrollContext";
 import Footer from "../components/Footer";
 import { ThemeProvider } from "../components/theme-provider";
 import { Toaster } from "../components/ui/sonner";
@@ -82,14 +83,16 @@ export default function SiteLayout({ children }: { children: React.ReactNode }) 
       >
         <TransitionProvider>
           <TransitionOverlay />
-          <Navbar />
-          <main className="flex-1">
-            {children}
-            {process.env.NODE_ENV === 'production' && (
-              <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID!} />
-            )}
-          </main>
-          <Footer />
+          <NavbarScrollProvider>
+            <Navbar />
+            <main className="flex-1">
+              {children}
+              {process.env.NODE_ENV === 'production' && (
+                <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID!} />
+              )}
+            </main>
+            <Footer />
+          </NavbarScrollProvider>
         </TransitionProvider>
       </ThemeProvider>
     </>
