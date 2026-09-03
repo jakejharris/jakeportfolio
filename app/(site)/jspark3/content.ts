@@ -419,17 +419,16 @@ export const ABLATION_GROUPS: ReadonlyArray<{
 ];
 
 /** One scale for every bar, exactly as the source block draws it. */
-export const ABLATION_SCALE = { min: -25, max: 10 } as const;
+export const ABLATION_SCALE = { min: -5, max: 10 } as const;
 
 /** Minor ticks are hidden on narrow screens, as in the source block. */
 export const ABLATION_TICKS: ReadonlyArray<{ value: number; minor: boolean }> = [
-  { value: -25, minor: true },
-  { value: -20, minor: false },
-  { value: -15, minor: true },
-  { value: -10, minor: false },
-  { value: -5, minor: true },
+  { value: -5, minor: false },
+  { value: -2.5, minor: true },
   { value: 0, minor: false },
-  { value: 5, minor: true },
+  { value: 2.5, minor: true },
+  { value: 5, minor: false },
+  { value: 7.5, minor: true },
   { value: 10, minor: false },
 ];
 
