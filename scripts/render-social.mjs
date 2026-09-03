@@ -6,13 +6,14 @@
 //
 // Output: .social-out/<id>.png (1600x900), .social-out/<id>-portrait.png (1080x1350),
 // .social-out/<id>-og.png (1200x630) for the hero card, and .social-out/thumbs/<id>.png scaled to 500px wide for the timeline check.
+// The selected hero OG is also copied to public/og/jspark3.png.
 //
 // Playwright is not a dependency of this repo. The script looks for playwright-core
 // in node_modules, then in $PLAYWRIGHT_CORE, then in the shared /tmp/fleet/pw install,
 // and drives whichever Chromium ~/.cache/ms-playwright holds ($CHROME_PATH overrides).
 import { createRequire } from 'node:module';
-import { existsSync, mkdirSync, readFileSync, readdirSync } from 'node:fs';
-import { resolve, join } from 'node:path';
+import { copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync } from 'node:fs';
+import { dirname, resolve, join } from 'node:path';
 import { homedir } from 'node:os';
 import { CARDS, OG, PORTRAIT } from './social/cards.mjs';
 import { shell } from './social/theme.mjs';
@@ -20,6 +21,7 @@ import { shell } from './social/theme.mjs';
 const root = resolve(new URL('..', import.meta.url).pathname);
 const out = join(root, '.social-out');
 const thumbs = join(out, 'thumbs');
+const publicOg = join(root, 'public', 'og', 'jspark3.png');
 mkdirSync(thumbs, { recursive: true });
 
 function loadPlaywright() {
@@ -65,6 +67,10 @@ async function render(page, card, orient) {
   await page.setContent(html, { waitUntil: 'load' });
   await page.evaluate(() => document.fonts.ready);
   await page.screenshot({ path: file, clip: { x: 0, y: 0, width: w, height: h } });
+  if (orient === 'og' && card.id === '07-hero-card') {
+    mkdirSync(dirname(publicOg), { recursive: true });
+    copyFileSync(file, publicOg);
+  }
   // timeline thumbnail: 500px wide
   const scale = 500 / w;
   await page.setViewportSize({ width: 500, height: Math.round(h * scale) });
