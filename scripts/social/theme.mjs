@@ -85,15 +85,19 @@ footer .site{flex:none;color:var(--fg)}
 .tagline{font-size:var(--label);font-weight:500;line-height:1.15;margin-bottom:var(--grid-gap)}
 
 /* hero copy experiments: card-scoped so the original series does not move */
-.card[data-card="07-hero-card-vb"] .eyebrow{font-size:22px;margin-bottom:12px}
-.card[data-card="07-hero-card-vb"] .comparison{margin-top:10px;font-size:24px;line-height:1.2;color:var(--muted)}
-.card[data-card="07-hero-card-vc"] footer{justify-content:flex-end}
-.card[data-card="07-hero-card-vc"] footer .receipt{display:none}
+.card[data-card="07-hero-card"] .eyebrow,.card[data-card="07-hero-card-vb"] .eyebrow{font-size:var(--eyebrow,22px);margin-bottom:var(--eyebrow-gap,12px)}
+.card[data-card="07-hero-card"] .comparison,.card[data-card="07-hero-card-vb"] .comparison{margin-top:var(--cmp-gap,10px);font-size:var(--cmp,24px);line-height:1.2;color:var(--muted);white-space:nowrap}
+.card[data-card="07-hero-card"] footer,.card[data-card="07-hero-card-vc"] footer{justify-content:flex-end}
+.card[data-card="07-hero-card"] footer .receipt,.card[data-card="07-hero-card-vc"] footer .receipt{display:none}
 
 /* landscape 1600x900 */
 .card[data-orient="landscape"]{--w:1600px;--h:900px;--pad:88px 96px 80px;--mark:46px;--word:36px;--brand-gap:14px;
   --receipt:21px;--num:330px;--label:46px;--caption:28px;--bar-h:88px;--bar-gap:44px;--bar-val:150px;
   --seg-top:56px;--seg-h:22px;--grid-gap:44px;--grid-num:170px;--grid-label:26px}
+/* og 1200x630 */
+.card[data-orient="og"]{--w:1200px;--h:630px;--pad:60px 68px 56px;--mark:32px;--word:26px;--brand-gap:10px;
+  --receipt:16px;--num:230px;--label:32px;--caption:20px;--bar-h:62px;--bar-gap:30px;--bar-val:104px;
+  --seg-top:40px;--seg-h:16px;--grid-gap:30px;--grid-num:120px;--grid-label:18px;--eyebrow:16px;--eyebrow-gap:8px;--cmp:17px;--cmp-gap:7px}
 /* portrait 1080x1350 */
 .card[data-orient="portrait"]{--w:1080px;--h:1350px;--pad:88px 80px 80px;--mark:46px;--word:36px;--brand-gap:14px;
   --receipt:19px;--num:270px;--label:44px;--caption:27px;--bar-h:96px;--bar-gap:60px;--bar-val:120px;

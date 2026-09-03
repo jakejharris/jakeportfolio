@@ -5,7 +5,7 @@
 //   node scripts/render-social.mjs 02 06      # only the cards whose id starts with these
 //
 // Output: .social-out/<id>.png (1600x900), .social-out/<id>-portrait.png (1080x1350),
-// and .social-out/thumbs/<id>.png scaled to 500px wide for the timeline check.
+// .social-out/<id>-og.png (1200x630) for the hero card, and .social-out/thumbs/<id>.png scaled to 500px wide for the timeline check.
 //
 // Playwright is not a dependency of this repo. The script looks for playwright-core
 // in node_modules, then in $PLAYWRIGHT_CORE, then in the shared /tmp/fleet/pw install,
@@ -14,7 +14,7 @@ import { createRequire } from 'node:module';
 import { existsSync, mkdirSync, readFileSync, readdirSync } from 'node:fs';
 import { resolve, join } from 'node:path';
 import { homedir } from 'node:os';
-import { CARDS, PORTRAIT } from './social/cards.mjs';
+import { CARDS, OG, PORTRAIT } from './social/cards.mjs';
 import { shell } from './social/theme.mjs';
 
 const root = resolve(new URL('..', import.meta.url).pathname);
@@ -54,12 +54,13 @@ function checkSources(cards) {
   }
 }
 
-const SIZES = { landscape: [1600, 900], portrait: [1080, 1350] };
+const SIZES = { landscape: [1600, 900], portrait: [1080, 1350], og: [1200, 630] };
 
 async function render(page, card, orient) {
   const [w, h] = SIZES[orient];
   const html = shell({ cardId: card.id, orient, body: card.body({ orient }), receipt: card.receipt });
-  const file = join(out, `${card.id}${orient === 'portrait' ? '-portrait' : ''}.png`);
+  const suffix = orient === 'landscape' ? '' : `-${orient}`;
+  const file = join(out, `${card.id}${suffix}.png`);
   await page.setViewportSize({ width: w, height: h });
   await page.setContent(html, { waitUntil: 'load' });
   await page.evaluate(() => document.fonts.ready);
@@ -68,7 +69,7 @@ async function render(page, card, orient) {
   const scale = 500 / w;
   await page.setViewportSize({ width: 500, height: Math.round(h * scale) });
   await page.evaluate((s) => { document.body.style.zoom = String(s); }, scale);
-  await page.screenshot({ path: join(thumbs, `${card.id}${orient === 'portrait' ? '-portrait' : ''}.png`) });
+  await page.screenshot({ path: join(thumbs, `${card.id}${suffix}.png`) });
   return file;
 }
 
@@ -82,5 +83,6 @@ const page = await browser.newPage({ deviceScaleFactor: 1 });
 for (const card of cards) {
   console.log(await render(page, card, 'landscape'));
   if (PORTRAIT.includes(card.id)) console.log(await render(page, card, 'portrait'));
+  if (OG.includes(card.id)) console.log(await render(page, card, 'og'));
 }
 await browser.close();

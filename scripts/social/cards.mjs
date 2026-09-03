@@ -78,17 +78,17 @@ ${bar({ ours: false, value: '44.6', unit: 'tok/s', who: 'Mia TP2 recipe, two DGX
   },
   {
     id: '07-hero-card',
-    idea: 'All four hero numbers on one card, for the blog OG later',
-    source: 'HERO.tagline; HERO_FACTS[0..3]',
-    sources: ['"1.49x"', '"391 ms"', '"251 tok/s"', '"1.8x"', 'Three DGX Sparks, one model server.'],
-    receipt: `Own fleet measurements against the two-Spark Mia TP2 recipe, v1.0.0. ${RECIPE}`,
+    idea: 'Final hero card: four decode and prefill numbers under one headline, for the blog OG',
+    source: 'HERO_FACTS[0]; BENCHMARK_FACTS[0..2]',
+    sources: ['"1.49x"', '66.3 vs 44.6 tok/s', '81.962', '66.257', '29.049', '"251"', '62.80 per stream', '"1,234"', '113,908-token prompt'],
+    receipt: '',
     body: () => `
-<div class="tagline">Three DGX Sparks, one model server.</div>
+<div class="tagline">One GLM-5.3 Flash endpoint: 3 DGX Sparks, 1M context.</div>
 <div class="grid">
-<div class="cell"><div class="num">1.49<span class="unit">x</span></div><div class="label">faster single-stream code decode than the two-Spark recipe: 66.3 vs 44.6 tok/s</div></div>
-<div class="cell"><div class="num">391<span class="unit">ms</span></div><div class="label">time to first token on the sparkDash prompt, down from 719 ms on two Sparks</div></div>
-<div class="cell"><div class="num">251<span class="unit">tok/s</span></div><div class="label">aggregate decode at four streams, up from 146.5 on two Sparks</div></div>
-<div class="cell"><div class="num">1.8<span class="unit">x</span></div><div class="label">the throughput of the two-Spark recipe on the same agent task: 44.6 vs 24.7 tok/s</div></div>
+<div class="cell"><div class="eyebrow">Single-stream code decode</div><div class="num">1.49<span class="unit">x</span></div><div class="comparison">66.3 vs 44.6 tok/s on two Sparks</div></div>
+<div class="cell"><div class="eyebrow">Single-stream decode</div><div class="num">82<span class="unit">tok/s</span></div><div class="comparison">structured output; code 66.3, prose 29.0</div></div>
+<div class="cell"><div class="eyebrow">Four-stream aggregate decode</div><div class="num">251<span class="unit">tok/s</span></div><div class="comparison">62.8 tok/s per stream, four streams</div></div>
+<div class="cell"><div class="eyebrow">Prefill</div><div class="num">1,234<span class="unit">tok/s</span></div><div class="comparison">113,908-token prompt, one request</div></div>
 </div>`,
   },
   {
@@ -154,6 +154,9 @@ ${bar({ ours: false, value: '24.7', unit: 'tok/s', who: 'Mia TP2 recipe, two DGX
 
 /** Portrait variants of the two strongest ideas. */
 export const PORTRAIT = ['02-ttft-391-vs-719', '03-code-decode-1.49x'];
+
+/** 1200x630 OpenGraph version of the hero card. */
+export const OG = ['07-hero-card'];
 
 /** A still of FabricTriangle.tsx: same node and leg coordinates, amber legs, one caption. */
 function topology(orient) {
