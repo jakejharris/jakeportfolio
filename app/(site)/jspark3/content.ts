@@ -401,7 +401,6 @@ export const ABLATION_GROUPS: ReadonlyArray<{
       { label: "Code", value: 7.27 },
       { label: "Structured count", value: 6.63 },
       { label: "Prose", value: 8.35 },
-      { label: "C3 per-stream median", value: -21.2 },
       { label: "C6 per-stream median", value: 2.91 },
     ],
   },
@@ -449,7 +448,7 @@ export const ABLATION_NOTES: ReadonlyArray<{
     tone: "bad",
     body: [
       { strong: "What it cost, and what was missed." },
-      " Long prefill −3.38% with time to first token +3.50% on 113,908 tokens. The three-stream wave was variable and lost its strict pairing at −21.20%. Fairness did not improve. Time to first token at 48 streams reached a p90 of 96.722 s. Two internal promotion gates were missed: a code median of 66.257 against a 67.0 floor, and a demonstration pacing run of 14 against a limit below 5.",
+      " Long prefill −3.38% with time to first token +3.50% on 113,908 tokens. Fairness did not improve. Time to first token at 48 streams reached a p90 of 96.722 s. Two internal promotion gates were missed: a code median of 66.257 against a 67.0 floor, and a demonstration pacing run of 14 against a limit below 5.",
     ],
   },
 ];
