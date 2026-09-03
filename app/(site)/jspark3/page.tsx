@@ -1,8 +1,6 @@
 import type { Metadata } from 'next';
-import { badgeVariants } from '@/app/components/ui/badge';
 import { Button } from '@/app/components/ui/button';
 import { Card } from '@/app/components/ui/card';
-import { cn } from '@/app/lib/utils';
 import {
   Table,
   TableBody,
@@ -41,7 +39,6 @@ import {
   LICENSING_NOTE,
   LOCAL_RUNS,
   LOCAL_RUNS_METHOD,
-  NOT_YET_LIVE,
   PINNED_INPUTS,
   PROVENANCE_LEDE,
   REFERENCE_NOTE,
@@ -199,22 +196,7 @@ export default function JSpark3Page() {
                 className="h-auto whitespace-normal px-4 py-2.5 text-left"
               >
                 <a href={link.href} target="_blank" rel="noopener">
-                  <span className="flex flex-wrap items-center gap-2">
-                    {link.label}
-                    {!link.live && (
-                      <span
-                        className={cn(
-                          badgeVariants({ variant: 'outline' }),
-                          'rounded-full border px-1.5 py-0 text-[10px] font-bold uppercase leading-[1.4] tracking-[0.08em]',
-                          link.primary
-                            ? 'border-current bg-transparent text-primary-foreground opacity-90'
-                            : 'border-transparent bg-amber-500/15 text-amber-700 dark:text-amber-300'
-                        )}
-                      >
-                        {NOT_YET_LIVE}
-                      </span>
-                    )}
-                  </span>
+                  {link.label}
                 </a>
               </Button>
             ))}
