@@ -23,6 +23,10 @@ export function NavbarScrollProvider({ children }: { children: React.ReactNode }
   const [mobileVisible, setMobileVisible] = useState(true);
   const prevScrollPos = useRef(0);
   const ticking = useRef(false);
+  // The browser scrolls on its own when it restores a position on reload or
+  // history traversal. That fires a scroll event with no gesture behind it,
+  // which must not read as the reader scrolling down. Hide only after input.
+  const userInput = useRef(false);
 
   const handleScroll = useCallback(() => {
     if (ticking.current) return;
@@ -37,7 +41,12 @@ export function NavbarScrollProvider({ children }: { children: React.ReactNode }
       const isScrollingUp = prevScrollPos.current > currentScrollPos;
       const isAtTop = currentScrollPos < 10;
 
-      if (isScrolledDown && !isAtTop && Math.abs(currentScrollPos - prevScrollPos.current) > 5) {
+      if (
+        userInput.current &&
+        isScrolledDown &&
+        !isAtTop &&
+        Math.abs(currentScrollPos - prevScrollPos.current) > 5
+      ) {
         setMobileVisible(false);
       } else if (isScrollingUp || isAtTop) {
         setMobileVisible(true);
@@ -51,12 +60,26 @@ export function NavbarScrollProvider({ children }: { children: React.ReactNode }
   useEffect(() => {
     const desktopQuery = window.matchMedia(NAVBAR_DESKTOP_MEDIA_QUERY);
     const handleBreakpointChange = () => setMobileVisible(true);
+    const markUserInput = () => {
+      userInput.current = true;
+    };
+    const inputEvents = ['pointerdown', 'touchstart', 'wheel', 'keydown'] as const;
+
+    // A restore that already happened before hydration must not count as a
+    // scroll-down on the reader's first real gesture.
+    prevScrollPos.current = window.scrollY;
 
     window.addEventListener('scroll', handleScroll, { passive: true });
+    inputEvents.forEach((name) => {
+      window.addEventListener(name, markUserInput, { passive: true, capture: true });
+    });
     desktopQuery.addEventListener('change', handleBreakpointChange);
 
     return () => {
       window.removeEventListener('scroll', handleScroll);
+      inputEvents.forEach((name) => {
+        window.removeEventListener(name, markUserInput, { capture: true });
+      });
       desktopQuery.removeEventListener('change', handleBreakpointChange);
     };
   }, [handleScroll]);
