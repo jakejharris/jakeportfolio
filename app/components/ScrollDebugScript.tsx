@@ -13,6 +13,11 @@
 // the getBoundingClientRect offset, which includes the entrance animation's
 // translateY, and `anim` names any running animation on the h1 or its
 // ancestors so the two can be told apart.
+//
+// v4: the Chrome iOS inset guard (ChromeIosInsetGuard) reports through
+// `window.__scrolldbg.note`, so its decisions appear as `mitigation` events
+// with a full layout sample, and the header carries the record the previous
+// document left for it (`guardPrev`).
 export default function ScrollDebugScript() {
   const script = `
 (function () {
@@ -65,7 +70,7 @@ export default function ScrollDebugScript() {
     } catch (e) {}
 
     var ua = safe(function () { return navigator.userAgent; }, '');
-    var header = { v: 3 };
+    var header = { v: 4 };
     header.href = safe(function () { return location.href; }, '');
     header.armedBy = armedByUrl ? 'url' : (search.indexOf('scrolldebug') !== -1 ? 'url-other' : 'storage');
     header.referrer = safe(function () { return document.referrer; }, '');
@@ -108,6 +113,12 @@ export default function ScrollDebugScript() {
     header.scrollYAtT0 = curY();
     header.startedAt = new Date().toISOString();
     header.hasPrev = !!prevRaw;
+    // What the previous document of this path in this tab left for the Chrome
+    // iOS inset guard: scrollY, innerHeight, and whether it was covered (cov),
+    // received input (inp) or was scrolled by the reader (us). guardPaths
+    // counts the paths the guard has records for.
+    header.guardPrev = safe(function () { var g = JSON.parse(sessionStorage.getItem('crios-inset-guard') || 'null'); return g && g[location.pathname] ? g[location.pathname] : null; }, null);
+    header.guardPaths = safe(function () { var g = JSON.parse(sessionStorage.getItem('crios-inset-guard') || 'null'); var n = 0; for (var k in g) if (Object.prototype.hasOwnProperty.call(g, k)) n++; return n; }, 0);
 
     var timeline = [];
     var events = [];
@@ -364,6 +375,20 @@ export default function ScrollDebugScript() {
     }
     pushTimeline(snap('init'));
 
+    // Hook for the Chrome iOS inset guard (ChromeIosInsetGuard): each of its
+    // decisions lands here as a 'mitigation' event carrying the guard's own
+    // fields (kind, action, from, after, prevY, ...) on top of a layout sample.
+    log.note = function (ev, fields) {
+      try {
+        var e = snap(ev);
+        for (var k in fields) {
+          if (Object.prototype.hasOwnProperty.call(fields, k) && !(k in e)) e[k] = fields[k];
+        }
+        addEvent(e);
+        pushTimeline(e, true);
+      } catch (err) {}
+    };
+
     // The mobile nav hides via a class flip (React state, one rAF after the scroll
     // event), so watch its class attribute and force a timeline line when it changes.
     var navObserved = null;
@@ -572,25 +597,30 @@ export default function ScrollDebugScript() {
       try {
         var run = JSON.parse(raw);
         var h = run.header || {};
-        var maxY = 0, hid = 0, i;
+        var maxY = 0, hid = 0, i, mit = [];
         for (i = 0; i < (run.timeline || []).length; i++) { var e = run.timeline[i]; if (e.y > maxY) maxY = e.y; if (e.navHidden) hid = 1; }
-        for (i = 0; i < (run.events || []).length; i++) { if (run.events[i].navHidden) hid = 1; }
-        return (h.startedAt || '?') + ' ' + (h.href || '?') + ' nav=' + h.navType + ' armed=' + h.armedBy + ' maxY=' + maxY + ' navHidden=' + hid + ' events=' + (run.events || []).length + ' calls=' + (run.calls || []).length;
+        for (i = 0; i < (run.events || []).length; i++) {
+          var ev = run.events[i];
+          if (ev.navHidden) hid = 1;
+          if (ev.ev === 'mitigation') mit.push(ev.kind + (ev.action ? '=' + ev.action : ''));
+        }
+        return (h.startedAt || '?') + ' ' + (h.href || '?') + ' nav=' + h.navType + ' armed=' + h.armedBy + ' maxY=' + maxY + ' navHidden=' + hid + ' events=' + (run.events || []).length + ' calls=' + (run.calls || []).length + ' mitigation=' + (mit.length ? mit.join(',') : 'none');
       } catch (e) { return raw ? '(unreadable, ' + raw.length + ' chars)' : '(none)'; }
     }
     function renderText() {
       var out = [];
-      out.push('scrolldebug v3  t0=' + header.startedAt + '  now=' + now() + 'ms  y=' + curY() + '  armed=' + header.armedBy + '  ' + header.browser);
+      out.push('scrolldebug v4  t0=' + header.startedAt + '  now=' + now() + 'ms  y=' + curY() + '  armed=' + header.armedBy + '  ' + header.browser);
       out.push('href=' + header.href);
       out.push('referrer=' + (header.referrer || '(none)') + '  opener=' + header.opener + '  hist=' + header.historyLength + '  nav=' + header.navType + '  redirects=' + header.redirectCount + '  scrollRestoration=' + header.scrollRestoration + '  vis@t0=' + header.visibility + '  focus@t0=' + header.hasFocus);
       out.push('inner=' + header.innerWidth + 'x' + header.innerHeight + '  ch@t0=' + header.clientHeight + '  screen=' + header.screen + '  dpr=' + header.dpr + '  vv@t0=' + short(header.visualViewport) + '  readyState@t0=' + header.readyStateAtT0 + '  y@t0=' + header.scrollYAtT0 + '  reducedMotion=' + header.reducedMotion);
       out.push('ua=' + header.ua);
       out.push('last run: ' + summarize(prevText()));
+      out.push('guard: prev=' + short(header.guardPrev) + '  live=' + safe(function () { var g = window.__criosGuard; return g ? g.log.length + ' entries, navType=' + g.navType : 'absent (not Chrome iOS)'; }, '?'));
       out.push('');
       out.push('-- timeline (' + timeline.length + ')  h1=layout offset, h1r=rect offset incl. transform --');
       for (var i = 0; i < timeline.length; i++) {
         var e = timeline[i];
-        out.push('t=' + e.t + 'ms y=' + fmtY(e.y) + ' h1=' + fmtY(e.h1) + ' h1r=' + fmtY(e.h1r) + ' hero=' + fmtY(e.hero) + ' nav=' + fmtY(e.nav) + '/' + fmtY(e.navH) + ' hid=' + fmtY(e.navHidden) + ' vvTop=' + fmtY(e.vvTop) + ' vvH=' + fmtY(e.vvH) + ' ih=' + fmtY(e.ih) + ' ch=' + fmtY(e.ch) + ' sh=' + fmtY(e.sh) + ' hyd=' + e.hyd + ' wm=' + e.wm + (e.anim ? ' anim=' + e.anim : '') + ' [' + e.ev + (e.chg ? ': ' + e.chg : '') + ']');
+        out.push('t=' + e.t + 'ms y=' + fmtY(e.y) + ' h1=' + fmtY(e.h1) + ' h1r=' + fmtY(e.h1r) + ' hero=' + fmtY(e.hero) + ' nav=' + fmtY(e.nav) + '/' + fmtY(e.navH) + ' hid=' + fmtY(e.navHidden) + ' vvTop=' + fmtY(e.vvTop) + ' vvH=' + fmtY(e.vvH) + ' ih=' + fmtY(e.ih) + ' ch=' + fmtY(e.ch) + ' sh=' + fmtY(e.sh) + ' hyd=' + e.hyd + ' wm=' + e.wm + (e.anim ? ' anim=' + e.anim : '') + ' [' + e.ev + (e.ev === 'mitigation' ? ' ' + e.kind + (e.action ? '=' + e.action : '') : '') + (e.chg ? ': ' + e.chg : '') + ']');
       }
       out.push('');
       out.push('-- api calls (' + calls.length + ') --');
