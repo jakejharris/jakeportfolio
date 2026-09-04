@@ -23,6 +23,15 @@
 # misc
 .DS_Store
 *.pem
+*.log
+.claude/
+.codex-tasks/
+runtime/
+SNAP-REPORT.md
+SESSION_NOTES.md
+article-draft.md
+temp_interactive-components.md
+typography-audit.md
 
 # debug
 npm-debug.log*

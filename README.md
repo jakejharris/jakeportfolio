@@ -48,7 +48,7 @@ A modern, responsive portfolio website and blog built with Next.js, React, TypeS
    ```
    NEXT_PUBLIC_SANITY_PROJECT_ID=your_project_id
    NEXT_PUBLIC_SANITY_DATASET=production
-   SANITY_API_TOKEN=your_api_token
+   SANITY_API_WRITE_TOKEN=your_api_token
    ```
 
 4. Run the development server:

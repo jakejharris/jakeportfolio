@@ -120,7 +120,7 @@ GA_SERVICE_ACCOUNT_JSON          # Service-account JSON with Viewer access to th
 - `useCdn: false` and `perspective: 'published'` on the read client — drafts are never exposed
 - `writeClient` is only used server-side in API routes, never in page components
 - All queries use `tags: ['post']` as a single global cache tag busted by the webhook
-- On Jake's local PC, the Sanity Studio repo is at `C:\Users\Jake\Documents\jakeportfolio-studio`
+- The Sanity Studio is maintained in a separate `jakeportfolio-studio` repository
 
 ## Next.js Config Notes
 
