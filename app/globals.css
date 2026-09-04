@@ -113,6 +113,32 @@
 .dark[data-accent="3"] { --accent-color: hsl(160 50% 55%); }
 .dark[data-accent="4"] { --accent-color: hsl(35 70% 60%); }
 
+/* Wordmark stack. Sentient Bold loads with font-display: block, so on a cold
+   cache the title is laid out invisibly in "Sentient Fallback" until the woff2
+   lands, then paints once in the real face. The fallback is local Georgia Bold
+   scaled to Sentient: size-adjust is the kerned advance-width ratio of the
+   literal string "Jake Harris" (Sentient 5.544em over Georgia Bold 6.0635em),
+   and the overrides are Sentient's hhea ascent 960, descent 320 and line gap
+   80 (per 1000 upm) divided by that ratio, so the glyphs sit on the same
+   baseline before and after the swap. Georgia ships on iOS, macOS and Windows.
+   Blink and CoreText match local() against the full or PostScript name, so the
+   bold face comes first; WebKit on Linux only matches family names and picks
+   the bold cut itself from this face's weight, hence the bare "Georgia". */
+@font-face {
+  font-family: "Sentient Fallback";
+  src: local("Georgia Bold"), local("Georgia-Bold"), local("Georgia");
+  font-weight: 700;
+  font-style: normal;
+  size-adjust: 91.43%;
+  ascent-override: 105%;
+  descent-override: 35%;
+  line-gap-override: 8.75%;
+}
+
+:root {
+  --font-wordmark-stack: var(--font-wordmark), "Sentient Fallback", ui-serif, Georgia, serif;
+}
+
 .pixel-fluid-background {
   background-color: hsl(var(--background));
 }
