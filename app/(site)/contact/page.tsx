@@ -28,7 +28,7 @@ export default function ContactPage() {
   return (
     <PageLayout center={false} className="py-20 md:py-24">
       <div className="max-w-none">
-        <h1 className="page-enter mb-3 text-5xl font-bold leading-[0.95] tracking-[-0.01em] [font-family:var(--font-wordmark),ui-serif,Georgia,serif] md:text-6xl">Get in Touch</h1>
+        <h1 className="page-enter mb-3 text-5xl font-bold leading-[0.95] tracking-[-0.01em] [font-family:var(--font-wordmark-stack)] md:text-6xl">Get in Touch</h1>
         <p className="page-enter-2 text-sm text-muted-foreground mb-1">Feel free to reach out — I&apos;m always open to new opportunities and conversations.</p>
         <ul className="page-enter-3 space-y-2 mt-4">
           <li className="relative">

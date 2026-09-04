@@ -30,7 +30,7 @@ export default function AboutPage() {
             <div className="max-w-none">
                 <h1
                     className="page-enter mb-6 text-5xl font-bold leading-[0.95] tracking-[-0.01em] md:text-6xl"
-                    style={{ fontFamily: 'var(--font-wordmark), ui-serif, Georgia, serif' }}
+                    style={{ fontFamily: 'var(--font-wordmark-stack)' }}
                 >
                     About
                 </h1>

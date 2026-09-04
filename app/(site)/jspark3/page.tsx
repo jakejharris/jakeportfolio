@@ -131,7 +131,7 @@ export default function JSpark3Page() {
           <JSpark3Mark className={`h-8 w-8 shrink-0 md:h-10 md:w-10 ${ACCENT_TEXT}`} />
           <h1
             className="text-5xl font-bold leading-[0.95] tracking-[-0.01em] md:text-6xl"
-            style={{ fontFamily: 'var(--font-wordmark), ui-serif, Georgia, serif' }}
+            style={{ fontFamily: 'var(--font-wordmark-stack)' }}
           >
             {HERO.title}
           </h1>
