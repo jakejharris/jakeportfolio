@@ -12,6 +12,35 @@ const THROTTLE_WINDOW_MS = 2_000;
 // Best-effort only: this Map is per serverless instance and resets on cold starts.
 const lastIncrements = new Map<string, number>();
 
+function isSameOrigin(request: NextRequest): boolean {
+  const fetchSite = request.headers.get('sec-fetch-site');
+  if (fetchSite && fetchSite !== 'same-origin') {
+    return false;
+  }
+
+  const origin = request.headers.get('origin');
+  if (origin) {
+    try {
+      const forwardedHost = request.headers.get('x-forwarded-host')?.split(',')[0]?.trim();
+      const host = forwardedHost || request.headers.get('host');
+      const forwardedProtocol = request.headers.get('x-forwarded-proto')
+        ?.split(',')[0]
+        ?.trim();
+      const protocol = forwardedProtocol || request.nextUrl.protocol.slice(0, -1);
+
+      if (!host || (protocol !== 'http' && protocol !== 'https')) {
+        return false;
+      }
+
+      return new URL(origin).origin === new URL(`${protocol}://${host}`).origin;
+    } catch {
+      return false;
+    }
+  }
+
+  return fetchSite === 'same-origin';
+}
+
 async function skippedResponse(
   slug: string,
   reason: 'skipped' | 'throttled'
@@ -28,6 +57,10 @@ export async function POST(request: NextRequest) {
     return new NextResponse(null, { status: 204 });
   }
 
+  if (!isSameOrigin(request)) {
+    return NextResponse.json({ error: 'Cross-origin request rejected' }, { status: 403 });
+  }
+
   let body: unknown;
   try {
     body = await request.json();
@@ -38,6 +71,28 @@ export async function POST(request: NextRequest) {
   const { slug } = (body ?? {}) as { slug?: unknown };
   if (typeof slug !== 'string' || !SLUG_PATTERN.test(slug)) {
     return NextResponse.json({ error: 'Invalid slug' }, { status: 400 });
+  }
+
+  let postId: string | null;
+  try {
+    postId = await writeClient.fetch<string | null>(
+      '*[_type == "post" && slug.current == $slug][0]._id',
+      { slug },
+      { cache: 'no-store' }
+    );
+  } catch (error) {
+    console.log(JSON.stringify({
+      evt: 'viewcount',
+      outcome: 'post-lookup-failed',
+      slug,
+      reason: error instanceof Error ? error.message.slice(0, 200) : 'unknown',
+      ts: new Date().toISOString(),
+    }));
+    return NextResponse.json({ error: 'Failed to verify post' }, { status: 500 });
+  }
+
+  if (!postId) {
+    return NextResponse.json({ error: 'Post not found' }, { status: 404 });
   }
 
   const userAgent = request.headers.get('user-agent') ?? '';
