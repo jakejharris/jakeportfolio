@@ -12,6 +12,10 @@
  * nothing here lays out or repaints the surrounding page. The figure's wrapper
  * (MotionScope) sets data-js3-motion="paused" while it is off screen, and
  * prefers-reduced-motion removes the moving parts entirely.
+ *
+ * The key under the figure reuses these classes: its packet swatch is a
+ * .js3-link-packet-down on the same clock, and its "In motion" row carries
+ * .js3-motion-note so it goes with the motion under reduced motion.
  */
 
 .js3-motion {
