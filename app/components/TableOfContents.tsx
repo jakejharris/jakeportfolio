@@ -82,16 +82,11 @@ export default function TableOfContents({ content, externalLinks }: TableOfConte
 
     const element = document.getElementById(id)
     if (element) {
-      // Calculate position with offset
-      const elementPosition = element.getBoundingClientRect().top + window.scrollY
-      const offsetPosition = elementPosition - (window.innerWidth >= 768 ? 150 : 100)
-      
-      // Scroll to the element with offset
-      window.scrollTo({
-        top: offsetPosition,
-        behavior: 'smooth'
-      })
-      
+      // The heading elements carry `scroll-mt-20`; scrollIntoView honours
+      // scroll-margin, so the landing offset lives with the heading instead of
+      // a pixel guess at the navbar's height here.
+      element.scrollIntoView({ behavior: 'smooth', block: 'start' })
+
       // Add a highlight effect
       element.classList.add('bg-primary/10')
       setTimeout(() => {

@@ -340,7 +340,7 @@ async function exitDraftPreview() {
 
 function DraftPreviewBanner({ title }: { title: string }) {
   return (
-    <div className="fixed left-0 right-0 top-16 z-50 border-b border-border bg-background/95 px-3 py-2 shadow-sm backdrop-blur">
+    <div className="border-b border-border bg-background px-3 py-2 shadow-sm">
       <div className="mx-auto flex max-w-2xl items-center justify-between gap-3 text-sm">
         <p className="min-w-0 truncate font-medium">
           Draft preview: {title}
@@ -483,7 +483,7 @@ export default async function PostPage({ params }: PageParams) {
       />
       {canRenderDraft && <DraftPreviewBanner title={post.title} />}
       <PageLayout>
-        <div className={`max-w-none ${canRenderDraft ? 'pt-14' : ''}`}>
+        <div className="max-w-none">
           {/* <Link 
           href="/" 
           className="group animated-underline !flex w-fit items-center gap-0 mb-6"
