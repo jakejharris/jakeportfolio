@@ -1,5 +1,3 @@
-// Import the updated next-sanity client
-// @ts-ignore - Ignoring type issues with next-sanity module
 import { createClient } from 'next-sanity';
 import imageUrlBuilder from '@sanity/image-url';
 import { apiVersion, dataset, projectId } from './sanity.config';
