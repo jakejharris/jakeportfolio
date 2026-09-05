@@ -2,18 +2,18 @@
 
 A modern, responsive portfolio website and blog built with Next.js, React, TypeScript, and Sanity CMS.
 
-![Next.js](https://img.shields.io/badge/Next.js-15.1-black)
-![React](https://img.shields.io/badge/React-19.0-blue)
+![Next.js](https://img.shields.io/badge/Next.js-15.5-black)
+![React](https://img.shields.io/badge/React-18.3-blue)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5-blue)
-![Sanity](https://img.shields.io/badge/Sanity-2.36-red)
+![Sanity](https://img.shields.io/badge/Sanity-3-red)
 ![TailwindCSS](https://img.shields.io/badge/TailwindCSS-3.4-cyan)
 
 ## 🚀 Features
 
-- **Modern Tech Stack**: Built with Next.js 15, React 19, and TypeScript
+- **Modern Tech Stack**: Built with Next.js 15, React 18, and TypeScript
 - **Responsive Design**: Optimized for all device sizes
 - **Dark/Light Mode**: Theme toggle with next-themes
-- **Content Management**: Powered by Sanity CMS for easy content updates
+- **Content Management**: Powered by Sanity CMS, with the Studio embedded at `/studio`
 - **Blog Platform**: Integrated blog with view counter and tag filtering
 - **Fast Performance**: Optimized with Turbopack for quick development
 - **Accessibility**: Built with best practices for web accessibility
@@ -23,8 +23,8 @@ A modern, responsive portfolio website and blog built with Next.js, React, TypeS
 
 ### Prerequisites
 
-- Node.js 18.x or higher
-- npm, yarn, or pnpm
+- Node.js 22.x
+- npm (the repo's `.npmrc` sets `legacy-peer-deps` and `include=dev`)
 
 ### Installation
 
@@ -37,10 +37,6 @@ A modern, responsive portfolio website and blog built with Next.js, React, TypeS
 2. Install dependencies:
    ```bash
    npm install
-   # or
-   yarn install
-   # or
-   pnpm install
    ```
 
 3. Set up environment variables:
@@ -48,29 +44,40 @@ A modern, responsive portfolio website and blog built with Next.js, React, TypeS
    ```
    NEXT_PUBLIC_SANITY_PROJECT_ID=your_project_id
    NEXT_PUBLIC_SANITY_DATASET=production
-   SANITY_API_WRITE_TOKEN=your_api_token
+   NEXT_PUBLIC_SANITY_API_VERSION=2023-05-03
    ```
+   See `CLAUDE.md` for the optional variables (webhook secret, write token, analytics).
 
 4. Run the development server:
    ```bash
    npm run dev
-   # or
-   yarn dev
-   # or
-   pnpm dev
    ```
 
 5. Open [http://localhost:3000](http://localhost:3000) in your browser to see the site.
 
+## 🧰 Scripts
+
+```bash
+npm run dev        # Development server (Turbopack)
+npm run build      # Production build
+npm run start      # Serve the production build
+npm run lint       # ESLint 9 (flat config in eslint.config.mjs)
+npm run typecheck  # tsc --noEmit
+npm test           # Unit tests (node test runner via tsx)
+```
+
+`next build` ignores lint and type errors on purpose, so run `npm run lint` and `npm run typecheck` before opening a PR.
+
 ## 📝 Project Structure
 
-- `app/` - Next.js 15 app router components and pages
-- `app/components/` - Reusable UI components
-- `app/posts/` - Blog post pages and components
-- `app/about/` - About page
-- `app/contact/` - Contact page
-- `lib/` - Utility functions and shared code
+- `app/` - Next.js 15 App Router
+- `app/(site)/` - Public pages: home, `about/`, `contact/`, `posts/[slug]/`, `tags/[slug]/`, `jspark3/`
+- `app/(studio)/` - Embedded Sanity Studio at `/studio`
+- `app/api/` - Route handlers (revalidation webhook, view counts)
+- `app/components/` - Site components (`ui/` holds the shadcn primitives in use)
+- `app/lib/` - Sanity clients, fonts, view-count helpers
 - `sanity-schemas/` - Sanity CMS schema definitions
+- `scripts/` - Seed and social-image scripts
 - `public/` - Static assets
 
 ## 🤝 Contributing
