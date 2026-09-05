@@ -24,7 +24,7 @@ Note: `.npmrc` sets `legacy-peer-deps=true` and `include=dev` (the Vercel projec
 
 ## Architecture
 
-This is a Next.js 15 portfolio and blog site using the App Router with Sanity CMS for content management. Deployed on Vercel at `https://jakejh.com`.
+This is a Next.js 15 portfolio and blog site using the App Router with Sanity CMS for content management. Deployed on Vercel at `https://www.jakejh.com` (the apex 308-redirects to www).
 
 ### Key Directories
 
@@ -136,7 +136,7 @@ GA_SERVICE_ACCOUNT_JSON          # Service-account JSON with Viewer access to th
 - **Robots** (`app/robots.ts`) — Allows `/`, disallows `/api/` and `/viewadmin/`
 - **JSON-LD** — WebSite + Person schemas in root layout; BlogPosting schema on post pages
 - **OpenGraph/Twitter** — Configured on all pages with canonical URLs
-- **Base URL** — `https://jakejh.com`
+- **Base URL** — `SITE_URL` in `app/lib/site.ts` (`https://www.jakejh.com`); every canonical, OpenGraph, sitemap, robots and JSON-LD URL derives from it
 
 ## Key Dependencies
 

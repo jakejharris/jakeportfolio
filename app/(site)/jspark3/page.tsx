@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { absoluteUrl } from '@/app/lib/site';
 import { Button } from '@/app/components/ui/button';
 import { Card } from '@/app/components/ui/card';
 import PageLayout from '@/app/components/PageLayout';
@@ -53,13 +54,13 @@ export const metadata: Metadata = {
   title: 'JSpark3',
   description: DESCRIPTION,
   alternates: {
-    canonical: 'https://jakejh.com/jspark3/',
+    canonical: absoluteUrl('/jspark3/'),
   },
   openGraph: {
     title: 'JSpark3',
     description: DESCRIPTION,
     type: 'website',
-    url: 'https://jakejh.com/jspark3/',
+    url: absoluteUrl('/jspark3/'),
     images: [{ url: SOCIAL_IMAGE, width: 1200, height: 630 }],
   },
   twitter: {

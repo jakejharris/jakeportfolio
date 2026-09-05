@@ -14,6 +14,7 @@ import PixelFluidBackground from '@/app/components/PixelFluidBackground';
 import TagPill from '@/app/components/TagPill';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
+import { absoluteUrl } from '@/app/lib/site';
 
 export const dynamic = 'force-dynamic';
 
@@ -61,7 +62,7 @@ export async function generateMetadata({
     title,
     description,
     alternates: {
-      canonical: `https://jakejh.com/tags/${slug}/`,
+      canonical: absoluteUrl(`/tags/${slug}/`),
     },
     openGraph: {
       title,
