@@ -8,7 +8,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 npm run dev      # Development server with Turbopack (http://localhost:3000)
 npm run build    # Production build
 npm run start    # Start production server
-npm run lint     # Run ESLint
+npm run lint     # ESLint 9, flat config in eslint.config.mjs (runs `eslint .`)
+npm run typecheck  # tsc --noEmit
+npm test         # node test runner via tsx (post-views + seed script tests)
 ```
 
 **Important:** Do NOT run `npm run build`, `npm run dev`, or `npm run start` directly. Always ask the user to run these commands themselves.
@@ -18,7 +20,7 @@ npm run lint     # Run ESLint
 - Use `git switch -c <branch>` to create new branches (not `git checkout -b`)
 - Use the [Conventional Commits](https://www.conventionalcommits.org/) standard for all commit messages (e.g., `feat:`, `fix:`, `refactor:`, `docs:`, `chore:`)
 
-Note: Use `npm install --legacy-peer-deps` if you encounter peer dependency issues (also enforced on Vercel via `vercel.json` NPM_FLAGS).
+Note: `.npmrc` sets `legacy-peer-deps=true` and `include=dev` (the Vercel project sets NODE_ENV, which would otherwise skip the devDependencies the build needs). Build and lint tooling lives in `devDependencies`.
 
 ## Architecture
 
@@ -44,10 +46,11 @@ This is a Next.js 15 portfolio and blog site using the App Router with Sanity CM
 | `/contact` | Client | Email copy-to-clipboard and LinkedIn link; metadata exported from `contact/layout.tsx` |
 | `/posts/[slug]` | Server | Full blog post with PortableText, TableOfContents, ViewCounter, and JSON-LD (BlogPosting) |
 | `/viewadmin` | Client | Internal admin panel for view count adjustments (password-protected, blocked in robots.ts) |
+| `/studio` | Client | Embedded Sanity Studio (`next-sanity/studio`), blocked in robots.ts |
 
 ### Data Flow
 
-1. **Sanity CMS** stores content (blog posts, tags) in a separate studio project (`jakeportfolio-studio`)
+1. **Sanity CMS** stores content (blog posts, tags); the Studio is embedded in this app at `/studio` (`app/(studio)/studio/[[...tool]]/page.tsx`, configured by `sanity.config.ts` with the schemas in `sanity-schemas/`)
 2. **`app/lib/sanity.client.ts`** provides `client` (read, `useCdn: false`, `perspective: 'published'`) and `writeClient` (mutations with `SANITY_API_WRITE_TOKEN`)
 3. **`sanityFetch()`** helper handles GROQ queries with Next.js revalidation tags and `revalidate: 0` (no time-based caching; all revalidation is on-demand)
 4. **Webhook revalidation** via `/api/revalidate` triggers `revalidateTag('post')` and `revalidatePath('/')` when Sanity content changes
@@ -114,19 +117,18 @@ GA_SERVICE_ACCOUNT_JSON          # Service-account JSON with Viewer access to th
 
 ## Sanity Integration Notes
 
-- The Sanity Studio lives in a separate `jakeportfolio-studio` directory
-- Schema changes must be synchronized between both projects
+- The Sanity Studio is embedded at `/studio` (`app/(studio)/`), built from `sanity.config.ts`, `sanity-structure.ts` and `sanity-schemas/`; there is no separate studio project
+- Schema changes go in `sanity-schemas/` and must stay in sync with the GROQ projections in the page files
 - Frontend queries in page files must match schema structure in `sanity-schemas/`
 - `useCdn: false` and `perspective: 'published'` on the read client — drafts are never exposed
 - `writeClient` is only used server-side in API routes, never in page components
 - All queries use `tags: ['post']` as a single global cache tag busted by the webhook
-- The Sanity Studio is maintained in a separate `jakeportfolio-studio` repository
 
 ## Next.js Config Notes
 
 - `trailingSlash: true` — all URLs end with `/`, important for link construction
 - `images.remotePatterns` — only `cdn.sanity.io/images/**` is allowed
-- `eslint.ignoreDuringBuilds: true` and `typescript.ignoreBuildErrors: true` — errors don't block production builds (ESLint 8.x / eslint-config-next 13.x pinned behind Next.js 15)
+- `eslint.ignoreDuringBuilds: true` and `typescript.ignoreBuildErrors: true` — errors don't block production builds, so run `npm run lint` and `npm run typecheck` explicitly. Lint is ESLint 9 with `eslint-config-next` 15 loaded through FlatCompat in `eslint.config.mjs` (the only ESLint config)
 
 ## SEO
 
@@ -143,8 +145,8 @@ GA_SERVICE_ACCOUNT_JSON          # Service-account JSON with Viewer access to th
 | Framework | Next.js 15, React 18 |
 | CMS | sanity, next-sanity, @sanity/image-url |
 | Content | @portabletext/react, react-syntax-highlighter |
-| UI | 22 @radix-ui packages, lucide-react, react-icons, sonner, vaul, cmdk |
+| UI | 6 @radix-ui packages (accordion, collapsible, hover-card, popover, separator, slot), lucide-react, react-icons, sonner, vaul |
 | Styling | Tailwind CSS 3, tailwindcss-animate, class-variance-authority, tailwind-merge |
-| Forms | react-hook-form, zod, @hookform/resolvers |
 | Theme | next-themes |
-| Analytics | @next/third-parties (Google Analytics) |
+| Analytics | @next/third-parties (Google Analytics), google-auth-library (GA4 Data API) |
+| Tooling (devDependencies) | TypeScript 5, ESLint 9 + eslint-config-next 15, Tailwind/PostCSS/autoprefixer, tsx |
