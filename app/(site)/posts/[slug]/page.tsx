@@ -75,8 +75,9 @@ export async function generateMetadata({
       ...(imageUrl && { images: [{ url: imageUrl, width: 1200, height: 630 }] }),
     },
     twitter: {
-      // Use summary card when no image, summary_large_image when image exists
-      card: imageUrl ? 'summary_large_image' : 'summary',
+      // Every post has a large image now: the Sanity share image or main image
+      // when set, otherwise the generated opengraph-image card for this route.
+      card: 'summary_large_image',
       title,
       description,
       site: '@jakeharrisdev',
