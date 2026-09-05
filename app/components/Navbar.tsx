@@ -4,7 +4,6 @@ import DesktopNavbar from './DesktopNavbar';
 import MobileNavbar from './MobileNavbar';
 import { useNavbarScroll } from './NavbarScrollContext';
 import '../css/navbar.css';
-import '../css/mobile-navbar.css';
 import '../css/animations.css';
 import '../css/magical-button.css';
 
