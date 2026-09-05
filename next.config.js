@@ -26,6 +26,16 @@ const nextConfig = {
   experimental: {
     scrollRestoration: false,
   },
+  // The opengraph-image routes read their font files at render time
+  // (app/lib/og.tsx). The build tracer does not follow those reads out of the
+  // shared server chunk, so list the files for every opengraph-image function.
+  outputFileTracingIncludes: {
+    '**/opengraph-image*': [
+      './public/fonts/Sentient-Bold.woff',
+      './node_modules/geist/dist/fonts/geist-sans/Geist-Medium.ttf',
+      './node_modules/geist/dist/fonts/geist-mono/GeistMono-Regular.ttf',
+    ],
+  },
   eslint: {
     // Disable ESLint during production builds
     ignoreDuringBuilds: true,
