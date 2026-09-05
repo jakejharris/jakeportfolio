@@ -32,7 +32,7 @@ export const metadata: Metadata = {
     description: "Full Stack Developer building AI-powered web applications, custom platforms, and digital experiences.",
   },
   twitter: {
-    card: "summary",
+    card: "summary_large_image",
     site: '@jakeharrisdev',
     creator: '@jakeharrisdev',
     title: "Jake Harris - Full Stack Developer",
