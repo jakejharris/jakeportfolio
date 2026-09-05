@@ -1,6 +1,9 @@
-// Import the updated next-sanity client
-// @ts-ignore - Ignoring type issues with next-sanity module
-import { createClient } from 'next-sanity';
+import 'server-only';
+
+// `@sanity/client` directly, not `next-sanity`: next-sanity's entry re-exports
+// its Visual Editing / live-loader client components, which Next then bundles
+// into every route that imports this module even though nothing renders them.
+import { createClient } from '@sanity/client';
 import imageUrlBuilder from '@sanity/image-url';
 import { apiVersion, dataset, projectId } from './sanity.config';
 
