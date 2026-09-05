@@ -1,6 +1,7 @@
 import * as React from 'react';
 import './architecture.css';
 import FabricTriangle from './FabricTriangle';
+import Fold from './Fold';
 import MotionScope from './MotionScope';
 
 /**
@@ -107,6 +108,71 @@ function Link({ label, kind }: { label: string; kind: 'http' | 'management' }) {
   );
 }
 
+/**
+ * The legend under the figure: one swatch per line style, drawn with the same
+ * strokes as the lines themselves (FabricTriangle's amber legs, Link's accent
+ * HTTP path and dashed management link), so the key and the figure cannot
+ * drift apart.
+ */
+function KeySwatch({ kind }: { kind: 'fabric' | 'http' | 'management' }) {
+  return (
+    <svg
+      width="44"
+      height="14"
+      viewBox="0 0 44 14"
+      className="mt-[3px] shrink-0 overflow-visible"
+      aria-hidden="true"
+    >
+      {kind === 'fabric' ? (
+        <line
+          x1="1"
+          y1="7"
+          x2="43"
+          y2="7"
+          className="stroke-amber-600 dark:stroke-amber-400"
+          strokeWidth={3}
+          strokeLinecap="round"
+        />
+      ) : kind === 'http' ? (
+        <>
+          <line x1="6" y1="7" x2="38" y2="7" stroke="var(--accent-color)" strokeWidth={2} />
+          <polygon points="0,7 7,2 7,12" fill="var(--accent-color)" />
+          <polygon points="44,7 37,2 37,12" fill="var(--accent-color)" />
+        </>
+      ) : (
+        <line
+          x1="1"
+          y1="7"
+          x2="43"
+          y2="7"
+          className="stroke-muted-foreground"
+          strokeWidth={1.5}
+          strokeDasharray="4 3"
+        />
+      )}
+    </svg>
+  );
+}
+
+function KeyRow({
+  kind,
+  label,
+  children,
+}: {
+  kind: 'fabric' | 'http' | 'management';
+  label: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <li className="flex items-start gap-2.5">
+      <KeySwatch kind={kind} />
+      <span className="min-w-0">
+        <span className="font-semibold text-foreground">{label}.</span> {children}
+      </span>
+    </li>
+  );
+}
+
 const RANK_LINES = {
   head: [
     'GB10 (SM 12.1), aarch64 · vLLM mp worker',
@@ -184,23 +250,38 @@ export default function ArchitectureDiagram() {
 
       <div className="mt-4 rounded-lg border border-border bg-muted p-3.5 text-[13px] leading-relaxed text-muted-foreground">
         <p className="text-xs font-bold text-foreground">Reading the Diagram</p>
-        <p className="mt-1.5">
-          Orange lines: three RoCE-v2 fabric legs, each on its own network at MTU 9000; every Spark
-          owns two. Solid arrowed line: the HTTP serving path, Rank 0 only. Dashed: management.
-        </p>
-        <p className="js3-motion-note mt-1.5">
-          In motion: one request. It comes down the HTTP link, Rank 0 takes it, the three ranks
-          exchange on every leg, and the answer goes back up the same link.
-        </p>
-        <p className="mt-1.5">
-          Model bytes are never inside the image or the recipe; each rank bind-mounts the pinned
-          checkpoint read-only.
-        </p>
-        <p className="mt-1.5">
-          Every serving byte is validated before start. W8A16 converts the BF16 trunk to INT8 Marlin
-          at load; experts stay EXL3, the 34 KDA f/g modules are excluded. The DFlash2 draft is built
-          over all three ranks (draft TP 1 in the profile is ignored).
-        </p>
+        <ul role="list" className="mt-2.5 space-y-2">
+          <KeyRow kind="fabric" label="RoCE-v2 fabric leg">
+            Three, each on its own network at MTU 9000; every Spark owns two.
+          </KeyRow>
+          <KeyRow kind="http" label="HTTP serving path">
+            Rank 0 only. The request comes down it and the answer goes back up.
+          </KeyRow>
+          <KeyRow kind="management" label="Management LAN">
+            Dashed and still: nothing on it is in the serving path.
+          </KeyRow>
+        </ul>
+        <Fold
+          className="mt-3.5 border-t border-border pt-3.5 text-foreground"
+          title="More about the figure"
+          summary="The request path, where the model bytes live, and what is checked before start."
+        >
+          <div className="text-muted-foreground">
+            <p className="js3-motion-note">
+              In motion: one request. It comes down the HTTP link, Rank 0 takes it, the three ranks
+              exchange on every leg, and the answer goes back up the same link.
+            </p>
+            <p className="mt-1.5">
+              Model bytes are never inside the image or the recipe; each rank bind-mounts the pinned
+              checkpoint read-only.
+            </p>
+            <p className="mt-1.5">
+              Every serving byte is validated before start. W8A16 converts the BF16 trunk to INT8 Marlin
+              at load; experts stay EXL3, the 34 KDA f/g modules are excluded. The DFlash2 draft is built
+              over all three ranks (draft TP 1 in the profile is ignored).
+            </p>
+          </div>
+        </Fold>
       </div>
     </MotionScope>
   );
