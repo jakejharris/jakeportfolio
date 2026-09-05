@@ -18,6 +18,7 @@ import nextDynamic from 'next/dynamic';
 import TableOfContents from '@/app/components/TableOfContents';
 import TagPill from '@/app/components/TagPill';
 import type { Metadata } from 'next';
+import { SITE_URL, absoluteUrl } from '@/app/lib/site';
 
 export const dynamic = 'force-dynamic';
 
@@ -62,7 +63,7 @@ export async function generateMetadata({
     title,
     description,
     alternates: {
-      canonical: `https://jakejh.com/posts/${slug}/`,
+      canonical: absoluteUrl(`/posts/${slug}/`),
     },
     openGraph: {
       title,
@@ -459,17 +460,17 @@ export default async function PostPage({ params }: PageParams) {
     author: {
       '@type': 'Person',
       name: 'Jake Harris',
-      url: 'https://jakejh.com/about/',
+      url: absoluteUrl('/about/'),
     },
     publisher: {
       '@type': 'Organization',
       name: 'Jake Harris',
-      url: 'https://jakejh.com',
+      url: SITE_URL,
     },
-    url: `https://jakejh.com/posts/${post.slug.current}/`,
+    url: absoluteUrl(`/posts/${post.slug.current}/`),
     mainEntityOfPage: {
       '@type': 'WebPage',
-      '@id': `https://jakejh.com/posts/${post.slug.current}/`,
+      '@id': absoluteUrl(`/posts/${post.slug.current}/`),
     },
     ...(imageUrl && { image: imageUrl }),
     ...(post.tags?.length && { keywords: post.tags.map(t => t.title) }),

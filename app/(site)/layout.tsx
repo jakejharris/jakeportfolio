@@ -8,9 +8,10 @@ import AccentScript from "../components/AccentScript";
 import { TransitionProvider } from "../components/TransitionProvider";
 import TransitionOverlay from "../components/TransitionOverlay";
 import type { Metadata } from "next";
+import { SITE_URL } from "../lib/site";
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://jakejh.com'),
+  metadataBase: new URL(SITE_URL),
   title: {
     default: "Jake Harris - Full Stack Developer",
     template: "%s | Jake Harris"
@@ -25,7 +26,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "en_US",
-    url: "https://jakejh.com",
+    url: SITE_URL,
     siteName: "Jake Harris",
     title: "Jake Harris - Full Stack Developer",
     description: "Full Stack Developer building AI-powered web applications, custom platforms, and digital experiences.",
@@ -47,7 +48,7 @@ const websiteSchema = {
   "@context": "https://schema.org",
   "@type": "WebSite",
   "name": "Jake Harris",
-  "url": "https://jakejh.com",
+  "url": SITE_URL,
   "description": "Jake Harris is a Full Stack Developer building AI-powered web applications, custom platforms, and digital experiences.",
 };
 
@@ -55,7 +56,7 @@ const personSchema = {
   "@context": "https://schema.org",
   "@type": "Person",
   "name": "Jake Harris",
-  "url": "https://jakejh.com",
+  "url": SITE_URL,
   "jobTitle": "Full Stack Developer",
   "sameAs": [
     "https://github.com/jakejharris",

@@ -4,12 +4,13 @@ import { FaDownload, FaGithub } from 'react-icons/fa';
 import '../../css/page.css';
 import '../../css/animations.css';
 import { MdArrowForward } from 'react-icons/md';
+import { absoluteUrl } from '@/app/lib/site';
 
 export const metadata = {
     title: "About",
     description: "Jake Harris is a Full Stack Developer with experience in AI-powered applications, startup development, and consulting. Learn about his background, skills, and projects.",
     alternates: {
-        canonical: 'https://jakejh.com/about/',
+        canonical: absoluteUrl('/about/'),
     },
 };
 
