@@ -8,7 +8,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" suppressHydrationWarning className={`${geistSans.variable} ${geistMono.variable} ${sentient.variable}`}>
       <head>
         <ChromeIosInsetGuard />
-        <link rel="icon" href="/favicon.ico" />
       </head>
       <body className="min-h-screen bg-background text-foreground flex flex-col font-sans">
         {children}
