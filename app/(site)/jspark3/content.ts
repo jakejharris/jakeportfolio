@@ -339,7 +339,7 @@ export const LOCAL_RUNS: ReadonlyArray<{
 }> = [
   {
     title: "JSpark3 v1.0.0",
-    flag: "local · this release",
+    flag: "local · historical v1.0.0",
     sparks: "3",
     ours: true,
     body: [
@@ -481,7 +481,7 @@ export const RUN_LINKS: ReadonlyArray<{ title: string; body: string; href: strin
   {
     title: "The full install",
     body: "From Docker hosts to a verified endpoint: pinned downloads, runtime views, fabric, preflight, start, health and verification.",
-    href: "https://github.com/jakejharris/jspark3/blob/v1.1.0/docs/INSTALL.md",
+    href: "https://github.com/jakejharris/jspark3/blob/main/docs/INSTALL.md",
     cta: "docs/INSTALL.md",
   },
 ];
