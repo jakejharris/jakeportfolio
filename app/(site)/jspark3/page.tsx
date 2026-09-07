@@ -46,7 +46,7 @@ import {
 } from './content';
 
 const DESCRIPTION =
-  'One GLM-5.3 Flash endpoint across three NVIDIA DGX Sparks, pinned to the byte and measured in the open.';
+  'JSpark3 v1.1 Cadence: GLM-5.3 Flash across three NVIDIA DGX Sparks, with a pinned recipe, measured decode and public limits.';
 const SOCIAL_IMAGE = '/og/jspark3.png';
 
 export const metadata: Metadata = {
@@ -215,8 +215,8 @@ export default function JSpark3Page() {
           title="The numbers, then the comparisons"
           lede={BENCHMARKS_LEDE}
         >
-          {/* The absolute story: four measurements of the release build with nothing
-              else in the frame. The hero facts carry the comparisons. */}
+          {/* Current decode and explicitly historical prefill, with the configured
+              context kept separate from measured capacity. */}
           <dl className="mt-5 grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-border bg-border">
             {BENCHMARK_FACTS.map((fact) => (
               <div key={fact.label} className="bg-card p-3.5 sm:p-4">
@@ -235,8 +235,8 @@ export default function JSpark3Page() {
           {/* The comparisons: the authors' own benchmark scripts first, then the same frozen
               screen on this fleet, then the same agent prompt across all four builds. */}
           <Subsection
-            title="Compared with what you could already get"
-            note="Every row names its node count. The hero figures come from these tables."
+            title="Historical comparisons with other recipes"
+            note="These v1.0.0 tables retain their original measurements. Each row names its node count."
           />
           <div className="mt-4 space-y-3.5">
             <AuthorBenchmarks />
@@ -306,7 +306,7 @@ export default function JSpark3Page() {
             <Fold
               className="mt-1.5"
               level={3}
-              title="What the overlay alone changed"
+              title="What the v1.0.0 overlay alone changed"
               summary="JSpark3 against itself with the trunk overlay switched off: single-stream decode up, long prefill down, two internal gates missed."
             >
             <p className="text-[13px] leading-relaxed text-muted-foreground">

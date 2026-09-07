@@ -165,7 +165,7 @@ export function AuthorBenchmarks() {
       <Fold
         className="mt-5 border-t border-border pt-5"
         title="The three tables"
-        summary="FlyCockpit's benchmark, Mia's bench_decode and Mia's sparkDash protocol, where the hero's 391 ms and 251 tok/s come from."
+        summary="Historical v1.0.0 results on FlyCockpit's benchmark, Mia's bench_decode and Mia's sparkDash protocol."
       >
       <h4 className="text-[15px] font-semibold">{flycockpit.heading}</h4>
       <UnitLabel>{flycockpit.unit}</UnitLabel>
