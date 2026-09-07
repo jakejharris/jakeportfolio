@@ -126,10 +126,10 @@ export default function ArchitectureDiagram() {
   return (
     <MotionScope className="js3-motion rounded-lg border border-border bg-card p-4 sm:p-5">
       <p className="text-base font-bold leading-snug">
-        JSpark3 v1: one GLM-5.3 Flash endpoint across three NVIDIA DGX Sparks
+        JSpark3 Cadence: one GLM-5.3 Flash endpoint across three NVIDIA DGX Sparks
       </p>
       <p className="mt-1.5 text-[13px] leading-relaxed text-muted-foreground">
-        TP 3 · EP 3 · EXL3/TR3 4-bpw target · DFlash2 k=7 draft · FP8 KV cache · 1,000,000-token
+        TP 3 · EP 3 · EXL3/TR3 4-bpw target · DFlash2 adaptive draft · FP8 KV cache · 1,000,000-token
         configured context
       </p>
 

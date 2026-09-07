@@ -1,10 +1,7 @@
 /**
- * Copy and figures for the /jspark3 page.
- *
- * Every number, name, commit hash, revision, license name and qualifier below is
- * transcribed verbatim from the JSpark3 v1.0.0 public site block. Nothing here is
- * rounded, recomputed, ranked, or derived: the only percentages are the internal
- * ablation deltas that the source block already prints.
+ * Current Cadence copy and descriptive headlines, with historical v1.0.0
+ * comparisons retained separately. Sources: sealed Cadence CLAIMS.json,
+ * the original-client C4 follow-up receipts, and frozen results/results.json.
  */
 
 /** A run of copy that may carry inline code or emphasis, kept as data so the strings stay verbatim. */
@@ -14,10 +11,10 @@ export const HERO = {
   title: "JSpark3",
   tagline: "Three DGX Sparks, one model server.",
   lede:
-    "I had three DGX Sparks and every recipe out there was written for two or four. JSpark3 is the setup that makes three work: GLM-5.3 Flash running across all of them as one endpoint, about 1.4x faster than the two-box recipe. Every piece is pinned so you can rebuild it exactly, and the numbers are published with the misses left in.",
+    "I had three DGX Sparks and wanted one model server. JSpark3 makes three work: GLM-5.3 Flash across all of them as one OpenAI-compatible endpoint. Version 1.1, Cadence, adds measured single-stream decode improvements and the long-context kernel fix. The recipe is pinned so you can rebuild it, with public benchmarks and the misses left in.",
 } as const;
 
-/** Public links for the v1.0.0 release. */
+/** Public links for the v1.1.0 release. */
 export const HERO_LINKS: ReadonlyArray<{
   label: string;
   href: string;
@@ -25,15 +22,15 @@ export const HERO_LINKS: ReadonlyArray<{
   live: true;
 }> = [
   { label: "GitHub repository", href: "https://github.com/jakejharris/jspark3", primary: true, live: true },
-  { label: "Release v1.0.0", href: "https://github.com/jakejharris/jspark3/releases/tag/v1.0.0", live: true },
+  { label: "Release v1.1.0", href: "https://github.com/jakejharris/jspark3/releases/tag/v1.1.0", live: true },
   { label: "Hugging Face: model card and provenance", href: "https://huggingface.co/jakejharris/jspark3", live: true },
 ];
 
 export const HERO_FACTS: ReadonlyArray<{ value: string; label: string }> = [
-  { value: "1.49x", label: "faster single-stream code decode than the two-Spark recipe: 66.3 vs 44.6 tok/s" },
-  { value: "391 ms", label: "time to first token on the sparkDash prompt, down from 719 ms on two Sparks" },
-  { value: "251 tok/s", label: "aggregate decode at four streams, up from 146.5 on two Sparks" },
-  { value: "1.8x", label: "the throughput of the two-Spark recipe on the same agent task: 44.6 vs 24.7 tok/s" },
+  { value: "68.77 tok/s", label: "single-stream code decode, v1.1: descriptive median of three battery medians" },
+  { value: "87.67 tok/s", label: "structured decode, v1.1: code 68.77, prose 34.64 tok/s on the same battery basis" },
+  { value: "223.14 tok/s", label: "four-stream aggregate, v1.1: median of three original-client waves; 56.59 per stream" },
+  { value: "1,234 tok/s", label: "historical v1.0.0 prefill on 113,908 tokens; no comparable v1.1 measurement" },
 ];
 
 /**
@@ -52,10 +49,10 @@ export const SECTIONS: ReadonlyArray<{ id: string; legacyIds: ReadonlyArray<stri
 /* --------------------------------------------------------- architecture --- */
 
 export const ARCHITECTURE_LEDE =
-  "Each Spark holds one tensor-parallel shard and one third of the routed experts. The three fabric legs form a triangle so every rank reaches each peer directly.";
+  "Each Spark holds one tensor-parallel shard and one third of the routed experts. Cadence adds an INT8 QKV decode shadow and request-local speculative width control to this three-rank foundation.";
 
 export const ARCHITECTURE_CAPTION =
-  "The shipped architecture diagram. Rank 0 exposes the API; ranks 1 and 2 are headless peers.";
+  "The base topology shared by both releases. Rank 0 exposes the API; ranks 1 and 2 are headless peers.";
 
 export const ARCHITECTURE_CARDS: ReadonlyArray<{ title: string; body: string }> = [
   {
@@ -79,50 +76,46 @@ export const ARCHITECTURE_CARDS: ReadonlyArray<{ title: string; body: string }> 
 /* ----------------------------------------------------------- benchmarks --- */
 
 export const BENCHMARKS_LEDE =
-  "Four numbers from this fleet, on their own terms, with no other recipe in the frame. The comparisons follow.";
+  "Current Cadence decode, historical prefill, and the configured context. Each has its own scope; the historical comparisons follow.";
 
-/**
- * The absolute story. Each value is a measurement of the release build alone; the hero
- * facts above carry the comparisons. Sources are the sparkDash protocol table and the
- * frozen screen below, and the repository's results.json for the prefill row.
- */
+/** Current descriptive decode, historical prefill and the configured envelope. */
 export const BENCHMARK_FACTS: ReadonlyArray<{ value: string; unit: string; label: string }> = [
   {
-    value: "82",
+    value: "87.67",
     unit: "tok/s",
-    label: "single-stream decode on structured output, median of three batteries: 81.962. Code 66.257, prose 29.049.",
+    label: "v1.1 structured decode, median of three battery medians. Code 68.77, prose 34.64; descriptive, not paired effects.",
   },
   {
-    value: "251",
+    value: "223.14",
     unit: "tok/s",
-    label: "aggregate decode at four streams on code, 62.80 per stream: sparkDash protocol, 251.13.",
+    label: "v1.1 four-stream aggregate, median of all three original-client code waves. Mean per stream: 56.59 tok/s.",
   },
   {
     value: "1,234",
     unit: "tok/s",
-    label: "prefill on a 113,908-token prompt, one request, 92.3 s to first token.",
+    label: "historical v1.0.0 prefill: one 113,908-token prompt divided by 92.3 s to first token. No comparable v1.1 rerun.",
   },
   {
     value: "1,000,000",
     unit: "tokens",
-    label: "configured context with an FP8 KV cache. The longest single prompt in the evidence set is the 113,908-token prefill run.",
+    label: "configured context with FP8 KV, not verified maximum capacity. The v1.1 long-context witness confirms the kernel fix, not this limit.",
   },
 ];
 
 export const BENCHMARK_FACTS_CONDITION =
-  "Three Sparks, warm server, thinking off, temperature 0. Every value is printed as measured; the repository's benchmarks page has the estimators and receipts.";
+  "Three Sparks, thinking off, temperature 0. Current decode figures are descriptive, not paired release effects. The repository benchmarks explain estimators, all repeats and limits.";
 
 export const EVIDENCE_LEDE =
-  "The public comparison is against recipes that were publicly available before JSpark3. Their numbers are author-reported; ours come from our own fleet. Prompts, instruments, and envelopes differ, and the node count is on every row, so read the table as context, not a ranking. No percentage is computed between rows.";
+  "These historical v1.0.0 comparisons use recipes publicly available before JSpark3. Their numbers are author-reported; ours come from our own fleet. Prompts, instruments, and envelopes differ, and the node count is on every row, so read the table as context, not a ranking. No percentage is computed between rows.";
 
 /**
  * Results measured on the upstream authors' own benchmark scripts. Every value, and the
  * five ratios, are printed exactly as supplied; nothing here is derived on the page.
  */
 export const AUTHOR_BENCHMARKS = {
-  title: "On their own benchmarks",
+  title: "Historical v1.0.0, on their benchmarks",
   subtitle:
-    "The authors' pinned benchmark scripts, run unchanged against the JSpark3 release build except for the endpoint address and model name. Author values are the numbers they published.",
+    "The authors' pinned scripts, run unchanged against JSpark3 v1.0.0 except for endpoint and model name. Author values are their published results; these tables are historical.",
   flycockpit: {
     heading: "FlyCockpit's benchmark, the same three Sparks",
     unit: "Decode, tok/s (mean of three runs)",
@@ -130,7 +123,7 @@ export const AUTHOR_BENCHMARKS = {
       {
         metric: "Hello (17-token stop)",
         ours: {
-          label: "JSpark3 v1",
+          label: "JSpark3 v1.0.0",
           sparks: "3",
           value: "46.110",
           runs: "46.106 / 46.405 / 45.820",
@@ -146,7 +139,7 @@ export const AUTHOR_BENCHMARKS = {
       {
         metric: "Structured count 1 to 200",
         ours: {
-          label: "JSpark3 v1",
+          label: "JSpark3 v1.0.0",
           sparks: "3",
           value: "84.243",
           runs: "83.988 / 84.580 / 84.161",
@@ -162,7 +155,7 @@ export const AUTHOR_BENCHMARKS = {
       {
         metric: "is_prime code",
         ours: {
-          label: "JSpark3 v1",
+          label: "JSpark3 v1.0.0",
           sparks: "3",
           value: "66.543",
           runs: "65.840 / 68.246 / 65.544",
@@ -184,18 +177,18 @@ export const AUTHOR_BENCHMARKS = {
     rows: [
       {
         metric: "Structured count 1 to 200",
-        ours: { label: "JSpark3 v1", sparks: "3", value: "88.17" },
+        ours: { label: "JSpark3 v1.0.0", sparks: "3", value: "88.17" },
         other: { label: "Mia TP2", sparks: "2", value: "65.1" },
         ratio: "1.35x",
       },
       {
         metric: "Prose hash-map",
-        ours: { label: "JSpark3 v1", sparks: "3", value: "36.78" },
+        ours: { label: "JSpark3 v1.0.0", sparks: "3", value: "36.78" },
         other: { label: "Mia TP2", sparks: "2", value: "27.1" },
         ratio: "1.36x",
       },
     ],
-    note: "Accepted-per-draft ratios match theirs almost exactly: 0.9533 against 0.959 on structured, 0.3357 against 0.341 on prose. The draft behaves the same; the engine is faster.",
+    note: "Accepted-per-draft ratios match theirs almost exactly: 0.9533 against 0.959 on structured, 0.3357 against 0.341 on prose. These similar acceptance ratios accompany higher observed decode rates.",
   },
   sparkdash: {
     heading: "Mia's sparkDash decode protocol",
@@ -230,24 +223,24 @@ export const AUTHOR_BENCHMARKS = {
  * supplied and nothing else here is derived.
  */
 export const SCREEN_COMPARISON = {
-  title: "Same screen, two Sparks against three",
+  title: "Historical screen, two Sparks against three",
   unit: "Single-stream decode, tok/s",
   rows: [
     {
       metric: "Structured count",
-      ours: { label: "JSpark3 v1", sparks: "3", value: "81.962" },
+      ours: { label: "JSpark3 v1.0.0", sparks: "3", value: "81.962" },
       other: { label: "Mia TP2", sparks: "2", value: "57.970" },
       ratio: "1.41x",
     },
     {
       metric: "Code",
-      ours: { label: "JSpark3 v1", sparks: "3", value: "66.257" },
+      ours: { label: "JSpark3 v1.0.0", sparks: "3", value: "66.257" },
       other: { label: "Mia TP2", sparks: "2", value: "44.563" },
       ratio: "1.49x",
     },
     {
       metric: "Prose",
-      ours: { label: "JSpark3 v1", sparks: "3", value: "29.049" },
+      ours: { label: "JSpark3 v1.0.0", sparks: "3", value: "29.049" },
       other: { label: "Mia TP2", sparks: "2", value: "20.039" },
       ratio: "1.45x",
     },
@@ -258,10 +251,10 @@ export const SCREEN_COMPARISON = {
 
 /** The same agent prompt, four independent runs. Node counts are in every label; no percentages. */
 export const SAME_TASK = {
-  title: "Same task, same prompt",
+  title: "Historical task, same prompt",
   unit: "Aggregate decode, tok/s",
   rows: [
-    { label: "JSpark3 v1", sparks: "3", value: "44.583", ours: true },
+    { label: "JSpark3 v1.0.0", sparks: "3", value: "44.583", ours: true },
     { label: "FlyCockpit-derived build", sparks: "3", value: "29.042" },
     { label: "Mia TP2, historical recipe", sparks: "2", value: "24.913" },
     { label: "Mia TP2, current recipe", sparks: "2", value: "24.728" },
@@ -283,7 +276,7 @@ export interface ReferenceRow {
 
 export const REFERENCE_ROWS: ReadonlyArray<ReferenceRow> = [
   {
-    recipe: "JSpark3 v1",
+    recipe: "JSpark3 v1.0.0",
     ours: true,
     sparks: "3",
     lane: "EXL3/TR3 4-bpw · DFlash2 k=7 · W8A16 trunk overlay · vLLM, TP3/EP3 over a RoCE-v2 triangle",
@@ -345,7 +338,7 @@ export const LOCAL_RUNS: ReadonlyArray<{
   body: ReadonlyArray<RichPart>;
 }> = [
   {
-    title: "JSpark3 v1",
+    title: "JSpark3 v1.0.0",
     flag: "local · this release",
     sparks: "3",
     ours: true,
@@ -464,18 +457,18 @@ export const ABLATION_NOTES: ReadonlyArray<{
 ];
 
 export const EVIDENCE_GRADE =
-  "Evidence grade: engineering evidence. One fleet, operated by the project, with no third-party reproduction yet. No correctness, stability, or safety failure was observed in any run. Estimators, sample sizes, receipts, and the three evidence classes are on the repository's benchmarks page.";
+  "Engineering evidence from one project-operated fleet, without third-party reproduction. Cadence's paired code gain did not replicate; its quality battery has candidate-only failures. Semantic parity, sustained concurrency and maximum context remain uncertified. The repository publishes the failed sham, confidence intervals, receipts and limitations.";
 
 /* ---------------------------------------------------------- run it --- */
 
 export const RUN_LEDE =
-  "The recipe is 39 files you copy to three Sparks. Start with the README quick start, pull the weights from Hugging Face, and the lifecycle scripts take it from there.";
+  "Start with the v1.1.0 installation guide. Stage the pinned image, target and draft, build the TP3 runtime views, and configure the fabric before starting the lifecycle.";
 
 /** The three places a visitor needs, in the order they will use them. */
 export const RUN_LINKS: ReadonlyArray<{ title: string; body: string; href: string; cta: string }> = [
   {
     title: "The recipe on GitHub",
-    body: "Quick start is the first thing in the README: clone at v1.0.0, verify the checksums, copy the recipe to each rank.",
+    body: "Clone v1.1.0, verify the checksums and copy the recipe to every rank. The README links each required installation step.",
     href: "https://github.com/jakejharris/jspark3#readme",
     cta: "github.com/jakejharris/jspark3",
   },
@@ -487,8 +480,8 @@ export const RUN_LINKS: ReadonlyArray<{ title: string; body: string; href: strin
   },
   {
     title: "The full install",
-    body: "Nine steps from bare Docker hosts to a verified endpoint: fabric, pinned inputs, preflight, start, health, verify.",
-    href: "https://github.com/jakejharris/jspark3/blob/v1.0.0/docs/INSTALL.md",
+    body: "From Docker hosts to a verified endpoint: pinned downloads, runtime views, fabric, preflight, start, health and verification.",
+    href: "https://github.com/jakejharris/jspark3/blob/v1.1.0/docs/INSTALL.md",
     cta: "docs/INSTALL.md",
   },
 ];
@@ -554,7 +547,7 @@ export const PINNED_INPUTS: ReadonlyArray<{ label: string; value: ReadonlyArray<
       { code: "incoai/GLM-5.3-Flash-DFlash2" },
       " at revision ",
       { code: "dc77ff1c99eeb2df044ee3d4f0094eb033fee410" },
-      ", k=7",
+      ", wide k=7; Cadence can narrow to k=3 for single-stream decode",
     ],
   },
   {
@@ -571,7 +564,7 @@ export const PINNED_INPUTS: ReadonlyArray<{ label: string; value: ReadonlyArray<
     value: [
       "vLLM build ",
       { code: "487ecf187" },
-      " as shipped inside the pinned image; five hash-gated runtime transforms are applied at start",
+      " as shipped inside the pinned image; hash-gated runtime transforms are applied at start",
     ],
   },
   {
@@ -610,12 +603,12 @@ export const LICENSES: ReadonlyArray<{ kind: string; name: string; body: string 
   {
     kind: "Target checkpoint",
     name: "ShapleyMcg License 1.0",
-    body: "Source-available and attribution-required; not OSI open source. Brandon M. Music created the EXL3/TR3 checkpoint, Mia-AiLab re-hosts it, and JSpark3 re-hosts that revision in turn under the same license, with the required attribution reproduced verbatim. Downstream copies stay under this license.",
+    body: "Source-available and attribution-required, with a named exclusion; not OSI open source. Brandon M. Music created the EXL3/TR3 checkpoint. Mia-AiLab and JSpark3 re-host it under the same terms, with verbatim attribution. Downstream copies stay under this license.",
   },
   {
     kind: "DFlash2 draft",
     name: "CC BY-NC-ND 4.0",
-    body: "Research and evaluation only. Commercial use of the draft requires a license from Inco. Without the draft the recipe still serves, without speculative decoding.",
+    body: "Research and evaluation only. Commercial use of the draft requires permission from Inco AI. The pinned serving recipe includes this separately downloaded draft.",
   },
 ];
 
@@ -660,11 +653,11 @@ export const CITE = {
     { code: "CITATION.bib" },
     ". Cite the release by name, version, and repository.",
   ] as ReadonlyArray<RichPart>,
-  citation: `JSpark3 v1, version 1.0.0 (2026)
+  citation: `JSpark3 v1.1 (Cadence), version 1.1.0 (2026)
 https://github.com/jakejharris/jspark3`,
 };
 
 export const BLOCK_FOOTER: ReadonlyArray<string> = [
-  "JSpark3 · release v1.0.0 · Apache-2.0 recipe code, upstream terms apply to the model bytes",
+  "JSpark3 · release v1.1.0 (Cadence) · Apache-2.0 recipe code, upstream terms apply to the model bytes",
   "Built and measured on three NVIDIA DGX Sparks, 2026",
 ];
