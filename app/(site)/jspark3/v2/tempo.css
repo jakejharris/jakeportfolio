@@ -40,6 +40,17 @@
 .tempo .jsv-svg-cap { display: none; }
 .tempo .jsv-cluster figcaption { border-top: 1px solid var(--tempo-line); padding-top: 12px; font-size: 14px; color: var(--tempo-muted); text-align: center; }
 .tempo .jsv-cluster figcaption span { display: block; margin-top: 3px; font-size: 13px; }
+.tempo .jsv-token { animation: jsv-token-flow 4.8s linear infinite; animation-delay: -1.2s; }
+.tempo .jsv-fabric-link-02 .jsv-token { animation-duration: 5.6s; animation-delay: -2.6s; animation-direction: reverse; }
+.tempo .jsv-fabric-link-12 .jsv-token { animation-duration: 6.4s; animation-delay: -.6s; }
+@keyframes jsv-token-flow {
+  from { stroke-dashoffset: 0; }
+  to { stroke-dashoffset: -100; }
+}
+@media (prefers-reduced-motion: reduce), (max-width: 1024px) {
+  .tempo .jsv-token { animation: none; }
+}
+
 .tempo-specs { display: grid; grid-template-columns: 1.15fr 1.15fr 1fr; border-top: 1px solid var(--tempo-line); gap: 28px; padding-block: 22px 30px; }
 .tempo-specs dt { font-size: 13px; color: var(--tempo-muted); margin-bottom: 5px; }
 .tempo-specs dd { font-size: 14px; }
