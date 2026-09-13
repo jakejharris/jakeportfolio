@@ -60,7 +60,7 @@ export default function TempoPage() {
 
     <section className="tempo-results" id="results" aria-labelledby="results-title">
       <div className="tempo-shell">
-        <div className="tempo-section-heading"><h2 id="results-title">Measured on our three Sparks.</h2><p>L5-P measurements, September 2026. Different workloads answer different questions.</p></div>
+        <div className="tempo-section-heading"><h2 id="results-title">Measured on our three Sparks.</h2><p>Tempo measurements, September 2026. Earlier test records call this build L5-P. Different workloads answer different questions.</p></div>
         <div className="tempo-charts">
           <article className="tempo-chart tempo-latency">
             <h3>Time to first token</h3>
