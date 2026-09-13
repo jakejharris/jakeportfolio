@@ -3,6 +3,8 @@ import ClusterIllustration from './ClusterIllustration';
 import ProjectHeader from './ProjectHeader';
 import { metric, metricRange, release, releasePublished } from './release-data';
 
+const siteLimitations = release.limitations.filter(item => !item.startsWith('Functional code passed '));
+
 function Latency({ context }: { context: '64k' | '76k' }) {
   return <div className="tempo-chart-panel" role="group" aria-label={`${context.toUpperCase()} prompt time to first token`}>
     <div className="tempo-scale" aria-hidden="true"><span>0</span><span>30</span><span>60 seconds</span></div>
@@ -100,7 +102,7 @@ export default function TempoPage() {
     </section>
 
     <section className="tempo-shell tempo-notes" aria-label="Limitations and release details">
-      <details open><summary>Known limitations <span aria-hidden="true">+</span></summary><ul>{release.limitations.map(item => <li key={item}>{item}</li>)}</ul></details>
+      <details open><summary>Known limitations <span aria-hidden="true">+</span></summary><ul>{siteLimitations.map(item => <li key={item}>{item}</li>)}</ul></details>
       <details id="release"><summary>Release, evidence, and credits <span aria-hidden="true">+</span></summary><div>
         <p>{release.identity.candidate} · {release.identity.status}. JSPARK3 names our current three-Spark daily driver, chosen through internal benchmarks and use. It does not claim to win every benchmark.</p>
         <p>DeepSeek created the model. Tony and Kai’s serving work, bot-lab-21’s EXL3 experts, and vLLM underpin this recipe. Code, weights, and drafts retain their upstream terms. This is serving engineering, with no new fine-tune or model merge.</p>
