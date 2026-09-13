@@ -5,7 +5,7 @@ import '../../css/page.css';
 import '../../css/hero.css';
 import './v2/hub.css';
 
-export const metadata = projectMetadata('JSPARK3 — Three Sparks, one model server', 'Tempo, our current DeepSeek-V4.1 Flash daily driver on three DGX Sparks, and the preserved GLM-5.3 Flash Cadence release.', '/jspark3/');
+export const metadata = projectMetadata('JSPARK3 — Three Sparks, one model server', 'The current daily driver, release history, and measured results for three NVIDIA DGX Sparks.', '/jspark3/', '/og/jspark3-hub-v1.png');
 
 export default function JSpark3Page() {
   return <><LegacyFragments /><HubPage /></>;
