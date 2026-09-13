@@ -117,6 +117,10 @@
 .tempo-release a { display: inline-flex; align-items: center; min-height: 44px; margin-top: 14px; color: var(--tempo-accent); text-decoration: underline; }
 .tempo-compatibility { font-size: 14px; color: var(--tempo-muted); border-top: 1px solid var(--tempo-line); padding-top: 24px; }
 .tempo-compatibility a { text-decoration: underline; }
+@media (max-width: 1024px) {
+  .tempo-hero { grid-template-columns: 1fr; }
+  .tempo-hero .jsv-cluster { display: none; }
+}
 @media (max-width: 1000px) {
   .tempo-shell { width: calc(100% - 64px); }
   .tempo-hero { gap: 24px; padding-block: 48px 38px; }
@@ -131,7 +135,6 @@
 @media (max-width: 800px) {
   .tempo-hero { grid-template-columns: 1fr; gap: 16px; }
   .tempo-intro { max-width: 550px; }
-  .tempo .jsv-cluster { max-width: 440px; margin-inline: auto; }
   .tempo-charts { grid-template-columns: 1fr; }
   .tempo-chart { padding: 26px; }
   .tempo-chart-panel { max-width: 580px; }
@@ -150,7 +153,6 @@
   .tempo h1 { font-size: 78px; }
   .tempo-lede { font-size: 23px; }
   .tempo-actions { gap: 12px 20px; }
-  .tempo .jsv-cluster { margin-top: 10px; }
   .tempo h2 { font-size: 27px; }
   .tempo-results { padding-block: 40px; }
   .tempo-chart { padding: 20px; }
