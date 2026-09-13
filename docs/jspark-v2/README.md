@@ -20,3 +20,5 @@ The implementation passed TypeScript, scoped ESLint, diff checks, 16 viewport ch
 Static preview tooling: `scripts/render-tempo.tsx`, `scripts/verify-tempo-browser.mjs`. The browser verifier expects a locally started static server and disposable Chromium CDP instance; it generates the social image as well as screenshots. Use the repository's permitted production-build workflow.
 
 Internal design/session records and machine-specific receipts are retained in the private working archive, outside this public package. `PROVENANCE.json` records the publication data hashes.
+
+Historical benchmark data retains its original measurement edition (`v2.0.0-rc.1`) as release packaging advances. The importer verifies the complete dataset hash and every selected value/condition against the current recipe summary; changing the release version does not relabel the historical measurements.

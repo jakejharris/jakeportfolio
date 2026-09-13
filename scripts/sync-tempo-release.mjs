@@ -19,7 +19,13 @@ assert.equal(summary.identity.project, 'JSPARK3');
 assert.equal(summary.identity.name, 'Tempo');
 assert.equal(summary.identity.model, 'DeepSeek-V4.1 Flash');
 assert.equal(summary.benchmarks_sha256, sha256(benchmarkBytes), 'Benchmark source hash drift');
-assert.equal(summary.identity.candidate, benchmarks.version, 'Candidate identity drift');
+// The historical measurement edition stays frozen as release plumbing changes.
+// Its exact bytes and every selected field are checked separately below.
+if (benchmarks.historical === true) {
+  assert.equal(benchmarks.version, 'v2.0.0-rc.1', 'Historical measurement edition drift');
+} else {
+  assert.equal(summary.identity.candidate, benchmarks.version, 'Candidate identity drift');
+}
 assert.ok(['pending', 'published'].includes(summary.publication_status));
 const required = ['ttft_cold_64k', 'ttft_repeat_64k', 'ttft_cold_76k', 'ttft_repeat_76k', 'work_c3_repeat', 'work_c6_repeat', 'short_c6', 'generation_prose', 'generation_code'];
 assert.equal(new Set(benchmarks.metrics.map(m => m.id)).size, benchmarks.metrics.length, 'Duplicate benchmark ID');

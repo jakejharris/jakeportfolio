@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "candidate": "v2.0.0-rc.1",
+  "candidate": "v2.0.0-rc.2",
   "publication_status": "pending",
-  "summary_sha256": "857df767730b760344e1b865c173a81be69666231e71a9531a756be22f2c2277",
+  "summary_sha256": "b75b36422f74ae9be0b7e22f2f0209b2628361be5d053d07ad685616c85c00ec",
   "benchmarks_sha256": "cbd5c88565cca540923a53282c007772b718a7b0187a2d80d68dca63a25e741d",
   "source_measurements_sha256": "c6b886887598c589797600b79863d01a64790ca9ff6aa2ed57c1a5557d4f2ad5",
   "validation": {
@@ -11,6 +11,7 @@
     "chromium_viewports": 16,
     "legacy_fragments": 14,
     "screenshots": 41,
-    "production_preview": "pending"
-  }
+    "production_preview": "passed real Next build, authenticated routes, hydration, mobile and legacy navigation on prior rc.1 data snapshot; rc.2 data-only preview follows"
+  },
+  "measurement_edition": "v2.0.0-rc.1 (frozen historical dataset, independent of current packaging candidate)"
 }
