@@ -1,17 +1,41 @@
 import React from 'react';
-import ProjectHeader from './ProjectHeader';
+import PageLayout from '../../../components/PageLayout';
+import PixelFluidBackground from '../../../components/PixelFluidBackground';
+import TransitionLink from '../../../components/TransitionLink';
 import { release } from './release-data';
 
 export default function HubPage() {
-  return <div className="tempo tempo-hub">
-    <a className="tempo-skip" href="#current">Skip to current release</a>
-    <div className="tempo-shell">
-      <ProjectHeader hub />
-      <header className="tempo-hub-intro"><h1>Three Sparks.<br />One model server.</h1><p>JSPARK3 is my three-DGX-Spark project. Each version records the daily driver we chose through internal benchmarks and actual use.</p></header>
-      <section className="tempo-release" id="current" aria-labelledby="tempo-title"><p>Current daily driver<br />JSPARK3 v2</p><div><h2 id="tempo-title">Tempo</h2><p>{release.identity.model} with EXL3 experts and vLLM.</p><p>{release.identity.candidate} · Experimental</p><a href="/jspark3/deepseek/">Recipe, measured results, and limitations →</a></div></section>
-      <section className="tempo-release" aria-labelledby="cadence-title"><p>Previous daily driver<br />JSPARK3 v1.1</p><div><h2 id="cadence-title">Cadence</h2><p>GLM-5.3 Flash. The published recipe, benchmarks, and release history remain available.</p><a href="/jspark3/glm/">Read the Cadence release →</a></div></section>
-      <p className="tempo-compatibility">Following an older GLM link? <a href="/jspark3/glm/">The preserved Cadence page has all original sections.</a></p>
-      <footer className="tempo-footer"><a href="/">← jakejh.com</a><a href="/about/">Jake Harris ↗</a></footer>
-    </div>
-  </div>;
+  return <>
+    <PixelFluidBackground heroMode quietShare={0.75} />
+    <PageLayout className="spark-hub">
+      <a className="spark-hub-skip" href="#current">Skip to releases</a>
+      <header className="hero spark-hub-intro">
+        <h1 className="hero-wordmark">JSPARK3</h1>
+        <p className="hero-standfirst">Three Sparks. One model server.<br />The daily drivers, recipes, and measured results.</p>
+      </header>
+      <section id="current" className="spark-hub-releases" aria-labelledby="spark-releases-title">
+        <h2 id="spark-releases-title" className="section-kicker">Releases</h2>
+        <ol className="spark-hub-list">
+          <li>
+            <TransitionLink href="/jspark3/deepseek/" className="pageLinkContainer pinnedLinkBorder spark-hub-release">
+              <span className="spark-hub-release-meta">Current daily driver <span>v2 · Experimental</span></span>
+              <span className="spark-hub-release-title">Tempo <span aria-hidden="true">↗</span></span>
+              <span className="spark-hub-release-model">{release.identity.model}</span>
+              <span className="spark-hub-release-detail">EXL3 experts · vLLM · Three DGX Sparks</span>
+              <span className="spark-hub-release-action">Recipe, results, and limitations <span aria-hidden="true">→</span></span>
+            </TransitionLink>
+          </li>
+          <li>
+            <TransitionLink href="/jspark3/glm/" className="pageLinkContainer spark-hub-release spark-hub-release-previous">
+              <span className="spark-hub-release-meta">Previous daily driver <span>v1.1</span></span>
+              <span className="spark-hub-release-title">Cadence <span aria-hidden="true">↗</span></span>
+              <span className="spark-hub-release-model">GLM-5.3 Flash</span>
+              <span className="spark-hub-release-action">Published recipe and release history <span aria-hidden="true">→</span></span>
+            </TransitionLink>
+          </li>
+        </ol>
+      </section>
+      <p className="spark-hub-note">Each release records a daily driver chosen through internal benchmarks and actual use. Earlier GLM links still lead to Cadence.</p>
+    </PageLayout>
+  </>;
 }

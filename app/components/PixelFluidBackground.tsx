@@ -61,11 +61,14 @@ function parseSaturation(hslString: string): number {
 interface PixelFluidBackgroundProps {
   className?: string;
   heroMode?: boolean;
+  /** Reserve this share of cells as still, unpatterned negative space. */
+  quietShare?: number;
 }
 
 export default function PixelFluidBackground({
   className,
   heroMode = false,
+  quietShare = 0,
 }: PixelFluidBackgroundProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationRef = useRef<number>(0);
@@ -76,6 +79,7 @@ export default function PixelFluidBackground({
   const prefersReducedMotionRef = useRef(false);
   const isAnimatingRef = useRef(false);
   const compositionBiasRef = useRef<Float32Array>(new Float32Array(0));
+  const fluidCellsRef = useRef<Uint8Array>(new Uint8Array(0));
   const pointerRef = useRef({ x: -1000, y: -1000, active: false });
   const configRef = useRef({
     pixelSize: 18,
@@ -220,12 +224,16 @@ export default function PixelFluidBackground({
     for (let x = 0; x < cols; x++) {
       for (let y = 0; y < rows; y++) {
         const cellIndex = x * rows + y;
+        // A fixed spatial mask, independent of time and pointer input, keeps
+        // the requested negative space quiet throughout the animation.
+        if (quietShare > 0 && !fluidCellsRef.current[cellIndex]) continue;
         const compositionBias = compositionBiasRef.current.length === cols * rows
           ? compositionBiasRef.current[cellIndex]
           : 0;
-        const noiseVal = clamp01(
+        const waveHeight = clamp01(
           getWaveHeight(x, y, timeRef.current) + compositionBias * amplitudeRef.current
         );
+        const noiseVal = quietShare > 0 ? 0.52 + waveHeight * 0.42 : waveHeight;
         let color: string | null = null;
 
         // 1. Pure background (skip drawing for performance)
@@ -292,7 +300,7 @@ export default function PixelFluidBackground({
         }
 
         if (color) {
-          ctx.globalAlpha = ambientPresence;
+          ctx.globalAlpha = ambientPresence * (quietShare > 0 ? amplitudeRef.current : 1);
           ctx.fillStyle = color;
           ctx.fillRect(
             x * pixelSize,
@@ -310,7 +318,7 @@ export default function PixelFluidBackground({
     if (isAnimatingRef.current && !prefersReducedMotionRef.current) {
       animationRef.current = requestAnimationFrame(draw);
     }
-  }, [getWaveHeight, isDark]);
+  }, [getWaveHeight, isDark, quietShare]);
 
   // Resize handler - mobile settles into a slightly quieter ambient drift.
   const resize = useCallback(() => {
@@ -342,7 +350,30 @@ export default function PixelFluidBackground({
     }
 
     compositionBiasRef.current = compositionBias;
-  }, [getCompositionBias]);
+
+    if (quietShare > 0) {
+      // Select the strongest edge formations by rank, rather than a wave
+      // threshold that changes coverage over time. At .75, at least 75% of
+      // cells stay blank. The reading column sits between the formations.
+      const cells = Array.from({ length: cols * rows }, (_, index) => {
+        const x = Math.floor(index / rows);
+        const y = index % rows;
+        const nx = x / Math.max(cols - 1, 1);
+        const ny = y / Math.max(rows - 1, 1);
+        const gutter = Math.max(16, (canvas.width - 640) / 2);
+        const behindMasthead = y * pixelSize >= 90 && y * pixelSize <= 330
+          && (x + 1) * pixelSize >= gutter && x * pixelSize <= canvas.width - gutter;
+        const score = behindMasthead ? 0
+          : gaussian(nx, ny, -0.06, 0.16, 0.34, 0.48)
+            + gaussian(nx, ny, 1.06, 0.72, 0.3, 0.52);
+        return { index, score };
+      }).sort((a, b) => b.score - a.score);
+      const fluidCells = new Uint8Array(cols * rows);
+      const count = Math.floor(cells.length * (1 - clamp01(quietShare)));
+      for (let i = 0; i < count; i++) fluidCells[cells[i].index] = 1;
+      fluidCellsRef.current = fluidCells;
+    }
+  }, [getCompositionBias, quietShare]);
 
   // Pointer update handler
   const updatePointer = useCallback((e: MouseEvent | TouchEvent) => {
@@ -388,6 +419,7 @@ export default function PixelFluidBackground({
     const renderOnce = () => {
       cancelAnimationFrame(animationRef.current);
       isAnimatingRef.current = false;
+      if (document.hidden) return;
       animationRef.current = requestAnimationFrame(draw);
     };
 
@@ -496,7 +528,8 @@ export default function PixelFluidBackground({
 
   return (
     <div
-      className={`pixel-fluid-background fixed inset-0 -z-10 ${className || ""}`}
+      className={`pixel-fluid-background ${quietShare > 0 ? "pixel-fluid-background-quiet" : ""} fixed inset-0 -z-10 ${className || ""}`}
+      aria-hidden="true"
     >
       <canvas ref={canvasRef} className="block w-full h-full" />
 
