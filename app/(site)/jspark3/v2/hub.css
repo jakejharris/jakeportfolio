@@ -1,0 +1,65 @@
+/* The hub shares the portfolio's ledger, type, glass, and accent tokens. */
+.spark-hub {
+  --hub-muted: color-mix(in srgb, hsl(var(--foreground)) 25%, hsl(var(--muted-foreground)));
+}
+.spark-hub-intro { padding-bottom: 3.5rem; }
+.spark-hub .section-kicker { font-size: 0.75rem; opacity: 1; color: var(--hub-muted); }
+.spark-hub-releases { scroll-margin-top: 5rem; }
+.spark-hub-list { display: grid; gap: 0.75rem; list-style: none; padding: 0; margin: 0; }
+.spark-hub-release {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 1.5rem;
+  color: hsl(var(--foreground));
+  background: hsl(var(--background) / 0.88);
+  border-color: hsl(var(--foreground) / 0.15);
+  text-decoration: none;
+}
+.spark-hub-release-meta {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.25rem 1rem;
+  color: var(--hub-muted);
+  font-size: 0.8125rem;
+  line-height: 1.5;
+}
+.spark-hub-release-meta > span { font-family: var(--font-geist-mono), monospace; font-size: 0.75rem; }
+.spark-hub-release-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 0.375rem;
+  font-size: 1.75rem;
+  line-height: 1.2;
+  letter-spacing: -0.04em;
+  font-weight: 500;
+}
+.spark-hub-release-title > span { color: var(--hub-muted); font-size: 1.25rem; font-weight: 400; }
+.spark-hub-release-model { font-size: 1rem; line-height: 1.5; }
+.spark-hub-release-detail { color: var(--hub-muted); font-size: 0.875rem; line-height: 1.5; }
+.spark-hub-release-action { margin-top: 0.625rem; font-size: 0.875rem; line-height: 1.6; }
+.spark-hub-release-action > span { white-space: nowrap; }
+.spark-hub-release-previous { padding-block: 1.25rem; }
+.spark-hub-note { margin: 1.5rem 0 0; max-width: 60ch; font-size: 0.875rem; line-height: 1.65; color: var(--hub-muted); }
+.spark-hub :focus-visible { outline: 2px solid hsl(var(--foreground)); outline-offset: 5px; }
+.spark-hub-skip { position: fixed; top: 0.5rem; left: 1rem; z-index: 60; padding: 0.75rem 1rem; background: hsl(var(--background)); color: hsl(var(--foreground)); transform: translateY(-200%); }
+.spark-hub-skip:focus { transform: translateY(0); }
+.pixel-fluid-background-quiet .pixel-fluid-hero-glow {
+  background: radial-gradient(ellipse 26rem 32rem at 50% 24rem, hsl(var(--background) / 0.85), hsl(var(--background) / 0.5) 55%, transparent 100%);
+}
+@media (hover: hover) {
+  .spark-hub-release:hover { background: hsl(var(--background) / 0.96); }
+  .spark-hub-release:hover .spark-hub-release-action { text-decoration: underline; text-underline-offset: 4px; }
+}
+@media (max-width: 767px) {
+  .spark-hub-intro { padding-bottom: 2.5rem; }
+  .spark-hub-release { padding: 1.125rem; }
+  .spark-hub-release-meta { font-size: 0.75rem; }
+  .spark-hub .hero-standfirst { font-size: 1rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .spark-hub, .spark-hub .pageLinkContainer, .spark-hub .pageLinkContainer::after { transition: none; }
+  .spark-hub .pageLinkContainer:hover, .spark-hub .pageLinkContainer:active { transform: none; }
+}
