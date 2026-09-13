@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "candidate": "v2.0.0-rc.1",
+  "publication_status": "pending",
+  "summary_sha256": "857df767730b760344e1b865c173a81be69666231e71a9531a756be22f2c2277",
+  "benchmarks_sha256": "cbd5c88565cca540923a53282c007772b718a7b0187a2d80d68dca63a25e741d",
+  "source_measurements_sha256": "c6b886887598c589797600b79863d01a64790ca9ff6aa2ed57c1a5557d4f2ad5",
+  "validation": {
+    "typecheck": "passed",
+    "scoped_lint": "passed",
+    "chromium_viewports": 16,
+    "legacy_fragments": 14,
+    "screenshots": 41,
+    "production_preview": "pending"
+  }
+}

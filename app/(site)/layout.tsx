@@ -1,3 +1,4 @@
+import PortfolioChrome from "../components/PortfolioChrome";
 import Navbar from "../components/Navbar";
 import { NavbarScrollProvider } from "../components/NavbarScrollContext";
 import Footer from "../components/Footer";
@@ -84,14 +85,14 @@ export default function SiteLayout({ children }: { children: React.ReactNode }) 
         <TransitionProvider>
           <TransitionOverlay />
           <NavbarScrollProvider>
-            <Navbar />
+            <PortfolioChrome><Navbar /></PortfolioChrome>
             <main className="flex-1">
               {children}
               {process.env.NODE_ENV === 'production' && (
                 <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID!} />
               )}
             </main>
-            <Footer />
+            <PortfolioChrome><Footer /></PortfolioChrome>
           </NavbarScrollProvider>
         </TransitionProvider>
       </ThemeProvider>

@@ -1,0 +1,62 @@
+{
+  "captured": "September 12, 2026",
+  "candidate": "L5-P",
+  "manifest": "3556113254de788ee188f1cc1f929438b30b79b58e0d2299f3c92edf7578d1c5",
+  "latency": [
+    {
+      "context": "64K",
+      "l4": 49.528,
+      "l5": 42.623,
+      "repeat": 0.708,
+      "suffix": 0.691
+    },
+    {
+      "context": "76K",
+      "l4": 58.836,
+      "l5": 49.659,
+      "repeat": 0.471,
+      "suffix": 0.475
+    }
+  ],
+  "work": [
+    {
+      "id": "L4",
+      "label": "JSPARK \u00b7 L4",
+      "c3": 79.54444444444445,
+      "c6": 103.0
+    },
+    {
+      "id": "Mia",
+      "label": "Mia \u00b7 SGLang",
+      "c3": 71.82777777777778,
+      "c6": 87.17222222222222
+    },
+    {
+      "id": "Tony",
+      "label": "Tony \u00b7 local EXL3",
+      "c3": 73.04444444444445,
+      "c6": 92.81666666666666
+    },
+    {
+      "id": "L5",
+      "label": "JSPARK \u00b7 L5-P",
+      "c3": 81.97777777777777,
+      "c6": 110.4888888888889
+    }
+  ],
+  "generation": {
+    "prose": [
+      32.21,
+      35.34
+    ],
+    "code": [
+      63.54,
+      68.22
+    ]
+  },
+  "concurrencyC6": 146.12,
+  "codePassed": 2,
+  "codeTotal": 4,
+  "inverseArrivalSeconds": 40.458,
+  "source_sha256": "c6b886887598c589797600b79863d01a64790ca9ff6aa2ed57c1a5557d4f2ad5"
+}

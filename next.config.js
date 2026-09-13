@@ -11,6 +11,12 @@ const securityHeaders = [
 const nextConfig = {
   /* config options here */
   trailingSlash: true,
+  async redirects() {
+    return [
+      { source: '/jspark3deepseek', destination: '/jspark3/deepseek/', permanent: true },
+      { source: '/jspark3glm', destination: '/jspark3/glm/', permanent: true },
+    ];
+  },
   async headers() {
     return [
       {
