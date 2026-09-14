@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Tempo recipe comparison methods</title><style>body{margin:0;background:#171c17;color:#edf0e5;font:16px/1.65 system-ui,sans-serif}main{max-width:820px;margin:auto;padding:48px 24px}a{color:#d6eea2}h1{font-size:36px;line-height:1.2}h2{font-size:24px;margin-top:40px}p,li{color:#b4bca9}li+li{margin-top:12px}code{overflow-wrap:anywhere}table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:12px;border-bottom:1px solid #48523f}a:focus-visible{outline:2px solid #d6eea2;outline-offset:4px}</style></head>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Tempo recipe comparison methods</title><style>body{margin:0;background:#171c17;color:#edf0e5;font:16px/1.65 system-ui,sans-serif}main{max-width:820px;margin:auto;padding:48px 24px}a{color:#d6eea2}h1{font-size:36px;line-height:1.2}h2{font-size:24px;margin-top:40px}p,li{color:#b4bca9}li+li{margin-top:12px}code{overflow-wrap:anywhere}table{width:100%;border-collapse:collapse}th,td{overflow-wrap:anywhere;text-align:left;padding:12px;border-bottom:1px solid #48523f}a:focus-visible{outline:2px solid #d6eea2;outline-offset:4px}</style></head>
 <body><main>
 <a href="/jspark3/deepseek/#recipe-comparison">← Tempo comparisons</a>
 <h1>Recipe comparison methods</h1>
@@ -20,6 +20,17 @@
 <li><a href="https://github.com/MiaAI-Lab/DeepSeek-v4.1-Flash-DGX-Sparks">Mia's recipe</a> · <a href="https://github.com/MiaAI-Lab/DeepSeek-v4.1-Flash-DGX-Sparks/tree/de57fe2b15a54f10f758bb4b72973063041bb7bf">Pinned recipe snapshot: de57fe2b</a>.</li>
 <li><a href="https://github.com/tonyd2wild/DeepSeek-V4.1-Flash-vLLM-DGX-Spark">Tony's recipe</a> · <a href="https://github.com/tonyd2wild/DeepSeek-V4.1-Flash-vLLM-DGX-Spark/tree/c2c1bb7">Reference snapshot: c2c1bb7</a>. Use the three-Spark TP3 lane, not the four-Spark headline.</li>
 </ul>
+<h2>Model downloads</h2>
+<p>These recipes use different versions of DeepSeek. The table separates the model downloads from the recipe snapshots above.</p>
+<table>
+<thead><tr><th>Recipe</th><th>Model files it downloads</th></tr></thead>
+<tbody>
+<tr><td>Mia</td><td><a href="https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash/tree/fb2764a5cf321eaa5070ca8f9e892818f477c16d">deepseek-ai/DeepSeek-V4.1-Flash, fb2764a</a>. The cited recipe fixes this revision.</td></tr>
+<tr><td>Tempo</td><td><a href="https://huggingface.co/bot-lab-21/DeepSeek-V4.1-Flash-EXL3-3.5bpw-Pollard/tree/b60193e0609147553145d1538d935925f2763c1d">bot-lab-21/DeepSeek-V4.1-Flash-EXL3-3.5bpw-Pollard, b60193e</a>. Tempo fixes this revision for all its model downloads, including the bundled draft.</td></tr>
+<tr><td>Tony and Kai</td><td>The cited three-Spark downloader fetches 40 changed model files from bot-lab-21 and reuses eight unchanged files from an existing official DeepSeek download. It does not fix a revision. Our saved source metadata records <a href="https://huggingface.co/bot-lab-21/DeepSeek-V4.1-Flash-EXL3-3.5bpw-Pollard/tree/b60193e0609147553145d1538d935925f2763c1d">b60193e</a>, but the script itself does not guarantee that version.</td></tr>
+</tbody>
+</table>
+<p>Tempo does not require a separate official DeepSeek download. That release is named to record where the model comes from. <a href="https://github.com/jakejharris/jspark3-deepseek/blob/main/docs/PROVENANCE.md">Full download sources and verification</a>. This clarification does not change the historical measurements.</p>
 <h2>Evidence</h2>
 <p><a href="/jspark3/tempo-comparisons.json">Exact chart values and source SHA-256 hashes</a> are a selected, sanitized extraction of the saved result artifacts, with C1–C4 short-screen comparisons and C3 Work comparisons. No live model requests were made for this page.</p>
 <ul>

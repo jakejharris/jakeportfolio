@@ -5,7 +5,7 @@
  */
 
 /** A run of copy that may carry inline code or emphasis, kept as data so the strings stay verbatim. */
-export type RichPart = string | { code: string } | { strong: string };
+export type RichPart = string | { code: string } | { strong: string } | { text: string; href: string };
 
 export const HERO = {
   title: "JSpark3",
@@ -292,7 +292,7 @@ export const REFERENCE_ROWS: ReadonlyArray<ReferenceRow> = [
   {
     recipe: "FlyCockpit TP3",
     sparks: "3",
-    lane: "EXL3/TR3 4-bpw, same target revision · DFlash2 k=7 · vLLM, TP3/EP3 over a mesh",
+    lane: "EXL3/TR3 4-bpw, Mia model files by default · DFlash2 k=7 · vLLM, TP3/EP3 over a mesh",
     context: "1,000,000",
     decode:
       'structured count 69.0 / 68.5 / 71.2 · code 52.3 / 58.7 / 58.2 · "hello" 37.9 / 36.9 / 37.3',
@@ -302,7 +302,7 @@ export const REFERENCE_ROWS: ReadonlyArray<ReferenceRow> = [
   {
     recipe: "Mia TP2",
     sparks: "2",
-    lane: "EXL3/TR3 4-bpw, same target revision · DFlash2 k=7 · vLLM, TP2",
+    lane: "EXL3/TR3 4-bpw, Mia model files by default · DFlash2 k=7 · vLLM, TP2",
     context: "1,000,000",
     decode:
       "62.9 on high-accept prompts (sparkDash, single stream) · structured 65.1 / prose 27.1 (bench_decode, four streams, median of 5×400)",
@@ -474,7 +474,7 @@ export const RUN_LINKS: ReadonlyArray<{ title: string; body: string; href: strin
   },
   {
     title: "The weights on Hugging Face",
-    body: "The exact target checkpoint revision, re-hosted shard for shard with the same hashes, with the model card and provenance.",
+    body: "Brandon M. Music made this version of GLM-5.3 Flash. Mia's AI Lab hosts a copy with credit, and JSPARK3 keeps its own pinned copy. The model files are the same, so you only need to download them once. The model cards and other repository files differ. Cadence also needs the separate DFlash2 draft, a smaller model that helps generate answers faster.",
     href: "https://huggingface.co/jakejharris/jspark3",
     cta: "huggingface.co/jakejharris/jspark3",
   },
@@ -531,14 +531,16 @@ export const PINNED_INPUTS: ReadonlyArray<{ label: string; value: ReadonlyArray<
   {
     label: "Target checkpoint",
     value: [
-      { code: "Mia-AiLab/GLM-5.3-Flash-EXL3-TR3-4bpw" },
-      " at revision ",
-      { code: "25a44fdbf16862a46b7cc9921142c6c81350af2f" },
-      ", itself byte-identical to ",
-      { code: "brandonmusic/GLM-5.3-Flash-tr3-4bpw" },
+      { text: "Mia-AiLab/GLM-5.3-Flash-EXL3-TR3-4bpw", href: "https://huggingface.co/Mia-AiLab/GLM-5.3-Flash-EXL3-TR3-4bpw/tree/25a44fdbf16862a46b7cc9921142c6c81350af2f" },
       " at ",
-      { code: "5ab363a8dcf6405955fd5f99671e01a1c9fb124b" },
-      ". The JSpark3 Hugging Face repository re-hosts this revision shard for shard with the same hashes; the preflight accepts either source because the bytes are identical",
+      { text: "25a44fd", href: "https://huggingface.co/Mia-AiLab/GLM-5.3-Flash-EXL3-TR3-4bpw/tree/25a44fdbf16862a46b7cc9921142c6c81350af2f" },
+      ". Its model files match Brandon M. Music's ",
+      { text: "declared source, 5ab363a8", href: "https://huggingface.co/brandonmusic/GLM-5.3-Flash-tr3-4bpw/tree/5ab363a8dcf6405955fd5f99671e01a1c9fb124b" },
+      ", and ",
+      { text: "later revision, 1ae6d70", href: "https://huggingface.co/brandonmusic/GLM-5.3-Flash-tr3-4bpw/tree/1ae6d70430a12d762917786696db06a7b4f9bbae" },
+      ". You can also use ",
+      { text: "JSPARK3's pinned copy", href: "https://huggingface.co/jakejharris/jspark3/tree/e7c34dba923916754cfcb0bdf6c2c75a9b7ff1fc" },
+      ". Download the model once. The model cards and other repository files differ.",
     ],
   },
   {

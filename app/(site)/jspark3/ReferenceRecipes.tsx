@@ -81,6 +81,13 @@ export default function ReferenceRecipes() {
           </dl>
         </article>
       ))}
+      <p className="text-sm leading-relaxed text-muted-foreground">
+        Mia’s and FlyCockpit’s GLM recipes use Mia’s model files by default.
+        Mia’s recipe can also use Brandon’s copy, and both recipes can reuse files
+        already on disk. Those defaults alone do not tell us which files a past
+        run used. The jetnet recipe uses a different version of GLM from LibertAIDAI.
+        Matching model files does not mean the recipes will run at the same speed.
+      </p>
     </div>
   );
 }
