@@ -235,8 +235,8 @@
 .tempo-scaling figcaption { font-size: 14px; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; margin-bottom: 16px; }
 .tempo-scaling figcaption span { font-size: 12px; color: #4b5744; }
 .tempo-scaling-plot { position: relative; padding-left: 32px; }
-.tempo-scaling svg { width: 100%; height: 220px; display: block; overflow: visible; }
-.tempo-scaling-axis { position: absolute; inset: 0 auto 0 0; display: flex; flex-direction: column; justify-content: space-between; padding-block: 2px 0; color: #4b5744; font: 12px var(--font-geist-mono), monospace; }
+.tempo-scaling-plot > svg { width: 100%; height: 220px; display: block; overflow: visible; }
+.tempo-scaling-axis { position: absolute; inset: 0 auto 0 0; color: #4b5744; font: 12px var(--font-geist-mono), monospace; }
 .tempo-plot-grid { stroke: #c2cbb5; stroke-width: 1; }
 .tempo-plot-cursor { stroke: #747f67; stroke-width: 1; stroke-dasharray: 3 5; }
 .tempo-plot-line { stroke: var(--series-color); stroke-width: 3; }
@@ -247,7 +247,9 @@
 .tempo-scaling-ticks .is-selected { font-weight: 700; color: #222b20; }
 .tempo-plot-legend { display: flex; flex-wrap: wrap; gap: 8px 18px; margin-top: 20px; font-size: 12px; color: #4b5744; }
 .tempo-plot-legend > span { display: flex; align-items: center; gap: 6px; }
-.tempo-plot-legend i { width: 16px; height: 3px; background: var(--series-color); }
+.tempo-plot-legend svg { display: block; width: 44px; height: 16px; flex-shrink: 0; }
+.tempo-scaling-axis span { position: absolute; left: 0; transform: translateY(-50%); }
+.tempo-scaling-range { margin-top: 12px; font-size: 12px; color: #4b5744; }
 .tempo-comparison-conditions { display: grid; gap: 12px; padding-top: 20px; border-top: 1px solid #a7b099; font-size: 13px; color: #4b5744; }
 .tempo-comparison-conditions strong { font-weight: 500; color: #222b20; }
 .tempo-comparison-table { margin-top: 20px; border-top: 1px solid #a7b099; font-size: 13px; }
@@ -308,11 +310,3 @@
 @media (max-width: 360px) {
   .tempo-concurrency { grid-template-columns: repeat(2, 1fr); }
 }
-
-
-.tempo-cap-note { display: grid; gap: 12px; }
-.tempo-only-rates { border-collapse: collapse; width: 100%; max-width: 560px; font-size: 13px; font-variant-numeric: tabular-nums; }
-.tempo-only-rates caption { text-align: left; color: #222b20; font-weight: 500; margin-bottom: 8px; }
-.tempo-only-rates th, .tempo-only-rates td { padding: 8px 4px; text-align: right; border-bottom: 1px solid #c2cbb5; }
-.tempo-only-rates th { font-weight: 500; }
-.tempo-only-rates th:first-child { text-align: left; }

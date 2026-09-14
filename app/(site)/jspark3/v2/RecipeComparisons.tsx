@@ -21,15 +21,18 @@ function ScalingChart({ workload, concurrency }: { workload: Workload; concurren
     const row = data.short[index];
     return recipe === 'tony' ? row.all.tony : row[workload][recipe];
   };
-  const max = workload === 'code' ? 200 : workload === 'prose' ? 100 : 150;
+  const rates = data.short.flatMap((_, index) => recipes.map(recipe => value(index, recipe)));
+  const min = Math.floor(Math.min(...rates) / 10) * 10;
+  const max = Math.max(min + 10, Math.ceil(Math.max(...rates) / 10) * 10);
+  const ticks = [max, (min + max) / 2, min];
   const x = (index: number) => 12 + index * 470 / (data.short.length - 1);
-  const y = (rate: number) => 208 - rate / max * 196;
+  const y = (rate: number) => 208 - (rate - min) / (max - min) * 196;
   return <figure className="tempo-scaling" aria-label={`${workloads[workload]} throughput from one to four offered streams`}>
     <figcaption>How throughput scales <span>tok/s · higher is better</span></figcaption>
     <div className="tempo-scaling-plot">
-      <div className="tempo-scaling-axis" aria-hidden="true"><span>{max}</span><span>{max / 2}</span><span>0</span></div>
-      <svg viewBox="0 0 500 220" preserveAspectRatio="none" role="img" aria-label={`Tempo and Mia measured on our three Sparks${workload === 'all' ? '; Tony is an author-published reference' : ''}. Select a stream count below to read exact values.`}>
-        {[0, max / 2, max].map(tick => <line key={tick} x1="12" x2="482" y1={y(tick)} y2={y(tick)} className="tempo-plot-grid" />)}
+      <div className="tempo-scaling-axis" aria-hidden="true">{ticks.map(tick => <span key={tick} style={{ top: y(tick) }}>{tick}</span>)}</div>
+      <svg viewBox="0 0 500 220" preserveAspectRatio="none" role="img" aria-label={`Tempo and Mia measured on our three Sparks${workload === 'all' ? '; Tony is an author-published reference' : ''}. Y-axis runs from ${min} to ${max} tok/s and does not start at zero. Select a stream count below to read exact values.`}>
+        {ticks.map(tick => <line key={tick} x1="12" x2="482" y1={y(tick)} y2={y(tick)} className="tempo-plot-grid" />)}
         <line x1={x(concurrency - 1)} x2={x(concurrency - 1)} y1="8" y2="212" className="tempo-plot-cursor" />
         {recipes.map(recipe => <g key={recipe} className={`tempo-series-${recipe}`}>
           <polyline points={data.short.map((_, i) => `${x(i)},${y(value(i, recipe))}`).join(' ')} fill="none" className="tempo-plot-line" vectorEffect="non-scaling-stroke" />
@@ -38,7 +41,8 @@ function ScalingChart({ workload, concurrency }: { workload: Workload; concurren
       </svg>
     </div>
     <div className="tempo-scaling-ticks" aria-hidden="true">{data.short.map(row => <span key={row.concurrency} className={row.concurrency === concurrency ? 'is-selected' : ''}>C{row.concurrency}</span>)}</div>
-    <div className="tempo-plot-legend">{recipes.map(recipe => <span key={recipe} className={`tempo-series-${recipe}`}><i aria-hidden="true" />{names[recipe]}{recipe === 'tony' ? ' (published)' : ''}</span>)}</div>
+    <div className="tempo-plot-legend">{recipes.map(recipe => <span key={recipe} className={`tempo-series-${recipe}`}><svg viewBox="0 0 44 16" aria-hidden="true"><line x1="2" x2="42" y1="8" y2="8" className="tempo-plot-line" /><circle cx="22" cy="8" r="3" className="tempo-plot-point" /></svg>{names[recipe]}{recipe === 'tony' ? ' (published)' : ''}</span>)}</div>
+    <p className="tempo-scaling-range">Y-axis: {min}–{max} tok/s · does not start at zero</p>
   </figure>;
 }
 
@@ -66,28 +70,22 @@ export function ShortScreenComparison() {
       </div>
       <ScalingChart workload={workload} concurrency={concurrency} />
     </div>
-    <fieldset className="tempo-choice tempo-concurrency" aria-describedby="tempo-cap-note"><legend>Offered streams* <span>C = concurrent requests submitted together</span></legend>
+    <fieldset className="tempo-choice tempo-concurrency"><legend>Offered streams <span>C = concurrent requests submitted together</span></legend>
       {data.short.map(item => <label key={item.concurrency}><input type="radio" name="comparison-concurrency" value={item.concurrency} checked={concurrency === item.concurrency} onChange={() => setConcurrency(item.concurrency)} /><span>C{item.concurrency}</span></label>)}
     </fieldset>
     <div className="tempo-comparison-conditions" id="short-screen-conditions">
       <p><strong>Same short screen, different recipes.</strong> Completion tokens across all streams ÷ shared HTTP wall time, including initial wait. One wave per category and concurrency, 150–256-token caps. These fixtures measure speed, not answer quality.</p>
-      <div className="tempo-cap-note" id="tempo-cap-note" role="note" aria-labelledby="tempo-cap-note-title">
-        <p id="tempo-cap-note-title"><strong>* Mia’s recipe is capped at 4 active requests (C4), so comparisons stop there.</strong> These are recipe-level comparisons, not an isolated kernel or quantization test.</p>
-        <table className="tempo-only-rates"><caption>Tempo only · aggregate end-to-end tok/s</caption><thead><tr><th scope="col">Streams</th><th scope="col">Code</th><th scope="col">Prose</th><th scope="col">8-cat. mean</th></tr></thead><tbody>
-          {data.tempo_only.map(item => <tr key={item.concurrency}><th scope="row">C{item.concurrency}</th><td>{item.code.toFixed(2)}</td><td>{item.prose.toFixed(2)}</td><td>{item.mean.toFixed(2)}</td></tr>)}
-        </tbody></table>
-        <p>Measured on our three Sparks: 150–256-token caps, one wave per category and stream count, including initial wait. The eight-category mean excludes counting. Speed fixtures, not answer-quality grades. This cohort ends at C6; higher concurrency is not validated.</p>
-      </div>
+      <p><strong>Comparisons stop at 4 offered streams, within Mia’s active-request cap.</strong> Tempo allows 8 active requests. These are recipe-level comparisons, not an isolated kernel or quantization test.</p>
       <p className="tempo-reference-note">{workload === 'all' ? 'The eight-category mean excludes counting. Tony’s TP3 figures are author-published on his three Sparks, not a rerun on ours. Hardware state and recipe settings differ.' : 'Tony’s published aggregate reference is available in “8-category mean”. It is separate from the code and prose measurements shown here.'}</p>
       <p className="tempo-comparison-sources"><a href="https://github.com/MiaAI-Lab/DeepSeek-v4.1-Flash-DGX-Sparks">Mia’s recipe ↗</a><a href="https://github.com/tonyd2wild/DeepSeek-V4.1-Flash-vLLM-DGX-Spark">Tony’s recipe ↗</a><a href="/jspark3/tempo-comparison-methods.html">Measurement notes ↗</a></p>
     </div>
     <details className="tempo-comparison-table"><summary>C1–C4 values and sources</summary>
       <div className="tempo-table-scroll" tabIndex={0} role="region" aria-label="Short-screen data table">
-        <table><caption>Aggregate end-to-end tok/s. Tempo and Mia measured locally; Tony author-published, eight-category mean only.</caption><thead><tr><th scope="col">Streams</th><th scope="col">Tempo code</th><th scope="col">Mia code</th><th scope="col">Tempo prose</th><th scope="col">Mia prose</th><th scope="col">Tempo mean</th><th scope="col">Mia mean</th><th scope="col">Tony mean†</th></tr></thead><tbody>
+        <table><caption>Aggregate end-to-end tok/s. Tempo and Mia measured locally; Tony author-published, eight-category mean only.</caption><thead><tr><th scope="col">Streams</th><th scope="col">Tempo code</th><th scope="col">Mia code</th><th scope="col">Tempo prose</th><th scope="col">Mia prose</th><th scope="col">Tempo mean</th><th scope="col">Mia mean</th><th scope="col">Tony mean*</th></tr></thead><tbody>
           {data.short.map(item => <tr key={item.concurrency}><th scope="row">C{item.concurrency}</th>{[item.code.tempo, item.code.mia, item.prose.tempo, item.prose.mia, item.all.tempo, item.all.mia, item.all.tony].map((value, index) => <td key={index}>{value.toFixed(2)}</td>)}</tr>)}
         </tbody></table>
       </div>
-      <p>†Author-published reference. <a href="/jspark3/tempo-comparisons.json">Chart data and source hashes ↗</a> · <a href="/jspark3/l5-benchmarks.html">Full methods and historical results ↗</a></p>
+      <p>*Author-published reference. <a href="/jspark3/tempo-comparisons.json">Chart data and source hashes ↗</a> · <a href="/jspark3/l5-benchmarks.html">Full methods and historical results ↗</a></p>
     </details>
   </article>;
 }
