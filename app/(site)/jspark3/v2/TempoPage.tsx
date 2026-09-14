@@ -90,7 +90,7 @@ export default function TempoPage() {
         <p className="tempo-evidence-link"><a href="/jspark3/l5-benchmarks.html">Full benchmark report and methods ↗</a><a href="/jspark3/tempo-benchmarks.json">Release measurement data ↗</a></p>
         <div className="tempo-recipe-credits" aria-label="Recipe credits">
           <h3>Built on shared work.</h3>
-          <p>Tempo builds on <a href="https://github.com/MiaAI-Lab/DeepSeek-v4.1-Flash-DGX-Sparks">Mia’s three-Spark recipe ↗</a> and draws on <a href="https://github.com/tonyd2wild/DeepSeek-V4.1-Flash-vLLM-DGX-Spark">Tony’s EXL3 and vLLM recipe ↗</a>. Their work made this iteration possible.</p>
+          <p>Tempo builds on <a href="https://github.com/tonyd2wild/DeepSeek-V4.1-Flash-vLLM-DGX-Spark">Tony and Kai’s DeepSeek Spark serving recipe ↗</a> and bot-lab-21’s EXL3 expert checkpoint using WestWaters’ Pollard method. <a href="https://github.com/MiaAI-Lab/DeepSeek-v4.1-Flash-DGX-Sparks">Mia’s three-Spark recipe ↗</a> is the comparison baseline; its fused MoE and slot-share KV ideas informed Tempo without code reuse.</p>
           <p className="tempo-condition">September 2026 snapshots, not a ranking of their latest releases. <a href="/jspark3/tempo-comparison-methods.html">Measurement sources, recipe pins, and comparison limits ↗</a></p>
         </div>
       </div>
