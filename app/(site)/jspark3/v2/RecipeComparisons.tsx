@@ -44,7 +44,7 @@ function ScalingChart({ workload, concurrency }: { workload: Workload; concurren
 
 export function ShortScreenComparison() {
   const [workload, setWorkload] = useState<Workload>('code');
-  const [concurrency, setConcurrency] = useState(4);
+  const [concurrency, setConcurrency] = useState(1);
   const row = data.short[concurrency - 1];
   const values = row[workload];
   const max = workload === 'code' ? 200 : workload === 'prose' ? 100 : 150;
@@ -66,22 +66,28 @@ export function ShortScreenComparison() {
       </div>
       <ScalingChart workload={workload} concurrency={concurrency} />
     </div>
-    <fieldset className="tempo-choice tempo-concurrency"><legend>Offered streams <span>C = concurrent requests submitted together</span></legend>
+    <fieldset className="tempo-choice tempo-concurrency" aria-describedby="tempo-cap-note"><legend>Offered streams* <span>C = concurrent requests submitted together</span></legend>
       {data.short.map(item => <label key={item.concurrency}><input type="radio" name="comparison-concurrency" value={item.concurrency} checked={concurrency === item.concurrency} onChange={() => setConcurrency(item.concurrency)} /><span>C{item.concurrency}</span></label>)}
     </fieldset>
     <div className="tempo-comparison-conditions" id="short-screen-conditions">
       <p><strong>Same short screen, different recipes.</strong> Completion tokens across all streams ÷ shared HTTP wall time, including initial wait. One wave per category and concurrency, 150–256-token caps. These fixtures measure speed, not answer quality.</p>
-      <p><strong>Comparisons stop at 4 offered streams, within Mia’s active-request cap.</strong> Tempo allows 8 active requests. These are recipe-level comparisons, not an isolated kernel or quantization test.</p>
+      <div className="tempo-cap-note" id="tempo-cap-note" role="note" aria-labelledby="tempo-cap-note-title">
+        <p id="tempo-cap-note-title"><strong>* Mia’s recipe is capped at 4 active requests (C4), so comparisons stop there.</strong> These are recipe-level comparisons, not an isolated kernel or quantization test.</p>
+        <table className="tempo-only-rates"><caption>Tempo only · aggregate end-to-end tok/s</caption><thead><tr><th scope="col">Streams</th><th scope="col">Code</th><th scope="col">Prose</th><th scope="col">8-cat. mean</th></tr></thead><tbody>
+          {data.tempo_only.map(item => <tr key={item.concurrency}><th scope="row">C{item.concurrency}</th><td>{item.code.toFixed(2)}</td><td>{item.prose.toFixed(2)}</td><td>{item.mean.toFixed(2)}</td></tr>)}
+        </tbody></table>
+        <p>Measured on our three Sparks: 150–256-token caps, one wave per category and stream count, including initial wait. The eight-category mean excludes counting. Speed fixtures, not answer-quality grades. This cohort ends at C6; higher concurrency is not validated.</p>
+      </div>
       <p className="tempo-reference-note">{workload === 'all' ? 'The eight-category mean excludes counting. Tony’s TP3 figures are author-published on his three Sparks, not a rerun on ours. Hardware state and recipe settings differ.' : 'Tony’s published aggregate reference is available in “8-category mean”. It is separate from the code and prose measurements shown here.'}</p>
       <p className="tempo-comparison-sources"><a href="https://github.com/MiaAI-Lab/DeepSeek-v4.1-Flash-DGX-Sparks">Mia’s recipe ↗</a><a href="https://github.com/tonyd2wild/DeepSeek-V4.1-Flash-vLLM-DGX-Spark">Tony’s recipe ↗</a><a href="/jspark3/tempo-comparison-methods.html">Measurement notes ↗</a></p>
     </div>
     <details className="tempo-comparison-table"><summary>C1–C4 values and sources</summary>
       <div className="tempo-table-scroll" tabIndex={0} role="region" aria-label="Short-screen data table">
-        <table><caption>Aggregate end-to-end tok/s. Tempo and Mia measured locally; Tony author-published, eight-category mean only.</caption><thead><tr><th scope="col">Streams</th><th scope="col">Tempo code</th><th scope="col">Mia code</th><th scope="col">Tempo prose</th><th scope="col">Mia prose</th><th scope="col">Tempo mean</th><th scope="col">Mia mean</th><th scope="col">Tony mean*</th></tr></thead><tbody>
+        <table><caption>Aggregate end-to-end tok/s. Tempo and Mia measured locally; Tony author-published, eight-category mean only.</caption><thead><tr><th scope="col">Streams</th><th scope="col">Tempo code</th><th scope="col">Mia code</th><th scope="col">Tempo prose</th><th scope="col">Mia prose</th><th scope="col">Tempo mean</th><th scope="col">Mia mean</th><th scope="col">Tony mean†</th></tr></thead><tbody>
           {data.short.map(item => <tr key={item.concurrency}><th scope="row">C{item.concurrency}</th>{[item.code.tempo, item.code.mia, item.prose.tempo, item.prose.mia, item.all.tempo, item.all.mia, item.all.tony].map((value, index) => <td key={index}>{value.toFixed(2)}</td>)}</tr>)}
         </tbody></table>
       </div>
-      <p>*Author-published reference. <a href="/jspark3/tempo-comparisons.json">Chart data and source hashes ↗</a> · <a href="/jspark3/l5-benchmarks.html">Full methods and historical results ↗</a></p>
+      <p>†Author-published reference. <a href="/jspark3/tempo-comparisons.json">Chart data and source hashes ↗</a> · <a href="/jspark3/l5-benchmarks.html">Full methods and historical results ↗</a></p>
     </details>
   </article>;
 }

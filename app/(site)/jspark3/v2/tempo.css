@@ -308,3 +308,11 @@
 @media (max-width: 360px) {
   .tempo-concurrency { grid-template-columns: repeat(2, 1fr); }
 }
+
+
+.tempo-cap-note { display: grid; gap: 12px; }
+.tempo-only-rates { border-collapse: collapse; width: 100%; max-width: 560px; font-size: 13px; font-variant-numeric: tabular-nums; }
+.tempo-only-rates caption { text-align: left; color: #222b20; font-weight: 500; margin-bottom: 8px; }
+.tempo-only-rates th, .tempo-only-rates td { padding: 8px 4px; text-align: right; border-bottom: 1px solid #c2cbb5; }
+.tempo-only-rates th { font-weight: 500; }
+.tempo-only-rates th:first-child { text-align: left; }
