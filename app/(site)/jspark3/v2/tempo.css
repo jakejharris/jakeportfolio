@@ -199,3 +199,98 @@
   .tempo-header nav, .tempo-actions, .tempo-switcher { display: none; }
   .tempo-chart, .tempo-install { break-inside: avoid; }
 }
+
+/* Recipe comparisons keep measured and author-published series visibly distinct. */
+.tempo-comparison { margin-top: 32px; border: 1px solid #a7b099; background: #f0f2e7; padding: 32px; }
+.tempo-comparison-heading { display: flex; justify-content: space-between; align-items: end; gap: 24px; }
+.tempo-comparison h3 { font-size: clamp(24px, 2.4vw, 32px); line-height: 1.2; letter-spacing: -.7px; font-weight: 500; }
+.tempo .tempo-comparison-eyebrow { font: 12px/1.5 var(--font-geist-mono), monospace; text-transform: uppercase; letter-spacing: .7px; color: #4b5744; margin-bottom: 8px; }
+.tempo-comparison-heading > p { font-size: 13px; color: #4b5744; flex-shrink: 0; }
+.tempo-choice { border: 0; padding: 0; margin: 24px 0; display: flex; flex-wrap: wrap; gap: 6px; min-width: 0; }
+.tempo-choice legend { font-size: 13px; color: #4b5744; margin-bottom: 8px; padding: 0; }
+.tempo-choice legend span { display: inline-block; margin-left: 10px; color: #4b5744; }
+.tempo-choice label { position: relative; cursor: pointer; }
+.tempo-choice input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.tempo-choice label > span { min-height: 44px; min-width: 44px; display: flex; align-items: center; justify-content: center; padding: 9px 16px; border: 1px solid #747f67; font-size: 14px; }
+.tempo-choice label:hover > span { background: #dce2cf; }
+.tempo-choice input:checked + span { background: #293923; color: #f0f2e7; border-color: #293923; }
+.tempo-choice input:focus-visible + span { outline: 2px solid #293923; outline-offset: 3px; }
+.tempo-comparison-grid { display: grid; grid-template-columns: .9fr 1.1fr; gap: 56px; align-items: start; }
+.tempo-selected-rates { min-height: 300px; }
+.tempo .tempo-selected-caption { font-size: 13px; color: #4b5744; margin-bottom: 22px; }
+.tempo-series-tempo { --series-color: #355025; }
+.tempo-series-mia { --series-color: #67745a; }
+.tempo-series-tony { --series-color: #855c38; }
+.tempo-rate + .tempo-rate { margin-top: 22px; }
+.tempo-rate-label { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+.tempo-rate-label strong { font-size: 16px; font-weight: 500; }
+.tempo-rate-label > span:first-child > small { display: block; font-size: 12px; color: #4b5744; }
+.tempo-rate-number { font-size: 28px; line-height: 1.15; letter-spacing: -.7px; font-weight: 500; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.tempo-rate-number small { font: 12px var(--font-geist-mono), monospace; letter-spacing: 0; }
+.tempo-rate-track { height: 10px; background: #d3dac7; margin-top: 8px; }
+.tempo-rate-track i { display: block; height: 100%; background: var(--series-color); transform-origin: left; transition: transform 220ms ease-out; }
+.tempo .tempo-comparison-delta { margin-top: 24px; font-size: 14px; color: #4b5744; }
+.tempo-comparison-delta strong { color: #355025; font-size: 26px; font-weight: 500; font-variant-numeric: tabular-nums; }
+.tempo-scaling { min-width: 0; }
+.tempo-scaling figcaption { font-size: 14px; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; margin-bottom: 16px; }
+.tempo-scaling figcaption span { font-size: 12px; color: #4b5744; }
+.tempo-scaling-plot { position: relative; padding-left: 32px; }
+.tempo-scaling svg { width: 100%; height: 220px; display: block; overflow: visible; }
+.tempo-scaling-axis { position: absolute; inset: 0 auto 0 0; display: flex; flex-direction: column; justify-content: space-between; padding-block: 2px 0; color: #4b5744; font: 12px var(--font-geist-mono), monospace; }
+.tempo-plot-grid { stroke: #c2cbb5; stroke-width: 1; }
+.tempo-plot-cursor { stroke: #747f67; stroke-width: 1; stroke-dasharray: 3 5; }
+.tempo-plot-line { stroke: var(--series-color); stroke-width: 3; }
+.tempo-series-mia .tempo-plot-line { stroke-dasharray: 7 4; }
+.tempo-series-tony .tempo-plot-line { stroke-dasharray: 2 5; }
+.tempo-plot-point { fill: #f0f2e7; stroke: var(--series-color); stroke-width: 2; }
+.tempo-scaling-ticks { display: flex; justify-content: space-between; padding-left: 32px; padding-right: 4px; font: 12px var(--font-geist-mono), monospace; color: #4b5744; margin-top: 8px; }
+.tempo-scaling-ticks .is-selected { font-weight: 700; color: #222b20; }
+.tempo-plot-legend { display: flex; flex-wrap: wrap; gap: 8px 18px; margin-top: 20px; font-size: 12px; color: #4b5744; }
+.tempo-plot-legend > span { display: flex; align-items: center; gap: 6px; }
+.tempo-plot-legend i { width: 16px; height: 3px; background: var(--series-color); }
+.tempo-comparison-conditions { display: grid; gap: 12px; padding-top: 20px; border-top: 1px solid #a7b099; font-size: 13px; color: #4b5744; }
+.tempo-comparison-conditions strong { font-weight: 500; color: #222b20; }
+.tempo-comparison-table { margin-top: 20px; border-top: 1px solid #a7b099; font-size: 13px; }
+.tempo-comparison-table summary { min-height: 44px; display: list-item; align-content: center; cursor: pointer; padding-block: 12px; }
+.tempo-table-scroll { overflow-x: auto; margin-block: 12px; }
+.tempo-comparison-table table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+.tempo-comparison-table caption { text-align: left; margin-bottom: 12px; color: #4b5744; }
+.tempo-comparison-table th, .tempo-comparison-table td { padding: 10px; text-align: right; border-bottom: 1px solid #c2cbb5; }
+.tempo-comparison-table th:first-child { text-align: left; }
+.tempo-comparison-table a, .tempo-recipe-credits a { text-decoration: underline; }
+.tempo-comparison-sources { display: flex; flex-wrap: wrap; gap: 4px 24px; }
+.tempo-comparison-sources a { min-height: 44px; display: inline-flex; align-items: center; text-decoration: underline; }
+.tempo-work-controls { display: flex; flex-wrap: wrap; gap: 0 24px; }
+.tempo-work-rates { margin-top: 4px; }
+.tempo-work-source { display: inline-flex; align-items: center; min-height: 44px; text-decoration: underline !important; margin-top: 12px; font-size: 13px; }
+.tempo-recipe-credits { padding-top: 24px; border-top: 1px solid #a7b099; margin-top: 12px; display: grid; grid-template-columns: 1fr 2fr; gap: 12px 32px; }
+.tempo-recipe-credits h3 { font-size: 22px; font-weight: 500; }
+.tempo-recipe-credits > p { font-size: 15px; max-width: 700px; }
+.tempo-recipe-credits .tempo-condition { grid-column: 2; margin-top: 0 !important; font-size: 13px; }
+.tempo .tempo-generation { margin-top: 32px; }
+@media (max-width: 1000px) {
+  .tempo-comparison-grid { gap: 28px; }
+  .tempo-comparison-heading { display: block; }
+  .tempo-comparison-heading > p { margin-top: 12px; }
+}
+@media (max-width: 800px) {
+  .tempo-comparison { padding: 24px; }
+  .tempo-comparison-grid { grid-template-columns: 1fr; gap: 28px; }
+  .tempo-selected-rates { min-height: 0; }
+  .tempo-recipe-credits { grid-template-columns: 1fr; }
+  .tempo-recipe-credits .tempo-condition { grid-column: 1; }
+}
+@media (max-width: 520px) {
+  .tempo-comparison { padding: 20px; }
+  .tempo-choice label > span { padding-inline: 12px; }
+  .tempo-choice legend span { display: block; margin-left: 0; margin-top: 4px; }
+  .tempo-concurrency { gap: 4px; }
+  .tempo-concurrency label { flex: 1; }
+  .tempo-concurrency label > span { padding-inline: 0; }
+  .tempo-rate-number { font-size: 26px; }
+}
+@media (max-width: 360px) {
+  .tempo-comparison { padding: 16px; }
+  .tempo-concurrency { display: grid; grid-template-columns: repeat(3, 1fr); }
+  .tempo-concurrency legend { float: left; grid-column: 1 / -1; }
+}

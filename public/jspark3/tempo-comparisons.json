@@ -1,0 +1,173 @@
+{
+  "cohort": "September 2026; Tempo L5-P, historical controls",
+  "short": [
+    {
+      "concurrency": 1,
+      "code": {
+        "tempo": 64.04762107726931,
+        "mia": 59.246256242131686
+      },
+      "prose": {
+        "tempo": 36.24650601438967,
+        "mia": 27.16049768129178
+      },
+      "all": {
+        "tempo": 49.046305908341104,
+        "mia": 42.54426739691917,
+        "tony": 46.0
+      }
+    },
+    {
+      "concurrency": 2,
+      "code": {
+        "tempo": 97.61809286006059,
+        "mia": 88.70142900401521
+      },
+      "prose": {
+        "tempo": 48.388388801425755,
+        "mia": 44.63326148987351
+      },
+      "all": {
+        "tempo": 73.54692132752501,
+        "mia": 66.4792418994454,
+        "tony": 73.37
+      }
+    },
+    {
+      "concurrency": 3,
+      "code": {
+        "tempo": 136.54922488366884,
+        "mia": 130.28803460721576
+      },
+      "prose": {
+        "tempo": 64.49985330368902,
+        "mia": 54.05990289711083
+      },
+      "all": {
+        "tempo": 97.2142640835259,
+        "mia": 90.17248258798631,
+        "tony": 100.14
+      }
+    },
+    {
+      "concurrency": 4,
+      "code": {
+        "tempo": 158.7043784317317,
+        "mia": 155.8848095097438
+      },
+      "prose": {
+        "tempo": 78.26775041659417,
+        "mia": 67.40721809297975
+      },
+      "all": {
+        "tempo": 114.15613945125249,
+        "mia": 106.68763210762886,
+        "tony": 118.41
+      }
+    },
+    {
+      "concurrency": 5,
+      "code": {
+        "tempo": 198.06344834098505,
+        "mia": 112.73548626897517
+      },
+      "prose": {
+        "tempo": 88.94111200771168,
+        "mia": 52.003250350993085
+      },
+      "all": {
+        "tempo": 131.4637424686464,
+        "mia": 80.60368471117565,
+        "tony": 134.44
+      }
+    },
+    {
+      "concurrency": 6,
+      "code": {
+        "tempo": 213.70349121990927,
+        "mia": 126.74978481969508
+      },
+      "prose": {
+        "tempo": 104.42032128107815,
+        "mia": 54.15469144346152
+      },
+      "all": {
+        "tempo": 146.11735191073768,
+        "mia": 87.34348961558209,
+        "tony": 152.89
+      }
+    }
+  ],
+  "work": [
+    {
+      "concurrency": 3,
+      "round": "first",
+      "tempo": 80.12222222222222,
+      "tony": 76.35555555555555,
+      "mia": 68.15
+    },
+    {
+      "concurrency": 3,
+      "round": "repeat",
+      "tempo": 81.97777777777777,
+      "tony": 73.04444444444445,
+      "mia": 71.82777777777778
+    },
+    {
+      "concurrency": 6,
+      "round": "first",
+      "tempo": 102.78888888888889,
+      "tony": 101.68888888888888,
+      "mia": 82.70555555555555
+    },
+    {
+      "concurrency": 6,
+      "round": "repeat",
+      "tempo": 110.4888888888889,
+      "tony": 92.81666666666666,
+      "mia": 87.17222222222222
+    }
+  ],
+  "sources": [
+    {
+      "id": "mia_short",
+      "artifact": "M-pre-tony-c4to6/TONY-RESULTS.json",
+      "sha256": "8b6f696b51d06401ce44debc360287592b116fdb5058333757e2ee2d341fb447"
+    },
+    {
+      "id": "tempo_short",
+      "artifact": "l5-qualification/TONY-RESULTS.json",
+      "sha256": "83cdd6e56dfbd042464774fdd617ec2e60d6a77e1e9dfef87af19b6a85d0e9e6"
+    },
+    {
+      "id": "tony_work",
+      "artifact": "work-benchmark/WORK-RESULTS.json",
+      "sha256": "c989ef5a9a19e44f55d38efc758b27ab35b1123392dee5ba259dc8eba3804236"
+    },
+    {
+      "id": "tempo_work",
+      "artifact": "l4-followup-20260912/L5-WORK-RESULTS.json",
+      "sha256": "9074579382e6d3a08c8ea7ecf29fc5db3ed1ec20c1d75067e727f2d4dcfbda84"
+    },
+    {
+      "id": "mia_work_c3-first",
+      "artifact": "work-benchmark/Mia-counted/c3-first/RESULT.json",
+      "sha256": "876f69ff3d16bd6c2cfb1d5d4fd7e83ef3f686cddd8408b1790801dc75f0a58d"
+    },
+    {
+      "id": "mia_work_c3-repeat",
+      "artifact": "work-benchmark/Mia-counted/c3-repeat/RESULT.json",
+      "sha256": "5b47e6bd6d91de75ebb76e14d3eda247101756a890a7ab5ab151155c24a924f5"
+    },
+    {
+      "id": "mia_work_c6-first",
+      "artifact": "work-benchmark/Mia-counted/c6-first/RESULT.json",
+      "sha256": "ee63c95165dc6ae45c8e73f8874acc0cc3d3d559020ddec9c6d79eb8223b3cdb"
+    },
+    {
+      "id": "mia_work_c6-repeat",
+      "artifact": "work-benchmark/Mia-counted/c6-repeat/RESULT.json",
+      "sha256": "612bd9ba912bdd3c7610643f1f7b7cb51c9109edee85d3149c22a274b6148f9b"
+    }
+  ]
+}
