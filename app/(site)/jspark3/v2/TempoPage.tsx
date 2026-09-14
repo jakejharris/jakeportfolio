@@ -61,29 +61,29 @@ export default function TempoPage() {
     <section className="tempo-results" id="results" aria-labelledby="results-title">
       <div className="tempo-shell">
         <div className="tempo-section-heading"><h2 id="results-title">Measured on our three Sparks.</h2><p>Tempo measurements, September 2026. Earlier test records call this build L5-P. Different workloads answer different questions.</p></div>
-        <div className="tempo-charts">
-          <article className="tempo-chart tempo-latency">
-            <h3>Time to first token</h3>
-            <p className="tempo-chart-subtitle">An uncached prompt and its exact repeat.</p>
-            <fieldset className="tempo-switcher"><legend className="tempo-sr-only">Prompt length</legend><input type="radio" name="tempo-context" id="tempo-64" defaultChecked /><label htmlFor="tempo-64">64K tokens</label><input type="radio" name="tempo-context" id="tempo-76" /><label htmlFor="tempo-76">76K tokens</label></fieldset>
-            <div className="tempo-context64"><Latency context="64k" /></div><div className="tempo-context76"><Latency context="76k" /></div>
-          </article>
-          <article className="tempo-chart tempo-work">
-            <h3>Three-minute agent tasks</h3>
-            <p className="tempo-chart-subtitle">The repeated Work round.</p>
-            <fieldset className="tempo-switcher"><legend className="tempo-sr-only">Concurrent agents</legend><input type="radio" name="tempo-agents" id="tempo-c3" /><label htmlFor="tempo-c3">3 agents</label><input type="radio" name="tempo-agents" id="tempo-c6" defaultChecked /><label htmlFor="tempo-c6">6 agents</label></fieldset>
-            <div className="tempo-work3"><Work concurrency={3} /></div><div className="tempo-work6"><Work concurrency={6} /></div>
-          </article>
-        </div>
-        <p className="tempo-evidence-link"><a href="/jspark3/l5-benchmarks.html">Full benchmark report and methods ↗</a><a href="/jspark3/tempo-benchmarks.json">Release measurement data ↗</a></p>
         <dl className="tempo-generation" aria-label="Single-stream generation rates">
-          {(['generation_prose', 'generation_code'] as const).map(id => {
+          {(['generation_code', 'generation_prose'] as const).map(id => {
             const row = metricRange(id);
             return <div key={id} data-metric-id={id}><dt>{id === 'generation_prose' ? 'Prose' : 'Code'}</dt><dd><strong>{row.value.map(value => value.toFixed(2)).join('–')}</strong> tok/s</dd></div>;
           })}
         </dl>
         <p className="tempo-generation-note">Single stream, after first output. Ranges across {metricRange('generation_prose').samples} prose and {metricRange('generation_code').samples} code tasks; one answer per task. (Completion tokens − 1) ÷ (HTTP duration − TTFT), including transport, finalization, and speculative chunks. Not GPU-only decode.</p>
         <p className="tempo-short-result" data-metric-id="short_c6"><strong>{metric('short_c6').value.toFixed(2)} tok/s</strong> in the separate six-stream short-answer test. {metric('short_c6').conditions} Mean of eight category wave rates, including initial wait.</p>
+        <div className="tempo-charts">
+          <article className="tempo-chart tempo-work">
+            <h3>Three-minute agent tasks</h3>
+            <p className="tempo-chart-subtitle">The repeated Work round.</p>
+            <fieldset className="tempo-switcher"><legend className="tempo-sr-only">Concurrent agents</legend><input type="radio" name="tempo-agents" id="tempo-c3" /><label htmlFor="tempo-c3">3 agents</label><input type="radio" name="tempo-agents" id="tempo-c6" defaultChecked /><label htmlFor="tempo-c6">6 agents</label></fieldset>
+            <div className="tempo-work3"><Work concurrency={3} /></div><div className="tempo-work6"><Work concurrency={6} /></div>
+          </article>
+          <article className="tempo-chart tempo-latency">
+            <h3>Time to first token</h3>
+            <p className="tempo-chart-subtitle">An uncached prompt and its exact repeat.</p>
+            <fieldset className="tempo-switcher"><legend className="tempo-sr-only">Prompt length</legend><input type="radio" name="tempo-context" id="tempo-64" defaultChecked /><label htmlFor="tempo-64">64K tokens</label><input type="radio" name="tempo-context" id="tempo-76" /><label htmlFor="tempo-76">76K tokens</label></fieldset>
+            <div className="tempo-context64"><Latency context="64k" /></div><div className="tempo-context76"><Latency context="76k" /></div>
+          </article>
+        </div>
+        <p className="tempo-evidence-link"><a href="/jspark3/l5-benchmarks.html">Full benchmark report and methods ↗</a><a href="/jspark3/tempo-benchmarks.json">Release measurement data ↗</a></p>
       </div>
     </section>
 

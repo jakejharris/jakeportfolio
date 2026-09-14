@@ -87,7 +87,7 @@
 .tempo-evidence-link a { display: inline-flex; min-height: 44px; align-items: center; text-decoration: underline; }
 .tempo-results a:hover { color: #355025; }
 .tempo-results :focus-visible { outline-color: #355025; }
-.tempo-generation { display: flex; flex-wrap: wrap; gap: 20px 48px; border-top: 1px solid #a7b099; padding-top: 22px; }
+.tempo-generation { display: flex; flex-wrap: wrap; gap: 20px 48px; margin-top: 28px; border-top: 1px solid #a7b099; padding-top: 22px; }
 .tempo-generation dt { color: #4b5744; font-size: 14px; }
 .tempo-generation dd { font-size: 14px; }
 .tempo-generation strong { font-size: 24px; font-weight: 500; white-space: nowrap; font-variant-numeric: tabular-nums; letter-spacing: -.7px; }
