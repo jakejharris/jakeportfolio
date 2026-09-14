@@ -21,10 +21,10 @@ function ScalingChart({ workload, concurrency }: { workload: Workload; concurren
     const row = data.short[index];
     return recipe === 'tony' ? row.all.tony : row[workload][recipe];
   };
-  const max = workload === 'code' ? 250 : workload === 'prose' ? 125 : 175;
-  const x = (index: number) => 12 + index * 94;
+  const max = workload === 'code' ? 200 : workload === 'prose' ? 100 : 150;
+  const x = (index: number) => 12 + index * 470 / (data.short.length - 1);
   const y = (rate: number) => 208 - rate / max * 196;
-  return <figure className="tempo-scaling" aria-label={`${workloads[workload]} throughput from one to six offered streams`}>
+  return <figure className="tempo-scaling" aria-label={`${workloads[workload]} throughput from one to four offered streams`}>
     <figcaption>How throughput scales <span>tok/s · higher is better</span></figcaption>
     <div className="tempo-scaling-plot">
       <div className="tempo-scaling-axis" aria-hidden="true"><span>{max}</span><span>{max / 2}</span><span>0</span></div>
@@ -44,10 +44,10 @@ function ScalingChart({ workload, concurrency }: { workload: Workload; concurren
 
 export function ShortScreenComparison() {
   const [workload, setWorkload] = useState<Workload>('code');
-  const [concurrency, setConcurrency] = useState(6);
+  const [concurrency, setConcurrency] = useState(4);
   const row = data.short[concurrency - 1];
   const values = row[workload];
-  const max = workload === 'code' ? 250 : workload === 'prose' ? 125 : 175;
+  const max = workload === 'code' ? 200 : workload === 'prose' ? 100 : 150;
   return <article className="tempo-comparison" id="recipe-comparison" aria-labelledby="short-comparison-title">
     <div className="tempo-comparison-heading">
       <div><p className="tempo-comparison-eyebrow">Short speed screen</p><h3 id="short-comparison-title">Code, prose, and parallel streams.</h3></div>
@@ -71,11 +71,11 @@ export function ShortScreenComparison() {
     </fieldset>
     <div className="tempo-comparison-conditions" id="short-screen-conditions">
       <p><strong>Same short screen, different recipes.</strong> Completion tokens across all streams ÷ shared HTTP wall time, including initial wait. One wave per category and concurrency, 150–256-token caps. These fixtures measure speed, not answer quality.</p>
-      <p><strong>Mia allows 4 active requests; Tempo allows 8.</strong> Mia’s C5/C6 results include queueing. These are recipe-level comparisons, not an isolated kernel or quantization test.</p>
+      <p><strong>Comparisons stop at 4 offered streams, within Mia’s active-request cap.</strong> Tempo allows 8 active requests. These are recipe-level comparisons, not an isolated kernel or quantization test.</p>
       <p className="tempo-reference-note">{workload === 'all' ? 'The eight-category mean excludes counting. Tony’s TP3 figures are author-published on his three Sparks, not a rerun on ours. Hardware state and recipe settings differ.' : 'Tony’s published aggregate reference is available in “8-category mean”. It is separate from the code and prose measurements shown here.'}</p>
       <p className="tempo-comparison-sources"><a href="https://github.com/MiaAI-Lab/DeepSeek-v4.1-Flash-DGX-Sparks">Mia’s recipe ↗</a><a href="https://github.com/tonyd2wild/DeepSeek-V4.1-Flash-vLLM-DGX-Spark">Tony’s recipe ↗</a><a href="/jspark3/tempo-comparison-methods.html">Measurement notes ↗</a></p>
     </div>
-    <details className="tempo-comparison-table"><summary>All short-screen values and sources</summary>
+    <details className="tempo-comparison-table"><summary>C1–C4 values and sources</summary>
       <div className="tempo-table-scroll" tabIndex={0} role="region" aria-label="Short-screen data table">
         <table><caption>Aggregate end-to-end tok/s. Tempo and Mia measured locally; Tony author-published, eight-category mean only.</caption><thead><tr><th scope="col">Streams</th><th scope="col">Tempo code</th><th scope="col">Mia code</th><th scope="col">Tempo prose</th><th scope="col">Mia prose</th><th scope="col">Tempo mean</th><th scope="col">Mia mean</th><th scope="col">Tony mean*</th></tr></thead><tbody>
           {data.short.map(item => <tr key={item.concurrency}><th scope="row">C{item.concurrency}</th>{[item.code.tempo, item.code.mia, item.prose.tempo, item.prose.mia, item.all.tempo, item.all.mia, item.all.tony].map((value, index) => <td key={index}>{value.toFixed(2)}</td>)}</tr>)}
@@ -87,25 +87,23 @@ export function ShortScreenComparison() {
 }
 
 export function WorkComparison() {
-  const [concurrency, setConcurrency] = useState(6);
   const [round, setRound] = useState('repeat');
-  const row = data.work.find(item => item.concurrency === concurrency && item.round === round)!;
+  const row = data.work.find(item => item.round === round)!;
   return <article className="tempo-chart tempo-work-comparison" aria-labelledby="work-comparison-title">
     <p className="tempo-comparison-eyebrow">Longer agent work</p>
-    <h3 id="work-comparison-title">Three-minute agent tasks</h3>
-    <p className="tempo-chart-subtitle">All three recipes measured on our fleet.</p>
+    <h3 id="work-comparison-title">Three agents, three recipes.</h3>
+    <p className="tempo-chart-subtitle">Three-minute tasks, measured on our fleet at C3.</p>
     <div className="tempo-work-controls">
-      <fieldset className="tempo-choice"><legend>Agents</legend>{[3, 6].map(count => <label key={count}><input type="radio" name="work-comparison-agents" checked={concurrency === count} onChange={() => setConcurrency(count)} /><span>{count} agents</span></label>)}</fieldset>
       <fieldset className="tempo-choice"><legend>Round</legend>{['first', 'repeat'].map(value => <label key={value}><input type="radio" name="work-comparison-round" checked={round === value} onChange={() => setRound(value)} /><span>{value === 'first' ? 'First' : 'Repeat'}</span></label>)}</fieldset>
     </div>
     <div aria-live="polite" aria-atomic="true" className="tempo-work-rates">
-      <p className="tempo-selected-caption">C{concurrency} · {round === 'first' ? 'First' : 'Repeat'} round · aggregate tok/s</p>
-      <RateBar recipe="tempo" value={row.tempo} max={120} basis="Our measurement" />
-      <RateBar recipe="tony" value={row.tony} max={120} basis="Locally adapted recipe" />
-      <RateBar recipe="mia" value={row.mia} max={120} basis="Counted local rerun" />
+      <p className="tempo-selected-caption">C3 · {round === 'first' ? 'First' : 'Repeat'} round · aggregate tok/s</p>
+      <RateBar recipe="tempo" value={row.tempo} max={100} basis="Our measurement" />
+      <RateBar recipe="tony" value={row.tony} max={100} basis="Locally adapted recipe" />
+      <RateBar recipe="mia" value={row.mia} max={100} basis="Counted local rerun" />
     </div>
     <p className="tempo-condition">Accepted backend tokens ÷ 180 seconds, including unfinished output, health probes, and small launch/drain overhead. Same initial tasks; later tool histories diverge. Repeat uses fresh Pi sessions with caches intact.</p>
-    <p className="tempo-condition">One cohort, no output-quality score or productivity claim. Mia’s active cap is 4; Tempo and local Tony allow 8. Tony’s local run includes fabric, storage, loader, and allocator adaptations; it is separate from his published short-screen figures.</p>
+    <p className="tempo-condition">One cohort, no output-quality score or productivity claim. Three agents stay within every recipe’s active-request cap. Tony’s local run includes fabric, storage, loader, and allocator adaptations; it is separate from his published short-screen figures.</p>
     <a className="tempo-work-source" href="/jspark3/l5-benchmarks.html#work">All Work rounds and methods ↗</a>
   </article>;
 }

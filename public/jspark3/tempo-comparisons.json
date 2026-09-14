@@ -64,38 +64,6 @@
         "mia": 106.68763210762886,
         "tony": 118.41
       }
-    },
-    {
-      "concurrency": 5,
-      "code": {
-        "tempo": 198.06344834098505,
-        "mia": 112.73548626897517
-      },
-      "prose": {
-        "tempo": 88.94111200771168,
-        "mia": 52.003250350993085
-      },
-      "all": {
-        "tempo": 131.4637424686464,
-        "mia": 80.60368471117565,
-        "tony": 134.44
-      }
-    },
-    {
-      "concurrency": 6,
-      "code": {
-        "tempo": 213.70349121990927,
-        "mia": 126.74978481969508
-      },
-      "prose": {
-        "tempo": 104.42032128107815,
-        "mia": 54.15469144346152
-      },
-      "all": {
-        "tempo": 146.11735191073768,
-        "mia": 87.34348961558209,
-        "tony": 152.89
-      }
     }
   ],
   "work": [
@@ -112,20 +80,6 @@
       "tempo": 81.97777777777777,
       "tony": 73.04444444444445,
       "mia": 71.82777777777778
-    },
-    {
-      "concurrency": 6,
-      "round": "first",
-      "tempo": 102.78888888888889,
-      "tony": 101.68888888888888,
-      "mia": 82.70555555555555
-    },
-    {
-      "concurrency": 6,
-      "round": "repeat",
-      "tempo": 110.4888888888889,
-      "tony": 92.81666666666666,
-      "mia": 87.17222222222222
     }
   ],
   "sources": [
@@ -158,16 +112,6 @@
       "id": "mia_work_c3-repeat",
       "artifact": "work-benchmark/Mia-counted/c3-repeat/RESULT.json",
       "sha256": "5b47e6bd6d91de75ebb76e14d3eda247101756a890a7ab5ab151155c24a924f5"
-    },
-    {
-      "id": "mia_work_c6-first",
-      "artifact": "work-benchmark/Mia-counted/c6-first/RESULT.json",
-      "sha256": "ee63c95165dc6ae45c8e73f8874acc0cc3d3d559020ddec9c6d79eb8223b3cdb"
-    },
-    {
-      "id": "mia_work_c6-repeat",
-      "artifact": "work-benchmark/Mia-counted/c6-repeat/RESULT.json",
-      "sha256": "612bd9ba912bdd3c7610643f1f7b7cb51c9109edee85d3149c22a274b6148f9b"
     }
   ]
 }

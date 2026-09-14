@@ -21,6 +21,18 @@ function Latency({ context }: { context: '64k' | '76k' }) {
   </div>;
 }
 
+function Work({ concurrency }: { concurrency: 3 | 6 }) {
+  const row = metric(`work_c${concurrency}_repeat`);
+  return <div className="tempo-chart-panel" role="group" aria-label={`Work at ${concurrency} concurrent agents`} data-metric-id={row.id}>
+    <p className="tempo-work-value">{row.value.toFixed(2)} <span>tok/s</span></p>
+    <p className="tempo-work-label">Aggregate output over the full task window</p>
+    <div className="tempo-scale" aria-hidden="true"><span>0</span><span>60</span><span>120 tok/s</span></div>
+    <div className="tempo-track tempo-highlight" aria-hidden="true"><i style={{ width: `${row.value / 120 * 100}%` }} /></div>
+    <p className="tempo-condition">{row.conditions}</p>
+    <p className="tempo-condition">Same initial payload repeated in fresh Pi sessions, with caches intact. Server-wide accepted tokens ÷ 180 seconds, including unfinished output, health probes, and small launch/drain overhead. Active cap: 8.</p>
+  </div>;
+}
+
 export default function TempoPage() {
   return <div className="tempo" id="tempo-top">
     <a className="tempo-skip" href="#results">Skip to results</a>
@@ -51,6 +63,8 @@ export default function TempoPage() {
       <div className="tempo-shell">
         <div className="tempo-section-heading"><h2 id="results-title">Measured on our three Sparks.</h2><p>Tempo measurements, September 2026. Earlier test records call this build L5-P. Different workloads answer different questions.</p></div>
         <ShortScreenComparison />
+        <WorkComparison />
+        <h3 className="tempo-solo-title">Tempo on its own</h3>
         <dl className="tempo-generation" aria-label="Single-stream generation rates">
           {(['generation_code', 'generation_prose'] as const).map(id => {
             const row = metricRange(id);
@@ -58,8 +72,14 @@ export default function TempoPage() {
           })}
         </dl>
         <p className="tempo-generation-note">Single stream, after first output. Ranges across {metricRange('generation_prose').samples} prose and {metricRange('generation_code').samples} code tasks; one answer per task. (Completion tokens − 1) ÷ (HTTP duration − TTFT), including transport, finalization, and speculative chunks. Not GPU-only decode.</p>
+        <p className="tempo-short-result" data-metric-id="short_c6"><strong>{metric('short_c6').value.toFixed(2)} tok/s</strong> in the separate six-stream short-answer test. {metric('short_c6').conditions} Mean of eight category wave rates, including initial wait.</p>
         <div className="tempo-charts">
-          <WorkComparison />
+          <article className="tempo-chart tempo-work">
+            <h3>Three-minute agent tasks</h3>
+            <p className="tempo-chart-subtitle">The repeated Work round.</p>
+            <fieldset className="tempo-switcher"><legend className="tempo-sr-only">Concurrent agents</legend><input type="radio" name="tempo-agents" id="tempo-c3" /><label htmlFor="tempo-c3">3 agents</label><input type="radio" name="tempo-agents" id="tempo-c6" defaultChecked /><label htmlFor="tempo-c6">6 agents</label></fieldset>
+            <div className="tempo-work3"><Work concurrency={3} /></div><div className="tempo-work6"><Work concurrency={6} /></div>
+          </article>
           <article className="tempo-chart tempo-latency">
             <h3>Time to first token</h3>
             <p className="tempo-chart-subtitle">An uncached prompt and its exact repeat.</p>

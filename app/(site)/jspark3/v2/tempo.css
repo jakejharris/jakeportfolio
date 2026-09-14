@@ -294,3 +294,17 @@
   .tempo-concurrency { display: grid; grid-template-columns: repeat(3, 1fr); }
   .tempo-concurrency legend { float: left; grid-column: 1 / -1; }
 }
+
+.tempo-work-comparison { margin-top: 28px; }
+.tempo-work-comparison .tempo-work-rates { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0 32px; }
+.tempo-work-comparison .tempo-selected-caption { grid-column: 1 / -1; }
+.tempo-work-comparison .tempo-rate { margin-top: 0; }
+.tempo-work-comparison .tempo-condition { max-width: 920px; }
+.tempo .tempo-solo-title { margin-top: 40px; font-size: 22px; font-weight: 500; }
+@media (max-width: 800px) {
+  .tempo-work-comparison .tempo-work-rates { grid-template-columns: 1fr; row-gap: 22px; }
+  .tempo-work-comparison .tempo-selected-caption { margin-bottom: 0; }
+}
+@media (max-width: 360px) {
+  .tempo-concurrency { grid-template-columns: repeat(2, 1fr); }
+}
