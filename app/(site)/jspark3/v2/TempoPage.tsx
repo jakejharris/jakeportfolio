@@ -1,6 +1,7 @@
 import React from 'react';
 import ClusterIllustration from './ClusterIllustration';
 import ProjectHeader from './ProjectHeader';
+import { ShortScreenComparison, WorkComparison } from './RecipeComparisons';
 import { metric, metricRange, release, releasePublished } from './release-data';
 
 const siteLimitations = release.limitations.filter(item => !item.startsWith('Functional code passed '));
@@ -61,6 +62,9 @@ export default function TempoPage() {
     <section className="tempo-results" id="results" aria-labelledby="results-title">
       <div className="tempo-shell">
         <div className="tempo-section-heading"><h2 id="results-title">Measured on our three Sparks.</h2><p>Tempo measurements, September 2026. Earlier test records call this build L5-P. Different workloads answer different questions.</p></div>
+        <ShortScreenComparison />
+        <WorkComparison />
+        <h3 className="tempo-solo-title">Tempo on its own</h3>
         <dl className="tempo-generation" aria-label="Single-stream generation rates">
           {(['generation_code', 'generation_prose'] as const).map(id => {
             const row = metricRange(id);
@@ -84,6 +88,11 @@ export default function TempoPage() {
           </article>
         </div>
         <p className="tempo-evidence-link"><a href="/jspark3/l5-benchmarks.html">Full benchmark report and methods ↗</a><a href="/jspark3/tempo-benchmarks.json">Release measurement data ↗</a></p>
+        <div className="tempo-recipe-credits" aria-label="Recipe credits">
+          <h3>Built on shared work.</h3>
+          <p>Tempo builds on <a href="https://github.com/MiaAI-Lab/DeepSeek-v4.1-Flash-DGX-Sparks">Mia’s three-Spark recipe ↗</a> and draws on <a href="https://github.com/tonyd2wild/DeepSeek-V4.1-Flash-vLLM-DGX-Spark">Tony’s EXL3 and vLLM recipe ↗</a>. Their work made this iteration possible.</p>
+          <p className="tempo-condition">September 2026 snapshots, not a ranking of their latest releases. <a href="/jspark3/tempo-comparison-methods.html">Measurement sources, recipe pins, and comparison limits ↗</a></p>
+        </div>
       </div>
     </section>
 
