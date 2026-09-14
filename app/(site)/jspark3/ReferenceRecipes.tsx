@@ -57,9 +57,9 @@ export default function ReferenceRecipes() {
             <SparkCount count={row.sparks} />
           </div>
           <dl className="mt-3 space-y-2.5 tabular-nums">
-            <Field label="Lane">{row.lane}</Field>
-            <Field label="Context">{row.context}</Field>
-            <Field label="Single-stream decode, tok/s">
+            <Field label="Model and software">{row.lane}</Field>
+            <Field label="Conversation limit, tokens">{row.context}</Field>
+            <Field label="One answer, tokens/s">
               {typeof row.decode === 'string' ? (
                 row.decode
               ) : (
@@ -75,7 +75,7 @@ export default function ReferenceRecipes() {
                 </span>
               )}
             </Field>
-            <Field label="Basis" muted>
+            <Field label="Test conditions" muted>
               {row.basis}
             </Field>
           </dl>

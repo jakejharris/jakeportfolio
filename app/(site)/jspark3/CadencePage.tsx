@@ -293,7 +293,7 @@ export default function JSpark3Page() {
             className="mt-8 border-t border-border pt-5"
             level={3}
             title="Published reference recipes"
-            summary="Four recipes as their authors reported them: node count, lane, context, decode and basis. Context, not a ranking."
+            summary="The authors’ reports of how their setups performed. The tests used different machines and settings, so the figures are not a ranking."
           >
             <p className="text-sm leading-relaxed text-muted-foreground">{EVIDENCE_LEDE}</p>
             <div className="mt-4">
@@ -348,7 +348,7 @@ export default function JSpark3Page() {
           id="run"
           legacyIds={["reproducibility", "js3-reproducibility"]}
           eyebrow="Run it yourself"
-          title="Get the recipe and the weights"
+          title="Get the setup software and model files"
           lede={RUN_LEDE}
         >
           <div className="mt-5 grid gap-3.5">
@@ -372,8 +372,8 @@ export default function JSpark3Page() {
           <Fold
             className="mt-8 border-t border-border pt-5"
             level={3}
-            title="It refuses to drift"
-            summary="Unpinned inputs, a changed environment, a mismatched identity or drifted bytes, and it does not start."
+            title="Checks before the server starts"
+            summary="The server will not start with the wrong files, settings, or setup records."
           >
             <p className="text-sm leading-relaxed text-muted-foreground">{REFUSE_LEDE}</p>
             <div className="mt-4 grid gap-3.5 sm:grid-cols-2">
@@ -393,14 +393,14 @@ export default function JSpark3Page() {
         <Section
           id="provenance"
           legacyIds={["js3-provenance"]}
-          eyebrow="Provenance"
-          title="Pinned inputs"
+          eyebrow="Download sources"
+          title="Model and software versions"
           lede={PROVENANCE_LEDE}
         >
           <Fold
             className="mt-5 border-t border-border pt-5"
             level={3}
-            title="What is pinned, and to what"
+            title="Exact versions and server settings"
             summary={PINNED_INPUTS.map((row) => row.label).join(', ') + '.'}
           >
           <dl className="overflow-hidden rounded-lg border border-border bg-card text-sm">
