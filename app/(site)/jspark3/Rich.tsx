@@ -12,6 +12,9 @@ export default function Rich({ parts }: { parts: ReadonlyArray<RichPart> }) {
         if (typeof part === 'string') {
           return <React.Fragment key={index}>{part}</React.Fragment>;
         }
+        if ('href' in part) {
+          return <a key={index} href={part.href} className="break-words underline underline-offset-2">{part.text}</a>;
+        }
         if ('code' in part) {
           return <Mono key={index}>{part.code}</Mono>;
         }

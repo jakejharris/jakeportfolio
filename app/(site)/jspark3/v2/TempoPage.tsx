@@ -90,8 +90,9 @@ export default function TempoPage() {
         <p className="tempo-evidence-link"><a href="/jspark3/l5-benchmarks.html">Full benchmark report and methods ↗</a><a href="/jspark3/tempo-benchmarks.json">Release measurement data ↗</a></p>
         <div className="tempo-recipe-credits" aria-label="Recipe credits">
           <h3>Built on shared work.</h3>
-          <p>Tempo builds on <a href="https://github.com/tonyd2wild/DeepSeek-V4.1-Flash-vLLM-DGX-Spark">Tony and Kai’s DeepSeek Spark serving recipe ↗</a> and bot-lab-21’s EXL3 expert checkpoint using WestWaters’ Pollard method. <a href="https://github.com/MiaAI-Lab/DeepSeek-v4.1-Flash-DGX-Sparks">Mia’s three-Spark recipe ↗</a> is the comparison baseline; its fused MoE and slot-share KV ideas informed Tempo without code reuse.</p>
-          <p className="tempo-condition">September 2026 snapshots, not a ranking of their latest releases. <a href="/jspark3/tempo-comparison-methods.html">Measurement sources, recipe pins, and comparison limits ↗</a></p>
+          <p>Tempo builds on <a href="https://github.com/tonyd2wild/DeepSeek-V4.1-Flash-vLLM-DGX-Spark">Tony and Kai’s DeepSeek Spark serving recipe ↗</a> and bot-lab-21’s model files, made smaller with WestWaters’ Pollard method (EXL3). <a href="https://github.com/MiaAI-Lab/DeepSeek-v4.1-Flash-DGX-Sparks">Mia’s three-Spark recipe ↗</a> provides a comparison. Its ideas for combining model calculations and sharing memory helped inform Tempo; Tempo does not reuse its code.</p>
+          <p>Mia’s DeepSeek recipe downloads <a href="https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash/tree/fb2764a5cf321eaa5070ca8f9e892818f477c16d">the official DeepSeek model files</a>. Tempo downloads <a href="https://huggingface.co/bot-lab-21/DeepSeek-V4.1-Flash-EXL3-3.5bpw-Pollard/tree/b60193e0609147553145d1538d935925f2763c1d">bot-lab-21’s version</a>, prepared to use less memory. These are different model downloads.</p>
+          <p className="tempo-condition">These comparisons use September 2026 versions. They do not rank the latest releases. <a href="/jspark3/tempo-comparison-methods.html">Test sources, exact software versions, and comparison limits ↗</a></p>
         </div>
       </div>
     </section>
@@ -106,7 +107,7 @@ export default function TempoPage() {
     </section>
 
     <section className="tempo-shell tempo-install" id="install" aria-labelledby="install-title">
-      <div><h2 id="install-title">Run Tempo</h2><p>Three DGX Sparks, a working RoCE fabric, and local storage for the pinned model, experts, draft, and prepared Engram files. The install guide starts with a fit check and configuration worksheet.</p></div>
+      <div><h2 id="install-title">Run Tempo</h2><p>You need three DGX Sparks, fast direct network connections between them (RoCE), and enough disk space. The install guide first checks that your machines have what they need.</p><p>Tempo downloads all its model files from <a href="https://huggingface.co/bot-lab-21/DeepSeek-V4.1-Flash-EXL3-3.5bpw-Pollard/tree/b60193e0609147553145d1538d935925f2763c1d">bot-lab-21’s DeepSeek release</a>, including a smaller helper model that helps generate answers faster. The official DeepSeek release named in our docs tells you where the model comes from; it is not another download. JSPARK3 Tempo on Hugging Face hosts the recipe, not model files.</p></div>
       <div className="tempo-install-action">{releasePublished ? <a className="tempo-button" href={release.links.install}>Install {release.identity.candidate} ↗</a> : <><p className="tempo-pending">Release candidate · publication pending</p><p>The versioned install guide and source links will open here when the release is published.</p></>}</div>
     </section>
 

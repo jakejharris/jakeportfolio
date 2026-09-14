@@ -5,7 +5,7 @@
  */
 
 /** A run of copy that may carry inline code or emphasis, kept as data so the strings stay verbatim. */
-export type RichPart = string | { code: string } | { strong: string };
+export type RichPart = string | { code: string } | { strong: string } | { text: string; href: string };
 
 export const HERO = {
   title: "JSpark3",
@@ -41,7 +41,7 @@ export const SECTIONS: ReadonlyArray<{ id: string; legacyIds: ReadonlyArray<stri
   { id: "architecture", legacyIds: ["js3-architecture"], label: "Architecture" },
   { id: "benchmarks", legacyIds: ["evidence", "js3-evidence"], label: "Benchmarks" },
   { id: "run", legacyIds: ["reproducibility", "js3-reproducibility"], label: "Run it yourself" },
-  { id: "provenance", legacyIds: ["js3-provenance"], label: "Pinned inputs" },
+  { id: "provenance", legacyIds: ["js3-provenance"], label: "Download versions" },
   { id: "licensing", legacyIds: ["js3-licensing"], label: "Licensing" },
   { id: "credits", legacyIds: ["js3-credits"], label: "Credits" },
 ];
@@ -106,7 +106,7 @@ export const BENCHMARK_FACTS_CONDITION =
   "Three Sparks, thinking off, temperature 0. Current decode figures are descriptive, not paired release effects. The repository benchmarks explain estimators, all repeats and limits.";
 
 export const EVIDENCE_LEDE =
-  "These historical v1.0.0 comparisons use recipes publicly available before JSpark3. Their numbers are author-reported; ours come from our own fleet. Prompts, instruments, and envelopes differ, and the node count is on every row, so read the table as context, not a ranking. No percentage is computed between rows.";
+  "These historical v1.0.0 comparisons use recipes publicly available before JSpark3. Their numbers are author-reported; ours come from our own fleet. The prompts, test tools, settings and machine counts differ, so these figures do not establish a ranking. We do not calculate percentage gains between rows.";
 
 /**
  * Results measured on the upstream authors' own benchmark scripts. Every value, and the
@@ -292,7 +292,7 @@ export const REFERENCE_ROWS: ReadonlyArray<ReferenceRow> = [
   {
     recipe: "FlyCockpit TP3",
     sparks: "3",
-    lane: "EXL3/TR3 4-bpw, same target revision · DFlash2 k=7 · vLLM, TP3/EP3 over a mesh",
+    lane: "EXL3/TR3 4-bpw, Mia model files by default · DFlash2 k=7 · vLLM, TP3/EP3 over a mesh",
     context: "1,000,000",
     decode:
       'structured count 69.0 / 68.5 / 71.2 · code 52.3 / 58.7 / 58.2 · "hello" 37.9 / 36.9 / 37.3',
@@ -302,7 +302,7 @@ export const REFERENCE_ROWS: ReadonlyArray<ReferenceRow> = [
   {
     recipe: "Mia TP2",
     sparks: "2",
-    lane: "EXL3/TR3 4-bpw, same target revision · DFlash2 k=7 · vLLM, TP2",
+    lane: "EXL3/TR3 4-bpw, Mia model files by default · DFlash2 k=7 · vLLM, TP2",
     context: "1,000,000",
     decode:
       "62.9 on high-accept prompts (sparkDash, single stream) · structured 65.1 / prose 27.1 (bench_decode, four streams, median of 5×400)",
@@ -323,7 +323,7 @@ export const REFERENCE_ROWS: ReadonlyArray<ReferenceRow> = [
 export const REFERENCE_SCROLL_HINT = "Scroll sideways for the full table.";
 
 export const REFERENCE_NOTE =
-  "Every row states hardware count, quantization and speculation, context, workload, and source. Sources are pinned commits, listed with full URLs on the repository's benchmarks page.";
+  "The rows record each test’s machine count, model format, helper model, conversation length, task and source. The benchmarks page links to the exact software versions. These historical test records retain their original technical labels.";
 
 /** Evidence class two: this fleet running published recipes, each with its adaptation flag. */
 export const LOCAL_RUNS_METHOD =
@@ -462,62 +462,62 @@ export const EVIDENCE_GRADE =
 /* ---------------------------------------------------------- run it --- */
 
 export const RUN_LEDE =
-  "Start with the v1.1.0 installation guide. Stage the pinned image, target and draft, build the TP3 runtime views, and configure the fabric before starting the lifecycle.";
+  "Start with the v1.1.0 installation guide. It walks you through downloading the software and model files, preparing them for three Sparks, connecting the machines, and checking that the server works.";
 
 /** The three places a visitor needs, in the order they will use them. */
 export const RUN_LINKS: ReadonlyArray<{ title: string; body: string; href: string; cta: string }> = [
   {
     title: "The recipe on GitHub",
-    body: "Clone v1.1.0, verify the checksums and copy the recipe to every rank. The README links each required installation step.",
+    body: "Download the v1.1.0 setup scripts, check that the files are complete, and copy them to each Spark. The README links every installation step.",
     href: "https://github.com/jakejharris/jspark3#readme",
     cta: "github.com/jakejharris/jspark3",
   },
   {
-    title: "The weights on Hugging Face",
-    body: "The exact target checkpoint revision, re-hosted shard for shard with the same hashes, with the model card and provenance.",
+    title: "The model files on Hugging Face",
+    body: "Brandon M. Music made this version of GLM-5.3 Flash. Mia's AI Lab hosts a copy with credit, and JSPARK3 keeps a copy of the same model version. The model files are the same, so you only need to download them once. The model cards and other repository files differ. Cadence also needs the separate DFlash2 draft, a smaller model that helps generate answers faster.",
     href: "https://huggingface.co/jakejharris/jspark3",
     cta: "huggingface.co/jakejharris/jspark3",
   },
   {
     title: "The full install",
-    body: "From Docker hosts to a verified endpoint: pinned downloads, runtime views, fabric, preflight, start, health and verification.",
+    body: "Follow the steps to install the software, download the model, connect your Sparks, and send a first request. The guide includes checks before and after starting the server.",
     href: "https://github.com/jakejharris/jspark3/blob/main/docs/INSTALL.md",
     cta: "docs/INSTALL.md",
   },
 ];
 
 export const REFUSE_LEDE =
-  "The construction is exact or the recipe does not start. The measurements are fully specified but the numbers are not guaranteed; your fleet will differ, the bytes will not. Every command has a dry run, and confirmation tokens are typed, never defaulted. It refuses on any of these:";
+  "The startup scripts check that your files and settings match the tested setup. Matching them does not guarantee the same speed on your machines. You can preview each command before running it, and commands that need confirmation require you to type it. The server will not start if these checks fail:";
 
 export const REFUSE_CARDS: ReadonlyArray<{ title: string; body: ReadonlyArray<RichPart> }> = [
   {
     title: "Inputs",
     body: [
-      "Any checkpoint revision, draft revision, image digest, or transform source that is not the pinned one.",
+      "The GLM model, DFlash2 helper model, Docker package or source code differs from the required version.",
     ],
   },
   {
     title: "Environment",
     body: [
-      "A cgroup other than 64 GiB with swap off; any ",
+      "The container must have a 64 GiB memory limit and no disk-backed swap memory. The scripts reject overrides of ",
       { code: "NCCL_PROTO" },
       ", ",
       { code: "NCCL_ALGO" },
       ", or ",
       { code: "NCCL_IB_ADDR_RANGE" },
-      " override; overlay or KDA environment drift.",
+      " and reject changes to the required software settings.",
     ],
   },
   {
     title: "Identity",
     body: [
-      "A preflight row that differs from the expected row, a preflight checksum mismatch, a missing or unbound image receipt, or an existing container with the release name.",
+      "Each Spark must pass the setup checks and have a matching record of its Docker package. Startup also stops if a container with this release’s name already exists.",
     ],
   },
   {
     title: "Bytes",
     body: [
-      "Overlay, loader-hook, and transform before/after hash drift; a missing or duplicated seam. Every rank validates every serving byte before start.",
+      "Each Spark checks that the required software changes are applied once, in the right places, and that the resulting files match the expected contents.",
     ],
   },
 ];
@@ -525,38 +525,40 @@ export const REFUSE_CARDS: ReadonlyArray<{ title: string; body: ReadonlyArray<Ri
 /* ----------------------------------------------------------- provenance --- */
 
 export const PROVENANCE_LEDE =
-  "Nothing here is a floating tag. The recipe checks each of these before it serves a token.";
+  "The setup uses fixed versions of the model and software. It checks the files before starting the server. The version links and file identifiers below let you verify your downloads.";
 
 export const PINNED_INPUTS: ReadonlyArray<{ label: string; value: ReadonlyArray<RichPart> }> = [
   {
-    label: "Target checkpoint",
+    label: "GLM model files",
     value: [
-      { code: "Mia-AiLab/GLM-5.3-Flash-EXL3-TR3-4bpw" },
-      " at revision ",
-      { code: "25a44fdbf16862a46b7cc9921142c6c81350af2f" },
-      ", itself byte-identical to ",
-      { code: "brandonmusic/GLM-5.3-Flash-tr3-4bpw" },
+      { text: "Mia-AiLab/GLM-5.3-Flash-EXL3-TR3-4bpw", href: "https://huggingface.co/Mia-AiLab/GLM-5.3-Flash-EXL3-TR3-4bpw/tree/25a44fdbf16862a46b7cc9921142c6c81350af2f" },
       " at ",
-      { code: "5ab363a8dcf6405955fd5f99671e01a1c9fb124b" },
-      ". The JSpark3 Hugging Face repository re-hosts this revision shard for shard with the same hashes; the preflight accepts either source because the bytes are identical",
+      { text: "25a44fd", href: "https://huggingface.co/Mia-AiLab/GLM-5.3-Flash-EXL3-TR3-4bpw/tree/25a44fdbf16862a46b7cc9921142c6c81350af2f" },
+      ". Its model files match Brandon M. Music's ",
+      { text: "version credited by Mia, 5ab363a8", href: "https://huggingface.co/brandonmusic/GLM-5.3-Flash-tr3-4bpw/tree/5ab363a8dcf6405955fd5f99671e01a1c9fb124b" },
+      ", and ",
+      { text: "later revision, 1ae6d70", href: "https://huggingface.co/brandonmusic/GLM-5.3-Flash-tr3-4bpw/tree/1ae6d70430a12d762917786696db06a7b4f9bbae" },
+      ". You can also use ",
+      { text: "JSPARK3's copy of this model version", href: "https://huggingface.co/jakejharris/jspark3/tree/e7c34dba923916754cfcb0bdf6c2c75a9b7ff1fc" },
+      ". Download the model once. The model cards and other repository files differ.",
     ],
   },
   {
-    label: "Draft checkpoint",
+    label: "DFlash2 helper model",
     value: [
       { code: "incoai/GLM-5.3-Flash-DFlash2" },
       " at revision ",
       { code: "dc77ff1c99eeb2df044ee3d4f0094eb033fee410" },
-      ", wide k=7; Cadence can narrow to k=3 for single-stream decode",
+      ". This smaller model helps generate answers faster. It usually suggests seven tokens (pieces of text) at a time. Cadence can use three when answering one request.",
     ],
   },
   {
-    label: "Container image",
+    label: "Docker software package",
     value: [
       { code: "ghcr.io/miaai-lab/glm-5.3-flash-2x-dgx-sparks" },
-      " at digest ",
+      " with this exact file identifier: ",
       { code: "sha256:9bb1557a4234fce63d59599e44d10747eabd742beb337eebf9e7070be8a0fd58" },
-      ", launched by digest, not redistributed",
+      ". Download this package from Mia’s registry; JSPARK3 does not distribute a copy.",
     ],
   },
   {
@@ -564,11 +566,11 @@ export const PINNED_INPUTS: ReadonlyArray<{ label: string; value: ReadonlyArray<
     value: [
       "vLLM build ",
       { code: "487ecf187" },
-      " as shipped inside the pinned image; hash-gated runtime transforms are applied at start",
+      " runs the model and answers requests. It comes with the Docker package above. At startup, the scripts apply the required software changes and verify each changed file.",
     ],
   },
   {
-    label: "Transform sources",
+    label: "Sources for software changes",
     value: [
       "FlyCockpit ",
       { code: "GLM-5.3-Flash-EXL3-3x-DGX-Sparks" },
@@ -581,9 +583,9 @@ export const PINNED_INPUTS: ReadonlyArray<{ label: string; value: ReadonlyArray<
     ],
   },
   {
-    label: "Runtime envelope",
+    label: "Server settings",
     value: [
-      "Configured context 1,000,000 tokens · 32 sequences · 8,192 batched tokens · GPU memory utilization 0.83 · FP8 KV cache · prefix caching · served as ",
+      "The settings allow up to 1,000,000 tokens of conversation and 32 requests at once; those limits are not certified capacity. Each processing step handles up to 8,192 tokens. The GPU memory setting is 0.83. It saves some working data in an 8-bit format (FP8) and can reuse calculations when prompts begin with the same text. The API model name is ",
       { code: "glm-5.3-flash" },
     ],
   },
