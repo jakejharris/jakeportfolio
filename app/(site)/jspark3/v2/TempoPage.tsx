@@ -3,6 +3,7 @@ import ClusterIllustration from './ClusterIllustration';
 import ProjectHeader from './ProjectHeader';
 import { ShortScreenComparison, WorkComparison } from './RecipeComparisons';
 import { metric, metricRange, release, releasePublished } from './release-data';
+import { TEMPO_COPY } from '../release-copy';
 
 const siteLimitations = release.limitations.filter(item => !item.startsWith('Functional code passed '));
 
@@ -40,10 +41,10 @@ export default function TempoPage() {
       <ProjectHeader />
       <header className="tempo-hero">
         <div>
-          <p className="tempo-kicker">JSPARK3 v2</p>
+          <p className="tempo-kicker">JSPARK3</p>
           <h1>Tempo</h1>
           <p className="tempo-lede">{release.identity.model}<br />on three DGX Sparks.</p>
-          <p className="tempo-intro">Our current daily driver, using EXL3 experts and vLLM with changes to prompt reuse, prefill scheduling, and Engram reads.</p>
+          <p className="tempo-intro">Our DeepSeek experiment, using EXL3 experts and vLLM with changes to prompt reuse, prefill scheduling, and Engram reads.</p>
           <nav className="tempo-actions" aria-label="Tempo resources">
             <a className="tempo-button" href={releasePublished ? release.links.install : '#install'}>Install recipe ↗</a>
             <a href="#results">Benchmarks ↓</a>
@@ -53,7 +54,7 @@ export default function TempoPage() {
         <ClusterIllustration />
       </header>
       <dl className="tempo-specs">
-        <div><dt>Release</dt><dd>{release.identity.candidate} · Experimental</dd></div>
+        <div><dt>Recipe</dt><dd>{release.identity.candidate} · Experimental</dd></div>
         <div><dt>Hardware</dt><dd>{release.identity.hardware}</dd></div>
         <div><dt>Serving</dt><dd>EXL3 experts · vLLM · TP3</dd></div>
       </dl>
@@ -108,16 +109,16 @@ export default function TempoPage() {
 
     <section className="tempo-shell tempo-install" id="install" aria-labelledby="install-title">
       <div><h2 id="install-title">Run Tempo</h2><p>You need three DGX Sparks, fast direct network connections between them (RoCE), and enough disk space. The install guide first checks that your machines have what they need.</p><p>Tempo downloads all its model files from <a href="https://huggingface.co/bot-lab-21/DeepSeek-V4.1-Flash-EXL3-3.5bpw-Pollard/tree/b60193e0609147553145d1538d935925f2763c1d">bot-lab-21’s DeepSeek release</a>, including a smaller helper model that helps generate answers faster. The official DeepSeek release named in our docs tells you where the model comes from; it is not another download. JSPARK3 Tempo on Hugging Face hosts the recipe, not model files.</p></div>
-      <div className="tempo-install-action">{releasePublished ? <a className="tempo-button" href={release.links.install}>Install {release.identity.candidate} ↗</a> : <><p className="tempo-pending">Release candidate · publication pending</p><p>The versioned install guide and source links will open here when the release is published.</p></>}</div>
+      <div className="tempo-install-action">{releasePublished ? <a className="tempo-button" href={release.links.install}>Install recipe {release.identity.candidate} ↗</a> : <><p className="tempo-pending">Release candidate · publication pending</p><p>The versioned install guide and source links will open here when the release is published.</p></>}</div>
     </section>
 
     <section className="tempo-shell tempo-notes" aria-label="Limitations and release details">
       <details open><summary>Known limitations <span aria-hidden="true">+</span></summary><ul>{siteLimitations.map(item => <li key={item}>{item}</li>)}</ul></details>
       <details id="release"><summary>Release, evidence, and credits <span aria-hidden="true">+</span></summary><div>
-        <p>{release.identity.candidate} · {release.identity.status}. JSPARK3 names our current three-Spark daily driver, chosen through internal benchmarks and use. It does not claim to win every benchmark.</p>
+        <p>Recipe {release.identity.candidate} · {release.identity.status}. Tempo is a named JSPARK3 release: our DeepSeek experiment on three Sparks. Numbered JSPARK3 releases are the main line, which runs GLM-5.3 Flash. Tempo was first published as “JSPARK3 v2”, so its recipe numbers start at v2.0.0. It does not claim to win every benchmark.</p>
         <p>DeepSeek created the model. Tony and Kai’s serving work, bot-lab-21’s EXL3 experts, and vLLM underpin this recipe. Code, weights, and drafts retain their upstream terms. This is serving engineering, with no new fine-tune or model merge.</p>
         <p>{releasePublished ? <><a href={release.links.release}>Versioned release</a> · <a href={release.links.source}>GitHub source</a> · <a href={release.links.huggingface}>Hugging Face recipe</a> · <a href={release.links.evidence}>Release evidence</a></> : 'GitHub and Hugging Face publication is pending. The Hugging Face package will contain a serving recipe; weights are downloaded separately.'}</p>
-        <p><a href="/jspark3/tempo-summary.json">Generated release summary</a> · <a href="/jspark3/glm/">Previous driver: GLM-5.3 Flash / Cadence</a></p>
+        <p><a href="/jspark3/tempo-summary.json">Generated release summary</a> · <a href="/jspark3/glm/">{TEMPO_COPY.mainLineLink}</a></p>
       </div></details>
     </section>
     <footer className="tempo-shell tempo-footer"><a href="/jspark3/">← All JSPARK3 releases</a><a href="/about/">Jake Harris ↗</a></footer>

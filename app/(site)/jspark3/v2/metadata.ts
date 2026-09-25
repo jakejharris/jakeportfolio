@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 
-export function projectMetadata(title: string, description: string, route: string, image = '/og/jspark3-tempo-sparks-v2.png'): Metadata {
+export function projectMetadata(title: string, description: string, route: string, image = '/og/jspark3-tempo-20260925.png'): Metadata {
   const url = `https://jakejh.com${route}`;
   return {
     title, description, alternates: { canonical: url },

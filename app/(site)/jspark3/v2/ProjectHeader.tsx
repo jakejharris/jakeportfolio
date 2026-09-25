@@ -12,7 +12,7 @@ export default function ProjectHeader({ hub = false }: { hub?: boolean }) {
     </a>
     <nav aria-label="Project navigation">
       {hub ? <a href="/jspark3/deepseek/">Tempo</a> : <a href="#results">Results</a>}
-      <a href="/jspark3/glm/">Cadence</a>
+      <a href="/jspark3/glm/">GLM</a>
       <a href="/about/" className="tempo-author">Jake Harris ↗</a>
     </nav>
   </header>;

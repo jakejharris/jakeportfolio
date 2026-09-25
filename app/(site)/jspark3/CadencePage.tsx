@@ -44,6 +44,7 @@ import {
   RUN_LEDE,
   RUN_LINKS,
 } from './content';
+import { GLM_COPY } from './release-copy';
 
 const DESCRIPTION =
   'JSpark3 v1.1 Cadence: GLM-5.3 Flash across three NVIDIA DGX Sparks, with a pinned recipe, measured decode and public limits.';
@@ -127,8 +128,8 @@ export default function JSpark3Page() {
   return (
     <PageLayout>
       <aside className="mb-5 border-b border-border pb-5 text-sm leading-relaxed">
-        <p><strong>JSPARK3 v1.1 — Cadence</strong> · Previous daily driver</p>
-        <p className="mt-2">GLM-5.3 Flash. This published recipe and its measurements are preserved.</p>
+        <p><strong>JSPARK3 v1.1 — Cadence</strong> · Earlier GLM release</p>
+        <p className="mt-2">GLM-5.3 Flash. This published recipe and its measurements are preserved. {GLM_COPY.label}: <a className="underline underline-offset-4" href={GLM_COPY.links[1].href}>{GLM_COPY.title}</a>.</p>
         <a className="mt-3 inline-flex min-h-11 items-center underline underline-offset-4" href="/jspark3/">All JSPARK3 releases →</a>
       </aside>
       <header className="page-enter pt-6 md:pt-10">

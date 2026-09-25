@@ -1,6 +1,6 @@
 # JSPARK3 website
 
-The current three-Spark daily driver is Tempo (DeepSeek-V4.1 Flash). Cadence (GLM-5.3 Flash) remains available as the previous release.
+Numbered JSPARK3 releases are the main line, which runs GLM-5.3 Flash. Tempo (DeepSeek-V4.1 Flash) is a named JSPARK3 release: the DeepSeek experiment. Hub and GLM-page release copy lives in `app/(site)/jspark3/release-copy.ts`; GLM release facts live in `glm-release.json` (check with `node scripts/check-glm-release.mjs`).
 
 - `/jspark3/` — project and releases.
 - `/jspark3/deepseek/` — Tempo recipe, measurements and limitations.
