@@ -4,8 +4,9 @@
 }
 .spark-hub .spark-hub-intro { padding-bottom: 3.5rem; }
 .spark-hub .section-kicker { font-size: 0.75rem; opacity: 1; color: var(--hub-muted); }
-.spark-hub-releases { scroll-margin-top: 5rem; }
-.spark-hub-list { display: grid; gap: 0.75rem; list-style: none; padding: 0; margin: 0; }
+.spark-hub .spark-hub-kicker { margin: 1.9rem 0 0.55rem; }
+.spark-hub-releases > .spark-hub-kicker:first-child { margin-top: 0; }
+.spark-hub-releases, .spark-hub-history { scroll-margin-top: 5rem; }
 .spark-hub .spark-hub-release {
   display: flex;
   flex-direction: column;
@@ -41,7 +42,48 @@
 .spark-hub-release-detail { color: var(--hub-muted); font-size: 0.875rem; line-height: 1.5; }
 .spark-hub-release-action { margin-top: 0.625rem; font-size: 0.875rem; line-height: 1.6; }
 .spark-hub-release-action > span { white-space: nowrap; }
-.spark-hub .spark-hub-release-previous { padding-block: 1.25rem; }
+.spark-hub-release-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 1.5rem;
+  margin-top: 0.15rem;
+  color: var(--hub-muted);
+  font-size: 0.875rem;
+  font-variant-numeric: tabular-nums;
+}
+.spark-hub-release-stats strong { margin-right: 0.3rem; color: hsl(var(--foreground)); font-size: 1.125rem; font-weight: 600; }
+.spark-hub .spark-hub-release-named { gap: 0.3rem; padding: 1.1rem 1.5rem; }
+.spark-hub-release-named .spark-hub-release-title { margin-top: 0.1rem; font-size: 1.25rem; letter-spacing: -0.03em; }
+.spark-hub-release-named .spark-hub-release-action { margin-top: 0.3rem; }
+/* Release history: every public release, plus one muted row for the internal builds. */
+.spark-hub-ledger { list-style: none; margin: 0; padding: 0; border-top: 1px solid hsl(var(--border)); }
+.spark-hub-ledger > li { border-bottom: 1px solid hsl(var(--border)); }
+.spark-hub-ledger-row {
+  display: grid;
+  grid-template-columns: 8.5rem 1fr auto;
+  align-items: baseline;
+  gap: 0.2rem 1rem;
+  min-height: 44px;
+  padding: 0.7rem 0;
+  color: hsl(var(--foreground));
+  font-size: 0.875rem;
+  line-height: 1.5;
+  text-decoration: none;
+}
+.spark-hub-ledger-version { font: 500 0.8125rem/1.4 var(--font-geist-mono), monospace; }
+.spark-hub-ledger-when { color: var(--hub-muted); font: 400 0.75rem/1.4 var(--font-geist-mono), monospace; font-variant-numeric: tabular-nums; text-align: right; }
+.spark-hub-ledger-pill {
+  margin-left: 0.5rem;
+  padding: 3px 6px;
+  border: 1px solid hsl(var(--border));
+  border-radius: 99px;
+  color: var(--hub-muted);
+  font: 400 0.6875rem/1 var(--font-geist-mono), monospace;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  vertical-align: 1px;
+}
+.spark-hub-ledger-internal .spark-hub-ledger-row { color: var(--hub-muted); }
 .spark-hub-note { margin: 1.5rem 0 0; max-width: 60ch; font-size: 0.875rem; line-height: 1.65; color: var(--hub-muted); }
 .spark-hub :focus-visible { outline: 2px solid hsl(var(--foreground)); outline-offset: 5px; }
 .spark-hub-skip { position: fixed; top: 0.5rem; left: 1rem; z-index: 60; padding: 0.75rem 1rem; background: hsl(var(--background)); color: hsl(var(--foreground)); transform: translateY(-200%); }
@@ -52,10 +94,14 @@
 @media (hover: hover) {
   .spark-hub .spark-hub-release:hover { background: hsl(var(--background) / 0.96); }
   .spark-hub-release:hover .spark-hub-release-action { text-decoration: underline; text-underline-offset: 4px; }
+  a.spark-hub-ledger-row:hover .spark-hub-ledger-what { text-decoration: underline; text-underline-offset: 4px; }
 }
 @media (max-width: 767px) {
   .spark-hub .spark-hub-intro { padding-bottom: 2.5rem; }
   .spark-hub .spark-hub-release { padding: 1.125rem; }
+  .spark-hub .spark-hub-release-named { padding: 1rem 1.125rem; }
+  .spark-hub-ledger-row { grid-template-columns: 1fr auto; }
+  .spark-hub-ledger-what { grid-column: 1 / -1; order: 3; }
   .spark-hub-release-meta { font-size: 0.75rem; }
   .spark-hub .hero-standfirst { font-size: 1rem; }
 }
