@@ -10,7 +10,7 @@ export function Ph({ children, block = false }: { children: React.ReactNode; blo
 
 const TOKENS = /(v1\.X(?:\.0)?|XX\.X)/;
 
-/** A copy string with its placeholder tokens (v1.X, XX.X) marked. */
+/** A copy string with its placeholder tokens marked. */
 export function Marked({ text }: { text: string }) {
   if (!IS_PLACEHOLDER) return <>{text}</>;
   return <>{text.split(TOKENS).map((part, index) => (index % 2 ? <Ph key={index}>{part}</Ph> : part))}</>;
