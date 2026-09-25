@@ -29,25 +29,30 @@ export default function HubPage() {
         <h1 className="hero-wordmark">JSPARK3</h1>
         <p className="hero-standfirst">Three Sparks. One model server.<br />{HUB_COPY.standfirst}</p>
       </header>
-      <section id="current" className="spark-hub-releases" aria-label="Releases">
-        <h2 className="section-kicker spark-hub-kicker">{HUB_COPY.glmCard.meta}</h2>
-        <TransitionLink href="/jspark3/glm/" className="pageLinkContainer pinnedLinkBorder spark-hub-release">
-          <span className="spark-hub-release-meta">{HUB_COPY.glmCard.meta} <span><Ph>{GLM_RELEASE.version}</Ph> · <Ph>{releaseDate(GLM_RELEASE.published)}</Ph></span></span>
-          <span className="spark-hub-release-title">{HUB_COPY.glmCard.title} <span aria-hidden="true">↗</span></span>
-          <span className="spark-hub-release-model">{HUB_COPY.glmCard.model}</span>
-          {HUB_STATS.length ? <span className="spark-hub-release-stats">
-            {HUB_STATS.map(({ row, caption }) => <span key={row.id}><strong><Ph>{headlineValue(row.value)}</Ph></strong> {row.unit} {caption}</span>)}
-          </span> : null}
-          <span className="spark-hub-release-detail">{HUB_COPY.glmCard.detail}</span>
-          <span className="spark-hub-release-action">{HUB_COPY.glmCard.action} <span aria-hidden="true">→</span></span>
-        </TransitionLink>
-        <h2 className="section-kicker spark-hub-kicker">{HUB_COPY.tempoCard.meta}</h2>
-        <TransitionLink href="/jspark3/deepseek/" className="pageLinkContainer spark-hub-release spark-hub-release-named">
-          <span className="spark-hub-release-meta">{HUB_COPY.tempoCard.meta} <span>{HUB_COPY.tempoCard.version} · Recipe {release.identity.candidate}</span></span>
-          <span className="spark-hub-release-title">{HUB_COPY.tempoCard.title} <span aria-hidden="true">↗</span></span>
-          <span className="spark-hub-release-detail">{release.identity.model}. {HUB_COPY.tempoCard.detail}</span>
-          <span className="spark-hub-release-action">{HUB_COPY.tempoCard.action} <span aria-hidden="true">→</span></span>
-        </TransitionLink>
+      <section id="current" className="spark-hub-releases" aria-labelledby="spark-releases-title">
+        <h2 id="spark-releases-title" className="section-kicker">{HUB_COPY.releasesTitle}</h2>
+        <ol className="spark-hub-list">
+          <li>
+            <TransitionLink href="/jspark3/glm/" className="pageLinkContainer pinnedLinkBorder spark-hub-release">
+              <span className="spark-hub-release-meta">{HUB_COPY.glmCard.meta} <span><Ph>{GLM_RELEASE.version}</Ph> · <Ph>{releaseDate(GLM_RELEASE.published)}</Ph></span></span>
+              <span className="spark-hub-release-title">{HUB_COPY.glmCard.title} <span aria-hidden="true">↗</span></span>
+              <span className="spark-hub-release-model">{HUB_COPY.glmCard.model}</span>
+              {HUB_STATS.length ? <span className="spark-hub-release-stats">
+                {HUB_STATS.map(({ row, caption }) => <span key={row.id}><strong><Ph>{headlineValue(row.value)}</Ph></strong> {row.unit} {caption}</span>)}
+              </span> : null}
+              <span className="spark-hub-release-detail">{HUB_COPY.glmCard.detail}</span>
+              <span className="spark-hub-release-action">{HUB_COPY.glmCard.action} <span aria-hidden="true">→</span></span>
+            </TransitionLink>
+          </li>
+          <li>
+            <TransitionLink href="/jspark3/deepseek/" className="pageLinkContainer spark-hub-release spark-hub-release-named">
+              <span className="spark-hub-release-meta">{HUB_COPY.tempoCard.meta} <span>{HUB_COPY.tempoCard.version} · Recipe {release.identity.candidate}</span></span>
+              <span className="spark-hub-release-title">{HUB_COPY.tempoCard.title} <span aria-hidden="true">↗</span></span>
+              <span className="spark-hub-release-detail">{release.identity.model}. {HUB_COPY.tempoCard.detail}</span>
+              <span className="spark-hub-release-action">{HUB_COPY.tempoCard.action} <span aria-hidden="true">→</span></span>
+            </TransitionLink>
+          </li>
+        </ol>
       </section>
       <section id="history" className="spark-hub-history" aria-labelledby="spark-history-title">
         <h2 id="spark-history-title" className="section-kicker spark-hub-kicker">{HUB_COPY.historyTitle}</h2>

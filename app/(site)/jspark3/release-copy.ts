@@ -106,6 +106,7 @@ export const HUB_COPY = {
     detail: 'Our DeepSeek experiment.',
     action: 'Recipe, results, and limitations',
   },
+  releasesTitle: 'Releases',
   historyTitle: 'Release history',
   internalRow: 'Internal builds, not published',
 } as const;
@@ -133,7 +134,14 @@ export const GLM_COPY = {
   whyGlmLink: 'Tempo, the DeepSeek experiment',
   numbersNote:
     'Compared with our own v1.1. Mia’s published numbers appear only where we ran her benchmark exactly as she describes it.',
-  resultsTitle: 'Measured on our three Sparks.',
+  /** The results heading. With a Mia series, it says her figures are hers, not ours. */
+  resultsTitle: SHOW_MIA ? 'Measured on our three Sparks, beside Mia’s published results.' : 'Measured on our three Sparks.',
+  mia: {
+    series: 'Mia, published',
+    source: 'Her figures are her published results for',
+    rows: 'In rows that show them, our numbers come from that same benchmark.',
+  },
+  notesLink: { title: 'Release notes and known issues', detail: 'release notes on GitHub' },
   credit: {
     text: 'Thanks to @unsaltedbutter-ai for the first community run of JSPARK3 on their own three GB10 machines, shared in PR #9.',
     handle: '@unsaltedbutter-ai',

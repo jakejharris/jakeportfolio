@@ -121,6 +121,7 @@
 .glm-table tbody th { font-weight: 500; }
 .glm-table th span, .glm-table td span { color: var(--glm-paper-muted); font-size: 12px; }
 .glm-small { font-size: 14px; color: var(--glm-paper-muted); margin-top: 16px !important; max-width: 860px; }
+.glm-small a { text-decoration: underline; }
 .glm-evidence-link { display: flex; gap: 8px 32px; flex-wrap: wrap; padding-top: 12px; font-size: 14px; }
 .glm-evidence-link a { display: inline-flex; min-height: 44px; align-items: center; text-decoration: underline; }
 

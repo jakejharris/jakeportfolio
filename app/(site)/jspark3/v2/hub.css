@@ -5,7 +5,7 @@
 .spark-hub .spark-hub-intro { padding-bottom: 3.5rem; }
 .spark-hub .section-kicker { font-size: 0.75rem; opacity: 1; color: var(--hub-muted); }
 .spark-hub .spark-hub-kicker { margin: 1.9rem 0 0.55rem; }
-.spark-hub-releases > .spark-hub-kicker:first-child { margin-top: 0; }
+.spark-hub-list { display: grid; gap: 0.75rem; list-style: none; padding: 0; margin: 0; }
 .spark-hub-releases, .spark-hub-history { scroll-margin-top: 5rem; }
 .spark-hub .spark-hub-release {
   display: flex;

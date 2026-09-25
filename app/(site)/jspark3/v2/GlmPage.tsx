@@ -14,6 +14,14 @@ const NAV = [
   { href: '#releases', label: 'History' },
 ] as const;
 
+/** Where the Mia series comes from: her benchmark, linked, and which of our rows ran it. */
+function MiaNote() {
+  const { benchmark, source } = GLM_RELEASE.mia;
+  return <p className="glm-small">
+    {GLM_COPY.numbersNote} {GLM_COPY.mia.source} {source ? <a href={source}>{benchmark} ↗</a> : benchmark}. {GLM_COPY.mia.rows}
+  </p>;
+}
+
 /** The credit line, with the handle and the pull request linked in place. */
 function Credit() {
   const { text, handle, profile, pr } = GLM_COPY.credit;
@@ -25,7 +33,7 @@ function Credit() {
 /**
  * The GLM release page: the Tempo project shell with the Spark's own palette.
  * The numbers lead; the first community run follows. Every value comes from
- * glm-release.json, so filling that file is the whole flip.
+ * glm-release.json, so filling that file updates the whole page.
  */
 export default function GlmPage() {
   const { version, name, published, links, headline } = GLM_RELEASE;
@@ -62,7 +70,7 @@ export default function GlmPage() {
           <p>{IS_PLACEHOLDER ? <Ph block>{headline.conditions}</Ph> : headline.conditions}</p>
         </div>
         <HeadlineResults />
-        {SHOW_MIA ? <p className="glm-small">{GLM_COPY.numbersNote}</p> : null}
+        {SHOW_MIA ? <MiaNote /> : null}
         {GLM_COPY.internalBuilds ? <p className="glm-small"><Marked text={GLM_COPY.internalBuilds} /></p> : null}
         <p className="glm-evidence-link"><a href={links.release}>Release notes and full results ↗</a><a href="#benchmarks">v1.1 benchmarks and comparisons ↓</a></p>
       </div>
