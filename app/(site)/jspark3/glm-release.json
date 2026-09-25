@@ -1,0 +1,28 @@
+{
+  "placeholder": true,
+  "version": "v1.X",
+  "tag": "v1.X.0",
+  "name": null,
+  "published": "2026-09-26",
+  "links": {
+    "release": "https://github.com/jakejharris/jspark3/releases/tag/v1.X.0",
+    "source": "https://github.com/jakejharris/jspark3",
+    "huggingface": "https://huggingface.co/jakejharris/jspark3"
+  },
+  "headline": {
+    "baseline": "v1.1",
+    "conditions": "PLACEHOLDER: benchmark, prompt set, output length, cache state and thinking mode, as the release notes state them.",
+    "rows": [
+      { "id": "prefill", "label": "Prefill", "concurrency": "c1", "unit": "tok/s", "value": null, "v1_1": null, "mia": null },
+      { "id": "decode_c1", "label": "Decode", "concurrency": "c1", "unit": "tok/s", "value": null, "v1_1": null, "mia": null },
+      { "id": "decode_c2", "label": "Decode", "concurrency": "c2", "unit": "tok/s", "value": null, "v1_1": null, "mia": null },
+      { "id": "decode_c4", "label": "Decode", "concurrency": "c4", "unit": "tok/s", "value": null, "v1_1": null, "mia": null },
+      { "id": "decode_c8", "label": "Decode", "concurrency": "c8", "unit": "tok/s", "value": null, "v1_1": null, "mia": null }
+    ]
+  },
+  "mia": {
+    "benchmark": null,
+    "source": null,
+    "ran_exactly_as_published": false
+  }
+}
