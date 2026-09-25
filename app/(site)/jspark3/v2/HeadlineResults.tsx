@@ -14,6 +14,8 @@ const SERIES: ReadonlyArray<{ key: SeriesKey; name: React.ReactNode; short: Reac
   { key: 'v1_1', name: 'v1.1', short: 'v1.1', className: 'glm-series-v11' },
   ...(SHOW_MIA ? [{ key: 'mia' as const, name: GLM_COPY.mia.series, short: 'Mia', className: 'glm-series-mia' }] : []),
 ];
+/** The chart's series: Mia joins only when a decode row carries her number, so the legend never names a series with no bars. */
+const DECODE_SERIES = SERIES.filter(series => series.key !== 'mia' || decode.some(row => row.mia !== null));
 
 /** A round axis end at or just above the largest value, so bars are drawn to scale from zero. */
 function axisEnd(values: number[]) {
@@ -42,18 +44,18 @@ function Figure({ row }: { row: HeadlineRow }) {
 
 /** Decode by concurrent streams: this release against v1.1 (and Mia where matched), to scale from zero. */
 function DecodeChart() {
-  const end = axisEnd(decode.flatMap(row => SERIES.map(series => row[series.key])).filter((value): value is number => value !== null));
+  const end = axisEnd(decode.flatMap(row => DECODE_SERIES.map(series => row[series.key])).filter((value): value is number => value !== null));
   const unit = decode[0].unit;
   return <figure className="glm-chart" aria-labelledby="glm-chart-title">
     <p id="glm-chart-title" className="glm-label">Decode by concurrent streams · {unit}, all streams combined</p>
     <ul className="glm-legend">
-      {SERIES.map(series => <li key={series.key} className={series.className}><i aria-hidden="true" />{series.name}</li>)}
+      {DECODE_SERIES.map(series => <li key={series.key} className={series.className}><i aria-hidden="true" />{series.name}</li>)}
       {IS_PLACEHOLDER ? <li><Ph>Placeholder bars, no data yet</Ph></li> : null}
     </ul>
     <div className="glm-groups">
       {decode.map(row => <div className="glm-group" key={row.id} data-metric-id={row.id} role="group" aria-label={`Decode, ${streams(row.concurrency)}`}>
         <p className="glm-group-label"><strong>{streams(row.concurrency)}</strong>{row.per_stream !== null ? <span>{headlineValue(row.per_stream)} {unit} per stream</span> : null}</p>
-        {SERIES.filter(series => series.key !== 'mia' || row.mia !== null).map(series => {
+        {DECODE_SERIES.filter(series => series.key !== 'mia' || row.mia !== null).map(series => {
           const value = row[series.key];
           const width = value === null ? (IS_PLACEHOLDER ? 62 : 0) : (value / end) * 100;
           return <div className={`glm-bar ${series.className}${IS_PLACEHOLDER ? ' glm-bar-placeholder' : ''}`} key={series.key}>
@@ -74,7 +76,7 @@ function NumbersTable() {
     <summary>The numbers as a table</summary>
     <div className="glm-table-scroll">
       <table>
-        <caption>Headline numbers, compared with our own v1.1. Decode above one stream is the aggregate across all streams.</caption>
+        <caption>Headline numbers, compared with our own v1.1{SHOW_MIA ? ' and with Mia’s published results' : ''}. Decode above one stream is the aggregate across all streams.</caption>
         <thead><tr>
           <th scope="col">Measure</th>
           <th scope="col"><Ph>{GLM_RELEASE.version}</Ph></th>

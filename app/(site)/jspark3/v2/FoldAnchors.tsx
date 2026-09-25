@@ -2,8 +2,14 @@
 
 import { useEffect } from 'react';
 
-/** Opens the fold that holds an anchor, and brings the anchor into view. */
-function openFoldFor(id: string) {
+/** Opens the fold that holds an anchor, and brings the anchor into view. A malformed fragment is ignored. */
+function openFoldFor(fragment: string) {
+  let id: string;
+  try {
+    id = decodeURIComponent(fragment);
+  } catch {
+    return;
+  }
   const target = id ? document.getElementById(id) : null;
   if (!target) return;
   const fold = target instanceof HTMLDetailsElement ? target : target.closest('details') ?? (target.dataset.fold ? document.getElementById(target.dataset.fold) : null);
@@ -21,11 +27,11 @@ function openFoldFor(id: string) {
  */
 export default function FoldAnchors() {
   useEffect(() => {
-    const fromHash = () => openFoldFor(decodeURIComponent(window.location.hash.slice(1)));
+    const fromHash = () => openFoldFor(window.location.hash.slice(1));
     const fromClick = (event: MouseEvent) => {
       const link = event.target instanceof Element ? event.target.closest('a[href^="#"]') : null;
       const id = link?.getAttribute('href')?.slice(1);
-      if (id) window.requestAnimationFrame(() => openFoldFor(decodeURIComponent(id)));
+      if (id) window.requestAnimationFrame(() => openFoldFor(id));
     };
     fromHash();
     window.addEventListener('hashchange', fromHash);
