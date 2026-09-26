@@ -3,23 +3,231 @@
   "version": "v1.X",
   "tag": "v1.X.0",
   "name": null,
-  "published": "2026-09-26",
+  "published": "2026-09-27",
+  "social_image": null,
+  "mode_switch": "B",
   "links": {
     "release": "https://github.com/jakejharris/jspark3/releases/tag/v1.X.0",
     "source": "https://github.com/jakejharris/jspark3",
-    "huggingface": "https://huggingface.co/jakejharris/jspark3"
+    "huggingface": "https://huggingface.co/jakejharris/jspark3",
+    "results": "https://github.com/jakejharris/jspark3/blob/v1.X.0/release/results-v1.X.0.json",
+    "numbers": "https://github.com/jakejharris/jspark3/blob/v1.X.0/release/RELEASE-NUMBERS.md"
   },
   "headline": {
     "baseline": "v1.1",
     "conditions": "PLACEHOLDER: benchmark, prompt set, output length, cache state and thinking mode, as the release notes state them.",
+    "build": "v1.X.0",
+    "missing": false,
+    "serving_starts": 1,
+    "sweeps": 2,
     "rows": [
-      { "id": "prefill", "label": "Prefill", "concurrency": "c1", "unit": "tok/s", "value": null, "v1_1": null, "mia": null },
-      { "id": "decode_c1", "label": "Decode", "concurrency": "c1", "unit": "tok/s", "value": null, "v1_1": null, "mia": null },
-      { "id": "decode_c2", "label": "Decode", "concurrency": "c2", "unit": "tok/s", "value": null, "v1_1": null, "mia": null },
-      { "id": "decode_c4", "label": "Decode", "concurrency": "c4", "unit": "tok/s", "value": null, "v1_1": null, "mia": null },
-      { "id": "decode_c8", "label": "Decode", "concurrency": "c8", "unit": "tok/s", "value": null, "v1_1": null, "mia": null }
+      {
+        "id": "prefill",
+        "label": "Prefill",
+        "concurrency": "c1",
+        "unit": "tok/s",
+        "lo": null,
+        "hi": null,
+        "lo_text": null,
+        "hi_text": null,
+        "v1_1": null,
+        "v1_1_text": null,
+        "mia": null
+      },
+      {
+        "id": "decode_c1",
+        "label": "Decode",
+        "concurrency": "c1",
+        "unit": "tok/s",
+        "lo": null,
+        "hi": null,
+        "lo_text": null,
+        "hi_text": null,
+        "v1_1": null,
+        "v1_1_text": null,
+        "mia": null
+      },
+      {
+        "id": "decode_c2",
+        "label": "Decode",
+        "concurrency": "c2",
+        "unit": "tok/s",
+        "lo": null,
+        "hi": null,
+        "lo_text": null,
+        "hi_text": null,
+        "v1_1": null,
+        "v1_1_text": null,
+        "mia": null
+      },
+      {
+        "id": "decode_c4",
+        "label": "Decode",
+        "concurrency": "c4",
+        "unit": "tok/s",
+        "lo": null,
+        "hi": null,
+        "lo_text": null,
+        "hi_text": null,
+        "v1_1": null,
+        "v1_1_text": null,
+        "mia": null
+      },
+      {
+        "id": "decode_c8",
+        "label": "Decode",
+        "concurrency": "c8",
+        "unit": "tok/s",
+        "lo": null,
+        "hi": null,
+        "lo_text": null,
+        "hi_text": null,
+        "v1_1": null,
+        "v1_1_text": null,
+        "mia": null
+      }
     ]
   },
+  "sets": [
+    {
+      "id": "base_m0_q",
+      "group": "base_m0",
+      "label": "PLACEHOLDER: base recipe, first start",
+      "build": "v1.X",
+      "mode": 0,
+      "serving_starts": 1,
+      "sweeps": 2,
+      "rows": [
+        {
+          "id": "prefill",
+          "lo": null,
+          "hi": null,
+          "lo_text": null,
+          "hi_text": null
+        },
+        {
+          "id": "decode_c1",
+          "lo": null,
+          "hi": null,
+          "lo_text": null,
+          "hi_text": null
+        },
+        {
+          "id": "decode_c2",
+          "lo": null,
+          "hi": null,
+          "lo_text": null,
+          "hi_text": null
+        },
+        {
+          "id": "decode_c4",
+          "lo": null,
+          "hi": null,
+          "lo_text": null,
+          "hi_text": null
+        },
+        {
+          "id": "decode_c8",
+          "lo": null,
+          "hi": null,
+          "lo_text": null,
+          "hi_text": null
+        }
+      ]
+    },
+    {
+      "id": "base_m0_o1",
+      "group": "base_m0",
+      "label": "PLACEHOLDER: base recipe, second start",
+      "build": "v1.X",
+      "mode": 0,
+      "serving_starts": 1,
+      "sweeps": 2,
+      "rows": [
+        {
+          "id": "prefill",
+          "lo": null,
+          "hi": null,
+          "lo_text": null,
+          "hi_text": null
+        },
+        {
+          "id": "decode_c1",
+          "lo": null,
+          "hi": null,
+          "lo_text": null,
+          "hi_text": null
+        },
+        {
+          "id": "decode_c2",
+          "lo": null,
+          "hi": null,
+          "lo_text": null,
+          "hi_text": null
+        },
+        {
+          "id": "decode_c4",
+          "lo": null,
+          "hi": null,
+          "lo_text": null,
+          "hi_text": null
+        },
+        {
+          "id": "decode_c8",
+          "lo": null,
+          "hi": null,
+          "lo_text": null,
+          "hi_text": null
+        }
+      ]
+    },
+    {
+      "id": "opt_in_m1",
+      "group": "opt_in_m1",
+      "label": "PLACEHOLDER: edited weights",
+      "build": "v1.X",
+      "mode": 1,
+      "serving_starts": 1,
+      "sweeps": 2,
+      "rows": [
+        {
+          "id": "prefill",
+          "lo": null,
+          "hi": null,
+          "lo_text": null,
+          "hi_text": null
+        },
+        {
+          "id": "decode_c1",
+          "lo": null,
+          "hi": null,
+          "lo_text": null,
+          "hi_text": null
+        },
+        {
+          "id": "decode_c2",
+          "lo": null,
+          "hi": null,
+          "lo_text": null,
+          "hi_text": null
+        },
+        {
+          "id": "decode_c4",
+          "lo": null,
+          "hi": null,
+          "lo_text": null,
+          "hi_text": null
+        },
+        {
+          "id": "decode_c8",
+          "lo": null,
+          "hi": null,
+          "lo_text": null,
+          "hi_text": null
+        }
+      ]
+    }
+  ],
   "mia": {
     "benchmark": null,
     "source": null,
