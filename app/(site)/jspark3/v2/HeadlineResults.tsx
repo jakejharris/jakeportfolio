@@ -1,21 +1,22 @@
 import React from 'react';
-import { GLM_COPY, GLM_RELEASE, IS_PLACEHOLDER, SHOW_MIA, changeFromBaseline, comparisonValue, headlineValue, streams, type HeadlineRow } from '../release-copy';
+import Band from './Band';
+import { GLM_COPY, GLM_RELEASE, HEADLINE_ROWS, IS_PLACEHOLDER, SHOW_MIA, streams, valueText, type HeadlineRow } from '../release-copy';
 import { Ph } from '../Placeholder';
 
-const rows = GLM_RELEASE.headline.rows;
-const decode = rows.filter(row => row.label === 'Decode');
-const figures = rows.filter(row => row.label !== 'Decode');
-const hasPerStream = rows.some(row => row.per_stream !== null);
+const decode = HEADLINE_ROWS.filter(row => row.label === 'Decode');
+const figures = HEADLINE_ROWS.filter(row => row.label !== 'Decode');
 
-type SeriesKey = 'value' | 'v1_1' | 'mia';
+type SeriesKey = 'now' | 'v1_1' | 'mia';
+/** Each series' band on a row: this release's measured range, or a single earlier figure. */
+const band = (row: HeadlineRow, key: SeriesKey): [number | null, number | null] =>
+  key === 'now' ? [row.lo, row.hi] : [row[key], row[key]];
+
 /** `name` labels the legend; `short` labels each bar. A Mia bar appears only on rows that carry her number. */
 const SERIES: ReadonlyArray<{ key: SeriesKey; name: React.ReactNode; short: React.ReactNode; className: string }> = [
-  { key: 'value', name: <Ph>{GLM_RELEASE.version}</Ph>, short: <Ph>{GLM_RELEASE.version}</Ph>, className: 'glm-series-now' },
-  { key: 'v1_1', name: 'v1.1', short: 'v1.1', className: 'glm-series-v11' },
-  ...(SHOW_MIA ? [{ key: 'mia' as const, name: GLM_COPY.mia.series, short: 'Mia', className: 'glm-series-mia' }] : []),
+  { key: 'now', name: <Ph>{GLM_RELEASE.version}</Ph>, short: <Ph>{GLM_RELEASE.version}</Ph>, className: 'glm-series-now' },
+  ...(IS_PLACEHOLDER || decode.some(row => row.v1_1 !== null) ? [{ key: 'v1_1' as const, name: 'v1.1', short: 'v1.1', className: 'glm-series-v11' }] : []),
+  ...(SHOW_MIA && decode.some(row => row.mia !== null) ? [{ key: 'mia' as const, name: GLM_COPY.mia.series, short: 'Mia', className: 'glm-series-mia' }] : []),
 ];
-/** The chart's series: Mia joins only when a decode row carries her number, so the legend never names a series with no bars. */
-const DECODE_SERIES = SERIES.filter(series => series.key !== 'mia' || decode.some(row => row.mia !== null));
 
 /** A round axis end at or just above the largest value, so bars are drawn to scale from zero. */
 function axisEnd(values: number[]) {
@@ -24,44 +25,45 @@ function axisEnd(values: number[]) {
   return ([1, 1.5, 2, 2.5, 3, 4, 5, 6, 8, 10].find(m => m * step >= max) ?? 10) * step;
 }
 
-function Change({ row }: { row: HeadlineRow }) {
-  const change = changeFromBaseline(row);
-  if (change) return <>{change}</>;
-  return IS_PLACEHOLDER ? <Ph>+XX%</Ph> : <>n/a</>;
-}
-
-/** A single measurement shown as a large figure, with its v1.1 comparison. */
+/** A single figure shown large as its band, with the v1.1 figure beside it. Nothing is derived from the two. */
 function Figure({ row }: { row: HeadlineRow }) {
   return <div className="glm-figure" data-metric-id={row.id}>
     <p className="glm-label">{row.label} · {streams(row.concurrency)}</p>
-    <p className="glm-big"><Ph>{headlineValue(row.value)}</Ph> <small>{row.unit}</small></p>
+    <p className="glm-big glm-big-band"><span><Band lo={row.lo} hi={row.hi} /></span> <small>{row.unit}</small></p>
     {row.v1_1 === null && !IS_PLACEHOLDER
       ? <p className="glm-vs">No v1.1 run on this benchmark.</p>
-      : <p className="glm-vs">v1.1: <Ph>{comparisonValue(row.v1_1)}</Ph> {row.unit}<br />Change: <Change row={row} /></p>}
-    {SHOW_MIA && row.mia !== null ? <p className="glm-vs">{GLM_COPY.mia.series}: {headlineValue(row.mia)} {row.unit}</p> : null}
+      : <p className="glm-vs">v1.1: <Ph>{valueText(row.v1_1)}</Ph> {row.unit}</p>}
+    {SHOW_MIA && row.mia !== null ? <p className="glm-vs">{GLM_COPY.mia.series}: {valueText(row.mia)} {row.unit}</p> : null}
   </div>;
 }
 
-/** Decode by concurrent streams: this release against v1.1 (and Mia where matched), to scale from zero. */
+/**
+ * Decode by concurrent streams, to scale from zero. This release's bar is solid to the low
+ * end of its band and lighter from there to the high end; earlier figures are single values.
+ */
 function DecodeChart() {
-  const end = axisEnd(decode.flatMap(row => DECODE_SERIES.map(series => row[series.key])).filter((value): value is number => value !== null));
+  const end = axisEnd(decode.flatMap(row => SERIES.flatMap(series => band(row, series.key))).filter((value): value is number => value !== null));
   const unit = decode[0].unit;
+  const percent = (value: number) => (value / end) * 100;
   return <figure className="glm-chart" aria-labelledby="glm-chart-title">
     <p id="glm-chart-title" className="glm-label">Decode by concurrent streams · {unit}, all streams combined</p>
     <ul className="glm-legend">
-      {DECODE_SERIES.map(series => <li key={series.key} className={series.className}><i aria-hidden="true" />{series.name}</li>)}
+      {SERIES.map(series => <li key={series.key} className={series.className}><i aria-hidden="true" />{series.name}</li>)}
+      <li className="glm-series-now glm-legend-band"><i aria-hidden="true" />{GLM_COPY.bandKey}</li>
       {IS_PLACEHOLDER ? <li><Ph>Placeholder bars, no data yet</Ph></li> : null}
     </ul>
     <div className="glm-groups">
       {decode.map(row => <div className="glm-group" key={row.id} data-metric-id={row.id} role="group" aria-label={`Decode, ${streams(row.concurrency)}`}>
-        <p className="glm-group-label"><strong>{streams(row.concurrency)}</strong>{row.per_stream !== null ? <span>{headlineValue(row.per_stream)} {unit} per stream</span> : null}</p>
-        {DECODE_SERIES.filter(series => series.key !== 'mia' || row.mia !== null).map(series => {
-          const value = row[series.key];
-          const width = value === null ? (IS_PLACEHOLDER ? 62 : 0) : (value / end) * 100;
+        <p className="glm-group-label"><strong>{streams(row.concurrency)}</strong></p>
+        {SERIES.filter(series => series.key !== 'mia' || row.mia !== null).map(series => {
+          const [lo, hi] = band(row, series.key);
+          const solid = lo === null ? (IS_PLACEHOLDER ? 56 : 0) : percent(lo);
+          const light = lo === null || hi === null ? (IS_PLACEHOLDER && series.key === 'now' ? 6 : 0) : percent(hi) - solid;
           return <div className={`glm-bar ${series.className}${IS_PLACEHOLDER ? ' glm-bar-placeholder' : ''}`} key={series.key}>
             <span className="glm-bar-name">{series.short}</span>
-            <span className="glm-bar-track" aria-hidden="true"><i style={{ width: `${width}%` }} /></span>
-            <span className="glm-bar-value"><Ph>{comparisonValue(value)}</Ph></span>
+            {/* A figure that was not measured draws no bar at all, not a stub that reads as a small value. */}
+            <span className="glm-bar-track" aria-hidden="true">{solid > 0 ? <i style={{ width: `${solid}%` }} /> : null}{light > 0 ? <b style={{ left: `${solid}%`, width: `${light}%` }} /> : null}</span>
+            <span className="glm-bar-value"><Band lo={lo} hi={hi} /></span>
           </div>;
         })}
       </div>)}
@@ -70,40 +72,11 @@ function DecodeChart() {
   </figure>;
 }
 
-/** Every headline row, for exact values and screen readers. */
-function NumbersTable() {
-  return <details className="glm-table">
-    <summary>The numbers as a table</summary>
-    <div className="glm-table-scroll">
-      <table>
-        <caption>Headline numbers, compared with our own v1.1{SHOW_MIA ? ' and with Mia’s published results' : ''}. Decode above one stream is the aggregate across all streams.</caption>
-        <thead><tr>
-          <th scope="col">Measure</th>
-          <th scope="col"><Ph>{GLM_RELEASE.version}</Ph></th>
-          {hasPerStream ? <th scope="col">Per stream</th> : null}
-          <th scope="col">v1.1</th>
-          {SHOW_MIA ? <th scope="col">{GLM_COPY.mia.series}</th> : null}
-          <th scope="col">Change</th>
-        </tr></thead>
-        <tbody>{rows.map(row => <tr key={row.id}>
-          <th scope="row">{row.label} <span>{row.concurrency}</span></th>
-          <td><Ph>{headlineValue(row.value)}</Ph> <span>{row.unit}</span></td>
-          {hasPerStream ? <td>{row.per_stream === null ? '' : headlineValue(row.per_stream)}</td> : null}
-          <td><Ph>{comparisonValue(row.v1_1)}</Ph></td>
-          {SHOW_MIA ? <td>{comparisonValue(row.mia)}</td> : null}
-          <td><Change row={row} /></td>
-        </tr>)}</tbody>
-      </table>
-    </div>
-  </details>;
-}
-
+/** The release's own figures: prefill large, decode as a chart. Every start, this one included, is in the table below. */
 export default function HeadlineResults() {
-  return <>
-    <div className={`glm-resgrid${figures.length && decode.length ? '' : ' glm-resgrid-single'}`}>
-      {figures.length ? <div className="glm-figures">{figures.map(row => <Figure key={row.id} row={row} />)}</div> : null}
-      {decode.length ? <DecodeChart /> : null}
-    </div>
-    <NumbersTable />
-  </>;
+  if (!HEADLINE_ROWS.length) return null;
+  return <div className={`glm-resgrid${figures.length && decode.length ? '' : ' glm-resgrid-single'}`}>
+    {figures.length ? <div className="glm-figures">{figures.map(row => <Figure key={row.id} row={row} />)}</div> : null}
+    {decode.length ? <DecodeChart /> : null}
+  </div>;
 }

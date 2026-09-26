@@ -51,7 +51,8 @@
   font-size: 0.875rem;
   font-variant-numeric: tabular-nums;
 }
-.spark-hub-release-stats strong { margin-right: 0.3rem; color: hsl(var(--foreground)); font-size: 1.125rem; font-weight: 600; }
+.spark-hub-release-stats strong { margin-right: 0.3rem; color: hsl(var(--foreground)); font-size: 1.125rem; font-weight: 600; white-space: nowrap; }
+.spark-hub-release-band { align-self: flex-end; font-size: 0.8125rem; }
 .spark-hub .spark-hub-release-named { gap: 0.3rem; padding: 1.1rem 1.5rem; }
 .spark-hub-release-named .spark-hub-release-title { margin-top: 0.1rem; font-size: 1.25rem; letter-spacing: -0.03em; }
 .spark-hub-release-named .spark-hub-release-action { margin-top: 0.3rem; }

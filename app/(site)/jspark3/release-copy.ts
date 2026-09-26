@@ -8,16 +8,35 @@
  */
 import glm from './glm-release.json';
 
-/** One headline measurement. `value` is the aggregate across all streams; `per_stream` is the optional mean per stream. */
+/** One headline measurement: the within-start band across the sweeps, with lo equal to hi for a single measurement. */
 export interface HeadlineRow {
   id: string;
   label: string;
   concurrency: string;
   unit: string;
-  value: number | null;
-  per_stream: number | null;
+  lo: number | null;
+  hi: number | null;
   v1_1: number | null;
   mia: number | null;
+}
+
+/** One cell of a serving start. lo and hi are both null when the start did not measure it. */
+export interface SetRow {
+  id: string;
+  lo: number | null;
+  hi: number | null;
+}
+
+/** One measured start of the server, labelled by the build it ran. Mode 0 is stock weights, mode 1 edited weights. */
+export interface ServingSet {
+  id: string;
+  group: string;
+  label: string;
+  build: string;
+  mode: number;
+  serving_starts: number;
+  sweeps: number;
+  rows: SetRow[];
 }
 
 export interface GlmRelease {
@@ -27,8 +46,10 @@ export interface GlmRelease {
   name: string | null;
   published: string;
   social_image: string | null;
-  links: { release: string; source: string; huggingface: string };
-  headline: { baseline: string; conditions: string; rows: HeadlineRow[] };
+  mode_switch: string;
+  links: { release: string; source: string; huggingface: string; results: string; numbers: string };
+  headline: { baseline: string; conditions: string; missing: boolean; serving_starts: number; sweeps: number; rows: HeadlineRow[] };
+  sets: ServingSet[];
   mia: { benchmark: string | null; source: string | null; ran_exactly_as_published: boolean };
 }
 
@@ -36,6 +57,9 @@ export const GLM_RELEASE: GlmRelease = glm;
 
 /** True until the release facts are filled in. Pages mark every unfilled value while it holds. */
 export const IS_PLACEHOLDER = GLM_RELEASE.placeholder;
+
+/** The release's own stock-weight rows, or none when its final start is not in the numbers. */
+export const HEADLINE_ROWS = GLM_RELEASE.headline.missing ? [] : GLM_RELEASE.headline.rows;
 
 /** "Sep 26, 2026" from "2026-09-26". */
 export function releaseDate(iso: string, year = true) {
@@ -55,25 +79,43 @@ function internalBuilds(version: string) {
 
 export const INTERNAL_BUILDS = internalBuilds(glm.version);
 
-/** A headline value, or a visible placeholder until the release numbers are filled in. */
-export function headlineValue(value: number | null) {
-  return value === null ? 'XX.X' : value.toLocaleString('en-US', { maximumFractionDigits: 2 });
+/**
+ * A measured value with every digit it was written with, plus a thousands separator; nothing is rounded.
+ * null is a visible placeholder before the fill and "n/a" (not measured) after it.
+ */
+export function valueText(value: number | null) {
+  if (value === null) return IS_PLACEHOLDER ? 'XX.X' : 'n/a';
+  const [whole, fraction] = String(value).split('.');
+  return `${whole.replace(/\B(?=(\d{3})+$)/g, ',')}${fraction ? `.${fraction}` : ''}`;
 }
 
-/** A comparison value (v1.1 or Mia). null is a placeholder before the fill and "no matched run" after it. */
-export function comparisonValue(value: number | null) {
-  return value === null && !IS_PLACEHOLDER ? 'n/a' : headlineValue(value);
+/** The five cells every serving start reports, in page order. glm-release.json uses the same ids. */
+export const METRICS = [
+  { id: 'prefill', label: 'Prefill', concurrency: 'c1' },
+  { id: 'decode_c1', label: 'Decode', concurrency: 'c1' },
+  { id: 'decode_c2', label: 'Decode', concurrency: 'c2' },
+  { id: 'decode_c4', label: 'Decode', concurrency: 'c4' },
+  { id: 'decode_c8', label: 'Decode', concurrency: 'c8' },
+] as const;
+
+const WORDS = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten'];
+const counted = (count: number, noun: string) => `${WORDS[count] ?? count} ${noun}${count === 1 ? '' : 's'}`;
+
+/** "one serving start, two sweeps". */
+export function startsAndSweeps({ serving_starts, sweeps }: { serving_starts: number; sweeps: number }) {
+  return `${counted(serving_starts, 'serving start')}, ${counted(sweeps, 'sweep')}`;
 }
 
-/** The change from v1.1, or null when either side is missing. */
-export function changeFromBaseline(row: HeadlineRow) {
-  if (row.value === null || row.v1_1 === null || row.v1_1 === 0) return null;
-  const change = ((row.value - row.v1_1) / row.v1_1) * 100;
-  return `${change >= 0 ? '+' : '−'}${Math.abs(change).toFixed(1)}%`;
+/** "v1.7.4 · stock weights · one serving start, two sweeps". */
+export function setCaption(set: { build: string; mode: number; serving_starts: number; sweeps: number }) {
+  return `${set.build} · ${set.mode === 0 ? 'stock weights' : 'edited weights, opt-in'} · ${startsAndSweeps(set)}`;
 }
 
-/** Mia's column appears only where we ran her benchmark exactly as she describes it. */
-export const SHOW_MIA = glm.mia.ran_exactly_as_published && GLM_RELEASE.headline.rows.some(row => row.mia !== null);
+/** Mia's series appears only where we ran her benchmark exactly as she describes it. */
+export const SHOW_MIA = glm.mia.ran_exactly_as_published && HEADLINE_ROWS.some(row => row.mia !== null);
+
+/** The v1.1 comparison shows while it is a placeholder, and after the fill only if a row carries a v1.1 figure. */
+export const SHOW_V1_1 = IS_PLACEHOLDER || HEADLINE_ROWS.some(row => row.v1_1 !== null);
 
 /** "one stream" for c1, "4 streams" for c4. */
 export function streams(concurrency: string) {
@@ -118,6 +160,17 @@ export const RELEASE_HISTORY = [
   { version: 'v1.0', what: 'GLM-5.3 Flash', when: 'Sep 2', href: 'https://github.com/jakejharris/jspark3/releases/tag/v1.0.0' },
 ] as const;
 
+const MODE_SWITCH = {
+  A: 'Experimental runtime switch. The whole service switches between stock and edited weights after admission closes and requests drain, with a receipt for every switch. It is global and serialized, not per request, and this release makes no latency or capacity claim for it.',
+  B: 'Choose stock or edited behavior before launch. Changing modes currently requires a service restart and recomputes conversation prefixes.',
+} as const;
+
+/** The groups of the serving-start table, in order. A set's group always matches its mode. */
+export const SET_GROUPS = [
+  { group: 'base_m0', title: 'Stock weights (default)' },
+  { group: 'opt_in_m1', title: 'Edited weights (opt-in)' },
+] as const;
+
 export const GLM_COPY = {
   title: `JSPARK3 ${glm.version}`,
   metaDescription: `JSPARK3 ${glm.version}: GLM-5.3 Flash across three NVIDIA DGX Sparks, with stock weights by default, a pinned recipe, and measured results.`,
@@ -128,20 +181,35 @@ export const GLM_COPY = {
     ? `${INTERNAL_BUILDS.last ? `${INTERNAL_BUILDS.first} through ${INTERNAL_BUILDS.last} were internal builds` : `${INTERNAL_BUILDS.first} was an internal build`}, so the public numbers go from v1.1 to ${glm.version}.`
     : null,
   weights: 'The default install uses the stock GLM-5.3 Flash weights. Abliteration is an explicit opt-in.',
+  /** How modes change in this release, chosen by mode_switch. Neither story makes a speed claim. */
+  modeSwitch: glm.mode_switch === 'A' || glm.mode_switch === 'B' ? MODE_SWITCH[glm.mode_switch] : null,
   whyGlmTitle: 'We tried DeepSeek, measured it, and came back.',
   whyGlm:
     'Tempo was my DeepSeek experiment, and I measured it seriously. Its tok/s held up, but it overthinks, and time to finish a task is what I actually feel. GLM-5.3 Flash is better at agent and coding work, and better in almost every other way I use it, so the numbered line runs GLM again.',
   whyGlmLink: 'Tempo, the DeepSeek experiment',
-  numbersNote:
-    'Compared with our own v1.1. Mia’s published numbers appear only where we ran her benchmark exactly as she describes it.',
-  /** The results heading. With a Mia series, it says her figures are hers, not ours. */
-  resultsTitle: SHOW_MIA ? 'Measured on our three Sparks, beside Mia’s published results.' : 'Measured on our three Sparks.',
-  mia: {
-    series: 'Mia, published',
-    source: 'Her figures are her published results for',
-    rows: 'In rows that show them, our numbers come from that same benchmark.',
+  numbersNote: 'Compared with our own v1.1.',
+  resultsTitle: 'Measured on our three Sparks.',
+  /** Under the results heading: what one headline figure is. */
+  bandLine: `${glm.version} with stock weights: ${startsAndSweeps(glm.headline)}. Each figure is the range across those sweeps.`,
+  /** In place of the band line when the release's own start is not in the numbers. No base start is promoted. */
+  headlineMissing: `No measured stock-weight start of ${glm.version} is in this release’s numbers. The stock-weight figures below come from the base recipe, labelled by build.`,
+  /** The chart key for the lighter part of a bar. */
+  bandKey: 'Range across sweeps',
+  sets: {
+    title: 'Every serving start we measured',
+    intro: 'Each row is one start of the server, labelled by build, with the range across its sweeps. Every start we measured is listed.',
+    column: 'Serving start',
+    caption: 'All figures in tok/s. Decode above one stream is the aggregate across all streams.',
+    thisRelease: `${glm.version}, this release`,
+    earlier: 'Earlier release',
+    unscaled: 'Edited-weight rows are measured as they are and never scaled to stand in for stock weights.',
   },
+  mia: { series: 'Mia, published' },
   notesLink: { title: 'Release notes and known issues', detail: 'release notes on GitHub' },
+  resultsLinks: [
+    { label: 'Results file ↗', href: glm.links.results },
+    { label: 'Every number, with how it was measured ↗', href: glm.links.numbers },
+  ],
   credit: {
     text: 'Thanks to @unsaltedbutter-ai for the first community run of JSPARK3 on their own three GB10 machines, shared in PR #9.',
     handle: '@unsaltedbutter-ai',

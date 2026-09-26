@@ -5,7 +5,8 @@ import FoldAnchors from './FoldAnchors';
 import GlmArchive from './GlmArchive';
 import HeadlineResults from './HeadlineResults';
 import ProjectHeader from './ProjectHeader';
-import { GLM_COPY, GLM_RELEASE, IS_PLACEHOLDER, LABELS, SHOW_MIA, releaseDate } from '../release-copy';
+import ServingStarts from './ServingStarts';
+import { GLM_COPY, GLM_RELEASE, IS_PLACEHOLDER, LABELS, SHOW_MIA, SHOW_V1_1, releaseDate } from '../release-copy';
 import { Marked, Ph } from '../Placeholder';
 
 const NAV = [
@@ -14,12 +15,10 @@ const NAV = [
   { href: '#releases', label: 'History' },
 ] as const;
 
-/** Where the Mia series comes from: her benchmark, linked, and which of our rows ran it. */
+/** The Mia series' label and her benchmark, linked. Nothing more is said about her. */
 function MiaNote() {
   const { benchmark, source } = GLM_RELEASE.mia;
-  return <p className="glm-small">
-    {GLM_COPY.numbersNote} {GLM_COPY.mia.source} {source ? <a href={source}>{benchmark} ↗</a> : benchmark}. {GLM_COPY.mia.rows}
-  </p>;
+  return <p className="glm-small">{GLM_COPY.mia.series}: {source ? <a href={source}>{benchmark} ↗</a> : benchmark}</p>;
 }
 
 /** The credit line, with the handle and the pull request linked in place. */
@@ -67,12 +66,20 @@ export default function GlmPage() {
       <div className="glm-shell">
         <div className="glm-section-heading">
           <h2 id="results-title">{GLM_COPY.resultsTitle}</h2>
+          {headline.missing
+            ? <p className="glm-band-line" data-headline="missing"><Marked text={GLM_COPY.headlineMissing} /></p>
+            : <p className="glm-band-line"><Marked text={GLM_COPY.bandLine} />{SHOW_V1_1 ? ` ${GLM_COPY.numbersNote}` : null}</p>}
           <p>{IS_PLACEHOLDER ? <Ph block>{headline.conditions}</Ph> : headline.conditions}</p>
         </div>
         <HeadlineResults />
+        <ServingStarts />
         {SHOW_MIA ? <MiaNote /> : null}
         {GLM_COPY.internalBuilds ? <p className="glm-small"><Marked text={GLM_COPY.internalBuilds} /></p> : null}
-        <p className="glm-evidence-link"><a href={links.release}>Release notes and full results ↗</a><a href="#benchmarks">v1.1 benchmarks and comparisons ↓</a></p>
+        <p className="glm-evidence-link">
+          <a href={links.release}>Release notes and full results ↗</a>
+          {GLM_COPY.resultsLinks.map(link => <a key={link.href} href={link.href}>{link.label}</a>)}
+          <a href="#benchmarks">v1.1 benchmarks and comparisons ↓</a>
+        </p>
       </div>
     </section>
 
@@ -98,6 +105,7 @@ export default function GlmPage() {
         <h2 id="install-title">Run <Ph>{version}</Ph></h2>
         <p>{GLM_COPY.install.body}</p>
         <p>{GLM_COPY.weights}</p>
+        {GLM_COPY.modeSwitch ? <p data-mode-switch={GLM_RELEASE.mode_switch}>{GLM_COPY.modeSwitch}</p> : null}
       </div>
       <ul className="glm-runlinks">
         <li><a href={links.source}><span>The recipe on GitHub</span><span>jakejharris/jspark3</span></a></li>
