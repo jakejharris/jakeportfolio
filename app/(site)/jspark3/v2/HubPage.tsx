@@ -4,17 +4,17 @@ import PixelFluidBackground from '../../../components/PixelFluidBackground';
 import TransitionLink from '../../../components/TransitionLink';
 import Band from './Band';
 import { release } from './release-data';
-import { GLM_RELEASE, HEADLINE_ROWS, HUB_COPY, INTERNAL_BUILDS, RELEASE_HISTORY, releaseDate, startsAndSweeps } from '../release-copy';
+import { GLM_RELEASE, HEADLINE_ROWS, HUB_COPY, INTERNAL_BUILDS, IS_PLACEHOLDER, RELEASE, RELEASE_HISTORY, releaseDate, startsAndSweeps } from '../release-copy';
 import { Ph } from '../Placeholder';
 
 /**
  * The card's two bands: prefill, and decode for one stream, from the release's own start.
- * A row missing from the release is left out, and with no measured start of the release the card shows none.
+ * A figure the release's numbers leave out is skipped, and with no measured start of the release the card shows none.
  */
 const HUB_STATS = [
   { row: HEADLINE_ROWS.find(row => row.label === 'Prefill'), caption: 'prefill' },
   { row: HEADLINE_ROWS.find(row => row.label === 'Decode' && row.concurrency === 'c1'), caption: 'decode, one stream' },
-].flatMap(({ row, caption }) => (row ? [{ row, caption }] : []));
+].flatMap(({ row, caption }) => (row && (IS_PLACEHOLDER || row.lo_text !== null) ? [{ row, caption }] : []));
 
 function LedgerRow({ href, children }: { href: string; children: React.ReactNode }) {
   return href.startsWith('/')
@@ -36,11 +36,11 @@ export default function HubPage() {
         <ol className="spark-hub-list">
           <li>
             <TransitionLink href="/jspark3/glm/" className="pageLinkContainer pinnedLinkBorder spark-hub-release">
-              <span className="spark-hub-release-meta">{`${HUB_COPY.glmCard.meta} `}<span><Ph>{GLM_RELEASE.version}</Ph> · <Ph>{releaseDate(GLM_RELEASE.published)}</Ph></span></span>
+              <span className="spark-hub-release-meta">{`${HUB_COPY.glmCard.meta} `}<span><Ph>{RELEASE}</Ph> · <Ph>{releaseDate(GLM_RELEASE.published)}</Ph></span></span>
               <span className="spark-hub-release-title">{HUB_COPY.glmCard.title} <span aria-hidden="true">↗</span></span>
               <span className="spark-hub-release-model">{HUB_COPY.glmCard.model}</span>
               {HUB_STATS.length ? <span className="spark-hub-release-stats">
-                {HUB_STATS.map(({ row, caption }) => <span key={row.id}><strong><Band lo={row.lo} hi={row.hi} /></strong> {row.unit} {caption}</span>)}
+                {HUB_STATS.map(({ row, caption }) => <span key={row.id}><strong><Band lo={row.lo_text} hi={row.hi_text} /></strong> {row.unit} {caption}</span>)}
                 <span className="spark-hub-release-band">{startsAndSweeps(GLM_RELEASE.headline)}</span>
               </span> : null}
               <span className="spark-hub-release-detail">{HUB_COPY.glmCard.detail}</span>
@@ -62,7 +62,7 @@ export default function HubPage() {
         <ol className="spark-hub-ledger">
           <li>
             <LedgerRow href="/jspark3/glm/">
-              <span className="spark-hub-ledger-version"><Ph>{GLM_RELEASE.version}</Ph></span>
+              <span className="spark-hub-ledger-version"><Ph>{RELEASE}</Ph></span>
               <span className="spark-hub-ledger-what">{GLM_RELEASE.name ? `${GLM_RELEASE.name}, GLM-5.3 Flash` : 'GLM-5.3 Flash'}<span className="spark-hub-ledger-pill">Latest</span></span>
               <span className="spark-hub-ledger-when"><Ph>{releaseDate(GLM_RELEASE.published, false)}</Ph></span>
             </LedgerRow>

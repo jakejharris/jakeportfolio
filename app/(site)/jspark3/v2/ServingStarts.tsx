@@ -3,19 +3,19 @@ import Band from './Band';
 import { GLM_COPY, GLM_RELEASE, HEADLINE_ROWS, IS_PLACEHOLDER, METRICS, SET_GROUPS, setCaption } from '../release-copy';
 import { Marked, Ph } from '../Placeholder';
 
-type Cell = { id: string; lo: number | null; hi: number | null };
+type Cell = { id: string; lo_text: string | null; hi_text: string | null };
 type Start = { key: string; caption: string; label: string; cells: Cell[]; current?: boolean };
 
-const { version, headline, sets } = GLM_RELEASE;
+const { headline, sets } = GLM_RELEASE;
 
-/** The release's own start leads the stock group. When it is missing, no other start takes its place. */
+/** The release's own start leads the stock group, captioned with its build. When it is missing, no other start takes its place. */
 const current: Start[] = HEADLINE_ROWS.length
-  ? [{ key: 'current', caption: setCaption({ build: version, mode: 0, ...headline }), label: GLM_COPY.sets.thisRelease, cells: HEADLINE_ROWS, current: true }]
+  ? [{ key: 'current', caption: setCaption({ ...headline, mode: 0 }), label: GLM_COPY.sets.thisRelease, cells: HEADLINE_ROWS, current: true }]
   : [];
 
 /** Our earlier release's figures, one per cell, where the release notes carry them. */
 const earlier: Start[] = HEADLINE_ROWS.some(row => row.v1_1 !== null)
-  ? [{ key: 'v1_1', caption: '', label: headline.baseline, cells: HEADLINE_ROWS.map(row => ({ id: row.id, lo: row.v1_1, hi: row.v1_1 })) }]
+  ? [{ key: 'v1_1', caption: '', label: headline.baseline, cells: HEADLINE_ROWS.map(row => ({ id: row.id, lo_text: row.v1_1_text, hi_text: row.v1_1_text })) }]
   : [];
 
 const GROUPS: { group: string; title: string; starts: Start[] }[] = [
@@ -56,7 +56,7 @@ export default function ServingStarts() {
           </th>
           {METRICS.map(metric => {
             const cell = start.cells.find(row => row.id === metric.id);
-            return <td role="cell" key={metric.id} data-label={heading(metric)}><Band lo={cell?.lo ?? null} hi={cell?.hi ?? null} /></td>;
+            return <td role="cell" key={metric.id} data-label={heading(metric)}><Band lo={cell?.lo_text ?? null} hi={cell?.hi_text ?? null} /></td>;
           })}
         </tr>)}
       </tbody>)}

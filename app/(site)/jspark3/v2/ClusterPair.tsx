@@ -1,5 +1,5 @@
 import React from 'react';
-import { GLM_RELEASE } from '../release-copy';
+import { RELEASE } from '../release-copy';
 import { Ph } from '../Placeholder';
 
 function Box({ x, y, own }: { x: number; y: number; own: boolean }) {
@@ -35,7 +35,7 @@ export default function ClusterPair() {
       <g stroke="#ecebe6" strokeDasharray="2 4" strokeLinecap="round"><line x1="190" y1="100" x2="212" y2="100" /><line x1="248" y1="100" x2="270" y2="100" /></g>
     </svg>
     <figcaption>
-      <span><strong>Our three DGX Sparks</strong>runs <Ph>{GLM_RELEASE.version}</Ph></span>
+      <span><strong>Our three DGX Sparks</strong>runs <Ph>{RELEASE}</Ph></span>
       <span><strong>Their three GB10 machines</strong>ran v1.1 with one added patch</span>
     </figcaption>
   </figure>;

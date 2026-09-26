@@ -37,7 +37,7 @@ import {
   RUN_LEDE,
   RUN_LINKS,
 } from '../content';
-import { GLM_COPY, GLM_RELEASE } from '../release-copy';
+import { GLM_COPY, GLM_RELEASE, RELEASE } from '../release-copy';
 import { Ph } from '../Placeholder';
 
 /*
@@ -105,7 +105,7 @@ export default function GlmArchive() {
     <section className="glm-shell glm-notes" aria-labelledby="glm-notes-title">
       <h2 id="glm-notes-title" className="glm-sr-only">Release details and history</h2>
       <a className="glm-notes-link" href={GLM_RELEASE.links.release}>
-        <span>{GLM_COPY.notesLink.title}<small><Ph>{GLM_RELEASE.version}</Ph> {GLM_COPY.notesLink.detail}</small></span>
+        <span>{GLM_COPY.notesLink.title}<small><Ph>{RELEASE}</Ph> {GLM_COPY.notesLink.detail}</small></span>
         <span aria-hidden="true">↗</span>
       </a>
       <p className="glm-notes-label">From the v1.1 page, kept as published</p>

@@ -6,7 +6,7 @@ import GlmArchive from './GlmArchive';
 import HeadlineResults from './HeadlineResults';
 import ProjectHeader from './ProjectHeader';
 import ServingStarts from './ServingStarts';
-import { GLM_COPY, GLM_RELEASE, IS_PLACEHOLDER, LABELS, SHOW_MIA, SHOW_V1_1, releaseDate } from '../release-copy';
+import { GLM_COPY, GLM_RELEASE, IS_PLACEHOLDER, LABELS, RELEASE, SHOW_MIA, SHOW_V1_1, releaseDate } from '../release-copy';
 import { Marked, Ph } from '../Placeholder';
 
 const NAV = [
@@ -35,7 +35,7 @@ function Credit() {
  * glm-release.json, so filling that file updates the whole page.
  */
 export default function GlmPage() {
-  const { version, name, published, links, headline } = GLM_RELEASE;
+  const { name, published, links, headline } = GLM_RELEASE;
   return <div className="glm" id="glm-top">
     <a className="glm-skip" href="#results">Skip to results</a>
     <FoldAnchors />
@@ -43,12 +43,12 @@ export default function GlmPage() {
       <ProjectHeader prefix="glm" nav={NAV} />
       <header className="glm-hero">
         <div>
-          <p className="glm-kicker">JSPARK3{name ? <> <Ph>{version}</Ph></> : null} · {LABELS.latest}</p>
-          <h1><Ph>{name ?? version}</Ph></h1>
+          <p className="glm-kicker">JSPARK3{name ? <> <Ph>{RELEASE}</Ph></> : null} · {LABELS.latest}</p>
+          <h1><Ph>{name ?? RELEASE}</Ph></h1>
           <p className="glm-lede">GLM-5.3 Flash<br />on three DGX Sparks.</p>
           <p className="glm-intro">{GLM_COPY.intro}</p>
           <nav className="glm-actions" aria-label="Release resources">
-            <a className="glm-button" href={GLM_COPY.install.guide}>Install <Ph>{version}</Ph> ↗</a>
+            <a className="glm-button" href={GLM_COPY.install.guide}>Install <Ph>{RELEASE}</Ph> ↗</a>
             <a href="#results">Results ↓</a>
             <a href={links.release}>Release notes ↗</a>
           </nav>
@@ -56,7 +56,7 @@ export default function GlmPage() {
         <ClusterIllustration />
       </header>
       <dl className="glm-specs">
-        <div><dt>Release</dt><dd><Ph>{version}</Ph> · <Ph>{releaseDate(published)}</Ph></dd></div>
+        <div><dt>Release</dt><dd><Ph>{RELEASE}</Ph> · <Ph>{releaseDate(published)}</Ph></dd></div>
         <div><dt>Weights</dt><dd>Stock GLM-5.3 Flash · abliteration is opt-in</dd></div>
         <div><dt>Hardware</dt><dd>Three DGX Sparks · RoCE · one endpoint</dd></div>
       </dl>
@@ -102,7 +102,7 @@ export default function GlmPage() {
 
     <section className="glm-shell glm-install" id="install" aria-labelledby="install-title">
       <div>
-        <h2 id="install-title">Run <Ph>{version}</Ph></h2>
+        <h2 id="install-title">Run <Ph>{RELEASE}</Ph></h2>
         <p>{GLM_COPY.install.body}</p>
         <p>{GLM_COPY.weights}</p>
         {GLM_COPY.modeSwitch ? <p data-mode-switch={GLM_RELEASE.mode_switch}>{GLM_COPY.modeSwitch}</p> : null}

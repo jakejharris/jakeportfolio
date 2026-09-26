@@ -45,6 +45,10 @@ const missing = glm => {
   glm.headline.rows = [];
   glm.mode_switch = 'A';
 };
+/** The release's numbers leave out its prefill: the row stays, with its band and texts null. */
+const prefillOmitted = glm => {
+  Object.assign(row(glm.headline.rows, 'prefill'), { lo: null, hi: null, lo_text: null, hi_text: null });
+};
 
 test('accepts the synthetic fixture', () => {
   const result = check(fixture);
@@ -56,6 +60,23 @@ test('accepts the fixture with the headline missing', () => {
   assert.equal(result.status, 0, result.stderr);
 });
 
+test('accepts the fixture with the headline prefill left out', () => {
+  const result = check(edited(prefillOmitted));
+  assert.equal(result.status, 0, result.stderr);
+  assert.deepEqual(JSON.parse(result.stdout).headline_omitted, ['prefill']);
+});
+
+test('accepts a v1.x.5 tag, whose version drops the patch', () => {
+  const result = check(edited(glm => {
+    const tag = 'v1.99.5';
+    glm.tag = tag;
+    glm.headline.build = tag;
+    for (const key of Object.keys(glm.links)) glm.links[key] = glm.links[key].replaceAll('v1.99.0', tag);
+  }));
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(JSON.parse(result.stdout).version, 'v1.99');
+});
+
 /** [what breaks, the edit, the refusal it must produce] */
 const CONTROLS = [
   ['placeholder is true', glm => { glm.placeholder = true; }, /placeholder is still true/],
@@ -65,6 +86,12 @@ const CONTROLS = [
   ['tag and version disagree', glm => { glm.tag = 'v1.98.0'; }, /tag and version disagree/],
   ['a malformed release date', glm => { glm.published = '27 Sep'; }, /published must look like/],
   ['a share card that does not exist', glm => { glm.social_image = '/og/jspark3-glm-none.png'; }, /does not exist/],
+  ['a share card for another release', glm => { glm.social_image = '/og/jspark3-hub-v1.png'; }, /social_image must be \/og\/jspark3-glm-v1\.99\.png/],
+  ['a release name with a lane id', glm => { glm.name = 'Q9'; }, /name has a boot or lane id: "Q9"/],
+  ['an empty release name', glm => { glm.name = ''; }, /name must be non-empty text/],
+  ['headline build missing', glm => { delete glm.headline.build; }, /headline\.build must be the tag v1\.99\.0/],
+  ['headline build is the version', glm => { glm.headline.build = 'v1.99'; }, /headline\.build must be the tag/],
+  ['headline build is another patch', glm => { glm.headline.build = 'v1.99.4'; }, /headline\.build must be the tag/],
   ['release link for another tag', glm => { glm.links.release = 'https://github.com/jakejharris/jspark3/releases/tag/v1.98.0'; }, /links\.release must be/],
   ['no results link', glm => { delete glm.links.results; }, /links\.results must be/],
   ['results link on main, not the tag', glm => { glm.links.results = 'https://github.com/jakejharris/jspark3/blob/main/release/results-v1.99.0.json'; }, /links\.results must be/],
@@ -82,6 +109,20 @@ const CONTROLS = [
   ['headline rows reordered', glm => { glm.headline.rows.reverse(); }, /in that order/],
   ['headline unit changed', glm => { glm.headline.rows[0].unit = 'ms'; }, /label, concurrency and unit/],
   ['headline lo null', glm => { row(glm.headline.rows, 'decode_c1').lo = null; }, /lo and hi must both be numbers$/],
+  ['headline decode left out like a prefill', glm => { Object.assign(row(glm.headline.rows, 'decode_c1'), { lo: null, hi: null, lo_text: null, hi_text: null }); }, /headline decode_c1: lo and hi must both be numbers$/],
+  ['headline prefill half left out', glm => { prefillOmitted(glm); row(glm.headline.rows, 'prefill').hi = 2222.2; }, /headline prefill: lo and hi must both be numbers, or both null/],
+  ['headline prefill left out but its text kept', glm => { prefillOmitted(glm); row(glm.headline.rows, 'prefill').lo_text = '1111.1'; }, /headline prefill: lo_text must be null, since its number is/],
+  ['headline lo_text missing', glm => { delete row(glm.headline.rows, 'decode_c1').lo_text; }, /headline decode_c1: lo_text must be the figure as written/],
+  ['headline hi_text as a number', glm => { row(glm.headline.rows, 'decode_c2').hi_text = 44.4; }, /headline decode_c2: hi_text must be the figure as written/],
+  ['headline text with a separator', glm => { row(glm.headline.rows, 'prefill').lo_text = '1,111.1'; }, /headline prefill: lo_text must be the figure as written/],
+  ['headline text with an exponent', glm => { row(glm.headline.rows, 'decode_c4').lo_text = '5.55e1'; }, /headline decode_c4: lo_text must be the figure as written/],
+  ['headline text with a sign', glm => { row(glm.headline.rows, 'decode_c4').hi_text = '+66.6'; }, /headline decode_c4: hi_text must be the figure as written/],
+  ['headline text with a trailing point', glm => { row(glm.headline.rows, 'decode_c8').hi_text = '88.'; }, /headline decode_c8: hi_text must be the figure as written/],
+  ['headline text that disagrees with its number', glm => { row(glm.headline.rows, 'decode_c8').lo_text = '77.8'; }, /headline decode_c8: lo_text "77\.8" does not equal 77\.7/],
+  ['headline text rounded', glm => { row(glm.headline.rows, 'prefill').hi_text = '2222'; }, /headline prefill: hi_text "2222" does not equal 2222\.2/],
+  ['v1_1_text missing', glm => { delete row(glm.headline.rows, 'decode_c1').v1_1_text; }, /headline decode_c1: v1_1_text must be the figure as written/],
+  ['v1_1_text without a v1_1 figure', glm => { row(glm.headline.rows, 'decode_c4').v1_1_text = '55.5'; }, /headline decode_c4: v1_1_text must be null, since its number is/],
+  ['v1_1_text that disagrees', glm => { row(glm.headline.rows, 'decode_c2').v1_1_text = '22.3'; }, /headline decode_c2: v1_1_text "22\.3" does not equal 22\.2/],
   ['headline hi as text', glm => { row(glm.headline.rows, 'decode_c4').hi = '66.6'; }, /lo and hi must both be numbers$/],
   ['headline band inverted', glm => { Object.assign(row(glm.headline.rows, 'decode_c2'), { lo: 44.4, hi: 33.3 }); }, /lo 44\.4 is above hi 33\.3/],
   ['headline lo negative', glm => { row(glm.headline.rows, 'decode_c8').lo = -11.1; }, /is negative/],
@@ -98,9 +139,12 @@ const CONTROLS = [
   ['mode as text', glm => { set(glm, 'base_m0_b').mode = '0'; }, /group base_m0 needs mode 0/],
   ['build not a version', glm => { set(glm, 'base_m0_a').build = 'latest'; }, /build must look like/],
   ['set cell half measured', glm => { row(set(glm, 'base_m0_b').rows, 'decode_c4').lo = 11.1; }, /or both null \(not measured\)/],
+  ['set cell text without a number', glm => { row(set(glm, 'base_m0_b').rows, 'decode_c4').hi_text = '11.1'; }, /set base_m0_b decode_c4: hi_text must be null, since its number is/],
+  ['set cell text missing', glm => { delete row(set(glm, 'opt_in_m1').rows, 'decode_c2').lo_text; }, /set opt_in_m1 decode_c2: lo_text must be the figure as written/],
+  ['set cell text that disagrees', glm => { row(set(glm, 'base_m0_a').rows, 'prefill').hi_text = '1111.01'; }, /set base_m0_a prefill: hi_text "1111\.01" does not equal 1111/],
   ['set band inverted', glm => { Object.assign(row(set(glm, 'opt_in_m1').rows, 'decode_c2'), { lo: 44.4, hi: 33.3 }); }, /is above hi/],
   ['set cell dropped', glm => { set(glm, 'opt_in_m1').rows.pop(); }, /set opt_in_m1 rows must be/],
-  ['set measured nothing', glm => { for (const cell of set(glm, 'base_m0_a').rows) Object.assign(cell, { lo: null, hi: null }); }, /measured none of the five cells/],
+  ['set measured nothing', glm => { for (const cell of set(glm, 'base_m0_a').rows) Object.assign(cell, { lo: null, hi: null, lo_text: null, hi_text: null }); }, /measured none of the five cells/],
   ['set with zero serving starts', glm => { set(glm, 'base_m0_a').serving_starts = 0; }, /serving_starts must be a whole number/],
   ['set with fractional sweeps', glm => { set(glm, 'base_m0_a').sweeps = 1.5; }, /sweeps must be a whole number/],
   ['set label over 60 characters', glm => { set(glm, 'base_m0_a').label = 'Synthetic base start with a label that runs well past the limit'; }, /the limit is 60/],
@@ -108,17 +152,62 @@ const CONTROLS = [
   ['headline missing and no base set', glm => { missing(glm); glm.sets = glm.sets.filter(item => item.group !== 'base_m0'); }, /no base_m0 set/],
 ];
 
-/** Text the page prints as written. Each value must be refused in a set label and in the conditions sentence. */
+/**
+ * Text the page prints as written. Each value must be refused in a set label and in the conditions sentence.
+ * The ids are made-up stand-ins with the shapes the checker refuses.
+ */
+const CLAIM = 'a claim about mode switching, speed, equivalence or scaling';
 const HYGIENE = [
   ['Base recipe \u2014 levers off', /an em dash/],
-  ['boot26 base recipe', /a boot or lane id: "boot2"/],
-  ['A0-Q base recipe', /a boot or lane id: "A0-"/],
-  ['K1 matrix at ship config', /a boot or lane id: "K1"/],
-  ['K2 matrix at ship config', /a boot or lane id: "K2"/],
-  ['W1 base matrix', /a boot or lane id: "W1"/],
-  ['FINAL-0715 start', /a boot or lane id: "FINAL-"/],
+  ['boot7 base recipe', /a boot or lane id: "boot7"/],
+  ['Boot 7 base recipe', /a boot or lane id: "Boot 7"/],
+  ['boot-7 base recipe', /a boot or lane id: "boot-7"/],
+  ['boot_7 base recipe', /a boot or lane id: "boot_7"/],
+  ['A0-X base recipe', /a boot or lane id: "A0-X"/],
+  ['A0 X base recipe', /a boot or lane id: "A0 X"/],
+  ['a0-x base recipe', /a boot or lane id: "a0-x"/],
+  ['a0_x base recipe', /a boot or lane id: "a0_x"/],
+  ['A0-X9 base recipe', /a boot or lane id: "A0-X9"/],
+  ['Q9 matrix at ship config', /a boot or lane id: "Q9"/],
+  ['Z3 matrix at ship config', /a boot or lane id: "Z3"/],
+  ["Q9' matrix at ship config", /a boot or lane id: "Q9"/],
+  ['Base matrix Z12', /a boot or lane id: "Z12"/],
+  ['FINAL-X start', /a boot or lane id: "FINAL-"/],
+  ['KGATE-X start', /a boot or lane id: "KGATE"/],
+  ['Base start on fa9', /a boot or lane id: "fa9"/],
+  ['Base start from lane 42', /a boot or lane id: "lane 42"/],
+  ['Base start from %42', /a boot or lane id: "%42"/],
   ['Base start from /home/run/numbers', /a local path/],
   ['Base start from ~/run/numbers', /a local path/],
+  ['Base start from /tmp/run/numbers', /a local path: "\/tmp\/"/],
+  ['Base start from /mnt/run/numbers', /a local path: "\/mnt\/"/],
+  ['Base start at 10.0.0.9', /an IP address: "10\.0\.0\.9"/],
+  ['Base start on node-z.local', /a local host name: "node-z\.local"/],
+  ['Base start on NODE-Z.LOCAL', /a local host name: "NODE-Z\.LOCAL"/],
+  ["Mia's benchmark settings", /the Mia name: "Mia"/],
+  ['MIA settings', /the Mia name: "MIA"/],
+  ['as mia runs it', /the Mia name: "mia"/],
+  ['Mode switching is instant and costs no throughput.', new RegExp(`${CLAIM}: "switch"`)],
+  ['switches modes in 2 s', new RegExp(`${CLAIM}: "switch"`)],
+  ['same quality as edited', new RegExp(`${CLAIM}: "same quality"`)],
+  ['x1.13 scaled', new RegExp(`${CLAIM}: "x1"`)],
+  ['Base start, 1.13x of stock', new RegExp(`${CLAIM}: "3x"`)],
+  ['Base start, 1.13 X stock', new RegExp(`${CLAIM}: "3 X"`)],
+  ['Base start, \u00d71.13', new RegExp(`${CLAIM}: "\u00d7"`)],
+  ['Edited start after a restart', new RegExp(`${CLAIM}: "restart"`)],
+  ['Edited start by hot swap', new RegExp(`${CLAIM}: "hot swap"`)],
+  ['Edited start, Hot-Swapped', new RegExp(`${CLAIM}: "Hot-Swap"`)],
+  ['Instantly ready edited start', new RegExp(`${CLAIM}: "Instant"`)],
+  ['Seamless edited start', new RegExp(`${CLAIM}: "Seamless"`)],
+  ['Edited start, no downtime', new RegExp(`${CLAIM}: "downtime"`)],
+  ['Edited start, low latency', new RegExp(`${CLAIM}: "latency"`)],
+  ['Edited start, equivalent output', new RegExp(`${CLAIM}: "equivalen"`)],
+  ['Identical edited start', new RegExp(`${CLAIM}: "Identical"`)],
+  ['Edited start at parity', new RegExp(`${CLAIM}: "parity"`)],
+  ['Edited start, scaled to stock', new RegExp(`${CLAIM}: "scaled"`)],
+  ['Edited start, Scaling applied', new RegExp(`${CLAIM}: "Scaling"`)],
+  ['Edited start, correction factor', new RegExp(`${CLAIM}: "factor"`)],
+  ['Edited start, abliteration tax', new RegExp(`${CLAIM}: "tax"`)],
 ];
 const NAMES = (process.env.GLM_CHECK_NAMES ?? '').split(',').map(name => name.trim()).filter(Boolean);
 for (const name of NAMES) {

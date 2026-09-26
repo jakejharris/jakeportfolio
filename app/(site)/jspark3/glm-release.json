@@ -16,6 +16,7 @@
   "headline": {
     "baseline": "v1.1",
     "conditions": "PLACEHOLDER: benchmark, prompt set, output length, cache state and thinking mode, as the release notes state them.",
+    "build": "v1.X.0",
     "missing": false,
     "serving_starts": 1,
     "sweeps": 2,
@@ -27,7 +28,10 @@
         "unit": "tok/s",
         "lo": null,
         "hi": null,
+        "lo_text": null,
+        "hi_text": null,
         "v1_1": null,
+        "v1_1_text": null,
         "mia": null
       },
       {
@@ -37,7 +41,10 @@
         "unit": "tok/s",
         "lo": null,
         "hi": null,
+        "lo_text": null,
+        "hi_text": null,
         "v1_1": null,
+        "v1_1_text": null,
         "mia": null
       },
       {
@@ -47,7 +54,10 @@
         "unit": "tok/s",
         "lo": null,
         "hi": null,
+        "lo_text": null,
+        "hi_text": null,
         "v1_1": null,
+        "v1_1_text": null,
         "mia": null
       },
       {
@@ -57,7 +67,10 @@
         "unit": "tok/s",
         "lo": null,
         "hi": null,
+        "lo_text": null,
+        "hi_text": null,
         "v1_1": null,
+        "v1_1_text": null,
         "mia": null
       },
       {
@@ -67,7 +80,10 @@
         "unit": "tok/s",
         "lo": null,
         "hi": null,
+        "lo_text": null,
+        "hi_text": null,
         "v1_1": null,
+        "v1_1_text": null,
         "mia": null
       }
     ]
@@ -85,27 +101,37 @@
         {
           "id": "prefill",
           "lo": null,
-          "hi": null
+          "hi": null,
+          "lo_text": null,
+          "hi_text": null
         },
         {
           "id": "decode_c1",
           "lo": null,
-          "hi": null
+          "hi": null,
+          "lo_text": null,
+          "hi_text": null
         },
         {
           "id": "decode_c2",
           "lo": null,
-          "hi": null
+          "hi": null,
+          "lo_text": null,
+          "hi_text": null
         },
         {
           "id": "decode_c4",
           "lo": null,
-          "hi": null
+          "hi": null,
+          "lo_text": null,
+          "hi_text": null
         },
         {
           "id": "decode_c8",
           "lo": null,
-          "hi": null
+          "hi": null,
+          "lo_text": null,
+          "hi_text": null
         }
       ]
     },
@@ -121,27 +147,37 @@
         {
           "id": "prefill",
           "lo": null,
-          "hi": null
+          "hi": null,
+          "lo_text": null,
+          "hi_text": null
         },
         {
           "id": "decode_c1",
           "lo": null,
-          "hi": null
+          "hi": null,
+          "lo_text": null,
+          "hi_text": null
         },
         {
           "id": "decode_c2",
           "lo": null,
-          "hi": null
+          "hi": null,
+          "lo_text": null,
+          "hi_text": null
         },
         {
           "id": "decode_c4",
           "lo": null,
-          "hi": null
+          "hi": null,
+          "lo_text": null,
+          "hi_text": null
         },
         {
           "id": "decode_c8",
           "lo": null,
-          "hi": null
+          "hi": null,
+          "lo_text": null,
+          "hi_text": null
         }
       ]
     },
@@ -157,27 +193,37 @@
         {
           "id": "prefill",
           "lo": null,
-          "hi": null
+          "hi": null,
+          "lo_text": null,
+          "hi_text": null
         },
         {
           "id": "decode_c1",
           "lo": null,
-          "hi": null
+          "hi": null,
+          "lo_text": null,
+          "hi_text": null
         },
         {
           "id": "decode_c2",
           "lo": null,
-          "hi": null
+          "hi": null,
+          "lo_text": null,
+          "hi_text": null
         },
         {
           "id": "decode_c4",
           "lo": null,
-          "hi": null
+          "hi": null,
+          "lo_text": null,
+          "hi_text": null
         },
         {
           "id": "decode_c8",
           "lo": null,
-          "hi": null
+          "hi": null,
+          "lo_text": null,
+          "hi_text": null
         }
       ]
     }

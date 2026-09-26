@@ -8,7 +8,10 @@
  */
 import glm from './glm-release.json';
 
-/** One headline measurement: the within-start band across the sweeps, with lo equal to hi for a single measurement. */
+/**
+ * One headline measurement: the within-start band across the sweeps, with lo equal to hi for a single measurement.
+ * The numbers size the bars; the *_text fields are the numbers as the release files write them, and the page prints those.
+ */
 export interface HeadlineRow {
   id: string;
   label: string;
@@ -16,15 +19,20 @@ export interface HeadlineRow {
   unit: string;
   lo: number | null;
   hi: number | null;
+  lo_text: string | null;
+  hi_text: string | null;
   v1_1: number | null;
+  v1_1_text: string | null;
   mia: number | null;
 }
 
-/** One cell of a serving start. lo and hi are both null when the start did not measure it. */
+/** One cell of a serving start. lo and hi (and their texts) are all null when the start did not measure it. */
 export interface SetRow {
   id: string;
   lo: number | null;
   hi: number | null;
+  lo_text: string | null;
+  hi_text: string | null;
 }
 
 /** One measured start of the server, labelled by the build it ran. Mode 0 is stock weights, mode 1 edited weights. */
@@ -48,7 +56,7 @@ export interface GlmRelease {
   social_image: string | null;
   mode_switch: string;
   links: { release: string; source: string; huggingface: string; results: string; numbers: string };
-  headline: { baseline: string; conditions: string; missing: boolean; serving_starts: number; sweeps: number; rows: HeadlineRow[] };
+  headline: { baseline: string; conditions: string; build: string; missing: boolean; serving_starts: number; sweeps: number; rows: HeadlineRow[] };
   sets: ServingSet[];
   mia: { benchmark: string | null; source: string | null; ran_exactly_as_published: boolean };
 }
@@ -66,27 +74,37 @@ export function releaseDate(iso: string, year = true) {
   return new Date(`${iso}T12:00:00Z`).toLocaleDateString('en-US', { month: 'short', day: 'numeric', ...(year ? { year: 'numeric' } : {}), timeZone: 'UTC' });
 }
 
-/**
- * The internal builds between v1.1 and this release: v1.2 through v1.7 for v1.8,
- * only v1.2 for v1.3, and none for v1.2.
- */
-function internalBuilds(version: string) {
-  const minor = Number(/^v1\.(\d+)$/.exec(version)?.[1]);
-  if (!Number.isInteger(minor)) return { first: 'v1.2', last: 'v1.X' };
-  if (minor <= 2) return null;
-  return { first: 'v1.2', last: minor === 3 ? null : `v1.${minor - 1}` };
+/** A build as the page shows it: the tag without a zero patch, so v1.8.0 is "v1.8" and v1.7.5 stays "v1.7.5". */
+export function displayBuild(build: string) {
+  return build.replace(/^(v\d+\.[\dX]+)\.0$/, '$1');
 }
 
-export const INTERNAL_BUILDS = internalBuilds(glm.version);
+/** This release as the page names it, from its tag. */
+export const RELEASE = displayBuild(glm.tag);
 
 /**
- * A measured value with every digit it was written with, plus a thousands separator; nothing is rounded.
- * null is a visible placeholder before the fill and "n/a" (not measured) after it.
+ * The internal builds between v1.1 and this release: v1.2 through v1.7 for v1.8.0,
+ * v1.2 through v1.7.4 for v1.7.5, only v1.2 for v1.3.0, and none for v1.2.0.
  */
-export function valueText(value: number | null) {
-  if (value === null) return IS_PLACEHOLDER ? 'XX.X' : 'n/a';
-  const [whole, fraction] = String(value).split('.');
-  return `${whole.replace(/\B(?=(\d{3})+$)/g, ',')}${fraction ? `.${fraction}` : ''}`;
+function internalBuilds(tag: string) {
+  const match = /^v1\.(\d+)\.(\d+)$/.exec(tag);
+  if (!match) return { first: 'v1.2', last: 'v1.X' };
+  const [minor, patch] = [Number(match[1]), Number(match[2])];
+  const last = patch > 0 ? displayBuild(`v1.${minor}.${patch - 1}`) : `v1.${minor - 1}`;
+  if (minor < 2 || (minor === 2 && patch === 0)) return null;
+  return { first: 'v1.2', last: last === 'v1.2' ? null : last };
+}
+
+export const INTERNAL_BUILDS = internalBuilds(glm.tag);
+
+/**
+ * A measured value exactly as the release files write it, so 108.0 stays 108.0. The only change is a
+ * thousands separator in the whole part. null is a visible placeholder before the fill and "n/a" after it.
+ */
+export function valueText(text: string | null) {
+  if (text === null) return IS_PLACEHOLDER ? 'XX.X' : 'n/a';
+  const [whole, fraction] = text.split('.');
+  return `${whole.replace(/\B(?=(\d{3})+$)/g, ',')}${fraction === undefined ? '' : `.${fraction}`}`;
 }
 
 /** The five cells every serving start reports, in page order. glm-release.json uses the same ids. */
@@ -108,7 +126,7 @@ export function startsAndSweeps({ serving_starts, sweeps }: { serving_starts: nu
 
 /** "v1.7.4 · stock weights · one serving start, two sweeps". */
 export function setCaption(set: { build: string; mode: number; serving_starts: number; sweeps: number }) {
-  return `${set.build} · ${set.mode === 0 ? 'stock weights' : 'edited weights, opt-in'} · ${startsAndSweeps(set)}`;
+  return `${displayBuild(set.build)} · ${set.mode === 0 ? 'stock weights' : 'edited weights, opt-in'} · ${startsAndSweeps(set)}`;
 }
 
 /** Mia's series appears only where we ran her benchmark exactly as she describes it. */
@@ -135,7 +153,7 @@ export const HUB_COPY = {
   note: 'Numbered JSPARK3 releases are the main line, and it runs GLM-5.3 Flash. Tempo is a named release: a DeepSeek experiment with its own recipe versions. Earlier GLM links still lead to the GLM page.',
   glmCard: {
     meta: LABELS.latest,
-    version: glm.version,
+    version: RELEASE,
     title: glm.name ?? 'GLM-5.3 Flash',
     model: glm.name ? 'GLM-5.3 Flash' : 'Stock weights by default',
     detail: 'vLLM · Three DGX Sparks · One OpenAI-compatible endpoint',
@@ -161,7 +179,7 @@ export const RELEASE_HISTORY = [
 ] as const;
 
 const MODE_SWITCH = {
-  A: 'Experimental runtime switch. The whole service switches between stock and edited weights after admission closes and requests drain, with a receipt for every switch. It is global and serialized, not per request, and this release makes no latency or capacity claim for it.',
+  A: 'Experimental runtime switch. It needs the service started in edited mode. The whole service then switches between stock and edited weights after admission closes and requests drain, with a receipt for every switch. It is global and serialized, not per request, and this release makes no latency or capacity claim for it.',
   B: 'Choose stock or edited behavior before launch. Changing modes currently requires a service restart and recomputes conversation prefixes.',
 } as const;
 
@@ -172,13 +190,13 @@ export const SET_GROUPS = [
 ] as const;
 
 export const GLM_COPY = {
-  title: `JSPARK3 ${glm.version}`,
-  metaDescription: `JSPARK3 ${glm.version}: GLM-5.3 Flash across three NVIDIA DGX Sparks, with stock weights by default, a pinned recipe, and measured results.`,
+  title: `JSPARK3 ${RELEASE}`,
+  metaDescription: `JSPARK3 ${RELEASE}: GLM-5.3 Flash across three NVIDIA DGX Sparks, with stock weights by default, a pinned recipe, and measured results.`,
   label: LABELS.latest,
   lede: 'GLM-5.3 Flash across three DGX Sparks as one OpenAI-compatible endpoint. The recipe is pinned so you can rebuild it, with public benchmarks and the misses left in.',
   intro: 'One OpenAI-compatible endpoint across all three. The recipe is pinned so you can rebuild it, with public benchmarks and the misses left in.',
   internalBuilds: INTERNAL_BUILDS
-    ? `${INTERNAL_BUILDS.last ? `${INTERNAL_BUILDS.first} through ${INTERNAL_BUILDS.last} were internal builds` : `${INTERNAL_BUILDS.first} was an internal build`}, so the public numbers go from v1.1 to ${glm.version}.`
+    ? `${INTERNAL_BUILDS.last ? `${INTERNAL_BUILDS.first} through ${INTERNAL_BUILDS.last} were internal builds` : `${INTERNAL_BUILDS.first} was an internal build`}, so the public numbers go from v1.1 to ${RELEASE}.`
     : null,
   weights: 'The default install uses the stock GLM-5.3 Flash weights. Abliteration is an explicit opt-in.',
   /** How modes change in this release, chosen by mode_switch. Neither story makes a speed claim. */
@@ -190,9 +208,11 @@ export const GLM_COPY = {
   numbersNote: 'Compared with our own v1.1.',
   resultsTitle: 'Measured on our three Sparks.',
   /** Under the results heading: what one headline figure is. */
-  bandLine: `${glm.version} with stock weights: ${startsAndSweeps(glm.headline)}. Each figure is the range across those sweeps.`,
+  bandLine: `${RELEASE} with stock weights: ${startsAndSweeps(glm.headline)}. Each figure is the range across those sweeps.`,
   /** In place of the band line when the release's own start is not in the numbers. No base start is promoted. */
-  headlineMissing: `No measured stock-weight start of ${glm.version} is in this release’s numbers. The stock-weight figures below come from the base recipe, labelled by build.`,
+  headlineMissing: `No measured stock-weight start of ${RELEASE} is in this release’s numbers. The stock-weight figures below come from the base recipe, labelled by build.`,
+  /** Under a headline figure the release's numbers leave out, such as a prefill with no clean measurement. */
+  figureOmitted: 'Not in this release’s numbers.',
   /** The chart key for the lighter part of a bar. */
   bandKey: 'Range across sweeps',
   sets: {
@@ -200,7 +220,7 @@ export const GLM_COPY = {
     intro: 'Each row is one start of the server, labelled by build, with the range across its sweeps. Every start we measured is listed.',
     column: 'Serving start',
     caption: 'All figures in tok/s. Decode above one stream is the aggregate across all streams.',
-    thisRelease: `${glm.version}, this release`,
+    thisRelease: `${RELEASE}, this release`,
     earlier: 'Earlier release',
     unscaled: 'Edited-weight rows are measured as they are and never scaled to stand in for stock weights.',
   },
@@ -218,10 +238,10 @@ export const GLM_COPY = {
   },
   proof: {
     title: 'Run on someone else’s hardware.',
-    scope: `Their run used JSPARK3 v1.1 with one added patch. It was not a run of ${glm.version}.`,
+    scope: `Their run used JSPARK3 v1.1 with one added patch. It was not a run of ${RELEASE}.`,
   },
   install: {
-    title: `Run ${glm.version}`,
+    title: `Run ${RELEASE}`,
     body: 'You need three DGX Sparks, fast direct connections between them (RoCE), and enough disk space. The install guide checks your machines before anything starts.',
     guide: `https://github.com/jakejharris/jspark3/blob/${glm.tag}/docs/INSTALL.md`,
   },
