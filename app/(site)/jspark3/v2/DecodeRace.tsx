@@ -35,7 +35,7 @@ function readPalette(el: HTMLElement): RacePalette {
 
 /**
  * The decode race: each decode row of a serving start grows at its measured rate for the same few
- * seconds, one strand per concurrent stream, and stops where the page's bar stops. p5 loads only when
+ * seconds, one strand per concurrent stream, on one scale shared by every start. p5 loads only when
  * the figure nears the viewport, draws only while it is on screen, and holds one still frame under
  * reduced motion. The server renders nothing here, so the page without script is unchanged.
  */

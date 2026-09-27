@@ -36,7 +36,7 @@ type Mode = 'play' | 'pause' | 'still';
 /**
  * The race's timing, in seconds. These are design constants that set the pace of the picture; none is printed.
  * A lane's full width stands for scaleEnd tok/s over RUN seconds, so each lane grows at its measured rate and
- * ends at lo / scaleEnd of the width, where the page's own bar ends.
+ * ends at lo / scaleEnd of the width. scaleEnd spans every start, so it can differ from the chart's axis.
  */
 const RUN = 6;
 const REVEAL = 0.6;
