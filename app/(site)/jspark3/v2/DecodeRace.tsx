@@ -43,6 +43,7 @@ export default function DecodeRace() {
   const [mounted, setMounted] = React.useState(false);
   const [startKey, setStartKey] = React.useState(RACE.initial?.key ?? '');
   const [state, setState] = React.useState<RaceState>('idle');
+  const [failed, setFailed] = React.useState(false);
   const figureRef = React.useRef<HTMLElement>(null);
   const hostRef = React.useRef<HTMLDivElement>(null);
   const sketchRef = React.useRef<RaceSketch | null>(null);
@@ -74,14 +75,18 @@ export default function DecodeRace() {
       }
     };
 
-    const load = async () => {
-      const { default: P5 } = await import('p5');
-      if (cancelled) return;
-      P5.disableFriendlyErrors = true;
-      sketch = createDecodeRace(P5, host, { data: RACE, startKey: startRef.current, palette: readPalette(figure) });
-      sketchRef.current = sketch;
-      apply();
-    };
+    const load = () => import('p5')
+      .then(({ default: P5 }) => {
+        if (cancelled) return;
+        P5.disableFriendlyErrors = true;
+        sketch = createDecodeRace(P5, host, { data: RACE, startKey: startRef.current, palette: readPalette(figure) });
+        sketchRef.current = sketch;
+        apply();
+      })
+      // Without p5 there is nothing to draw, so the figure goes; the chart and table carry the numbers.
+      .catch(() => {
+        if (!cancelled) setFailed(true);
+      });
 
     const observers: IntersectionObserver[] = [];
     if (onScreen) {
@@ -129,7 +134,7 @@ export default function DecodeRace() {
     sketchRef.current?.show(startKey);
   }, [startKey]);
 
-  if (!mounted || !RACE.initial) return null;
+  if (!mounted || failed || !RACE.initial) return null;
   const shown = RACE.starts.find(entry => entry.key === startKey) ?? RACE.initial;
   const placeholder = !RACE.measured.length;
 
