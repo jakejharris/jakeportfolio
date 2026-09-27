@@ -194,14 +194,15 @@ export function streamCounts(counts: readonly number[]) {
 export const SPEED = GLM_RELEASE.headline.missing ? null : GLM_RELEASE.headline.speed;
 
 /**
- * The reference clause, worded by the speed headline's rule. It names no build, node count, band or figure,
- * and appears only for stream counts the numbers list. A median rule says "median"; any other rule makes no claim.
+ * The reference clause, worded by the speed headline's rule. It names the reference as the three-Spark
+ * build its figures come from, but no band or figure, and appears only for stream counts the numbers list.
+ * A median rule says "median"; any other rule makes no claim.
  */
 function referenceClause(speed: HeadlineSpeed | null) {
   if (!speed || !speed.reference_streams.length || IS_PLACEHOLDER) return null;
   const at = streamCounts(speed.reference_streams);
-  if (speed.rule === 'strict') return `Faster than the published reference build on its own benchmark at ${at}, in every run.`;
-  if (speed.rule === 'median_noise' || speed.rule === 'median') return `Median faster than the published reference build on its own benchmark at ${at}.`;
+  if (speed.rule === 'strict') return `Faster than the published three-Spark reference build on its own benchmark at ${at}, in every run.`;
+  if (speed.rule === 'median_noise' || speed.rule === 'median') return `Median faster than the published three-Spark reference build on its own benchmark at ${at}.`;
   return null;
 }
 
