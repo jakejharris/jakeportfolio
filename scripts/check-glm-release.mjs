@@ -224,8 +224,10 @@ async function check() {
   // mode_switch only chooses between the two sentences already on the page.
   assert.ok(glm.mode_switch === 'A' || glm.mode_switch === 'B', `mode_switch must be "A" or "B", not ${JSON.stringify(glm.mode_switch)}`);
 
+  // Every jspark3 link is pinned to the release tag, so a later main or README never changes what the page opens.
   const links = {
     release: `${REPO}/releases/tag/${glm.tag}`,
+    source: `${REPO}/tree/${glm.tag}`,
     results: `${REPO}/blob/${glm.tag}/release/results-${glm.tag}.json`,
     numbers: `${REPO}/blob/${glm.tag}/release/RELEASE-NUMBERS.md`,
   };
@@ -289,7 +291,7 @@ async function check() {
   if (headline.missing) assert.ok(glm.sets.some(set => set.group === 'base_m0'), 'headline.missing is true, but no base_m0 set is there to show the stock-weight figures');
 
   if (live) {
-    for (const url of [links.release, glm.links.source, glm.links.huggingface, `${REPO}/blob/${glm.tag}/docs/INSTALL.md`, links.results, links.numbers]) {
+    for (const url of [links.release, links.source, glm.links.huggingface, `${REPO}/blob/${glm.tag}/docs/INSTALL.md`, links.results, links.numbers]) {
       const response = await fetch(url, { method: 'HEAD', redirect: 'follow' });
       assert.equal(response.status, 200, `${url} returned ${response.status}`);
     }
