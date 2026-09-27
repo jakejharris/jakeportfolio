@@ -2,7 +2,7 @@
 
 import React from 'react';
 import RACE from './decode-race-data';
-import { createDecodeRace, type RacePalette, type RaceSketch } from './decode-race-sketch';
+import type { RacePalette, RaceSketch } from './decode-race-sketch';
 import { Marked, Ph } from '../Placeholder';
 import './decode-race.css';
 
@@ -75,8 +75,9 @@ export default function DecodeRace() {
       }
     };
 
-    const load = () => import('p5')
-      .then(({ default: P5 }) => {
+    // The sketch comes with p5, so neither is in the page's first load.
+    const load = () => Promise.all([import('p5'), import('./decode-race-sketch')])
+      .then(([{ default: P5 }, { createDecodeRace }]) => {
         if (cancelled) return;
         P5.disableFriendlyErrors = true;
         sketch = createDecodeRace(P5, host, { data: RACE, startKey: startRef.current, palette: readPalette(figure) });
