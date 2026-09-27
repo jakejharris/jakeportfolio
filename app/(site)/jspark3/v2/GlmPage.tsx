@@ -1,6 +1,7 @@
 import React from 'react';
 import ClusterIllustration from './ClusterIllustration';
 import ClusterPair from './ClusterPair';
+import DecodeRace from './DecodeRace';
 import FoldAnchors from './FoldAnchors';
 import GlmArchive from './GlmArchive';
 import HeadlineResults from './HeadlineResults';
@@ -74,6 +75,7 @@ export default function GlmPage() {
           <p>{IS_PLACEHOLDER ? <Ph block>{headline.conditions}</Ph> : headline.conditions}</p>
         </div>
         <HeadlineResults />
+        <DecodeRace />
         <ServingStarts />
         {SHOW_MIA ? <MiaNote /> : null}
         {GLM_COPY.internalBuilds ? <p className="glm-small"><Marked text={GLM_COPY.internalBuilds} /></p> : null}
