@@ -4,7 +4,8 @@ import path from 'node:path';
 import test from 'node:test';
 import committed from '../glm-release.json';
 import type { GlmRelease } from '../release-copy';
-import { axisEnd, bandText, buildRaceStarts, type RaceData } from './decode-race-data';
+import { displayBuild } from '../release-copy';
+import { axisEnd, bandText, buildRaceStarts, raceCaption, type RaceData, type RaceStart } from './decode-race-data';
 
 const synthetic: GlmRelease = JSON.parse(
   fs.readFileSync(path.join(process.cwd(), 'scripts/fixtures/glm-release.synthetic.json'), 'utf8'),
@@ -132,4 +133,33 @@ test('one lane width covers every lo and hi of every measured start, by the char
   assert.equal(axisEnd([251]), 300);
   assert.equal(axisEnd([0.4]), 1);
   assert.equal(axisEnd([]), 1);
+});
+
+/** How often `part` appears in `text`. */
+const count = (text: string, part: string) => text.split(part).length - 1;
+
+test('a caption says the label as written, then the build and the weights once each, then starts and sweeps', () => {
+  const run = { serving_starts: 1, sweeps: 2 };
+  const caption = (label: string, build: string, mode: number) => raceCaption({ label, run: { build, mode, ...run } });
+  assert.equal(caption('v1.7.4 base recipe, stock weights, QA profile', 'v1.7.4', 0), 'v1.7.4 base recipe, stock weights, QA profile · one serving start, two sweeps');
+  assert.equal(caption('v1.7.4 base recipe, no decode levers', 'v1.7.4', 1), 'v1.7.4 base recipe, no decode levers · edited weights, opt-in · one serving start, two sweeps');
+  assert.equal(caption('v1.99, this release', 'v1.99.0', 0), 'v1.99, this release · stock weights · one serving start, two sweeps');
+  // A build the label lacks leads, and a longer version in the label does not count as it.
+  assert.equal(caption('Base recipe, levers off', 'v1.98.4', 0), 'v1.98.4 · Base recipe, levers off · stock weights · one serving start, two sweeps');
+  assert.equal(caption('v1.7.4 base recipe', 'v1.7.0', 0), 'v1.7 · v1.7.4 base recipe · stock weights · one serving start, two sweeps');
+});
+
+test('every start of a file gets its label verbatim, its build and its weights exactly once', () => {
+  for (const release of [synthetic, committed as GlmRelease, placeholderOf(committed as GlmRelease)]) {
+    for (const start of buildRaceStarts(release).starts as RaceStart[]) {
+      const caption = raceCaption(start);
+      assert.ok(caption.includes(start.label), `${start.key}: "${caption}" lacks its label`);
+      assert.equal(count(caption, displayBuild(start.run.build)), Math.max(1, count(start.label, displayBuild(start.run.build))), `${start.key}: "${caption}"`);
+      const weights = start.run.mode === 0 ? 'stock weights' : 'edited weights';
+      assert.equal(count(caption.toLowerCase(), weights), 1, `${start.key}: "${caption}" has its weights other than once`);
+    }
+  }
+  // The release's own start is labelled from the page's own file, which names its build, so the label leads.
+  const own = buildRaceStarts(committed as GlmRelease).starts.find(start => start.key === 'current');
+  if (own) assert.equal(raceCaption(own), [own.label, 'stock weights', raceCaption(own).split(' · ').at(-1)].join(' · '));
 });

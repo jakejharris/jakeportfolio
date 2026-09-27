@@ -1,4 +1,4 @@
-import { GLM_COPY, GLM_RELEASE, METRICS, setCaption, streams, valueText, type GlmRelease } from '../release-copy';
+import { GLM_COPY, GLM_RELEASE, METRICS, displayBuild, startsAndSweeps, streams, valueText, weightsText, type GlmRelease } from '../release-copy';
 
 /**
  * The decode race's data: the page's own serving starts, reduced to the decode rows the race draws.
@@ -18,11 +18,20 @@ export interface RaceLane {
   band: string;
 }
 
+/** What a start ran, as the serving-start table captions it. */
+export interface StartRun {
+  build: string;
+  mode: number;
+  serving_starts: number;
+  sweeps: number;
+}
+
 export interface RaceStart {
   /** "current" for the release's own start, otherwise the set id, as in the serving-start table. */
   key: string;
-  caption: string;
+  /** The start's label from the data, never edited. */
   label: string;
+  run: StartRun;
   /** True when at least one lane has a measured lo. */
   measured: boolean;
   lanes: RaceLane[];
@@ -76,8 +85,29 @@ function lanes<T extends Cell>(cells: T[], concurrency: (cell: T) => string | un
   });
 }
 
-function start(key: string, caption: string, label: string, raceLanes: RaceLane[]): RaceStart {
-  return { key, caption, label, measured: raceLanes.some(lane => lane.lo !== null), lanes: raceLanes };
+function start(key: string, label: string, { build, mode, serving_starts, sweeps }: StartRun, raceLanes: RaceLane[]): RaceStart {
+  return { key, label, run: { build, mode, serving_starts, sweeps }, measured: raceLanes.some(lane => lane.lo !== null), lanes: raceLanes };
+}
+
+/** True when `text` names `build` as a whole version, so "v1.7" is not found inside "v1.7.4". */
+function names(text: string, build: string) {
+  return new RegExp(`(?<![\\w.])${build.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?!\\.?\\d)`).test(text);
+}
+
+/**
+ * The figure caption for a start: its label as written, then the build and the weights in the serving-start
+ * table's words where the label does not already say them, then its starts and sweeps. A build the label lacks
+ * leads. "v1.7.4 base recipe, no decode levers · edited weights, opt-in · one serving start, two sweeps".
+ */
+export function raceCaption({ label, run }: Pick<RaceStart, 'label' | 'run'>) {
+  const build = displayBuild(run.build);
+  const weights = run.mode === 0 ? 'stock weights' : 'edited weights';
+  return [
+    ...(names(label, build) ? [] : [build]),
+    label,
+    ...(label.toLowerCase().includes(weights) ? [] : [weightsText(run.mode)]),
+    startsAndSweeps(run),
+  ].join(' · ');
 }
 
 /**
@@ -90,9 +120,9 @@ export function buildRaceStarts(release: GlmRelease): RaceData {
   const own = headline.missing ? [] : headline.rows;
   const starts: RaceStart[] = [
     ...(own.length
-      ? [start('current', setCaption({ ...headline, mode: 0 }), GLM_COPY.sets.thisRelease, lanes(own, row => (row.label === 'Decode' ? row.concurrency : undefined)))]
+      ? [start('current', GLM_COPY.sets.thisRelease, { ...headline, mode: 0 }, lanes(own, row => (row.label === 'Decode' ? row.concurrency : undefined)))]
       : []),
-    ...sets.map(set => start(set.id, setCaption(set), set.label, lanes(set.rows, cell => DECODE.get(cell.id)))),
+    ...sets.map(set => start(set.id, set.label, set, lanes(set.rows, cell => DECODE.get(cell.id)))),
   ].filter(entry => entry.lanes.length);
   const measured = starts.filter(entry => entry.measured);
   const values = measured.flatMap(entry => entry.lanes.flatMap(lane => [lane.lo, lane.hi])).filter((value): value is number => value !== null);
