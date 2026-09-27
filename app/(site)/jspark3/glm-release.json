@@ -21,7 +21,7 @@
     "serving_starts": 1,
     "sweeps": 2,
     "speed": {
-      "streams": 8,
+      "streams": 4,
       "code": {
         "lo": null,
         "hi": null,

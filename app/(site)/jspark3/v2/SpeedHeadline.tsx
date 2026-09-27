@@ -1,25 +1,25 @@
 import React from 'react';
-import Band from './Band';
-import { GLM_COPY, SPEED, type SpeedBand } from '../release-copy';
+import { GLM_COPY, SPEED, valueText, type SpeedBand } from '../release-copy';
+import { Ph } from '../Placeholder';
 
-/** A headline figure: the approximate token the numbers supply, or else the measured band as written. */
+/** A headline figure: the top of its measured range, as the release files write it, never rounded. */
 function Figure({ band }: { band: SpeedBand }) {
-  return <strong className="glm-speed-figure">{band.display ?? <Band lo={band.lo_text} hi={band.hi_text} />}</strong>;
+  return <strong className="glm-speed-figure"><Ph>{valueText(band.hi_text)}</Ph></strong>;
 }
 
 /**
- * The hero's lead line: this release's stock-weight decode at eight streams, from headline.speed alone.
- * It renders nothing when the release's own start is not in the numbers, and never borrows another start.
+ * The hero's lead line: this release's stock-weight decode at four streams, "up to" the best measured run,
+ * from headline.speed alone. The results below keep the full ranges. It renders nothing when the release's
+ * own start is not in the numbers, and never borrows another start.
  */
 export default function SpeedHeadline() {
   if (!SPEED) return null;
   const { code, prose, streams } = SPEED;
-  const approximate = code.display !== null || (prose !== null && prose.display !== null);
-  return <div className="glm-speed" data-speed-prose={prose !== null} data-speed-approximate={approximate}>
+  return <div className="glm-speed" data-speed-prose={prose !== null}>
     <p className="glm-speed-line">
-      <Figure band={code} /> tok/s code{prose ? <> and <Figure band={prose} /> tok/s prose</> : null} decode at {streams} streams on three DGX Sparks, stock weights.
+      Up to <Figure band={code} /> tok/s code{prose ? <> and <Figure band={prose} /> tok/s prose</> : null} decode at {streams} streams on three DGX Sparks, stock weights.
     </p>
-    <p className="glm-speed-sub">{approximate ? GLM_COPY.speed.approximate : GLM_COPY.speed.range}</p>
+    <p className="glm-speed-sub">{GLM_COPY.speed.best}</p>
     {GLM_COPY.speed.reference ? <p className="glm-speed-reference">{GLM_COPY.speed.reference}</p> : null}
   </div>;
 }

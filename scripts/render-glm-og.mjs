@@ -30,31 +30,24 @@ const format = (text) => {
   const [whole, fraction] = text.split('.');
   return `${whole.replace(/\B(?=(\d{3})+$)/g, ',')}${fraction === undefined ? '' : `.${fraction}`}`;
 };
-const band = (row) => (row.lo_text === row.hi_text ? format(row.lo_text) : `${format(row.lo_text)}–${format(row.hi_text)}`);
-const WORDS = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten'];
-const counted = (count, noun) => `${WORDS[count] ?? count} ${noun}${count === 1 ? '' : 's'}`;
-const bandLine = `${release} with stock weights: ${counted(glm.headline.serving_starts, 'serving start')}, ${counted(glm.headline.sweeps, 'sweep')}. Each figure is the range across those sweeps.`;
-const streams = (c) => (c === 'c1' ? 'one stream' : `${c.slice(1)} streams`);
-// Only figures the numbers carry get a cell.
-const rows = glm.headline.rows.filter((row) => row.lo_text !== null);
-const decode = rows.filter((row) => row.label === 'Decode').sort((a, b) => Number(a.concurrency.slice(1)) - Number(b.concurrency.slice(1)));
-// Up to four cells in page order: the single figure (prefill), one-stream decode, then the highest-concurrency
-// decode rows. Without a prefill, the next decode row takes its place.
-const picked = new Set([...rows.filter((row) => row.label !== 'Decode').slice(0, 1), decode[0], ...decode.slice(-2)].filter(Boolean));
-for (const row of decode) if (picked.size < 4) picked.add(row);
-const cells = rows.filter((row) => picked.has(row)).slice(0, 4);
-// Six characters fill a half-width cell. Longer bands step down, all cells together, so none reaches the next column.
-const longest = Math.max(...cells.map((row) => band(row).length));
+// The card's four figures match the hub card: prefill, code and prose for one stream, code for four streams,
+// each "up to" the top of its measured range (the release page keeps the full ranges). prose_c1 is the
+// release's decode_prose_c1; a figure the numbers leave out gets no cell.
+const TILES = [['prefill', 'Prefill'], ['decode_c1', 'Code · one stream'], ['prose_c1', 'Prose · one stream'], ['decode_c4', 'Code · 4 streams']];
+const cells = TILES.flatMap(([id, label]) => {
+  const cell = id === 'prose_c1' ? glm.headline.prose_c1 : glm.headline.rows.find((row) => row.id === id);
+  return cell && cell.hi_text !== null ? [{ id, label, hi: cell.hi_text, unit: cell.unit ?? 'tok/s' }] : [];
+});
+if (!cells.length) throw new Error('no figures to show; keep the neutral hub card');
+const caption = 'Best measured run for each. Full ranges on the release page.';
+// Six characters fill a half-width cell. Longer figures step down, all cells together, so none reaches the next column.
+const longest = Math.max(...cells.map((item) => format(item.hi).length));
 const scale = longest > 9 ? 0.5 : longest > 6 ? 0.68 : 1;
 const size = scale < 1 ? ` style="font-size:calc(var(--grid-num) * ${scale})"` : '';
-const cell = (row) => {
-  const label = row.label === 'Decode' && row.concurrency !== 'c1' ? `Decode · ${streams(row.concurrency)}, all combined` : `${row.label} · ${streams(row.concurrency)}`;
-  const comparison = row.v1_1_text === null ? '' : `v1.1: ${format(row.v1_1_text)} ${row.unit}`;
-  return `<div class="cell"><div class="eyebrow">${escape(label)}</div><div class="num"${size}>${escape(band(row))}<span class="unit">${escape(row.unit)}</span></div><div class="comparison">${escape(comparison)}</div></div>`;
-};
+const cell = (item) => `<div class="cell"><div class="eyebrow">${escape(item.label)}</div><div class="num"${size}><span style="font-size:0.32em;font-weight:400;margin-right:0.25em">up to</span>${escape(format(item.hi))}<span class="unit">${escape(item.unit)}</span></div><div class="comparison"></div></div>`;
 // There is no release name; one set anyway is escaped like every other interpolated text.
 const title = escape(glm.name ? `JSPARK3 ${release} ${glm.name}` : `JSPARK3 ${release}`);
-const body = `<div class="tagline">${title}: GLM-5.3 Flash on three DGX Sparks.<div style="margin-top:10px;font-size:18px;font-weight:400;color:var(--muted)">${escape(bandLine)}</div></div><div class="grid">${cells.map(cell).join('')}</div>`;
+const body = `<div class="tagline">${title}: GLM-5.3 Flash on three DGX Sparks.<div style="margin-top:10px;font-size:18px;font-weight:400;color:var(--muted)">${escape(caption)}</div></div><div class="grid">${cells.map(cell).join('')}</div>`;
 if (body.includes('—')) throw new Error('em dash in card copy');
 // The shared shell keeps the original series' wordmark; this card uses the current casing.
 const html = shell({ cardId: '07-hero-card', orient: 'og', body, receipt: '' }).replace('<span class="word">JSpark3</span>', '<span class="word">JSPARK3</span>');
@@ -70,4 +63,4 @@ await page.screenshot({ path: join(root, 'public', image), clip: { x: 0, y: 0, w
 await browser.close();
 
 writeFileSync(file, text.replace(/"social_image": (null|"[^"]*")/, `"social_image": "${image}"`));
-console.log(JSON.stringify({ image, cells: cells.map((row) => row.id) }));
+console.log(JSON.stringify({ image, cells: cells.map((item) => item.id) }));

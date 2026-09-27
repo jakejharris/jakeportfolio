@@ -48,8 +48,8 @@ export interface ServingSet {
 }
 
 /**
- * One figure of the speed headline: a within-start band as written, like a headline row. display is an
- * approximate token such as "~180" that the release's numbers supply; the page never rounds one itself.
+ * One figure of the speed headline: a within-start band as written, like a headline row. The line prints
+ * its hi as "up to"; display is always null (no approximate token stands in for a figure).
  */
 export interface SpeedBand {
   lo: number | null;
@@ -60,7 +60,7 @@ export interface SpeedBand {
 }
 
 /**
- * The hero's speed headline, from the release's own stock-weight start. code is its decode_c8 row;
+ * The hero's speed headline, from the release's own stock-weight start. code is its decode_c4 row;
  * prose is null when the start has no prose run. reference_streams lists the stream counts at which
  * its exact runs of the published reference benchmark came out ahead under rule, and is empty for no claim.
  * rule is "strict" (every run ahead), "median_noise" or "median" (the median ahead; the two differ only in
@@ -288,10 +288,9 @@ export const GLM_COPY = {
   whyGlm:
     'Tempo was my DeepSeek experiment, and I measured it seriously. Its tok/s held up, but it overthinks, and time to finish a task is what I actually feel. GLM-5.3 Flash is better at agent and coding work, and better in almost every other way I use it, so the numbered line runs GLM again.',
   whyGlmLink: 'Tempo, the DeepSeek experiment',
-  /** Under the hero's speed headline. It is approximate only when the numbers supply a display token. */
   speed: {
-    approximate: 'Approximate. The measured ranges are in the results below.',
-    range: `Range across ${counted(glm.headline.sweeps, 'sweep')} of ${counted(glm.headline.serving_starts, 'serving start')}.`,
+    /** Under the "up to" line: each figure is the top of its measured range; the results keep the full ranges. */
+    best: `Best of ${counted(glm.headline.sweeps, 'run')}. Full ranges in the results below.`,
     reference: referenceClause(SPEED),
   },
   numbersNote: 'Compared with our own v1.1.',

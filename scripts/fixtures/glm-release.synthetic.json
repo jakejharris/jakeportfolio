@@ -21,12 +21,12 @@
     "serving_starts": 1,
     "sweeps": 2,
     "speed": {
-      "streams": 8,
+      "streams": 4,
       "code": {
-        "lo": 77.7,
-        "hi": 88.8,
-        "lo_text": "77.7",
-        "hi_text": "88.8",
+        "lo": 55.5,
+        "hi": 66.6,
+        "lo_text": "55.5",
+        "hi_text": "66.6",
         "display": null
       },
       "prose": {

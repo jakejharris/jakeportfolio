@@ -116,14 +116,14 @@ const SPEED_RULES = ['strict', 'median_noise', 'median', 'off'];
 const keys = value => Object.keys(value).sort().join(', ');
 
 /**
- * The hero's speed headline keeps one shape in every state: eight streams, a code band, a prose band or null,
+ * The hero's speed headline keeps one shape in every state: four streams, a code band, a prose band or null,
  * a comparison rule, and a list, which is empty when the rule is "off".
  */
 function speedShape(speed) {
   assert.ok(speed !== null && typeof speed === 'object' && !Array.isArray(speed), 'headline.speed must be an object');
   assert.ok(SPEED_RULES.includes(speed.rule), `headline.speed.rule must be "strict", "median_noise", "median" or "off", not ${JSON.stringify(speed.rule) ?? 'missing'}`);
   assert.equal(keys(speed), SPEED_KEYS, `headline.speed must have exactly ${SPEED_KEYS}`);
-  assert.equal(speed.streams, 8, 'headline.speed.streams must be 8');
+  assert.equal(speed.streams, 4, 'headline.speed.streams must be 4');
   for (const name of ['code', 'prose']) {
     const cell = speed[name];
     if (name === 'prose' && cell === null) continue;
@@ -150,12 +150,9 @@ function placeholderSpeed(speed) {
  * An approximate token for a speed band, printed in place of the band: "~" and a number within
  * [floor(lo), ceil(hi)]. The release's numbers supply it; the page never rounds a figure itself.
  */
+/** The speed line prints "up to" the top of each measured range, so no approximate token stands in for it. */
 function display(cell, where) {
-  if (cell.display === null) return;
-  assert.ok(typeof cell.display === 'string' && /^~\d+(\.\d+)?$/.test(cell.display), `${where}.display must be null or look like "~180"`);
-  const value = Number(cell.display.slice(1));
-  const [floor, ceil] = [Math.floor(cell.lo), Math.ceil(cell.hi)];
-  assert.ok(value >= floor && value <= ceil, `${where}.display "${cell.display}" is outside ${floor} to ${ceil}, the band it stands for`);
+  assert.equal(cell.display, null, `${where}.display must be null: the speed line prints "up to" the top of its measured range`);
 }
 
 /**
@@ -166,9 +163,9 @@ function display(cell, where) {
 function filledSpeed(speed, rows) {
   speedShape(speed);
   band(speed.code, 'headline.speed.code', false);
-  const c8 = rows.find(row => row.id === 'decode_c8');
+  const c4 = rows.find(row => row.id === 'decode_c4');
   for (const key of ['lo', 'hi', 'lo_text', 'hi_text']) {
-    assert.equal(speed.code[key], c8[key], `headline.speed.code.${key} must equal the headline decode_c8 ${key} (${JSON.stringify(c8[key])}), not ${JSON.stringify(speed.code[key])}`);
+    assert.equal(speed.code[key], c4[key], `headline.speed.code.${key} must equal the headline decode_c4 ${key} (${JSON.stringify(c4[key])}), not ${JSON.stringify(speed.code[key])}`);
   }
   display(speed.code, 'headline.speed.code');
   if (speed.prose !== null) {
