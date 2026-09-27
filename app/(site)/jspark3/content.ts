@@ -457,7 +457,7 @@ export const RUN_LINKS: ReadonlyArray<{ title: string; body: string; href: strin
   {
     title: "The recipe on GitHub",
     body: "Download the v1.1.0 setup scripts, check that the files are complete, and copy them to each Spark. The README links every installation step.",
-    href: "https://github.com/jakejharris/jspark3#readme",
+    href: "https://github.com/jakejharris/jspark3/tree/v1.1.0#readme",
     cta: "github.com/jakejharris/jspark3",
   },
   {
@@ -469,7 +469,7 @@ export const RUN_LINKS: ReadonlyArray<{ title: string; body: string; href: strin
   {
     title: "The full install",
     body: "Follow the steps to install the software, download the model, connect your Sparks, and send a first request. The guide includes checks before and after starting the server.",
-    href: "https://github.com/jakejharris/jspark3/blob/main/docs/INSTALL.md",
+    href: "https://github.com/jakejharris/jspark3/blob/v1.1.0/docs/INSTALL.md",
     cta: "docs/INSTALL.md",
   },
 ];
