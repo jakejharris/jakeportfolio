@@ -43,6 +43,7 @@ const row = (rows, id) => rows.find(item => item.id === id);
 const missing = glm => {
   glm.headline.missing = true;
   glm.headline.speed = null;
+  glm.headline.prose_c1 = null;
   glm.headline.rows = [];
   glm.mode_switch = 'A';
 };
@@ -55,10 +56,16 @@ const NULL_BAND = { lo: null, hi: null, lo_text: null, hi_text: null, display: n
 const template = glm => {
   glm.placeholder = true;
   glm.headline.speed = { streams: 8, code: { ...NULL_BAND }, prose: { ...NULL_BAND }, rule: 'strict', reference_streams: [] };
+  glm.headline.prose_c1 = { lo: null, hi: null, lo_text: null, hi_text: null };
 };
 /** Every comparison rule the reference clause can be worded by. */
 const RULES = ['strict', 'median_noise', 'median', 'off'];
 const speed = glm => glm.headline.speed;
+
+test('accepts the fixture with no hub prose figure (the release has none)', () => {
+  const result = check(edited(glm => { glm.headline.prose_c1 = null; }));
+  assert.equal(result.status, 0, result.stderr);
+});
 
 test('accepts the synthetic fixture', () => {
   const result = check(fixture);
@@ -131,6 +138,13 @@ test('accepts a v1.x.5 tag, whose version drops the patch', () => {
 
 /** [what breaks, the edit, the refusal it must produce] */
 const CONTROLS = [
+  ['hub prose c1 kept when the headline is missing', glm => { missing(glm); glm.headline.prose_c1 = { lo: 22.2, hi: 33.3, lo_text: '22.2', hi_text: '33.3' }; }, /headline\.missing is true, so headline\.prose_c1 must be null/],
+  ['hub prose c1 left undefined', glm => { delete glm.headline.prose_c1; }, /headline\.prose_c1 must be a band or null/],
+  ['hub prose c1 inverted', glm => { Object.assign(glm.headline.prose_c1, { lo: 44.4, lo_text: '44.4' }); }, /headline\.prose_c1: lo 44\.4 is above hi 33\.3/],
+  ['hub prose c1 text not its number', glm => { glm.headline.prose_c1.hi_text = '33.4'; }, /headline\.prose_c1: hi_text/],
+  ['hub prose c1 half null', glm => { glm.headline.prose_c1.hi = null; }, /headline\.prose_c1: lo and hi must both be numbers/],
+  ['hub prose c1 extra field', glm => { glm.headline.prose_c1.display = null; }, /headline\.prose_c1 must have exactly/],
+  ['hub prose c1 figure in the template', glm => { template(glm); glm.headline.prose_c1.lo = 22.2; }, /in placeholder state every headline\.prose_c1 value must be null/],
   ['placeholder is true', glm => { glm.placeholder = true; }, /placeholder is still true/],
   ['a PLACEHOLDER marker', glm => { glm.headline.conditions = 'PLACEHOLDER: conditions'; }, /PLACEHOLDER is still in/],
   ['a placeholder version', glm => { glm.version = 'v1.X'; }, /v1\.X is still in/],

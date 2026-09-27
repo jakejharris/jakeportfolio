@@ -2,19 +2,31 @@ import React from 'react';
 import PageLayout from '../../../components/PageLayout';
 import PixelFluidBackground from '../../../components/PixelFluidBackground';
 import TransitionLink from '../../../components/TransitionLink';
-import Band from './Band';
 import { release } from './release-data';
-import { GLM_RELEASE, HEADLINE_ROWS, HUB_COPY, INTERNAL_BUILDS, IS_PLACEHOLDER, RELEASE, RELEASE_HISTORY, releaseDate, startsAndSweeps } from '../release-copy';
+import { GLM_RELEASE, HEADLINE_ROWS, HUB_COPY, INTERNAL_BUILDS, IS_PLACEHOLDER, RELEASE, RELEASE_HISTORY, releaseDate, valueText } from '../release-copy';
 import { Ph } from '../Placeholder';
 
 /**
- * The card's two bands: prefill, and decode for one stream, from the release's own start.
- * A figure the release's numbers leave out is skipped, and with no measured start of the release the card shows none.
+ * The card's four figures, from the release's own start: prefill, code and prose for one stream, and code
+ * for four streams. prose_c1 is the release's decode_prose_c1; the others are headline rows. A figure the
+ * release's numbers leave out is skipped, and with no measured start of the release the card shows none.
  */
-const HUB_STATS = [
-  { row: HEADLINE_ROWS.find(row => row.label === 'Prefill'), caption: 'prefill' },
-  { row: HEADLINE_ROWS.find(row => row.label === 'Decode' && row.concurrency === 'c1'), caption: 'decode, one stream' },
-].flatMap(({ row, caption }) => (row && (IS_PLACEHOLDER || row.lo_text !== null) ? [{ row, caption }] : []));
+type HubCell = { lo_text: string | null; hi_text: string | null; unit: string };
+const HUB_TILES = HUB_COPY.glmCard.tiles.flatMap(tile => {
+  const cell: HubCell | undefined = tile.id === 'prose_c1'
+    ? (GLM_RELEASE.headline.missing || !GLM_RELEASE.headline.prose_c1 ? undefined : { ...GLM_RELEASE.headline.prose_c1, unit: 'tok/s' })
+    : HEADLINE_ROWS.find(item => item.id === tile.id);
+  return cell && (IS_PLACEHOLDER || cell.hi_text !== null) ? [{ ...tile, cell }] : [];
+});
+const FIGURE = HUB_COPY.glmCard.figure;
+
+/** One figure: the top of its measured range as the release files write it, never rounded. */
+function HubFigure({ cell }: { cell: HubCell }) {
+  const top = <Ph>{valueText(cell.hi_text)}</Ph>;
+  return FIGURE === 'asterisk'
+    ? <>{top}<span className="spark-hub-figure-mark" aria-hidden="true">*</span></>
+    : <><span className="spark-hub-figure-upto">up to</span>{top}</>;
+}
 
 function LedgerRow({ href, children }: { href: string; children: React.ReactNode }) {
   return href.startsWith('/')
@@ -38,12 +50,13 @@ export default function HubPage() {
             <TransitionLink href="/jspark3/glm/" className="pageLinkContainer pinnedLinkBorder spark-hub-release">
               <span className="spark-hub-release-meta">{`${HUB_COPY.glmCard.meta} `}<span><Ph>{RELEASE}</Ph> · <Ph>{releaseDate(GLM_RELEASE.published)}</Ph></span></span>
               <span className="spark-hub-release-title">{HUB_COPY.glmCard.title} <span aria-hidden="true">↗</span></span>
-              <span className="spark-hub-release-model">{HUB_COPY.glmCard.model}</span>
-              {HUB_STATS.length ? <span className="spark-hub-release-stats">
-                {HUB_STATS.map(({ row, caption }) => <span key={row.id}><strong><Band lo={row.lo_text} hi={row.hi_text} /></strong> {row.unit} {caption}</span>)}
-                <span className="spark-hub-release-band">{startsAndSweeps(GLM_RELEASE.headline)}</span>
+              {HUB_TILES.length ? <span className="spark-hub-figures" data-figure={FIGURE}>
+                {HUB_TILES.map(({ id, label, cell }) => <span key={id} className="spark-hub-figure" data-metric-id={id}>
+                  <span className="spark-hub-figure-label">{label}</span>
+                  <span className="spark-hub-figure-value"><HubFigure cell={cell} /><small>{cell.unit}</small></span>
+                </span>)}
               </span> : null}
-              <span className="spark-hub-release-detail">{HUB_COPY.glmCard.detail}</span>
+              <span className="spark-hub-release-detail">{HUB_TILES.length ? HUB_COPY.glmCard.caption[FIGURE] : HUB_COPY.glmCard.caption.none}</span>
               <span className="spark-hub-release-action">{HUB_COPY.glmCard.action} <span aria-hidden="true">→</span></span>
             </TransitionLink>
           </li>

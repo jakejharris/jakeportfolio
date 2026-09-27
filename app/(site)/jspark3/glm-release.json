@@ -39,6 +39,12 @@
       "rule": "strict",
       "reference_streams": []
     },
+    "prose_c1": {
+      "lo": null,
+      "hi": null,
+      "lo_text": null,
+      "hi_text": null
+    },
     "rows": [
       {
         "id": "prefill",

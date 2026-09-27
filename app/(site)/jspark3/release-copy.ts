@@ -92,6 +92,8 @@ export interface GlmRelease {
     sweeps: number;
     /** null exactly when missing is true. */
     speed: HeadlineSpeed | null;
+    /** The hub card's prose figure for one stream: the release's own decode_prose_c1, or null when it has none. */
+    prose_c1: { lo: number | null; hi: number | null; lo_text: string | null; hi_text: string | null } | null;
     rows: HeadlineRow[];
   };
   sets: ServingSet[];
@@ -220,8 +222,24 @@ export const HUB_COPY = {
     meta: LABELS.latest,
     version: RELEASE,
     title: glm.name ?? 'GLM-5.3 Flash',
-    model: glm.name ? 'GLM-5.3 Flash' : 'Stock weights by default',
-    detail: 'vLLM · Three DGX Sparks · One OpenAI-compatible endpoint',
+    /**
+     * How each figure prints, one token: 'upto' prints "up to" and the top of the measured range;
+     * 'asterisk' prints the top of the range with a mark, and the caption carries the mark.
+     */
+    figure: 'upto' as 'upto' | 'asterisk',
+    /** The four figures, from the release's own start. 'prose_c1' is its decode_prose_c1; the rest are headline rows. */
+    tiles: [
+      { id: 'prefill', label: 'Prefill' },
+      { id: 'decode_c1', label: 'Code, 1 stream' },
+      { id: 'prose_c1', label: 'Prose, 1 stream' },
+      { id: 'decode_c4', label: 'Code, 4 streams' },
+    ],
+    /** The card's one line under the figures, true for every tile: prefill is the best of its turns, decode of its sweeps. */
+    caption: {
+      upto: 'Best measured run for each. Full ranges on the release page.',
+      asterisk: '* Best measured run for each. Full ranges on the release page.',
+      none: 'Three DGX Sparks · stock weights by default',
+    },
     action: 'Recipe, results, and release notes',
   },
   tempoCard: {

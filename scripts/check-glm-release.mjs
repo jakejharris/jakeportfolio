@@ -180,6 +180,21 @@ function filledSpeed(speed, rows) {
   assert.ok(counts.every((count, index) => index === 0 || count > counts[index - 1]), `headline.speed.reference_streams must be ascending with no repeats, not ${JSON.stringify(counts)}`);
 }
 
+/**
+ * The hub card's prose figure for one stream: the release's own decode_prose_c1 band, or null when the
+ * release has none. In the template it is the empty band.
+ */
+const HUB_PROSE_KEYS = 'hi, hi_text, lo, lo_text';
+function hubProse(cell, placeholder) {
+  if (!placeholder && cell === null) return;
+  assert.ok(cell !== null && typeof cell === 'object' && !Array.isArray(cell) && keys(cell) === HUB_PROSE_KEYS, `headline.prose_c1 must have exactly ${HUB_PROSE_KEYS}${placeholder ? '' : ', or be null'}`);
+  if (placeholder) {
+    for (const [key, value] of Object.entries(cell)) assert.equal(value, null, `in placeholder state every headline.prose_c1 value must be null, but ${key} is ${JSON.stringify(value)}`);
+    return;
+  }
+  band(cell, 'headline.prose_c1', false);
+}
+
 async function check() {
   const text = fs.readFileSync(file, 'utf8');
   const glm = JSON.parse(text);
@@ -188,6 +203,7 @@ async function check() {
   if (glm.placeholder === true) {
     try {
       placeholderSpeed(glm.headline?.speed);
+      hubProse(glm.headline?.prose_c1 ?? null, true);
     } catch (error) {
       assert.fail(`placeholder is still true, and ${error.message.split('\n')[0]}`);
     }
@@ -230,6 +246,7 @@ async function check() {
   if (headline.missing) {
     assert.deepEqual(rows, [], 'headline.missing is true, so headline.rows must be empty');
     assert.equal(headline.speed, null, 'headline.missing is true, so headline.speed must be null');
+    assert.equal(headline.prose_c1, null, 'headline.missing is true, so headline.prose_c1 must be null');
   } else {
     assert.ok(Array.isArray(rows) && rows.length > 0, 'headline.missing is false, so headline.rows must hold the five rows');
     assert.equal(headline.serving_starts, 1, 'the headline is one serving start of the release build');
@@ -246,6 +263,8 @@ async function check() {
     });
     assert.ok(headline.speed != null, 'headline.missing is false, so headline.speed must hold the speed headline');
     filledSpeed(headline.speed, rows);
+    assert.ok(headline.prose_c1 !== undefined, 'headline.prose_c1 must be a band or null');
+    hubProse(headline.prose_c1, false);
   }
   // Mia's numbers appear only where we ran her benchmark exactly as she describes it.
   if (rows.some(row => row.mia !== null)) {
