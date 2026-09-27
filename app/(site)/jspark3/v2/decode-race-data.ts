@@ -1,4 +1,4 @@
-import { GLM_COPY, GLM_RELEASE, METRICS, displayBuild, startsAndSweeps, streams, valueText, weightsText, type GlmRelease } from '../release-copy';
+import { GLM_COPY, GLM_RELEASE, METRICS, displayBuild, startsAndSweeps, streams, valueText, type GlmRelease } from '../release-copy';
 
 /**
  * The decode race's data: the page's own serving starts, reduced to the decode rows the race draws.
@@ -87,6 +87,14 @@ function lanes<T extends Cell>(cells: T[], concurrency: (cell: T) => string | un
 
 function start(key: string, label: string, { build, mode, serving_starts, sweeps }: StartRun, raceLanes: RaceLane[]): RaceStart {
   return { key, label, run: { build, mode, serving_starts, sweeps }, measured: raceLanes.some(lane => lane.lo !== null), lanes: raceLanes };
+}
+
+/**
+ * The weights a start ran, in the serving-start table's words. It mirrors the words setCaption in
+ * release-copy.ts writes, kept here so that file stays as it is; a test fails if the two drift apart.
+ */
+export function weightsText(mode: number) {
+  return mode === 0 ? 'stock weights' : 'edited weights, opt-in';
 }
 
 /** True when `text` names `build` as a whole version, so "v1.7" is not found inside "v1.7.4". */

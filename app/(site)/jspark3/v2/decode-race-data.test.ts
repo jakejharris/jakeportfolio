@@ -4,8 +4,8 @@ import path from 'node:path';
 import test from 'node:test';
 import committed from '../glm-release.json';
 import type { GlmRelease } from '../release-copy';
-import { displayBuild } from '../release-copy';
-import { axisEnd, bandText, buildRaceStarts, raceCaption, type RaceData, type RaceStart } from './decode-race-data';
+import { displayBuild, setCaption } from '../release-copy';
+import { axisEnd, bandText, buildRaceStarts, raceCaption, weightsText, type RaceData, type RaceStart } from './decode-race-data';
 
 const synthetic: GlmRelease = JSON.parse(
   fs.readFileSync(path.join(process.cwd(), 'scripts/fixtures/glm-release.synthetic.json'), 'utf8'),
@@ -162,4 +162,11 @@ test('every start of a file gets its label verbatim, its build and its weights e
   // The release's own start is labelled from the page's own file, which names its build, so the label leads.
   const own = buildRaceStarts(committed as GlmRelease).starts.find(start => start.key === 'current');
   if (own) assert.equal(raceCaption(own), [own.label, 'stock weights', raceCaption(own).split(' · ').at(-1)].join(' · '));
+});
+
+test('the weights words match the ones setCaption writes', () => {
+  for (const mode of [0, 1]) {
+    const caption = setCaption({ build: 'v1.2.3', mode, serving_starts: 1, sweeps: 1 });
+    assert.ok(caption.includes(` · ${weightsText(mode)} · `), `setCaption writes "${caption}", without "${weightsText(mode)}"`);
+  }
 });

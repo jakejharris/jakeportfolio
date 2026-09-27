@@ -163,14 +163,9 @@ export function startsAndSweeps({ serving_starts, sweeps }: { serving_starts: nu
   return `${counted(serving_starts, 'serving start')}, ${counted(sweeps, 'sweep')}`;
 }
 
-/** The weights a start ran, in the table's words: "stock weights" for mode 0, "edited weights, opt-in" for mode 1. */
-export function weightsText(mode: number) {
-  return mode === 0 ? 'stock weights' : 'edited weights, opt-in';
-}
-
 /** "v1.7.4 · stock weights · one serving start, two sweeps". */
 export function setCaption(set: { build: string; mode: number; serving_starts: number; sweeps: number }) {
-  return `${displayBuild(set.build)} · ${weightsText(set.mode)} · ${startsAndSweeps(set)}`;
+  return `${displayBuild(set.build)} · ${set.mode === 0 ? 'stock weights' : 'edited weights, opt-in'} · ${startsAndSweeps(set)}`;
 }
 
 /** Mia's series appears only where we ran her benchmark exactly as she describes it. */
