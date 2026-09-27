@@ -82,7 +82,7 @@ for(const hash of hashes) {await navigate('/jspark3/#'+hash);const r=await run('
 report.cadence={};
 for(const width of [1440,1024,768,390,320]) {await viewport(width);await navigate('/jspark3/glm/');report.cadence[width]=await run('({width:innerWidth,scroll:document.documentElement.scrollWidth})');await shot(`${width}-cadence-full`);await shot(`${width}-cadence-header`,'header');}
 await viewport(1200,630);await navigate('/social.html');await shot('tempo-social');
-fs.copyFileSync(`${out}/shots/tempo-social.png`,'public/og/jspark3-tempo.png');
+fs.copyFileSync(`${out}/shots/tempo-social.png`,'public/og/jspark3-tempo-20260925.png');
 fs.writeFileSync(`${out}/BROWSER-VALIDATION.json`,JSON.stringify(report,null,2)+'\n');
 await call('Target.closeTarget',{targetId});ws.close();
 console.log(JSON.stringify({widths:Object.keys(report.widths).length,shots:report.shots.length,legacy:report.legacy.length,report:`${out}/BROWSER-VALIDATION.json`,cadence:report.cadence}));

@@ -14,18 +14,6 @@ export const HERO = {
     "I had three DGX Sparks and wanted one model server. JSpark3 makes three work: GLM-5.3 Flash across all of them as one OpenAI-compatible endpoint. Version 1.1, Cadence, adds measured single-stream decode improvements and the long-context kernel fix. The recipe is pinned so you can rebuild it, with public benchmarks and the misses left in.",
 } as const;
 
-/** Public links for the v1.1.0 release. */
-export const HERO_LINKS: ReadonlyArray<{
-  label: string;
-  href: string;
-  primary?: boolean;
-  live: true;
-}> = [
-  { label: "GitHub repository", href: "https://github.com/jakejharris/jspark3", primary: true, live: true },
-  { label: "Release v1.1.0", href: "https://github.com/jakejharris/jspark3/releases/tag/v1.1.0", live: true },
-  { label: "Hugging Face: model card and provenance", href: "https://huggingface.co/jakejharris/jspark3", live: true },
-];
-
 export const HERO_FACTS: ReadonlyArray<{ value: string; label: string }> = [
   { value: "68.77 tok/s", label: "single-stream code decode, v1.1: descriptive median of three battery medians" },
   { value: "87.67 tok/s", label: "structured decode, v1.1: code 68.77, prose 34.64 tok/s on the same battery basis" },

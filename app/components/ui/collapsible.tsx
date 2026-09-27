@@ -109,7 +109,12 @@ const CollapsibleContent = React.forwardRef<
   React.useEffect(() => {
     if (!state) return
     const follow = () => {
-      const id = decodeURIComponent(window.location.hash.slice(1))
+      let id: string
+      try {
+        id = decodeURIComponent(window.location.hash.slice(1))
+      } catch {
+        return // a malformed fragment is not a deep link
+      }
       if (!id) return
       const target = document.getElementById(id)
       if (!target || !innerRef.current?.contains(target)) return

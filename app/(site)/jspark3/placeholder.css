@@ -1,0 +1,17 @@
+/* Unfilled release values: hatched amber with a dashed edge, visible in every theme. */
+.jspark-ph {
+  --ph-edge: #d99a00;
+  --ph-a: rgba(230, 160, 0, .14);
+  --ph-b: rgba(230, 160, 0, .32);
+  color: inherit;
+  background: repeating-linear-gradient(135deg, var(--ph-a) 0 5px, var(--ph-b) 5px 10px);
+  outline: 1.5px dashed var(--ph-edge);
+  outline-offset: 1px;
+  border-radius: 3px;
+  padding: 0 .18em;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.dark .jspark-ph, .glm .jspark-ph { --ph-edge: #f0b429; --ph-a: rgba(240, 180, 41, .1); --ph-b: rgba(240, 180, 41, .26); }
+.glm .glm-results .jspark-ph { --ph-edge: #b07a00; --ph-a: rgba(230, 160, 0, .14); --ph-b: rgba(230, 160, 0, .32); }
+.jspark-ph-block { display: block; white-space: normal; padding: .4em .6em; }
