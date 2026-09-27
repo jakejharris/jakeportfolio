@@ -36,6 +36,7 @@
         "hi_text": null,
         "display": null
       },
+      "rule": "strict",
       "reference_streams": []
     },
     "rows": [

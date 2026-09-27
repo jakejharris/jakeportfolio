@@ -106,13 +106,22 @@ function ids(rows, where) {
   assert.equal(rows.map(row => row?.id).join(', '), IDS, `${where} rows must be ${IDS}, in that order`);
 }
 
-const SPEED_KEYS = 'code, prose, reference_streams, streams';
+const SPEED_KEYS = 'code, prose, reference_streams, rule, streams';
 const SPEED_BAND_KEYS = 'display, hi, hi_text, lo, lo_text';
+/**
+ * How the reference clause compares, and so how it is worded: "strict" is every run ahead, the two median
+ * rules differ only in which stream counts qualify, and "off" makes no claim at all.
+ */
+const SPEED_RULES = ['strict', 'median_noise', 'median', 'off'];
 const keys = value => Object.keys(value).sort().join(', ');
 
-/** The hero's speed headline keeps one shape in every state: eight streams, a code band, a prose band or null, and a list. */
+/**
+ * The hero's speed headline keeps one shape in every state: eight streams, a code band, a prose band or null,
+ * a comparison rule, and a list, which is empty when the rule is "off".
+ */
 function speedShape(speed) {
   assert.ok(speed !== null && typeof speed === 'object' && !Array.isArray(speed), 'headline.speed must be an object');
+  assert.ok(SPEED_RULES.includes(speed.rule), `headline.speed.rule must be "strict", "median_noise", "median" or "off", not ${JSON.stringify(speed.rule) ?? 'missing'}`);
   assert.equal(keys(speed), SPEED_KEYS, `headline.speed must have exactly ${SPEED_KEYS}`);
   assert.equal(speed.streams, 8, 'headline.speed.streams must be 8');
   for (const name of ['code', 'prose']) {
@@ -121,6 +130,7 @@ function speedShape(speed) {
     assert.ok(cell !== null && typeof cell === 'object' && keys(cell) === SPEED_BAND_KEYS, `headline.speed.${name} must have exactly ${SPEED_BAND_KEYS}${name === 'prose' ? ', or be null' : ''}`);
   }
   assert.ok(Array.isArray(speed.reference_streams), 'headline.speed.reference_streams must be a list');
+  if (speed.rule === 'off') assert.deepEqual(speed.reference_streams, [], `headline.speed.rule is "off", so headline.speed.reference_streams must be empty, not ${JSON.stringify(speed.reference_streams)}`);
 }
 
 /**
@@ -150,8 +160,8 @@ function display(cell, where) {
 
 /**
  * The filled speed headline. code is the headline decode_c8 band exactly; prose is a band or null.
- * reference_streams are the stream counts, 1 to 8, at which every exact run of the published reference
- * benchmark on this start came out ahead.
+ * reference_streams are the stream counts, 1 to 8, at which the exact runs of the published reference
+ * benchmark on this start came out ahead under rule: every run for "strict", the median for the median rules.
  */
 function filledSpeed(speed, rows) {
   speedShape(speed);
@@ -282,6 +292,7 @@ async function check() {
     speed: headline.speed && {
       prose: headline.speed.prose !== null,
       display: [headline.speed.code.display, headline.speed.prose?.display ?? null],
+      rule: headline.speed.rule,
       reference_streams: headline.speed.reference_streams,
     },
     social_image: glm.social_image,

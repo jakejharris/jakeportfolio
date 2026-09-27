@@ -36,6 +36,7 @@
         "hi_text": "44.4",
         "display": null
       },
+      "rule": "strict",
       "reference_streams": [
         1,
         2

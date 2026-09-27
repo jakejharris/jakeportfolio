@@ -54,8 +54,10 @@ const NULL_BAND = { lo: null, hi: null, lo_text: null, hi_text: null, display: n
 /** The committed template's state: placeholder true and the speed headline the empty shape. */
 const template = glm => {
   glm.placeholder = true;
-  glm.headline.speed = { streams: 8, code: { ...NULL_BAND }, prose: { ...NULL_BAND }, reference_streams: [] };
+  glm.headline.speed = { streams: 8, code: { ...NULL_BAND }, prose: { ...NULL_BAND }, rule: 'strict', reference_streams: [] };
 };
+/** Every comparison rule the reference clause can be worded by. */
+const RULES = ['strict', 'median_noise', 'median', 'off'];
 const speed = glm => glm.headline.speed;
 
 test('accepts the synthetic fixture', () => {
@@ -80,6 +82,14 @@ test('refuses the template state only because it is a placeholder', () => {
   assert.equal(result.stderr.trim(), 'REFUSED: placeholder is still true');
 });
 
+for (const rule of RULES) {
+  test(`refuses the template state under rule ${rule} only because it is a placeholder`, () => {
+    const result = check(edited(glm => { template(glm); speed(glm).rule = rule; }));
+    assert.notEqual(result.status, 0, result.stdout);
+    assert.equal(result.stderr.trim(), 'REFUSED: placeholder is still true');
+  });
+}
+
 /** [what varies, the edit] for speed headlines the checker must accept. The fixture's decode_c8 band is 77.7 to 88.8. */
 const SPEED_ACCEPTED = [
   ['no prose run', glm => { speed(glm).prose = null; }],
@@ -92,11 +102,19 @@ const SPEED_ACCEPTED = [
   ['a display token at the floor of lo', glm => { speed(glm).code.display = '~77'; }],
   ['a display token at the ceiling of hi', glm => { speed(glm).code.display = '~89'; }],
   ['a single-value prose band', glm => { Object.assign(speed(glm).prose, { lo: 33.3, hi: 33.3, lo_text: '33.3', hi_text: '33.3' }); }],
+  ['rule strict and no reference clause', glm => { Object.assign(speed(glm), { rule: 'strict', reference_streams: [] }); }],
+  ['rule median_noise', glm => { Object.assign(speed(glm), { rule: 'median_noise', reference_streams: [1, 2] }); }],
+  ['rule median', glm => { Object.assign(speed(glm), { rule: 'median', reference_streams: [1, 2, 3, 4] }); }],
+  ['rule median and no reference clause', glm => { Object.assign(speed(glm), { rule: 'median', reference_streams: [] }); }],
+  ['rule off', glm => { Object.assign(speed(glm), { rule: 'off', reference_streams: [] }); }],
+  ['rule off and no prose run', glm => { Object.assign(speed(glm), { rule: 'off', prose: null, reference_streams: [] }); }],
 ];
 for (const [what, edit] of SPEED_ACCEPTED) {
   test(`accepts a speed headline with ${what}`, () => {
-    const result = check(edited(edit));
+    const glm = edited(edit);
+    const result = check(glm);
     assert.equal(result.status, 0, result.stderr);
+    assert.equal(JSON.parse(result.stdout).speed.rule, speed(glm).rule);
   });
 }
 
@@ -188,7 +206,14 @@ const CONTROLS = [
   ['a null speed headline when the headline is present', glm => { glm.headline.speed = null; }, /headline\.missing is false, so headline\.speed must hold the speed headline/],
   ['no speed headline when the headline is present', glm => { delete glm.headline.speed; }, /headline\.missing is false, so headline\.speed must hold the speed headline/],
   ['a speed headline that is a list', glm => { glm.headline.speed = []; }, /headline\.speed must be an object/],
-  ['a speed headline with an extra field', glm => { speed(glm).scaled_from = 'base_m0_a'; }, /headline\.speed must have exactly code, prose, reference_streams, streams/],
+  ['a speed headline with an extra field', glm => { speed(glm).scaled_from = 'base_m0_a'; }, /headline\.speed must have exactly code, prose, reference_streams, rule, streams/],
+  ['a speed headline without a rule', glm => { delete speed(glm).rule; }, /headline\.speed\.rule must be "strict", "median_noise", "median" or "off", not missing/],
+  ['a rule named by its option letter', glm => { speed(glm).rule = 'A'; }, /headline\.speed\.rule must be "strict", "median_noise", "median" or "off", not "A"/],
+  ['a rule named by its wording', glm => { speed(glm).rule = 'every_run'; }, /headline\.speed\.rule must be "strict", "median_noise", "median" or "off", not "every_run"/],
+  ['a rule in the wrong case', glm => { speed(glm).rule = 'Median'; }, /headline\.speed\.rule must be "strict", "median_noise", "median" or "off", not "Median"/],
+  ['a null rule', glm => { speed(glm).rule = null; }, /headline\.speed\.rule must be "strict", "median_noise", "median" or "off", not null/],
+  ['a rule as a number', glm => { speed(glm).rule = 1; }, /headline\.speed\.rule must be "strict", "median_noise", "median" or "off", not 1$/],
+  ['rule off with a reference clause', glm => { speed(glm).rule = 'off'; speed(glm).reference_streams = [1]; }, /headline\.speed\.rule is "off", so headline\.speed\.reference_streams must be empty, not \[1\]/],
   ['a speed headline at 4 streams', glm => { speed(glm).streams = 4; }, /headline\.speed\.streams must be 8/],
   ['a speed headline streams as text', glm => { speed(glm).streams = '8'; }, /headline\.speed\.streams must be 8/],
   ['a speed band with an extra field', glm => { speed(glm).code.per_stream = 11.1; }, /headline\.speed\.code must have exactly display, hi, hi_text, lo, lo_text$/],
@@ -229,6 +254,10 @@ const CONTROLS = [
   ['a null prose in the template', glm => { template(glm); speed(glm).prose = null; }, /^REFUSED: placeholder is still true, and in placeholder state headline\.speed\.prose must be the null band, not null/],
   ['no speed headline in the template', glm => { template(glm); delete glm.headline.speed; }, /^REFUSED: placeholder is still true, and headline\.speed must be an object/],
   ['a template speed headline at 4 streams', glm => { template(glm); speed(glm).streams = 4; }, /^REFUSED: placeholder is still true, and headline\.speed\.streams must be 8/],
+  ['a template speed headline without a rule', glm => { template(glm); delete speed(glm).rule; }, /^REFUSED: placeholder is still true, and headline\.speed\.rule must be "strict", "median_noise", "median" or "off", not missing/],
+  ['a template rule named by its option letter', glm => { template(glm); speed(glm).rule = 'A'; }, /^REFUSED: placeholder is still true, and headline\.speed\.rule must be "strict", "median_noise", "median" or "off", not "A"/],
+  ['a null template rule', glm => { template(glm); speed(glm).rule = null; }, /^REFUSED: placeholder is still true, and headline\.speed\.rule must be "strict", "median_noise", "median" or "off", not null/],
+  ['a template rule off with a reference clause', glm => { template(glm); speed(glm).rule = 'off'; speed(glm).reference_streams = [1]; }, /^REFUSED: placeholder is still true, and headline\.speed\.rule is "off", so headline\.speed\.reference_streams must be empty, not \[1\]/],
 ];
 
 /**

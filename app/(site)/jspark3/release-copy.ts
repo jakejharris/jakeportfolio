@@ -62,12 +62,15 @@ export interface SpeedBand {
 /**
  * The hero's speed headline, from the release's own stock-weight start. code is its decode_c8 row;
  * prose is null when the start has no prose run. reference_streams lists the stream counts at which
- * its exact runs of the published reference benchmark all came out ahead, and is empty for no claim.
+ * its exact runs of the published reference benchmark came out ahead under rule, and is empty for no claim.
+ * rule is "strict" (every run ahead), "median_noise" or "median" (the median ahead; the two differ only in
+ * which counts qualify), or "off", which makes no claim.
  */
 export interface HeadlineSpeed {
   streams: number;
   code: SpeedBand;
   prose: SpeedBand | null;
+  rule: string;
   reference_streams: number[];
 }
 
@@ -190,6 +193,18 @@ export function streamCounts(counts: readonly number[]) {
 /** The speed headline, or null when the release's own start is not in the numbers. Nothing stands in for it. */
 export const SPEED = GLM_RELEASE.headline.missing ? null : GLM_RELEASE.headline.speed;
 
+/**
+ * The reference clause, worded by the speed headline's rule. It names no build, node count, band or figure,
+ * and appears only for stream counts the numbers list. A median rule says "median"; any other rule makes no claim.
+ */
+function referenceClause(speed: HeadlineSpeed | null) {
+  if (!speed || !speed.reference_streams.length || IS_PLACEHOLDER) return null;
+  const at = streamCounts(speed.reference_streams);
+  if (speed.rule === 'strict') return `Faster than the published reference build on its own benchmark at ${at}, in every run.`;
+  if (speed.rule === 'median_noise' || speed.rule === 'median') return `Median faster than the published reference build on its own benchmark at ${at}.`;
+  return null;
+}
+
 export const LABELS = {
   latest: 'Latest release',
   named: 'Named release',
@@ -254,16 +269,11 @@ export const GLM_COPY = {
   whyGlm:
     'Tempo was my DeepSeek experiment, and I measured it seriously. Its tok/s held up, but it overthinks, and time to finish a task is what I actually feel. GLM-5.3 Flash is better at agent and coding work, and better in almost every other way I use it, so the numbered line runs GLM again.',
   whyGlmLink: 'Tempo, the DeepSeek experiment',
-  /**
-   * Under the hero's speed headline. It is approximate only when the numbers supply a display token;
-   * the reference clause names no build, node count or figure, and appears only for stream counts the numbers list.
-   */
+  /** Under the hero's speed headline. It is approximate only when the numbers supply a display token. */
   speed: {
     approximate: 'Approximate. The measured ranges are in the results below.',
     range: `Range across ${counted(glm.headline.sweeps, 'sweep')} of ${counted(glm.headline.serving_starts, 'serving start')}.`,
-    reference: SPEED && SPEED.reference_streams.length && !IS_PLACEHOLDER
-      ? `Faster than the published reference build on its own benchmark at ${streamCounts(SPEED.reference_streams)}, in every run.`
-      : null,
+    reference: referenceClause(SPEED),
   },
   numbersNote: 'Compared with our own v1.1.',
   resultsTitle: 'Measured on our three Sparks.',
