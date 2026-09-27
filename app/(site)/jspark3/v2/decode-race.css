@@ -45,7 +45,10 @@
 @media (max-width: 520px) {
   .glm-race { padding: 18px; }
   .glm-race-canvas { height: 288px; }
-  .glm-race-chips button { min-height: 40px; }
+  /* One row of starts that scrolls sideways inside the card, so the canvas stays near the chart. */
+  .glm-race-chips { flex: 1 1 100%; min-width: 0; flex-wrap: nowrap; overflow-x: auto; margin-inline: -18px; padding-inline: 18px; scrollbar-width: none; }
+  .glm-race-chips::-webkit-scrollbar { display: none; }
+  .glm-race-chips button { flex: none; min-height: 40px; white-space: nowrap; }
 }
 @media print {
   .glm-race { display: none; }
