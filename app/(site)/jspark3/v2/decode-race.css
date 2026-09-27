@@ -15,7 +15,6 @@
   --race-chassis: #b8b2a2;
   --race-vent: #2a2d25;
   --race-placeholder: #f0b429;
-  margin: 24px 0 0;
   background: var(--glm-card);
   border: 1px solid var(--glm-paper-line);
   padding: 26px;
@@ -35,6 +34,8 @@
 .glm-race-chips button:hover { border-color: var(--glm-gold-deep); color: var(--glm-paper-ink); }
 .glm-race-chips button[aria-pressed="true"] { border-color: var(--glm-gold-deep); background: var(--glm-paper-ink); color: var(--glm-gold); }
 .glm-race-canvas { position: relative; height: 300px; margin-top: 16px; background: var(--race-bg); overflow: hidden; }
+/* glm.css zeroes every figure's margin inside .glm, so the gap above the card needs this weight. */
+.glm figure.glm-race { margin: 24px 0 0; }
 /* p5 turns off touch scrolling on its canvas; the race takes no input, so scrolling over it stays normal. */
 .glm-race-canvas canvas { display: block; touch-action: auto !important; }
 .glm-race figcaption { display: grid; gap: 4px; margin-top: 12px; font-size: 14px; color: var(--glm-paper-muted); }
