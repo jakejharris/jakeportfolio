@@ -20,6 +20,27 @@
     "missing": false,
     "serving_starts": 1,
     "sweeps": 2,
+    "speed": {
+      "streams": 8,
+      "code": {
+        "lo": 77.7,
+        "hi": 88.8,
+        "lo_text": "77.7",
+        "hi_text": "88.8",
+        "display": null
+      },
+      "prose": {
+        "lo": 33.3,
+        "hi": 44.4,
+        "lo_text": "33.3",
+        "hi_text": "44.4",
+        "display": null
+      },
+      "reference_streams": [
+        1,
+        2
+      ]
+    },
     "rows": [
       {
         "id": "prefill",

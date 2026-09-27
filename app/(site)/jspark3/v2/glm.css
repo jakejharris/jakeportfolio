@@ -42,6 +42,12 @@
 .glm-kicker { color: var(--glm-muted); font: 14px/1.5 var(--font-geist-mono), monospace; letter-spacing: .5px; }
 .glm h1 { color: var(--glm-gold); font: 700 clamp(70px, 7.2vw, 104px)/1.06 var(--font-wordmark), Georgia, serif; letter-spacing: -.05em; margin-top: 12px; overflow-wrap: anywhere; }
 .glm-lede { font-size: clamp(22px, 2.2vw, 29px); letter-spacing: -.6px; line-height: 1.4; margin-top: 24px !important; }
+/* The speed headline: the lead line under the lede, with its figures in gold. */
+.glm-speed { max-width: 520px; margin-top: 22px; padding-left: 16px; border-left: 2px solid var(--glm-gold); }
+.glm-speed-line { font-size: 19px; line-height: 1.45; letter-spacing: -.2px; }
+.glm-speed-figure { color: var(--glm-gold); font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.glm-speed-sub { color: var(--glm-muted); font: 13px/1.5 var(--font-geist-mono), monospace; margin-top: 8px !important; }
+.glm-speed-reference { font-size: 15px; line-height: 1.5; margin-top: 8px !important; }
 .glm-intro { color: var(--glm-muted); max-width: 470px; margin-top: 18px !important; }
 .glm-actions { display: flex; align-items: center; gap: 24px; flex-wrap: wrap; margin-top: 26px; }
 .glm-actions a { display: inline-flex; align-items: center; min-height: 48px; font-size: 14px; }
@@ -242,6 +248,7 @@
   .glm-hero { padding-top: 38px; }
   .glm h1 { font-size: clamp(56px, 18vw, 78px); }
   .glm-lede { font-size: 23px; }
+  .glm-speed-line { font-size: 18px; }
   .glm-actions { gap: 12px 20px; }
   .glm h2 { font-size: 26px; }
   .glm-results { padding-block: 40px; }

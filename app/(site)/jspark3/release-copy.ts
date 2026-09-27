@@ -47,6 +47,30 @@ export interface ServingSet {
   rows: SetRow[];
 }
 
+/**
+ * One figure of the speed headline: a within-start band as written, like a headline row. display is an
+ * approximate token such as "~180" that the release's numbers supply; the page never rounds one itself.
+ */
+export interface SpeedBand {
+  lo: number | null;
+  hi: number | null;
+  lo_text: string | null;
+  hi_text: string | null;
+  display: string | null;
+}
+
+/**
+ * The hero's speed headline, from the release's own stock-weight start. code is its decode_c8 row;
+ * prose is null when the start has no prose run. reference_streams lists the stream counts at which
+ * its exact runs of the published reference benchmark all came out ahead, and is empty for no claim.
+ */
+export interface HeadlineSpeed {
+  streams: number;
+  code: SpeedBand;
+  prose: SpeedBand | null;
+  reference_streams: number[];
+}
+
 export interface GlmRelease {
   placeholder: boolean;
   version: string;
@@ -56,7 +80,17 @@ export interface GlmRelease {
   social_image: string | null;
   mode_switch: string;
   links: { release: string; source: string; huggingface: string; results: string; numbers: string };
-  headline: { baseline: string; conditions: string; build: string; missing: boolean; serving_starts: number; sweeps: number; rows: HeadlineRow[] };
+  headline: {
+    baseline: string;
+    conditions: string;
+    build: string;
+    missing: boolean;
+    serving_starts: number;
+    sweeps: number;
+    /** null exactly when missing is true. */
+    speed: HeadlineSpeed | null;
+    rows: HeadlineRow[];
+  };
   sets: ServingSet[];
   mia: { benchmark: string | null; source: string | null; ran_exactly_as_published: boolean };
 }
@@ -141,6 +175,21 @@ export function streams(concurrency: string) {
   return count === 1 ? 'one stream' : `${count} streams`;
 }
 
+/**
+ * Ascending stream counts in words: "one stream", "one and two streams", "one to four streams"
+ * for a run of three or more, and "one, two and four streams" otherwise.
+ */
+export function streamCounts(counts: readonly number[]) {
+  const words = counts.map(count => WORDS[count]);
+  const last = words[words.length - 1];
+  const run = counts.length >= 3 && counts.every((count, index) => index === 0 || count === counts[index - 1] + 1);
+  const list = words.length === 1 ? last : run ? `${words[0]} to ${last}` : `${words.slice(0, -1).join(', ')} and ${last}`;
+  return `${list} ${counts.length === 1 && counts[0] === 1 ? 'stream' : 'streams'}`;
+}
+
+/** The speed headline, or null when the release's own start is not in the numbers. Nothing stands in for it. */
+export const SPEED = GLM_RELEASE.headline.missing ? null : GLM_RELEASE.headline.speed;
+
 export const LABELS = {
   latest: 'Latest release',
   named: 'Named release',
@@ -205,6 +254,17 @@ export const GLM_COPY = {
   whyGlm:
     'Tempo was my DeepSeek experiment, and I measured it seriously. Its tok/s held up, but it overthinks, and time to finish a task is what I actually feel. GLM-5.3 Flash is better at agent and coding work, and better in almost every other way I use it, so the numbered line runs GLM again.',
   whyGlmLink: 'Tempo, the DeepSeek experiment',
+  /**
+   * Under the hero's speed headline. It is approximate only when the numbers supply a display token;
+   * the reference clause names no build, node count or figure, and appears only for stream counts the numbers list.
+   */
+  speed: {
+    approximate: 'Approximate. The measured ranges are in the results below.',
+    range: `Range across ${counted(glm.headline.sweeps, 'sweep')} of ${counted(glm.headline.serving_starts, 'serving start')}.`,
+    reference: SPEED && SPEED.reference_streams.length && !IS_PLACEHOLDER
+      ? `Faster than the published reference build on its own benchmark at ${streamCounts(SPEED.reference_streams)}, in every run.`
+      : null,
+  },
   numbersNote: 'Compared with our own v1.1.',
   resultsTitle: 'Measured on our three Sparks.',
   /** Under the results heading: what one headline figure is. */

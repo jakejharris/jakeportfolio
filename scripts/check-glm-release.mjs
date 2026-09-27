@@ -106,10 +106,82 @@ function ids(rows, where) {
   assert.equal(rows.map(row => row?.id).join(', '), IDS, `${where} rows must be ${IDS}, in that order`);
 }
 
+const SPEED_KEYS = 'code, prose, reference_streams, streams';
+const SPEED_BAND_KEYS = 'display, hi, hi_text, lo, lo_text';
+const keys = value => Object.keys(value).sort().join(', ');
+
+/** The hero's speed headline keeps one shape in every state: eight streams, a code band, a prose band or null, and a list. */
+function speedShape(speed) {
+  assert.ok(speed !== null && typeof speed === 'object' && !Array.isArray(speed), 'headline.speed must be an object');
+  assert.equal(keys(speed), SPEED_KEYS, `headline.speed must have exactly ${SPEED_KEYS}`);
+  assert.equal(speed.streams, 8, 'headline.speed.streams must be 8');
+  for (const name of ['code', 'prose']) {
+    const cell = speed[name];
+    if (name === 'prose' && cell === null) continue;
+    assert.ok(cell !== null && typeof cell === 'object' && keys(cell) === SPEED_BAND_KEYS, `headline.speed.${name} must have exactly ${SPEED_BAND_KEYS}${name === 'prose' ? ', or be null' : ''}`);
+  }
+  assert.ok(Array.isArray(speed.reference_streams), 'headline.speed.reference_streams must be a list');
+}
+
+/**
+ * The committed template: the speed headline is the empty shape the fill writes into. Every figure and
+ * display token is null, prose is the null band rather than null, and no reference clause is claimed.
+ */
+function placeholderSpeed(speed) {
+  speedShape(speed);
+  for (const name of ['code', 'prose']) {
+    assert.ok(speed[name] !== null, `in placeholder state headline.speed.${name} must be the null band, not null`);
+    for (const [key, value] of Object.entries(speed[name])) assert.equal(value, null, `in placeholder state every headline.speed value must be null, but ${name}.${key} is ${JSON.stringify(value)}`);
+  }
+  assert.deepEqual(speed.reference_streams, [], 'in placeholder state headline.speed.reference_streams must be empty');
+}
+
+/**
+ * An approximate token for a speed band, printed in place of the band: "~" and a number within
+ * [floor(lo), ceil(hi)]. The release's numbers supply it; the page never rounds a figure itself.
+ */
+function display(cell, where) {
+  if (cell.display === null) return;
+  assert.ok(typeof cell.display === 'string' && /^~\d+(\.\d+)?$/.test(cell.display), `${where}.display must be null or look like "~180"`);
+  const value = Number(cell.display.slice(1));
+  const [floor, ceil] = [Math.floor(cell.lo), Math.ceil(cell.hi)];
+  assert.ok(value >= floor && value <= ceil, `${where}.display "${cell.display}" is outside ${floor} to ${ceil}, the band it stands for`);
+}
+
+/**
+ * The filled speed headline. code is the headline decode_c8 band exactly; prose is a band or null.
+ * reference_streams are the stream counts, 1 to 8, at which every exact run of the published reference
+ * benchmark on this start came out ahead.
+ */
+function filledSpeed(speed, rows) {
+  speedShape(speed);
+  band(speed.code, 'headline.speed.code', false);
+  const c8 = rows.find(row => row.id === 'decode_c8');
+  for (const key of ['lo', 'hi', 'lo_text', 'hi_text']) {
+    assert.equal(speed.code[key], c8[key], `headline.speed.code.${key} must equal the headline decode_c8 ${key} (${JSON.stringify(c8[key])}), not ${JSON.stringify(speed.code[key])}`);
+  }
+  display(speed.code, 'headline.speed.code');
+  if (speed.prose !== null) {
+    band(speed.prose, 'headline.speed.prose', false);
+    display(speed.prose, 'headline.speed.prose');
+  }
+  const counts = speed.reference_streams;
+  assert.ok(counts.every(count => Number.isInteger(count) && count >= 1 && count <= 8), `headline.speed.reference_streams must be whole numbers from 1 to 8, not ${JSON.stringify(counts)}`);
+  assert.ok(counts.every((count, index) => index === 0 || count > counts[index - 1]), `headline.speed.reference_streams must be ascending with no repeats, not ${JSON.stringify(counts)}`);
+}
+
 async function check() {
   const text = fs.readFileSync(file, 'utf8');
   const glm = JSON.parse(text);
 
+  // A template whose speed headline is not the empty shape is refused for that too, so it never renders a claim.
+  if (glm.placeholder === true) {
+    try {
+      placeholderSpeed(glm.headline?.speed);
+    } catch (error) {
+      assert.fail(`placeholder is still true, and ${error.message.split('\n')[0]}`);
+    }
+  }
   assert.equal(glm.placeholder, false, 'placeholder is still true');
   for (const marker of ['PLACEHOLDER', 'v1.X', 'XX.X']) assert.ok(!text.includes(marker), `${marker} is still in ${file}`);
   assert.match(glm.version, /^v1\.\d+$/, 'version must look like v1.8');
@@ -147,6 +219,7 @@ async function check() {
   const rows = headline.rows;
   if (headline.missing) {
     assert.deepEqual(rows, [], 'headline.missing is true, so headline.rows must be empty');
+    assert.equal(headline.speed, null, 'headline.missing is true, so headline.speed must be null');
   } else {
     assert.ok(Array.isArray(rows) && rows.length > 0, 'headline.missing is false, so headline.rows must hold the five rows');
     assert.equal(headline.serving_starts, 1, 'the headline is one serving start of the release build');
@@ -161,6 +234,8 @@ async function check() {
       token(row.v1_1_text, row.v1_1, `headline ${row.id}: v1_1_text`);
       assert.ok(row.mia === null || finite(row.mia), `headline ${row.id}: mia must be a number or null`);
     });
+    assert.ok(headline.speed != null, 'headline.missing is false, so headline.speed must hold the speed headline');
+    filledSpeed(headline.speed, rows);
   }
   // Mia's numbers appear only where we ran her benchmark exactly as she describes it.
   if (rows.some(row => row.mia !== null)) {
@@ -204,6 +279,11 @@ async function check() {
     not_measured: glm.sets.flatMap(set => set.rows.filter(cell => cell.lo === null).map(cell => `${set.id}.${cell.id}`)),
     v1_1: rows.filter(row => row.v1_1 !== null).length,
     mia: rows.filter(row => row.mia !== null).length,
+    speed: headline.speed && {
+      prose: headline.speed.prose !== null,
+      display: [headline.speed.code.display, headline.speed.prose?.display ?? null],
+      reference_streams: headline.speed.reference_streams,
+    },
     social_image: glm.social_image,
     live,
   };

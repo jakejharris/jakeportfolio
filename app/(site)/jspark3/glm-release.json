@@ -20,6 +20,24 @@
     "missing": false,
     "serving_starts": 1,
     "sweeps": 2,
+    "speed": {
+      "streams": 8,
+      "code": {
+        "lo": null,
+        "hi": null,
+        "lo_text": null,
+        "hi_text": null,
+        "display": null
+      },
+      "prose": {
+        "lo": null,
+        "hi": null,
+        "lo_text": null,
+        "hi_text": null,
+        "display": null
+      },
+      "reference_streams": []
+    },
     "rows": [
       {
         "id": "prefill",

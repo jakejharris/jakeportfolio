@@ -6,6 +6,7 @@ import GlmArchive from './GlmArchive';
 import HeadlineResults from './HeadlineResults';
 import ProjectHeader from './ProjectHeader';
 import ServingStarts from './ServingStarts';
+import SpeedHeadline from './SpeedHeadline';
 import { GLM_COPY, GLM_RELEASE, IS_PLACEHOLDER, LABELS, RELEASE, SHOW_MIA, SHOW_V1_1, releaseDate } from '../release-copy';
 import { Marked, Ph } from '../Placeholder';
 
@@ -46,6 +47,7 @@ export default function GlmPage() {
           <p className="glm-kicker">JSPARK3{name ? <> <Ph>{RELEASE}</Ph></> : null} · {LABELS.latest}</p>
           <h1><Ph>{name ?? RELEASE}</Ph></h1>
           <p className="glm-lede">GLM-5.3 Flash<br />on three DGX Sparks.</p>
+          <SpeedHeadline />
           <p className="glm-intro">{GLM_COPY.intro}</p>
           <nav className="glm-actions" aria-label="Release resources">
             <a className="glm-button" href={GLM_COPY.install.guide}>Install <Ph>{RELEASE}</Ph> ↗</a>

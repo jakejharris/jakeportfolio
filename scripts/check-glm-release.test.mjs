@@ -39,9 +39,10 @@ const edited = edit => {
 };
 const set = (glm, id) => glm.sets.find(item => item.id === id);
 const row = (rows, id) => rows.find(item => item.id === id);
-/** The headline's final start missed the freeze: no headline rows, Story A. */
+/** The headline's final start missed the freeze: no headline rows, no speed headline, Story A. */
 const missing = glm => {
   glm.headline.missing = true;
+  glm.headline.speed = null;
   glm.headline.rows = [];
   glm.mode_switch = 'A';
 };
@@ -49,6 +50,13 @@ const missing = glm => {
 const prefillOmitted = glm => {
   Object.assign(row(glm.headline.rows, 'prefill'), { lo: null, hi: null, lo_text: null, hi_text: null });
 };
+const NULL_BAND = { lo: null, hi: null, lo_text: null, hi_text: null, display: null };
+/** The committed template's state: placeholder true and the speed headline the empty shape. */
+const template = glm => {
+  glm.placeholder = true;
+  glm.headline.speed = { streams: 8, code: { ...NULL_BAND }, prose: { ...NULL_BAND }, reference_streams: [] };
+};
+const speed = glm => glm.headline.speed;
 
 test('accepts the synthetic fixture', () => {
   const result = check(fixture);
@@ -65,6 +73,32 @@ test('accepts the fixture with the headline prefill left out', () => {
   assert.equal(result.status, 0, result.stderr);
   assert.deepEqual(JSON.parse(result.stdout).headline_omitted, ['prefill']);
 });
+
+test('refuses the template state only because it is a placeholder', () => {
+  const result = check(edited(template));
+  assert.notEqual(result.status, 0, result.stdout);
+  assert.equal(result.stderr.trim(), 'REFUSED: placeholder is still true');
+});
+
+/** [what varies, the edit] for speed headlines the checker must accept. The fixture's decode_c8 band is 77.7 to 88.8. */
+const SPEED_ACCEPTED = [
+  ['no prose run', glm => { speed(glm).prose = null; }],
+  ['no reference clause', glm => { speed(glm).reference_streams = []; }],
+  ['one reference stream count', glm => { speed(glm).reference_streams = [1]; }],
+  ['every reference stream count', glm => { speed(glm).reference_streams = [1, 2, 3, 4, 5, 6, 7, 8]; }],
+  ['non-contiguous reference stream counts', glm => { speed(glm).reference_streams = [1, 2, 4]; }],
+  ['display tokens', glm => { speed(glm).code.display = '~80'; speed(glm).prose.display = '~40'; }],
+  ['a display token with a decimal part', glm => { speed(glm).code.display = '~80.5'; }],
+  ['a display token at the floor of lo', glm => { speed(glm).code.display = '~77'; }],
+  ['a display token at the ceiling of hi', glm => { speed(glm).code.display = '~89'; }],
+  ['a single-value prose band', glm => { Object.assign(speed(glm).prose, { lo: 33.3, hi: 33.3, lo_text: '33.3', hi_text: '33.3' }); }],
+];
+for (const [what, edit] of SPEED_ACCEPTED) {
+  test(`accepts a speed headline with ${what}`, () => {
+    const result = check(edited(edit));
+    assert.equal(result.status, 0, result.stderr);
+  });
+}
 
 test('accepts a v1.x.5 tag, whose version drops the patch', () => {
   const result = check(edited(glm => {
@@ -150,6 +184,51 @@ const CONTROLS = [
   ['set label over 60 characters', glm => { set(glm, 'base_m0_a').label = 'Synthetic base start with a label that runs well past the limit'; }, /the limit is 60/],
   ['empty set label', glm => { set(glm, 'base_m0_a').label = ' '; }, /label must be non-empty text/],
   ['headline missing and no base set', glm => { missing(glm); glm.sets = glm.sets.filter(item => item.group !== 'base_m0'); }, /no base_m0 set/],
+  ['a speed headline when the headline is missing', glm => { const kept = speed(glm); missing(glm); glm.headline.speed = kept; }, /headline\.missing is true, so headline\.speed must be null/],
+  ['a null speed headline when the headline is present', glm => { glm.headline.speed = null; }, /headline\.missing is false, so headline\.speed must hold the speed headline/],
+  ['no speed headline when the headline is present', glm => { delete glm.headline.speed; }, /headline\.missing is false, so headline\.speed must hold the speed headline/],
+  ['a speed headline that is a list', glm => { glm.headline.speed = []; }, /headline\.speed must be an object/],
+  ['a speed headline with an extra field', glm => { speed(glm).scaled_from = 'base_m0_a'; }, /headline\.speed must have exactly code, prose, reference_streams, streams/],
+  ['a speed headline at 4 streams', glm => { speed(glm).streams = 4; }, /headline\.speed\.streams must be 8/],
+  ['a speed headline streams as text', glm => { speed(glm).streams = '8'; }, /headline\.speed\.streams must be 8/],
+  ['a speed band with an extra field', glm => { speed(glm).code.per_stream = 11.1; }, /headline\.speed\.code must have exactly display, hi, hi_text, lo, lo_text$/],
+  ['a speed band without display', glm => { delete speed(glm).prose.display; }, /headline\.speed\.prose must have exactly display, hi, hi_text, lo, lo_text, or be null/],
+  ['reference_streams not a list', glm => { speed(glm).reference_streams = 1; }, /headline\.speed\.reference_streams must be a list/],
+  ['code lo that is not the decode_c8 lo', glm => { Object.assign(speed(glm).code, { lo: 77.8, lo_text: '77.8' }); }, /headline\.speed\.code\.lo must equal the headline decode_c8 lo \(77\.7\), not 77\.8/],
+  ['code hi that is not the decode_c8 hi', glm => { Object.assign(speed(glm).code, { hi: 99.9, hi_text: '99.9' }); }, /headline\.speed\.code\.hi must equal the headline decode_c8 hi \(88\.8\), not 99\.9/],
+  ['code taken from the decode_c4 row', glm => { Object.assign(speed(glm).code, { lo: 55.5, hi: 66.6, lo_text: '55.5', hi_text: '66.6' }); }, /headline\.speed\.code\.lo must equal the headline decode_c8 lo \(77\.7\), not 55\.5/],
+  ['code hi_text written differently from the decode_c8 row', glm => { speed(glm).code.hi_text = '88.80'; }, /headline\.speed\.code\.hi_text must equal the headline decode_c8 hi_text \("88\.8"\), not "88\.80"/],
+  ['code null', glm => { speed(glm).code = null; }, /headline\.speed\.code must have exactly display, hi, hi_text, lo, lo_text$/],
+  ['code band null', glm => { Object.assign(speed(glm).code, { lo: null, hi: null, lo_text: null, hi_text: null }); }, /headline\.speed\.code: lo and hi must both be numbers$/],
+  ['code band inverted', glm => { Object.assign(speed(glm).code, { lo: 88.8, hi: 77.7, lo_text: '88.8', hi_text: '77.7' }); }, /headline\.speed\.code: lo 88\.8 is above hi 77\.7/],
+  ['code text that is not its number', glm => { speed(glm).code.lo_text = '77.6'; }, /headline\.speed\.code: lo_text "77\.6" does not equal 77\.7/],
+  ['a display token without "~"', glm => { speed(glm).code.display = '80'; }, /headline\.speed\.code\.display must be null or look like "~180"/],
+  ['a display token in words', glm => { speed(glm).code.display = 'about 80'; }, /headline\.speed\.code\.display must be null or look like "~180"/],
+  ['a display token as a number', glm => { speed(glm).code.display = 80; }, /headline\.speed\.code\.display must be null or look like "~180"/],
+  ['a display token with a separator', glm => { speed(glm).code.display = '~1,080'; }, /headline\.speed\.code\.display must be null or look like "~180"/],
+  ['a display token with a unit', glm => { speed(glm).code.display = '~80 tok/s'; }, /headline\.speed\.code\.display must be null or look like "~180"/],
+  ['a display token far above the band', glm => { speed(glm).code.display = '~200'; }, /headline\.speed\.code\.display "~200" is outside 77 to 89, the band it stands for/],
+  ['a display token just above the band', glm => { speed(glm).code.display = '~89.1'; }, /headline\.speed\.code\.display "~89\.1" is outside 77 to 89/],
+  ['a display token just below the band', glm => { speed(glm).code.display = '~76.9'; }, /headline\.speed\.code\.display "~76\.9" is outside 77 to 89/],
+  ['a prose display token out of its band', glm => { speed(glm).prose.display = '~80'; }, /headline\.speed\.prose\.display "~80" is outside 33 to 45/],
+  ['a prose band inverted', glm => { Object.assign(speed(glm).prose, { lo: 44.4, hi: 33.3, lo_text: '44.4', hi_text: '33.3' }); }, /headline\.speed\.prose: lo 44\.4 is above hi 33\.3/],
+  ['a prose text that is not its number', glm => { speed(glm).prose.hi_text = '44.5'; }, /headline\.speed\.prose: hi_text "44\.5" does not equal 44\.4/],
+  ['a prose text with a sign', glm => { speed(glm).prose.lo_text = '+33.3'; }, /headline\.speed\.prose: lo_text must be the figure as written/],
+  ['a prose band half null', glm => { speed(glm).prose.hi = null; }, /headline\.speed\.prose: lo and hi must both be numbers$/],
+  ['a prose band all null after the fill', glm => { speed(glm).prose = { ...NULL_BAND }; }, /headline\.speed\.prose: lo and hi must both be numbers$/],
+  ['reference stream count 0', glm => { speed(glm).reference_streams = [0]; }, /headline\.speed\.reference_streams must be whole numbers from 1 to 8, not \[0\]/],
+  ['reference stream count 9', glm => { speed(glm).reference_streams = [9]; }, /headline\.speed\.reference_streams must be whole numbers from 1 to 8, not \[9\]/],
+  ['a fractional reference stream count', glm => { speed(glm).reference_streams = [1.5]; }, /headline\.speed\.reference_streams must be whole numbers from 1 to 8/],
+  ['a reference stream count as text', glm => { speed(glm).reference_streams = ['1']; }, /headline\.speed\.reference_streams must be whole numbers from 1 to 8, not \["1"\]/],
+  ['a reference stream count as a concurrency', glm => { speed(glm).reference_streams = ['c1']; }, /headline\.speed\.reference_streams must be whole numbers from 1 to 8/],
+  ['reference stream counts descending', glm => { speed(glm).reference_streams = [2, 1]; }, /headline\.speed\.reference_streams must be ascending with no repeats, not \[2,1\]/],
+  ['a repeated reference stream count', glm => { speed(glm).reference_streams = [1, 1]; }, /headline\.speed\.reference_streams must be ascending with no repeats, not \[1,1\]/],
+  ['a reference clause in the template', glm => { template(glm); speed(glm).reference_streams = [1]; }, /^REFUSED: placeholder is still true, and in placeholder state headline\.speed\.reference_streams must be empty/],
+  ['a figure in the template', glm => { template(glm); speed(glm).code.lo = 77.7; }, /^REFUSED: placeholder is still true, and in placeholder state every headline\.speed value must be null, but code\.lo is 77\.7/],
+  ['a display token in the template', glm => { template(glm); speed(glm).prose.display = '~40'; }, /^REFUSED: placeholder is still true, and in placeholder state every headline\.speed value must be null, but prose\.display is "~40"/],
+  ['a null prose in the template', glm => { template(glm); speed(glm).prose = null; }, /^REFUSED: placeholder is still true, and in placeholder state headline\.speed\.prose must be the null band, not null/],
+  ['no speed headline in the template', glm => { template(glm); delete glm.headline.speed; }, /^REFUSED: placeholder is still true, and headline\.speed must be an object/],
+  ['a template speed headline at 4 streams', glm => { template(glm); speed(glm).streams = 4; }, /^REFUSED: placeholder is still true, and headline\.speed\.streams must be 8/],
 ];
 
 /**
