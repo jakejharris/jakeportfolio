@@ -46,10 +46,9 @@
 @media (max-width: 520px) {
   .glm-race { padding: 18px; }
   .glm-race-canvas { height: 288px; }
-  /* One row of starts that scrolls sideways inside the card, so the canvas stays near the chart. */
-  .glm-race-chips { flex: 1 1 100%; min-width: 0; flex-wrap: nowrap; overflow-x: auto; margin-inline: -18px; padding-inline: 18px; scrollbar-width: none; }
-  .glm-race-chips::-webkit-scrollbar { display: none; }
-  .glm-race-chips button { flex: none; min-height: 40px; white-space: nowrap; }
+  /* The starts wrap inside their own row, and a long label wraps inside its button, so every one stays in view. */
+  .glm-race-chips { flex: 1 1 100%; min-width: 0; }
+  .glm-race-chips button { min-height: 40px; max-width: 100%; white-space: normal; }
 }
 @media print {
   .glm-race { display: none; }
