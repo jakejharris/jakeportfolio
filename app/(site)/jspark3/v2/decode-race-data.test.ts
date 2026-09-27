@@ -41,17 +41,44 @@ function assertFromData(race: RaceData, release: GlmRelease) {
   }
 }
 
-test('the committed placeholder file yields no measured start and no scale', () => {
-  const race = buildRaceStarts(committed as GlmRelease);
+/**
+ * The committed file in its placeholder state: a deep copy with every measured value set back to null.
+ * Built from the file itself, so it keeps the current schema whether or not the release has been filled.
+ */
+function placeholderOf(release: GlmRelease): GlmRelease {
+  const MEASURED = new Set(['lo', 'hi', 'lo_text', 'hi_text', 'v1_1', 'v1_1_text', 'mia']);
+  const blank = (value: unknown): unknown => {
+    if (Array.isArray(value)) return value.map(blank);
+    if (!value || typeof value !== 'object') return value;
+    return Object.fromEntries(Object.entries(value).map(([key, entry]) => [key, MEASURED.has(key) ? null : blank(entry)]));
+  };
+  return { ...(blank(structuredClone(release)) as GlmRelease), placeholder: true, mia: release.mia };
+}
+
+test('the placeholder state yields no measured start and no scale', () => {
+  const release = placeholderOf(committed as GlmRelease);
+  const race = buildRaceStarts(release);
+  const own = release.headline.missing ? [] : ['current'];
   assert.equal(race.measured.length, 0);
   assert.equal(race.scaleEnd, null);
-  assert.equal(race.initial?.key, 'current');
-  assert.deepEqual(race.starts.map(start => start.key), ['current', ...committed.sets.map(set => set.id)]);
+  assert.deepEqual(race.starts.map(start => start.key), [...own, ...release.sets.map(set => set.id)]);
+  assert.equal(race.initial?.key, race.starts[0]?.key);
   for (const start of race.starts) {
     assert.deepEqual(start.lanes.map(lane => lane.id), ['decode_c1', 'decode_c2', 'decode_c4', 'decode_c8']);
-    for (const lane of start.lanes) assert.equal(lane.band, 'XX.X');
+    for (const lane of start.lanes) assert.equal(lane.band, bandText(null, null));
   }
-  assertFromData(race, committed as GlmRelease);
+  assertFromData(race, release);
+});
+
+test('every number the race uses is in the committed file, filled or not', () => {
+  const release = committed as GlmRelease;
+  const race = buildRaceStarts(release);
+  assert.ok(race.starts.length > 0);
+  assertFromData(race, release);
+  if (race.scaleEnd !== null) {
+    const all = race.measured.flatMap(start => start.lanes.flatMap(lane => [lane.lo, lane.hi])).filter((value): value is number => value !== null);
+    assert.equal(race.scaleEnd, axisEnd(all));
+  }
 });
 
 test('a filled file yields every start in table order, with its own decode rows', () => {
