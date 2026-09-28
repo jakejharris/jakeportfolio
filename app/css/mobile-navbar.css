@@ -1,101 +1,206 @@
-/* Mobile Navbar Styles */
-.mobile-navbar {
+/* Mobile menu: the page goes under a pixel tide, and the pages you can go to
+   stand in the water as dry land. Behavior lives in site-menu/SiteMenu.tsx. */
+
+/* The button: a pixel icon with a thumb-sized target. */
+.site-menu-button {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  margin-right: -4px;
+  color: hsl(var(--foreground));
+  border-radius: 4px;
+  -webkit-tap-highlight-color: transparent;
+}
+
+@media (hover: hover) {
+  .site-menu-button:hover {
+    background: hsl(var(--foreground) / 0.08);
+  }
+}
+
+.site-menu-button:focus-visible {
+  outline: 2px solid hsl(var(--foreground));
+  outline-offset: -2px;
+}
+
+.site-menu-icon {
+  width: 18px;
+  height: 18px;
+  fill: currentColor;
+}
+
+/* The sea covers the page, under the navbar and the appearance dock. */
+.site-menu {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  z-index: 50;
-  background-color: hsl(var(--secondary));
-  border-bottom: 1px solid hsl(var(--border));
-  transition: transform 0.3s ease;
-}
-
-.mobile-navbar.hidden {
-  transform: translateY(-100%);
-}
-
-.mobile-navbar.scrolled {
-  /* No changes needed */
-}
-
-/* Mobile Sidebar */
-.mobile-sidebar {
-  position: fixed;
-  top: 0;
-  right: 0;
+  inset: 0;
+  /* An enlarged page can overflow a phone's layout viewport. Keep this
+     overlay inside the actual CSS viewport, including its changing toolbar. */
+  width: 100vw;
   height: 100vh;
-  width: 75vw;
-  max-width: 300px;
-  background-color: hsl(var(--background));
-  z-index: 60;
-  transform: translateX(100%);
-  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-  box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
-  display: flex;
-  flex-direction: column;
+  height: 100dvh;
+  z-index: 39;
+  /* The water is sized in whole cells and runs past the edges; clip, never
+     scroll. */
+  overflow: hidden;
+  overflow: clip;
+  /* Its repaints, a frame at a time while the tide runs, stay inside it. */
+  contain: strict;
+  background: hsl(var(--background));
+  -webkit-tap-highlight-color: transparent;
 }
 
-.mobile-sidebar.open {
-  transform: translateX(0);
+.site-menu[hidden] {
+  display: none;
 }
 
-/* Overlay for when sidebar is open */
-.sidebar-overlay {
-  position: fixed;
+@media (min-width: 768px) {
+  .site-menu {
+    display: none;
+  }
+}
+
+/* The page stays where the reader left it. */
+html[data-menu-open] {
+  overflow: hidden;
+}
+
+/* One canvas pixel per lattice cell, scaled up crisply, like the page's
+   water. */
+.site-menu-sea,
+.site-menu-foam {
+  position: absolute;
   top: 0;
   left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
-  z-index: 55;
-  opacity: 0;
+  display: block;
+  image-rendering: crisp-edges;
+  image-rendering: pixelated;
+}
+
+/* Foam rides over the words as the front passes them. */
+.site-menu-foam {
+  z-index: 2;
   pointer-events: none;
-  transition: opacity 0.3s ease;
-  backdrop-filter: blur(2px);
 }
 
-.sidebar-overlay.open {
-  opacity: 1;
-  pointer-events: auto;
+/* The same finish as the page's water: scanlines, vignette and grain. */
+.site-menu-finish {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(to bottom, transparent 50%, rgb(0 0 0 / 0.03) 50%) 0 0 / 100% 3px,
+    radial-gradient(circle at center, transparent 50%, rgb(0 0 0 / 0.15) 100%);
 }
 
-/* Mobile Sidebar Links */
-.mobile-sidebar-links {
+.site-menu-finish::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='grain'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23grain)'/%3E%3C/svg%3E");
+  opacity: 0.08;
+  mix-blend-mode: multiply;
+}
+
+.dark .site-menu-finish::after {
+  opacity: 0.05;
+  mix-blend-mode: screen;
+}
+
+/* The words sit low, within thumb reach, and leave the dock its corner.
+   Nothing here scrolls, so a finger drawn anywhere stirs the water; only
+   text too large for the screen lets the column scroll. */
+.site-menu-nav {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
   display: flex;
   flex-direction: column;
-  padding: 1.5rem;
-  flex: 1;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  touch-action: none;
+  padding: 5rem 0 calc(max(1rem, env(safe-area-inset-bottom)) + 3.75rem);
 }
 
-.mobile-sidebar-link {
-  font-size: 1.125rem;
-  padding: 1rem 0;
-  border-bottom: 1px solid hsl(var(--border) / 50%);
-  transition: all 0.2s ease;
+.site-menu-nav[data-scrolls] {
+  touch-action: pan-y;
+}
+
+.site-menu-links {
+  margin: auto 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.site-menu-link {
   display: flex;
   align-items: center;
+  gap: 0.28em;
+  padding: 0.12em 1rem;
+  color: hsl(var(--foreground));
+  font-family: var(--font-wordmark-stack);
+  font-size: clamp(2rem, min(12.5vw, 7.2svh), 3.6rem);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1.08;
 }
 
-.mobile-sidebar-link:hover {
-  padding-left: 0.5rem;
+/* Enlarged text may wrap instead of disappearing beyond the viewport. */
+.site-menu-link [data-menu-island] {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
-/* Contact button container at the bottom */
-.mobile-sidebar-footer {
-  margin-top: auto;
-  padding: 1.5rem;
-  border-top: 1px solid hsl(var(--border) / 50%);
+/* A keyboard focus ring hugs the word, not the whole row. */
+.site-menu-link:focus-visible {
+  outline: none;
 }
 
-/* Animation for sidebar items */
-.mobile-sidebar-content {
-  opacity: 0;
-  transform: translateX(20px);
-  transition: opacity 0.3s ease, transform 0.3s ease;
-  transition-delay: 0.1s;
+.site-menu-link:focus-visible [data-menu-island],
+.site-menu-colophon a:focus-visible {
+  outline: 2px solid hsl(var(--foreground));
+  outline-offset: 4px;
 }
 
-.mobile-sidebar.open .mobile-sidebar-content {
-  opacity: 1;
-  transform: translateX(0);
-} 
+/* You are here: one lattice cell of the accent beside the current page. */
+.site-menu-here {
+  flex: none;
+  width: 0.22em;
+  height: 0.22em;
+  background: var(--accent-color);
+  visibility: hidden;
+  forced-color-adjust: none;
+}
+
+.site-menu-link[data-here] .site-menu-here {
+  visibility: visible;
+}
+
+.site-menu-colophon {
+  display: flex;
+  flex-wrap: wrap;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 1.25rem;
+  margin: 1.25rem 0 0;
+  padding: 0 1rem;
+  color: hsl(var(--muted-foreground));
+  font-family: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.6875rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.site-menu-colophon a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5em;
+  min-height: 44px;
+  color: inherit;
+}
+
+@media print {
+  .site-menu {
+    display: none;
+  }
+}

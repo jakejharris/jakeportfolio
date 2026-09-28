@@ -138,8 +138,8 @@ export function distanceField(mask: Uint8Array, cols: number, rows: number): Flo
 }
 
 /** Trace every island on the page. Null when the page marks none. */
-export function measureIslands(): IslandField | null {
-  const elements = document.querySelectorAll(ISLAND_SELECTOR);
+export function measureIslands(selector = ISLAND_SELECTOR): IslandField | null {
+  const elements = document.querySelectorAll(selector);
   if (!elements.length) return null;
 
   const probe = document.createElement('canvas').getContext('2d');
