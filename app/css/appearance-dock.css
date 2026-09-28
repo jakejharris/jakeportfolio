@@ -171,6 +171,17 @@
 
 /* Theme flood: the new page is revealed by a stepped clip-path animation from
    pixel-tide.ts, over a still image of the old one. No cross-fade. */
+::view-transition,
+::view-transition-group(root),
+::view-transition-image-pair(root),
+::view-transition-old(root),
+::view-transition-new(root) {
+  pointer-events: none;
+}
+
+/* The theme does not move the root. Its default geometry animation would
+   composite extra frames underneath the stepped reveal. */
+::view-transition-group(root),
 ::view-transition-old(root),
 ::view-transition-new(root) {
   animation: none;

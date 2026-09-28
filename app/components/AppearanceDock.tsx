@@ -6,7 +6,7 @@ import { flushSync } from "react-dom";
 import { useTheme } from "next-themes";
 import { useNavbarScroll } from "./NavbarScrollContext";
 import { disturbWater } from "./pixel-fluid/disturb";
-import { floodTheme } from "../lib/pixel-tide";
+import { floodTheme, isThemeFloodActive } from "../lib/pixel-tide";
 import "../css/appearance-dock.css";
 
 // Theme and accent controls, docked in the bottom right corner in the same
@@ -69,6 +69,9 @@ export default function AppearanceDock() {
   const { mobileVisible } = useNavbarScroll();
   const [mounted, setMounted] = useState(false);
   const [accent, setAccent] = useState(0);
+  const accentRef = useRef(0);
+  const accentFrame = useRef(0);
+  const requestedTheme = useRef(resolvedTheme);
   const [open, setOpen] = useState(false);
   const dockRef = useRef<HTMLDivElement>(null);
   const toggleRef = useRef<HTMLButtonElement>(null);
@@ -80,8 +83,39 @@ export default function AppearanceDock() {
     const stored = localStorage.getItem(STORAGE_KEY);
     const active = stored ?? document.documentElement.getAttribute("data-accent");
     const index = active === null ? 0 : parseInt(active, 10);
-    if (index >= 0 && index < ACCENTS.length) setAccent(index);
+    if (index >= 0 && index < ACCENTS.length) {
+      accentRef.current = index;
+      setAccent(index);
+    }
     setMounted(true);
+    return () => cancelAnimationFrame(accentFrame.current);
+  }, []);
+
+  useEffect(() => {
+    requestedTheme.current = resolvedTheme;
+  }, [resolvedTheme]);
+
+  useEffect(() => {
+    // During a root snapshot the browser hit-tests the captured page as
+    // <html>, even with pointer-events disabled on the transition overlay.
+    // Keep just the dock usable so another pick can interrupt the flood.
+    const handleCapturedClick = (event: globalThis.MouseEvent) => {
+      if (event.target !== document.documentElement || !isThemeFloodActive()) return;
+      const buttons = dockRef.current?.querySelectorAll("button");
+      if (!buttons) return;
+      for (const button of buttons) {
+        const rect = button.getBoundingClientRect();
+        if (rect.width && rect.height && event.clientX >= rect.left && event.clientX < rect.right
+          && event.clientY >= rect.top && event.clientY < rect.bottom) {
+          button.focus({ preventScroll: true });
+          button.click();
+          return;
+        }
+      }
+      setOpen(false);
+    };
+    document.addEventListener("click", handleCapturedClick);
+    return () => document.removeEventListener("click", handleCapturedClick);
   }, []);
 
   // Ride above the site footer once it comes into view, so the dock never
@@ -116,6 +150,7 @@ export default function AppearanceDock() {
   useEffect(() => {
     if (!open) return;
     const handlePointerDown = (event: PointerEvent) => {
+      if (event.target === document.documentElement && isThemeFloodActive()) return;
       if (!dockRef.current?.contains(event.target as Node)) setOpen(false);
     };
     document.addEventListener("pointerdown", handlePointerDown);
@@ -135,22 +170,33 @@ export default function AppearanceDock() {
   };
 
   const pickAccent = (index: number, from: HTMLElement) => {
-    if (index === accent) {
+    if (index === accentRef.current) {
       closePalette();
       return;
     }
-    disturbWater({ ...center(from), dye: true });
-    const root = document.documentElement;
-    if (index === 0) root.removeAttribute("data-accent");
-    else root.setAttribute("data-accent", String(index));
-    try {
-      localStorage.setItem(STORAGE_KEY, String(index));
-    } catch {}
+    accentRef.current = index;
+    const origin = center(from);
+    // Only the last pick before paint needs a pour or a page-wide restyle.
+    // Read its origin before changing <html>, so a burst does not alternate
+    // layout reads with global color writes hundreds of times.
+    cancelAnimationFrame(accentFrame.current);
+    accentFrame.current = requestAnimationFrame(() => {
+      disturbWater({ ...origin, dye: true });
+      const root = document.documentElement;
+      if (index === 0) root.removeAttribute("data-accent");
+      else root.setAttribute("data-accent", String(index));
+      try {
+        localStorage.setItem(STORAGE_KEY, String(index));
+      } catch {}
+    });
     setAccent(index);
   };
 
   const switchTheme = (event: MouseEvent<HTMLButtonElement>) => {
-    const next = isDark ? "light" : "dark";
+    // A capture can defer the DOM update. Toggle the last request so clicks
+    // during that capture still count, even before React has rendered it.
+    const next = requestedTheme.current === "dark" ? "light" : "dark";
+    requestedTheme.current = next;
     const origin = center(event.currentTarget);
     disturbWater(origin);
     floodTheme(() => {
@@ -179,7 +225,7 @@ export default function AppearanceDock() {
       closePalette();
     } else if (step) {
       event.preventDefault();
-      const index = (accent + step + ACCENTS.length) % ACCENTS.length;
+      const index = (accentRef.current + step + ACCENTS.length) % ACCENTS.length;
       const swatch = swatchRefs.current[index];
       if (swatch) {
         swatch.focus();

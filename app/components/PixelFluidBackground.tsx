@@ -99,6 +99,9 @@ export default function PixelFluidBackground({
     let measuredWidth = -1;
     const resize = () => {
       fluid.resize(window.innerWidth, window.innerHeight);
+      // Resizing clears the bitmap even when only a phone toolbar changes
+      // height. Reduced motion has no animation loop to paint it again.
+      if (fluid.still) renderOnce();
       if (window.innerWidth === measuredWidth) return;
       measuredWidth = window.innerWidth;
       measure();
@@ -128,6 +131,9 @@ export default function PixelFluidBackground({
     };
 
     const handleAnimationEnd = (event: AnimationEvent) => {
+      // View Transition pseudo-elements report the root as their target;
+      // their animation does not move the text or change its glyph outlines.
+      if (event.pseudoElement) return;
       const target = event.target;
       if (target instanceof Element && (target.matches(ISLAND_SELECTOR) || target.querySelector(ISLAND_SELECTOR))) {
         measure();

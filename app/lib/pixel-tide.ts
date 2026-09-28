@@ -46,11 +46,39 @@ function easeOutQuad(t: number) {
 }
 
 type ViewTransitionDocument = Document & {
-  startViewTransition?: (update: () => void) => { ready: Promise<void> };
+  startViewTransition?: (update: () => void) => {
+    ready: Promise<void>;
+    finished: Promise<void>;
+    skipTransition: () => void;
+  };
 };
+
+// Keep the browser's snapshots bounded, including while it is still capturing
+// the old page. A skipped transition still runs its update callback.
+interface Flood {
+  transition: ReturnType<NonNullable<ViewTransitionDocument['startViewTransition']>>;
+  animation?: Animation;
+  superseded: boolean;
+  latest?: () => void;
+}
+let activeFlood: Flood | null = null;
+
+export function isThemeFloodActive() {
+  return activeFlood !== null;
+}
 
 /** Run `apply` (which must switch the theme synchronously) as a tide from (x, y). */
 export function floodTheme(apply: () => void, x: number, y: number) {
+  if (activeFlood) {
+    activeFlood.latest = apply;
+    if (!activeFlood.superseded) {
+      activeFlood.superseded = true;
+      activeFlood.animation?.cancel();
+      activeFlood.transition.skipTransition();
+    }
+    return;
+  }
+
   const doc = document as ViewTransitionDocument;
   const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   if (!doc.startViewTransition || reduce) {
@@ -67,13 +95,23 @@ export function floodTheme(apply: () => void, x: number, y: number) {
     frames.push({ clipPath: tidePolygon(x, y, radius, height), easing: 'step-end' });
   }
 
-  const transition = doc.startViewTransition(apply);
+  const transition = doc.startViewTransition(() => {
+    if (!flood.superseded) apply();
+  });
+  const flood: Flood = { transition, superseded: false };
+  activeFlood = flood;
   transition.ready
     .then(() => {
-      document.documentElement.animate(frames, {
+      if (activeFlood !== flood || flood.superseded) return;
+      flood.animation = document.documentElement.animate(frames, {
         duration: TIDE_MS,
         pseudoElement: '::view-transition-new(root)',
       });
     })
     .catch(() => {});
+  const finish = () => {
+    activeFlood = null;
+    flood.latest?.();
+  };
+  void transition.finished.then(finish, finish);
 }
