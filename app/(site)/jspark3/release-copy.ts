@@ -273,7 +273,7 @@ export const GLM_COPY = {
   lede: 'GLM-5.3 Flash across three DGX Sparks as one OpenAI-compatible endpoint. The recipe is pinned so you can rebuild it, with public benchmarks and the misses left in.',
   intro: 'One OpenAI-compatible endpoint across all three. The recipe is pinned so you can rebuild it, with public benchmarks and the misses left in.',
   internalBuilds: `${INTERNAL_BUILDS.first} through ${INTERNAL_BUILDS.last} were internal builds before the public v1.8 release.`,
-  weights: 'The default install uses the stock GLM-5.3 Flash weights. Abliteration is an explicit opt-in.',
+  weights: "The default install uses Brandon M. Music's EXL3/TR3 4-bpw checkpoint of Z.AI's GLM-5.3 Flash, downloaded from Mia-AiLab's byte-identical re-host. JSPARK3 provides a mirror. Stock means unedited quantized weights. Abliteration is an explicit opt-in.",
   /** How modes change in this release, chosen by mode_switch. Neither story makes a speed claim. */
   modeSwitch: glm.mode_switch === 'A' || glm.mode_switch === 'B' ? MODE_SWITCH[glm.mode_switch] : null,
   whyGlmTitle: 'We tried DeepSeek, measured it, and came back.',
