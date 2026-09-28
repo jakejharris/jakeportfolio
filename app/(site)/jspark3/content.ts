@@ -635,17 +635,26 @@ export const CREDITS_ROLL: ReadonlyArray<RichPart> = [
   { strong: "plotarmordev" },
   " for fine-grained prefix hits. ",
   { strong: "vcruz305" },
-  " for the K2 recipe lineage. ",
+  " for the K2 recipe lineage and the K-pool tail correction it inspired. ",
   { strong: "tonyd2wild" },
   " for scheduler and concurrency benchmarking context. ",
   { strong: "sfxnz" },
   " for DGX Spark serving context. ",
   { strong: "Inco AI" },
   " for DFlash2. ",
+  { strong: "z-lab" },
+  " for DFlash. ",
   { strong: "Z.AI" },
   " for GLM-5.3 Flash. The ",
   { strong: "vLLM" },
   " project for the engine.",
+];
+
+/** Verbatim notice from the release's REQUIRED_ATTRIBUTION.md. */
+export const SHAPLEYMCG_ATTRIBUTION: ReadonlyArray<RichPart> = [
+  "This work includes or was produced using ShapleyMcg, created by Brandon M. Music (",
+  { text: "https://github.com/brandonmmusic-max/shapleymcg", href: "https://github.com/brandonmmusic-max/shapleymcg" },
+  '). ShapleyMcg is licensed under the ShapleyMcg License v1.0, an attribution-required license that grants no rights to the person known as "0xSero." Use of ShapleyMcg without this attribution is unlicensed.',
 ];
 
 export const CREDITS_NOTE =

@@ -36,6 +36,7 @@ import {
   REFUSE_LEDE,
   RUN_LEDE,
   RUN_LINKS,
+  SHAPLEYMCG_ATTRIBUTION,
 } from '../content';
 import { GLM_COPY, GLM_RELEASE, INSTALL_RELEASE } from '../release-copy';
 import { Ph } from '../Placeholder';
@@ -115,6 +116,9 @@ export default function GlmArchive() {
             <Rich parts={CREDITS_ROLL} />
           </p>
           <p>{CREDITS_INTRO}</p>
+          <blockquote className="break-words border-l-2 border-border pl-4 text-sm">
+            <Rich parts={SHAPLEYMCG_ATTRIBUTION} />
+          </blockquote>
           <p className="text-sm text-muted-foreground">{CREDITS_NOTE}</p>
         </div>
         <Card className="mt-5 p-4">
