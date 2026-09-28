@@ -63,8 +63,12 @@ export default function PixelFluidBackground({
       if (!document.hidden && !disposed) frame = requestAnimationFrame(draw);
     };
 
+    // The mobile menu brings its own water over the whole page. This one
+    // rests from the moment the menu starts to open until it has left.
+    const covered = () => document.documentElement.hasAttribute("data-menu-open");
+
     const start = () => {
-      if (running || document.hidden || disposed) return;
+      if (running || document.hidden || disposed || covered()) return;
       if (fluid.still) {
         renderOnce();
         return;
@@ -197,6 +201,11 @@ export default function PixelFluidBackground({
       attributes: true,
       attributeFilter: ["class", "data-accent"],
     });
+    const menuObserver = new MutationObserver(() => (covered() ? stop() : start()));
+    menuObserver.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["data-menu-open"],
+    });
 
     window.addEventListener("resize", resize);
     window.addEventListener("scroll", handleScroll, { passive: true });
@@ -217,6 +226,7 @@ export default function PixelFluidBackground({
       stop();
       cancelAnimationFrame(measureFrame);
       observer.disconnect();
+      menuObserver.disconnect();
       window.removeEventListener("resize", resize);
       window.removeEventListener("scroll", handleScroll);
       document.removeEventListener("visibilitychange", handleVisibility);
