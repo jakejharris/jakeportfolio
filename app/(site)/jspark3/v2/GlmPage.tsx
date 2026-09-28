@@ -8,7 +8,7 @@ import HeadlineResults from './HeadlineResults';
 import ProjectHeader from './ProjectHeader';
 import ServingStarts from './ServingStarts';
 import SpeedHeadline from './SpeedHeadline';
-import { GLM_COPY, GLM_RELEASE, IS_PLACEHOLDER, LABELS, RELEASE, SHOW_MIA, SHOW_V1_1, releaseDate } from '../release-copy';
+import { GLM_COPY, GLM_RELEASE, INSTALL_RELEASE, IS_PLACEHOLDER, LABELS, RELEASE, SHOW_MIA, SHOW_V1_1, releaseDate } from '../release-copy';
 import { Marked, Ph } from '../Placeholder';
 
 const NAV = [
@@ -51,10 +51,11 @@ export default function GlmPage() {
           <SpeedHeadline />
           <p className="glm-intro">{GLM_COPY.intro}</p>
           <nav className="glm-actions" aria-label="Release resources">
-            <a className="glm-button" href={GLM_COPY.install.guide}>Install <Ph>{RELEASE}</Ph> ↗</a>
+            <a className="glm-button" href={GLM_COPY.install.guide}>Install <Ph>{INSTALL_RELEASE}</Ph> ↗</a>
             <a href="#results">Results ↓</a>
             <a href={links.release}>Release notes ↗</a>
           </nav>
+          {GLM_COPY.install.note ? <p className="glm-fine" data-install-note>{GLM_COPY.install.note}</p> : null}
         </div>
         <ClusterIllustration />
       </header>
@@ -106,7 +107,7 @@ export default function GlmPage() {
 
     <section className="glm-shell glm-install" id="install" aria-labelledby="install-title">
       <div>
-        <h2 id="install-title">Run <Ph>{RELEASE}</Ph></h2>
+        <h2 id="install-title">Run <Ph>{INSTALL_RELEASE}</Ph></h2>
         <p>{GLM_COPY.install.body}</p>
         <p>{GLM_COPY.weights}</p>
         {GLM_COPY.modeSwitch ? <p data-mode-switch={GLM_RELEASE.mode_switch}>{GLM_COPY.modeSwitch}</p> : null}
