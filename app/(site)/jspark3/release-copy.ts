@@ -79,7 +79,7 @@ export interface GlmRelease {
   version: string;
   /** The tag the numbers were measured on. */
   tag: string;
-  /** The tag installers get: tag itself, or a later patch that only changes packaging and installation. */
+  /** The tag installers get: tag itself, or a later patch whose defaults may differ from the measured build. */
   install_tag: string;
   name: string | null;
   published: string;
@@ -124,7 +124,7 @@ export function displayBuild(build: string) {
 /** This release as the page names it, from its tag. */
 export const RELEASE = displayBuild(glm.tag);
 
-/** The tag installers get, as the page names it: v1.8.1 while the numbers stay those of v1.8.0. */
+/** The tag installers get, as the page names it, independently of the measured build. */
 export const INSTALL_RELEASE = displayBuild(glm.install_tag);
 
 /**
@@ -339,8 +339,8 @@ export const GLM_COPY = {
     body: 'You need three DGX Sparks, fast direct connections between them (RoCE), and enough disk space. The install guide checks your machines before anything starts.',
     guide: glm.links.install,
     /**
-     * Shown only when installers get a later patch than the measured build. It holds while that patch
-     * changes packaging and installation and not the serving code, as v1.8.1 does.
+     * Shown when installers get a later patch than the measured build. The current install patch
+     * changes defaults, so its performance must not be inferred from the measured build.
      */
     note: glm.install_tag === glm.tag ? null : `The numbers were measured on ${glm.tag}. ${glm.install_tag} fixes installation; its default settings have not been benchmarked yet.`,
   },

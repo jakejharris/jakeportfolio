@@ -4,7 +4,7 @@ import path from 'node:path';
 import test from 'node:test';
 import committed from '../glm-release.json';
 import type { GlmRelease } from '../release-copy';
-import { displayBuild, setCaption } from '../release-copy';
+import { setCaption } from '../release-copy';
 import { axisEnd, bandText, buildRaceStarts, raceCaption, weightsText, type RaceData, type RaceStart } from './decode-race-data';
 
 const synthetic: GlmRelease = JSON.parse(
@@ -88,6 +88,7 @@ test('a filled file yields every start in table order, with its own decode rows'
   assert.deepEqual(race.measured.map(start => start.key), race.starts.map(start => start.key));
   assert.equal(race.initial?.key, 'current');
   const own = race.starts[0];
+  assert.equal(own.label, `${synthetic.headline.build}, measured build`);
   const decode = synthetic.headline.rows.filter(row => row.label === 'Decode');
   assert.deepEqual(own.lanes.map(lane => [lane.id, lane.streams, lane.lo, lane.hi]), decode.map(row => [row.id, Number(row.concurrency.slice(1)), row.lo, row.hi]));
   assert.deepEqual(own.lanes.map(lane => lane.label), ['one stream', '2 streams', '4 streams', '8 streams']);
@@ -143,10 +144,11 @@ test('a caption says the label as written, then the build and the weights once e
   const caption = (label: string, build: string, mode: number) => raceCaption({ label, run: { build, mode, ...run } });
   assert.equal(caption('v1.7.4 base recipe, stock weights, QA profile', 'v1.7.4', 0), 'v1.7.4 base recipe, stock weights, QA profile · one serving start, two sweeps');
   assert.equal(caption('v1.7.4 base recipe, no decode levers', 'v1.7.4', 1), 'v1.7.4 base recipe, no decode levers · edited weights, opt-in · one serving start, two sweeps');
-  assert.equal(caption('v1.99, this release', 'v1.99.0', 0), 'v1.99, this release · stock weights · one serving start, two sweeps');
+  assert.equal(caption('v1.99.0, measured build', 'v1.99.0', 0), 'v1.99.0, measured build · stock weights · one serving start, two sweeps');
+  assert.equal(caption('v1.99, this release', 'v1.99.0', 0), 'v1.99.0 · v1.99, this release · stock weights · one serving start, two sweeps');
   // A build the label lacks leads, and a longer version in the label does not count as it.
   assert.equal(caption('Base recipe, levers off', 'v1.98.4', 0), 'v1.98.4 · Base recipe, levers off · stock weights · one serving start, two sweeps');
-  assert.equal(caption('v1.7.4 base recipe', 'v1.7.0', 0), 'v1.7 · v1.7.4 base recipe · stock weights · one serving start, two sweeps');
+  assert.equal(caption('v1.7.4 base recipe', 'v1.7.0', 0), 'v1.7.0 · v1.7.4 base recipe · stock weights · one serving start, two sweeps');
 });
 
 test('every start of a file gets its label verbatim, its build and its weights exactly once', () => {
@@ -154,7 +156,7 @@ test('every start of a file gets its label verbatim, its build and its weights e
     for (const start of buildRaceStarts(release).starts as RaceStart[]) {
       const caption = raceCaption(start);
       assert.ok(caption.includes(start.label), `${start.key}: "${caption}" lacks its label`);
-      assert.equal(count(caption, displayBuild(start.run.build)), Math.max(1, count(start.label, displayBuild(start.run.build))), `${start.key}: "${caption}"`);
+      assert.equal(count(caption, start.run.build), Math.max(1, count(start.label, start.run.build)), `${start.key}: "${caption}"`);
       const weights = start.run.mode === 0 ? 'stock weights' : 'edited weights';
       assert.equal(count(caption.toLowerCase(), weights), 1, `${start.key}: "${caption}" has its weights other than once`);
     }
@@ -162,6 +164,16 @@ test('every start of a file gets its label verbatim, its build and its weights e
   // The release's own start is labelled from the page's own file, which names its build, so the label leads.
   const own = buildRaceStarts(committed as GlmRelease).starts.find(start => start.key === 'current');
   if (own) assert.equal(raceCaption(own), [own.label, 'stock weights', raceCaption(own).split(' · ').at(-1)].join(' · '));
+});
+
+test('the measured build stays independent of a later install patch', () => {
+  for (const installTag of [synthetic.tag, 'v1.99.2']) {
+    const release = { ...synthetic, install_tag: installTag };
+    const own = buildRaceStarts(release).starts.find(start => start.key === 'current')!;
+    assert.equal(own.run.build, release.headline.build);
+    assert.equal(own.label, `${release.headline.build}, measured build`);
+    assert.equal(raceCaption(own), `${release.headline.build}, measured build · stock weights · one serving start, two sweeps`);
+  }
 });
 
 test('the weights words match the ones setCaption writes', () => {

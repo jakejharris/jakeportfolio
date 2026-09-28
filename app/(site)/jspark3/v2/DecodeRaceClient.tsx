@@ -38,11 +38,13 @@ function readPalette(el: HTMLElement): RacePalette {
  * on the server, so the page without script is unchanged. Its data and marked copy arrive as props,
  * so the release file stays out of the browser bundle.
  */
-export default function DecodeRaceClient({ race, labels, captions, note }: {
+export default function DecodeRaceClient({ race, labels, captions, installNote, note }: {
   race: RaceData;
   /** Each start's button label and figure caption by start key, marked as placeholders where needed. */
   labels: Record<string, React.ReactNode>;
   captions: Record<string, React.ReactNode>;
+  /** Distinguishes the installer from the measured build when the tags differ. */
+  installNote: string | null;
   /** The caption while no start is measured. */
   note: React.ReactNode;
 }) {
@@ -50,10 +52,13 @@ export default function DecodeRaceClient({ race, labels, captions, note }: {
   const [startKey, setStartKey] = React.useState(race.initial?.key ?? '');
   const [state, setState] = React.useState<RaceState>('idle');
   const [failed, setFailed] = React.useState(false);
+  const [stopped, setStopped] = React.useState(false);
   const figureRef = React.useRef<HTMLElement>(null);
   const hostRef = React.useRef<HTMLDivElement>(null);
   const sketchRef = React.useRef<RaceSketch | null>(null);
   const startRef = React.useRef(startKey);
+  const stoppedRef = React.useRef(stopped);
+  const applyRef = React.useRef<(() => void) | null>(null);
 
   React.useEffect(() => setMounted(true), []);
 
@@ -69,7 +74,7 @@ export default function DecodeRaceClient({ race, labels, captions, note }: {
 
     const apply = () => {
       if (!sketch) return;
-      if (motion.matches) {
+      if (motion.matches || stoppedRef.current) {
         sketch.still();
         setState('static');
       } else if (onScreen && !document.hidden) {
@@ -80,6 +85,7 @@ export default function DecodeRaceClient({ race, labels, captions, note }: {
         setState('paused');
       }
     };
+    applyRef.current = apply;
 
     // The sketch comes with p5, so neither is in the page's first load.
     const load = () => Promise.all([import('p5'), import('./decode-race-sketch')])
@@ -133,6 +139,7 @@ export default function DecodeRaceClient({ race, labels, captions, note }: {
       motion.removeEventListener('change', apply);
       sketch?.remove();
       sketchRef.current = null;
+      applyRef.current = null;
     };
   }, [mounted, race]);
 
@@ -141,6 +148,11 @@ export default function DecodeRaceClient({ race, labels, captions, note }: {
     sketchRef.current?.show(startKey);
   }, [startKey]);
 
+  React.useEffect(() => {
+    stoppedRef.current = stopped;
+    applyRef.current?.();
+  }, [stopped]);
+
   if (!mounted || failed || !race.initial) return null;
   const shown = race.starts.find(entry => entry.key === startKey) ?? race.initial;
   const placeholder = !race.measured.length;
@@ -148,6 +160,9 @@ export default function DecodeRaceClient({ race, labels, captions, note }: {
   return <figure id="decode-race" ref={figureRef} className="glm-race" data-race-state={state} data-race-start={shown.key} aria-labelledby="decode-race-title">
     <div className="glm-race-head">
       <p id="decode-race-title" className="glm-label">Decode race · {race.unit}, all streams combined</p>
+      <button type="button" className="glm-race-motion" onClick={() => setStopped(value => !value)}>
+        {stopped ? 'Play animation' : 'Stop animation'}
+      </button>
       {race.measured.length > 1
         ? <div className="glm-race-chips" role="group" aria-label="Serving start shown">
           {race.measured.map(entry => <button type="button" key={entry.key} data-race-chip={entry.key} aria-pressed={entry.key === shown.key} onClick={() => setStartKey(entry.key)}>
@@ -161,7 +176,8 @@ export default function DecodeRaceClient({ race, labels, captions, note }: {
       {placeholder
         ? note
         : <><span className="glm-race-start">{captions[shown.key]}</span>
-          <span>An illustration, not live telemetry. Each lane grows at its measured low end for the same few seconds, one strand per stream. The lighter tail is the range across sweeps.</span></>}
+          <span>An illustration, not live telemetry. Each lane grows at its measured low end for the same few seconds, one strand per stream. The lighter tail is the range across sweeps.</span>
+          {installNote ? <span data-race-install-note>{installNote}</span> : null}</>}
     </figcaption>
   </figure>;
 }
