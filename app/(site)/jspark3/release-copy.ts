@@ -7,6 +7,7 @@
  * placeholder remains. Until then, placeholders render visibly as "v1.X" and "XX.X".
  */
 import glm from './glm-release.json';
+import { installNote } from './install-note.mjs';
 
 /**
  * One headline measurement: the within-start band across the sweeps, with lo equal to hi for a single measurement.
@@ -131,7 +132,7 @@ export const INSTALL_RELEASE = displayBuild(glm.install_tag);
  * Shown wherever the numbers appear when installers get a later patch than the measured build. The current
  * install patch changes defaults, so its performance must not be inferred from the measured build.
  */
-export const INSTALL_NOTE = glm.install_tag === glm.tag ? null : `The numbers were measured on ${glm.tag}. ${glm.install_tag} fixes installation; its default settings have not been benchmarked yet.`;
+export const INSTALL_NOTE = installNote(glm.tag, glm.install_tag);
 
 /** Known unpublished builds before v1.8. A later release cannot change this history. */
 export const INTERNAL_BUILDS = { first: 'v1.2', last: 'v1.7' } as const;

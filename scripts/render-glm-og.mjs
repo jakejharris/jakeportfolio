@@ -13,6 +13,7 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { chromePath, loadPlaywright } from './social/browser.mjs';
 import { shell } from './social/theme.mjs';
+import { installNote } from '../app/(site)/jspark3/install-note.mjs';
 
 const root = resolve(new URL('..', import.meta.url).pathname);
 const file = join(root, 'app/(site)/jspark3/glm-release.json');
@@ -41,7 +42,7 @@ const cells = TILES.flatMap(([id, label]) => {
 if (!cells.length) throw new Error('no figures to show; keep the neutral hub card');
 const caption = 'Best measured run for each. Full ranges on the release page.';
 // When installers get a later patch than the measured build, the card carries the page's install note (release-copy.ts INSTALL_NOTE).
-const note = glm.install_tag === glm.tag ? null : `The numbers were measured on ${glm.tag}. ${glm.install_tag} fixes installation; its default settings have not been benchmarked yet.`;
+const note = installNote(glm.tag, glm.install_tag);
 // Six characters fill a half-width cell. Longer figures step down, all cells together, so none reaches the next column.
 const longest = Math.max(...cells.map((item) => format(item.hi).length));
 const scale = longest > 9 ? 0.5 : longest > 6 ? 0.68 : 1;

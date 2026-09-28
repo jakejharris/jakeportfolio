@@ -60,3 +60,19 @@ test('future measured releases preserve the known unpublished interval', () => {
     assert.match(history.note, /before the public v1\.8 release/);
   }
 });
+
+test('v1.8.4 installation keeps the historical results and shares the coop release note', () => {
+  const copy = installCopyFor('v1.8.0', 'v1.8.4');
+  assert.equal(copy.note, 'The numbers were measured on v1.8.0 with the cooperative MoE kernel on. v1.8.4 builds that kernel to the exact bytes we qualified and turns it on for every install. Its own measurements follow.');
+  assert.equal(copy.hub, copy.note);
+  assert.equal(copy.hero, copy.note);
+  assert.deepEqual(copy.results, { label: 'v1.8.0 release notes and full results ↗', href: 'https://github.com/jakejharris/jspark3/releases/tag/v1.8.0' });
+});
+
+test('the v1.8.4 note does not make claims about another measured build or install patch', () => {
+  for (const [tag, installTag] of [['v1.8.0', 'v1.8.5'], ['v1.8.1', 'v1.8.4']]) {
+    const copy = installCopyFor(tag, installTag);
+    assert.equal(copy.note, `The numbers were measured on ${tag}. ${installTag} fixes installation; its default settings have not been benchmarked yet.`);
+  }
+  assert.equal(installCopyFor('v1.8.4', 'v1.8.4').note, null);
+});
