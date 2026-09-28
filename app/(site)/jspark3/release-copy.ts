@@ -127,20 +127,8 @@ export const RELEASE = displayBuild(glm.tag);
 /** The tag installers get, as the page names it, independently of the measured build. */
 export const INSTALL_RELEASE = displayBuild(glm.install_tag);
 
-/**
- * The internal builds between v1.1 and this release: v1.2 through v1.7 for v1.8.0,
- * v1.2 through v1.7.4 for v1.7.5, only v1.2 for v1.3.0, and none for v1.2.0.
- */
-function internalBuilds(tag: string) {
-  const match = /^v1\.(\d+)\.(\d+)$/.exec(tag);
-  if (!match) return { first: 'v1.2', last: 'v1.X' };
-  const [minor, patch] = [Number(match[1]), Number(match[2])];
-  const last = patch > 0 ? displayBuild(`v1.${minor}.${patch - 1}`) : `v1.${minor - 1}`;
-  if (minor < 2 || (minor === 2 && patch === 0)) return null;
-  return { first: 'v1.2', last: last === 'v1.2' ? null : last };
-}
-
-export const INTERNAL_BUILDS = internalBuilds(glm.tag);
+/** Known unpublished builds before v1.8. A later release cannot change this history. */
+export const INTERNAL_BUILDS = { first: 'v1.2', last: 'v1.7' } as const;
 
 /**
  * A measured value exactly as the release files write it, so 108.0 stays 108.0. The only change is a
@@ -284,9 +272,7 @@ export const GLM_COPY = {
   label: LABELS.latest,
   lede: 'GLM-5.3 Flash across three DGX Sparks as one OpenAI-compatible endpoint. The recipe is pinned so you can rebuild it, with public benchmarks and the misses left in.',
   intro: 'One OpenAI-compatible endpoint across all three. The recipe is pinned so you can rebuild it, with public benchmarks and the misses left in.',
-  internalBuilds: INTERNAL_BUILDS
-    ? `${INTERNAL_BUILDS.last ? `${INTERNAL_BUILDS.first} through ${INTERNAL_BUILDS.last} were internal builds` : `${INTERNAL_BUILDS.first} was an internal build`}, so the public numbers go from v1.1 to ${RELEASE}.`
-    : null,
+  internalBuilds: `${INTERNAL_BUILDS.first} through ${INTERNAL_BUILDS.last} were internal builds before the public v1.8 release.`,
   weights: 'The default install uses the stock GLM-5.3 Flash weights. Abliteration is an explicit opt-in.',
   /** How modes change in this release, chosen by mode_switch. Neither story makes a speed claim. */
   modeSwitch: glm.mode_switch === 'A' || glm.mode_switch === 'B' ? MODE_SWITCH[glm.mode_switch] : null,
@@ -302,7 +288,7 @@ export const GLM_COPY = {
   numbersNote: 'Compared with our own v1.1.',
   resultsTitle: 'Measured on our three Sparks.',
   /** Under the results heading: what one headline figure is. */
-  bandLine: `${RELEASE} with stock weights: ${startsAndSweeps(glm.headline)}. Each figure is the range across those sweeps.`,
+  bandLine: `${RELEASE} with stock weights: ${startsAndSweeps(glm.headline)}. Decode ranges span those sweeps. Prefill spans the individual turns described below.`,
   /** In place of the band line when the release's own start is not in the numbers. No base start is promoted. */
   headlineMissing: `No measured stock-weight start of ${RELEASE} is in this release’s numbers. The stock-weight figures below come from the base recipe, labelled by build.`,
   /** Under a headline figure the release's numbers leave out, such as a prefill with no clean measurement. */
@@ -311,7 +297,7 @@ export const GLM_COPY = {
   bandKey: 'Range across sweeps',
   sets: {
     title: 'Every serving start we measured',
-    intro: 'Each row is one start of the server, labelled by build, with the range across its sweeps. Every start we measured is listed.',
+    intro: 'Each row is one start of the server, labelled by build. Decode ranges span its sweeps; prefill spans individual turns. Every start we measured is listed.',
     column: 'Serving start',
     caption: 'All figures in tok/s. Decode above one stream is the aggregate across all streams.',
     thisRelease: `${RELEASE}, this release`,

@@ -463,7 +463,7 @@ export const RUN_LINKS: ReadonlyArray<{ title: string; body: string; href: strin
   {
     title: "The model files on Hugging Face",
     body: "Brandon M. Music made this version of GLM-5.3 Flash. Mia's AI Lab hosts a copy with credit, and JSPARK3 keeps a copy of the same model version. The model files are the same, so you only need to download them once. The model cards and other repository files differ. Cadence also needs the separate DFlash2 draft, a smaller model that helps generate answers faster.",
-    href: "https://huggingface.co/jakejharris/jspark3",
+    href: "https://huggingface.co/jakejharris/jspark3/tree/e7c34dba923916754cfcb0bdf6c2c75a9b7ff1fc",
     cta: "huggingface.co/jakejharris/jspark3",
   },
   {

@@ -1,14 +1,9 @@
-name: Decode race checks
+name: Checks
 
 on:
   pull_request:
-    paths:
-      - 'app/(site)/jspark3/v2/DecodeRace*'
-      - 'app/(site)/jspark3/v2/decode-race*'
-      - 'app/(site)/jspark3/release-copy.ts'
-      - 'app/(site)/jspark3/glm-release.json'
-      - 'package*.json'
-      - '.github/workflows/decode-race.yml'
+  push:
+    branches: [main]
 
 permissions:
   contents: read
@@ -19,7 +14,7 @@ jobs:
     timeout-minutes: 20
     env:
       NEXT_TELEMETRY_DISABLED: '1'
-      # Public content project, also recorded in sanity.cli.ts.
+      # Public content project, also recorded in sanity.cli.ts. No write token is needed.
       NEXT_PUBLIC_SANITY_PROJECT_ID: q1u033fj
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -35,6 +30,7 @@ jobs:
         run: |
           node scripts/check-glm-release.mjs
           node --test scripts/check-glm-release.test.mjs
+          npx tsx --test 'app/(site)/jspark3/release-copy.test.ts'
       - run: npm run lint
       - run: npm run typecheck
       - run: npm run build
