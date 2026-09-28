@@ -210,6 +210,11 @@ async function check() {
   assert.match(glm.version, /^v1\.\d+$/, 'version must look like v1.8');
   assert.match(glm.tag, /^v1\.\d+\.\d+$/, 'tag must look like v1.8.0');
   assert.ok(glm.tag.startsWith(`${glm.version}.`), 'tag and version disagree');
+  // The tag installers get: the measured tag, or a later patch of the same line that only changes packaging and installation.
+  assert.match(String(glm.install_tag), /^v1\.\d+\.\d+$/, 'install_tag must look like v1.8.1');
+  assert.ok(glm.install_tag.startsWith(`${glm.version}.`), `install_tag ${glm.install_tag} is not on the ${glm.version} line`);
+  const patch = tag => Number(tag.split('.')[2]);
+  assert.ok(patch(glm.install_tag) >= patch(glm.tag), `install_tag ${glm.install_tag} is older than the measured tag ${glm.tag}`);
   assert.match(glm.published, /^\d{4}-\d{2}-\d{2}$/, 'published must look like 2026-09-27');
   // The release has no name; the page shows its build. A name set anyway is printed, so it is screened like the labels.
   if (glm.name !== null) publicText(glm.name, 'name');
@@ -224,10 +229,12 @@ async function check() {
   // mode_switch only chooses between the two sentences already on the page.
   assert.ok(glm.mode_switch === 'A' || glm.mode_switch === 'B', `mode_switch must be "A" or "B", not ${JSON.stringify(glm.mode_switch)}`);
 
-  // Every jspark3 link is pinned to the release tag, so a later main or README never changes what the page opens.
+  // Every jspark3 link is pinned to a tag, so a later main or README never changes what the page opens.
+  // What installers get is on install_tag; the numbers' files stay on the tag they were measured and frozen on.
   const links = {
-    release: `${REPO}/releases/tag/${glm.tag}`,
-    source: `${REPO}/tree/${glm.tag}`,
+    release: `${REPO}/releases/tag/${glm.install_tag}`,
+    source: `${REPO}/tree/${glm.install_tag}`,
+    install: `${REPO}/blob/${glm.install_tag}/docs/INSTALL.md`,
     results: `${REPO}/blob/${glm.tag}/release/results-${glm.tag}.json`,
     numbers: `${REPO}/blob/${glm.tag}/release/RELEASE-NUMBERS.md`,
   };
@@ -291,7 +298,7 @@ async function check() {
   if (headline.missing) assert.ok(glm.sets.some(set => set.group === 'base_m0'), 'headline.missing is true, but no base_m0 set is there to show the stock-weight figures');
 
   if (live) {
-    for (const url of [links.release, links.source, glm.links.huggingface, `${REPO}/blob/${glm.tag}/docs/INSTALL.md`, links.results, links.numbers]) {
+    for (const url of [links.release, links.source, glm.links.huggingface, links.install, links.results, links.numbers]) {
       const response = await fetch(url, { method: 'HEAD', redirect: 'follow' });
       assert.equal(response.status, 200, `${url} returned ${response.status}`);
     }
@@ -300,6 +307,7 @@ async function check() {
     ok: true,
     version: glm.version,
     tag: glm.tag,
+    install_tag: glm.install_tag,
     mode_switch: glm.mode_switch,
     headline: headline.missing ? 'missing' : rows.length,
     headline_omitted: rows.filter(row => row.lo === null).map(row => row.id),

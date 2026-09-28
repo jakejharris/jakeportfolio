@@ -77,12 +77,15 @@ export interface HeadlineSpeed {
 export interface GlmRelease {
   placeholder: boolean;
   version: string;
+  /** The tag the numbers were measured on. */
   tag: string;
+  /** The tag installers get: tag itself, or a later patch that only changes packaging and installation. */
+  install_tag: string;
   name: string | null;
   published: string;
   social_image: string | null;
   mode_switch: string;
-  links: { release: string; source: string; huggingface: string; results: string; numbers: string };
+  links: { release: string; source: string; install: string; huggingface: string; results: string; numbers: string };
   headline: {
     baseline: string;
     conditions: string;
@@ -120,6 +123,9 @@ export function displayBuild(build: string) {
 
 /** This release as the page names it, from its tag. */
 export const RELEASE = displayBuild(glm.tag);
+
+/** The tag installers get, as the page names it: v1.8.1 while the numbers stay those of v1.8.0. */
+export const INSTALL_RELEASE = displayBuild(glm.install_tag);
 
 /**
  * The internal builds between v1.1 and this release: v1.2 through v1.7 for v1.8.0,
@@ -329,13 +335,18 @@ export const GLM_COPY = {
     scope: `Their run used JSPARK3 v1.1 with one added patch. It was not a run of ${RELEASE}.`,
   },
   install: {
-    title: `Run ${RELEASE}`,
+    title: `Run ${INSTALL_RELEASE}`,
     body: 'You need three DGX Sparks, fast direct connections between them (RoCE), and enough disk space. The install guide checks your machines before anything starts.',
-    guide: `https://github.com/jakejharris/jspark3/blob/${glm.tag}/docs/INSTALL.md`,
+    guide: glm.links.install,
+    /**
+     * Shown only when installers get a later patch than the measured build. It holds while that patch
+     * changes packaging and installation and not the serving code, as v1.8.1 does.
+     */
+    note: glm.install_tag === glm.tag ? null : `The numbers were measured on ${glm.tag}. ${glm.install_tag} fixes installation on other machines and does not change the serving code.`,
   },
   links: [
     { label: 'GitHub repository', href: glm.links.source, primary: true },
-    { label: `Release ${glm.tag}`, href: glm.links.release },
+    { label: `Release ${glm.install_tag}`, href: glm.links.release },
     { label: 'Hugging Face: model card and provenance', href: glm.links.huggingface },
   ],
   /** The published v1.1 page, for history links. */

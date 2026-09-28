@@ -125,6 +125,7 @@ test('accepts a v1.x.5 tag, whose version drops the patch', () => {
   const result = check(edited(glm => {
     const tag = 'v1.99.5';
     glm.tag = tag;
+    glm.install_tag = tag;
     glm.headline.build = tag;
     for (const key of Object.keys(glm.links)) glm.links[key] = glm.links[key].replaceAll('v1.99.0', tag);
   }));
@@ -132,8 +133,40 @@ test('accepts a v1.x.5 tag, whose version drops the patch', () => {
   assert.equal(JSON.parse(result.stdout).version, 'v1.99');
 });
 
+/**
+ * Installers get a later patch of the measured build, which only changes packaging and installation:
+ * the release, source and install links move to it, and the numbers' files stay on the measured tag.
+ */
+const laterInstall = glm => {
+  glm.install_tag = 'v1.99.1';
+  for (const key of ['release', 'source', 'install']) glm.links[key] = glm.links[key].replaceAll('v1.99.0', 'v1.99.1');
+};
+
+test('accepts an install tag that is a later patch of the measured tag', () => {
+  const glm = edited(laterInstall);
+  const result = check(glm);
+  assert.equal(result.status, 0, result.stderr);
+  const out = JSON.parse(result.stdout);
+  assert.equal(out.tag, 'v1.99.0');
+  assert.equal(out.install_tag, 'v1.99.1');
+  assert.equal(glm.links.results, 'https://github.com/jakejharris/jspark3/blob/v1.99.0/release/results-v1.99.0.json');
+});
+
 /** [what breaks, the edit, the refusal it must produce] */
 const CONTROLS = [
+  ['no install tag', glm => { delete glm.install_tag; }, /install_tag must look like v1\.8\.1/],
+  ['an install tag without a patch', glm => { glm.install_tag = 'v1.99'; }, /install_tag must look like v1\.8\.1/],
+  ['an install tag on another line', glm => { laterInstall(glm); glm.install_tag = 'v1.98.1'; }, /install_tag v1\.98\.1 is not on the v1\.99 line/],
+  ['an install tag older than the measured tag', glm => { glm.tag = 'v1.99.2'; glm.headline.build = 'v1.99.2'; glm.install_tag = 'v1.99.1'; }, /install_tag v1\.99\.1 is older than the measured tag v1\.99\.2/],
+  ['release link on the measured tag, not the install tag', glm => { laterInstall(glm); glm.links.release = 'https://github.com/jakejharris/jspark3/releases/tag/v1.99.0'; }, /links\.release must be https:\/\/github\.com\/jakejharris\/jspark3\/releases\/tag\/v1\.99\.1/],
+  ['source link on the measured tag, not the install tag', glm => { laterInstall(glm); glm.links.source = 'https://github.com/jakejharris/jspark3/tree/v1.99.0'; }, /links\.source must be https:\/\/github\.com\/jakejharris\/jspark3\/tree\/v1\.99\.1/],
+  ['install link on the measured tag, not the install tag', glm => { laterInstall(glm); glm.links.install = 'https://github.com/jakejharris/jspark3/blob/v1.99.0/docs/INSTALL.md'; }, /links\.install must be https:\/\/github\.com\/jakejharris\/jspark3\/blob\/v1\.99\.1\/docs\/INSTALL\.md/],
+  ['no install link', glm => { delete glm.links.install; }, /links\.install must be/],
+  ['install link on main', glm => { glm.links.install = 'https://github.com/jakejharris/jspark3/blob/main/docs/INSTALL.md'; }, /links\.install must be/],
+  ['results link moved to the install tag', glm => { laterInstall(glm); glm.links.results = 'https://github.com/jakejharris/jspark3/blob/v1.99.1/release/results-v1.99.0.json'; }, /links\.results must be https:\/\/github\.com\/jakejharris\/jspark3\/blob\/v1\.99\.0\/release\/results-v1\.99\.0\.json/],
+  ['results file named by the install tag', glm => { laterInstall(glm); glm.links.results = 'https://github.com/jakejharris/jspark3/blob/v1.99.1/release/results-v1.99.1.json'; }, /links\.results must be/],
+  ['numbers link moved to the install tag', glm => { laterInstall(glm); glm.links.numbers = 'https://github.com/jakejharris/jspark3/blob/v1.99.1/release/RELEASE-NUMBERS.md'; }, /links\.numbers must be/],
+  ['headline build is the install tag', glm => { laterInstall(glm); glm.headline.build = 'v1.99.1'; }, /headline\.build must be the tag v1\.99\.0/],
   ['hub prose c1 kept when the headline is missing', glm => { missing(glm); glm.headline.prose_c1 = { lo: 22.2, hi: 33.3, lo_text: '22.2', hi_text: '33.3' }; }, /headline\.missing is true, so headline\.prose_c1 must be null/],
   ['hub prose c1 left undefined', glm => { delete glm.headline.prose_c1; }, /headline\.prose_c1 must be a band or null/],
   ['hub prose c1 inverted', glm => { Object.assign(glm.headline.prose_c1, { lo: 44.4, lo_text: '44.4' }); }, /headline\.prose_c1: lo 44\.4 is above hi 33\.3/],

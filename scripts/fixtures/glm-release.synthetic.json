@@ -2,6 +2,7 @@
   "placeholder": false,
   "version": "v1.99",
   "tag": "v1.99.0",
+  "install_tag": "v1.99.0",
   "name": null,
   "published": "2099-01-01",
   "social_image": null,
@@ -9,6 +10,7 @@
   "links": {
     "release": "https://github.com/jakejharris/jspark3/releases/tag/v1.99.0",
     "source": "https://github.com/jakejharris/jspark3/tree/v1.99.0",
+    "install": "https://github.com/jakejharris/jspark3/blob/v1.99.0/docs/INSTALL.md",
     "huggingface": "https://huggingface.co/jakejharris/jspark3",
     "results": "https://github.com/jakejharris/jspark3/blob/v1.99.0/release/results-v1.99.0.json",
     "numbers": "https://github.com/jakejharris/jspark3/blob/v1.99.0/release/RELEASE-NUMBERS.md"
