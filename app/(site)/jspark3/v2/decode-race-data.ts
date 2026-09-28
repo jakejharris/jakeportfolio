@@ -1,4 +1,4 @@
-import { GLM_COPY, GLM_RELEASE, METRICS, displayBuild, startsAndSweeps, streams, valueText, type GlmRelease } from '../release-copy';
+import { GLM_RELEASE, METRICS, startsAndSweeps, streams, valueText, type GlmRelease } from '../release-copy';
 
 /**
  * The decode race's data: the page's own serving starts, reduced to the decode rows the race draws.
@@ -108,7 +108,7 @@ function names(text: string, build: string) {
  * leads. "v1.7.4 base recipe, no decode levers · edited weights, opt-in · one serving start, two sweeps".
  */
 export function raceCaption({ label, run }: Pick<RaceStart, 'label' | 'run'>) {
-  const build = displayBuild(run.build);
+  const build = run.build;
   const weights = run.mode === 0 ? 'stock weights' : 'edited weights';
   return [
     ...(names(label, build) ? [] : [build]),
@@ -128,7 +128,7 @@ export function buildRaceStarts(release: GlmRelease): RaceData {
   const own = headline.missing ? [] : headline.rows;
   const starts: RaceStart[] = [
     ...(own.length
-      ? [start('current', GLM_COPY.sets.thisRelease, { ...headline, mode: 0 }, lanes(own, row => (row.label === 'Decode' ? row.concurrency : undefined)))]
+      ? [start('current', `${headline.build}, measured build`, { ...headline, mode: 0 }, lanes(own, row => (row.label === 'Decode' ? row.concurrency : undefined)))]
       : []),
     ...sets.map(set => start(set.id, set.label, set, lanes(set.rows, cell => DECODE.get(cell.id)))),
   ].filter(entry => entry.lanes.length);

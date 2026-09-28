@@ -21,7 +21,7 @@
 }
 .glm-race-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 18px; }
 .glm-race-chips { display: flex; flex-wrap: wrap; gap: 8px; }
-.glm-race-chips button {
+.glm-race-chips button, .glm-race-motion {
   min-height: 36px;
   padding: 6px 12px;
   border: 1px solid var(--glm-paper-line);
@@ -31,7 +31,9 @@
   text-align: left;
   cursor: pointer;
 }
-.glm-race-chips button:hover { border-color: var(--glm-gold-deep); color: var(--glm-paper-ink); }
+.glm-race-chips button:hover, .glm-race-motion:hover { border-color: var(--glm-gold-deep); color: var(--glm-paper-ink); }
+.glm-race-head button:focus-visible { outline: 2px solid var(--glm-gold-deep); outline-offset: 3px; }
+.glm-race-motion { margin-left: auto; }
 .glm-race-chips button[aria-pressed="true"] { border-color: var(--glm-gold-deep); background: var(--glm-paper-ink); color: var(--glm-gold); }
 .glm-race-canvas { position: relative; height: 300px; margin-top: 16px; background: var(--race-bg); overflow: hidden; }
 /* glm.css zeroes every figure's margin inside .glm, so the gap above the card needs this weight. */
@@ -48,7 +50,10 @@
   .glm-race-canvas { height: 288px; }
   /* The starts wrap inside their own row, and a long label wraps inside its button, so every one stays in view. */
   .glm-race-chips { flex: 1 1 100%; min-width: 0; }
-  .glm-race-chips button { min-height: 40px; max-width: 100%; white-space: normal; }
+  .glm-race-head button { min-height: 40px; max-width: 100%; white-space: normal; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .glm-race-motion { display: none; }
 }
 @media print {
   .glm-race { display: none; }
