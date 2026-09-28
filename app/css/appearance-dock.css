@@ -1,0 +1,189 @@
+/* Appearance dock: theme and accent controls in the bottom right corner,
+   drawn in the pixel water's 18px cells. Within thumb reach on a phone, in
+   the empty margin on a desktop. */
+
+.appearance-dock {
+  --dock-lift: 0px;
+  position: fixed;
+  right: max(1rem, env(safe-area-inset-right));
+  bottom: calc(max(1rem, env(safe-area-inset-bottom)) + var(--dock-lift));
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  padding: 3px;
+  color: hsl(var(--foreground));
+  background: hsl(var(--background) / 0.72);
+  border: 1px solid hsl(var(--foreground) / 0.14);
+  border-radius: 6px;
+  box-shadow: 0 8px 28px rgb(0 0 0 / 0.12);
+  -webkit-backdrop-filter: blur(14px) saturate(120%);
+  backdrop-filter: blur(14px) saturate(120%);
+  transition: transform 0.3s ease;
+}
+
+.dark .appearance-dock {
+  box-shadow: 0 8px 28px rgb(0 0 0 / 0.4);
+}
+
+.appearance-dock-cell {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+@media (hover: hover) {
+  .appearance-dock-cell:hover {
+    background: hsl(var(--foreground) / 0.08);
+  }
+}
+
+.appearance-dock-cell:focus-visible {
+  outline: 2px solid hsl(var(--foreground));
+  outline-offset: -2px;
+}
+
+/* Wide screens with a mouse show every swatch. Everywhere else they fold into
+   the current one until it is tapped. */
+.appearance-dock .appearance-dock-palette {
+  display: none;
+}
+
+.appearance-dock[data-open] .appearance-dock-palette {
+  display: flex;
+}
+
+.appearance-dock[data-open] .appearance-dock-toggle {
+  display: none;
+}
+
+@media (min-width: 1024px) and (hover: hover) and (pointer: fine) {
+  .appearance-dock .appearance-dock-palette {
+    display: flex;
+  }
+
+  .appearance-dock .appearance-dock-toggle {
+    display: none;
+  }
+}
+
+/* One lattice cell of color. The color is the content, so high contrast
+   modes keep it. */
+.appearance-dock-swatch {
+  display: block;
+  width: 18px;
+  height: 18px;
+  box-shadow: inset 0 0 0 1px hsl(var(--foreground) / 0.18);
+  forced-color-adjust: none;
+}
+
+/* The picked swatch wears pixel corner brackets. Keyed to <html> rather than
+   React state, so they are right before the page hydrates. */
+:root:not([data-accent]) .appearance-dock-cell[data-swatch="0"]::before,
+:root[data-accent="1"] .appearance-dock-cell[data-swatch="1"]::before,
+:root[data-accent="2"] .appearance-dock-cell[data-swatch="2"]::before,
+:root[data-accent="3"] .appearance-dock-cell[data-swatch="3"]::before,
+:root[data-accent="4"] .appearance-dock-cell[data-swatch="4"]::before {
+  content: "";
+  position: absolute;
+  inset: 7px;
+  --corner: hsl(var(--foreground));
+  background:
+    linear-gradient(var(--corner), var(--corner)) top left / 5px 2px,
+    linear-gradient(var(--corner), var(--corner)) top left / 2px 5px,
+    linear-gradient(var(--corner), var(--corner)) top right / 5px 2px,
+    linear-gradient(var(--corner), var(--corner)) top right / 2px 5px,
+    linear-gradient(var(--corner), var(--corner)) bottom left / 5px 2px,
+    linear-gradient(var(--corner), var(--corner)) bottom left / 2px 5px,
+    linear-gradient(var(--corner), var(--corner)) bottom right / 5px 2px,
+    linear-gradient(var(--corner), var(--corner)) bottom right / 2px 5px;
+  background-repeat: no-repeat;
+  pointer-events: none;
+}
+
+.appearance-dock-rule {
+  width: 1px;
+  height: 18px;
+  margin: 0 3px;
+  background: hsl(var(--foreground) / 0.16);
+}
+
+/* The theme button shows where it goes: a sun at night, a moon by day. */
+.appearance-dock-theme svg {
+  width: 18px;
+  height: 18px;
+  fill: currentColor;
+}
+
+.appearance-dock-sun,
+.dark .appearance-dock-moon {
+  display: none;
+}
+
+.dark .appearance-dock-sun {
+  display: block;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .appearance-dock[data-open] .appearance-dock-palette .appearance-dock-cell {
+    animation: appearance-dock-pop 160ms steps(3, end) both;
+    animation-delay: calc(var(--swatch-index, 0) * 30ms);
+  }
+
+  @keyframes appearance-dock-pop {
+    from {
+      opacity: 0;
+      transform: scale(0.34);
+    }
+  }
+}
+
+/* Where the dock could sit over the reading column, it tucks away while the
+   reader scrolls down and returns on the way back up, like the mobile
+   navbar. The end of the page keeps room for it above the footer, so the
+   last lines can always scroll clear of it. */
+@media (max-width: 1023px) {
+  .appearance-dock[data-tucked] {
+    transform: translateY(calc(100% + max(1rem, env(safe-area-inset-bottom)) + var(--dock-lift) + 8px));
+  }
+
+  [data-site-footer] {
+    margin-top: 3rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .appearance-dock,
+  .appearance-dock-cell {
+    transition: none;
+  }
+}
+
+@media print {
+  .appearance-dock {
+    display: none;
+  }
+}
+
+/* Theme flood: the new page is revealed by a stepped clip-path animation from
+   pixel-tide.ts, over a still image of the old one. No cross-fade. */
+::view-transition,
+::view-transition-group(root),
+::view-transition-image-pair(root),
+::view-transition-old(root),
+::view-transition-new(root) {
+  pointer-events: none;
+}
+
+/* The theme does not move the root. Its default geometry animation would
+   composite extra frames underneath the stepped reveal. */
+::view-transition-group(root),
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}

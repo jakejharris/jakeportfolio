@@ -63,7 +63,8 @@ This is a Next.js 15 portfolio and blog site using the App Router with Sanity CM
 
 - **Tailwind CSS** with CSS variable color system in `globals.css` (HSL tokens via `hsl(var(--token))`)
 - **Dark mode** via `next-themes` (class strategy, `.dark` on `<html>`)
-- **Accent color system** — 5 options (default + red/blue/green/orange) controlled by `data-accent` attribute on `<html>`, persisted in `localStorage` under key `accent-index`. `AccentScript` applies the attribute before hydration to prevent flash.
+- **Accent color system** — 5 options (default + red/blue/green/orange) controlled by `data-accent` attribute on `<html>`, persisted in `localStorage` under key `accent-index`. `AccentScript` applies the attribute before hydration to prevent flash. The swatches are CSS variables `--accent-0` to `--accent-4` in `globals.css`; `--accent-color` points at the active one.
+- **Appearance dock**: Theme and accent controls live in `AppearanceDock` (fixed, bottom right, mounted in the site layout), not in the navbar. A theme switch reveals the new theme from the button through the View Transitions API (`app/lib/pixel-tide.ts`), instant under reduced motion or without the API. Picking an accent pours it into the pixel background from the swatch.
 - **shadcn/ui** "new-york" style preset with `lucide-react` icons
 - **Component CSS** in `app/css/`: `page.css` (glassmorphism `.pageLinkContainer`), `animations.css` (transition particles, scanline sweep)
 - **Portable Text styles** in `globals.css` under `.portable-text` class
@@ -72,6 +73,7 @@ This is a Next.js 15 portfolio and blog site using the App Router with Sanity CM
 
 - **Hydration mismatch prevention** — Components use `mounted` state pattern, opacity-based icon switching, or `ClientOnly` wrappers to avoid SSR/client mismatches
 - **Feature flags** — Top-of-file constants toggle features: `ENABLE_PAGE_TRANSITIONS = false` (TransitionOverlay), `ENABLE_PIXEL_FLUID_BACKGROUND = true` (canvas background)
+- **Pixel background**: `PixelFluidBackground` wraps the engine in `app/components/pixel-fluid/`. Text marked `data-fluid-island` is dry land: the background traces its glyphs and never draws near them. Mark any heading or standfirst that sits over the background (homepage hero, tag headers, JSPARK3 hub masthead).
 - **Navigation** — Internal links use `TransitionLink` (wraps Next.js `Link`) with `scroll={true}`. Navbar and drawer hrefs use clean paths (for example, `href="/about"`); post-card links retain the legacy trailing-`#` pattern
 - **Scroll management** — `ScrollToTop` component handles scroll reset on navigation; `experimental.scrollRestoration` is disabled in next.config.js
 - **Portable Text headings** — Bold (`strong`-marked) text in normal paragraphs is treated as section headings (not Sanity's built-in h1–h4). Both `TableOfContents` and the custom block renderer generate heading IDs in format `section-{block._key}`

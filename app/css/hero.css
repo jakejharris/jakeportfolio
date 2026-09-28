@@ -6,23 +6,6 @@
   padding: 4.25rem 0;
 }
 
-/* Full-viewport canvas overlay, rendered by PixelFluidBackground rather than
-   inside .hero. The gradient reaches transparency well beyond the content
-   bounds, so there is no section-edge cutoff and pointer input still reaches
-   the canvas interaction beneath it. */
-.pixel-fluid-hero-glow {
-  position: absolute;
-  inset: 0;
-  z-index: 8;
-  pointer-events: none;
-  background: radial-gradient(
-    ellipse 32rem 18rem at 50% 14.75rem,
-    hsl(var(--background) / 0.58) 0%,
-    hsl(var(--background) / 0.34) 50%,
-    transparent 100%
-  );
-}
-
 .hero-wordmark {
   margin: 0;
   color: hsl(var(--foreground));
@@ -98,14 +81,4 @@
   .hero {
     padding: 2.9rem 0 2.7rem;
   }
-
-  .pixel-fluid-hero-glow {
-    background: radial-gradient(
-      ellipse 24rem 17rem at 50% 12.75rem,
-      hsl(var(--background) / 0.76) 0%,
-      hsl(var(--background) / 0.46) 52%,
-      transparent 100%
-    );
-  }
-
 }
