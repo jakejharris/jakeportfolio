@@ -342,7 +342,7 @@ export const GLM_COPY = {
      * Shown only when installers get a later patch than the measured build. It holds while that patch
      * changes packaging and installation and not the serving code, as v1.8.1 does.
      */
-    note: glm.install_tag === glm.tag ? null : `The numbers were measured on ${glm.tag}. ${glm.install_tag} fixes installation on other machines and does not change the serving code.`,
+    note: glm.install_tag === glm.tag ? null : `The numbers were measured on ${glm.tag}. ${glm.install_tag} changes only how the recipe is installed, not the serving code.`,
   },
   links: [
     { label: 'GitHub repository', href: glm.links.source, primary: true },
