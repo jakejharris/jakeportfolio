@@ -1,5 +1,6 @@
 import PortfolioChrome from "../components/PortfolioChrome";
 import Navbar from "../components/Navbar";
+import AppearanceDock from "../components/AppearanceDock";
 import { NavbarScrollProvider } from "../components/NavbarScrollContext";
 import Footer from "../components/Footer";
 import { ThemeProvider } from "../components/theme-provider";
@@ -86,6 +87,7 @@ export default function SiteLayout({ children }: { children: React.ReactNode }) 
           <TransitionOverlay />
           <NavbarScrollProvider>
             <PortfolioChrome><Navbar /></PortfolioChrome>
+            <PortfolioChrome><AppearanceDock /></PortfolioChrome>
             <main className="flex-1">
               {children}
               {process.env.NODE_ENV === 'production' && (

@@ -3,8 +3,6 @@
 import { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { FaGithub } from 'react-icons/fa';
-import ThemeToggle from './ThemeToggle';
-import AccentPicker from './AccentPicker';
 import { Button } from './ui/button';
 import TransitionLink from './TransitionLink';
 import HamburgerIcon from './HamburgerIcon';
@@ -65,8 +63,6 @@ export default function MobileNavbar({ scrolled, visible }: MobileNavbarProps) {
           </TransitionLink>
         </div>
         <div className="flex items-center gap-2">
-          <AccentPicker />
-          <ThemeToggle />
           <Drawer
             key={drawerKey}
             open={isDrawerOpen}

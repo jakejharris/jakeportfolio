@@ -1,8 +1,6 @@
 "use client";
 
 import { usePathname } from 'next/navigation';
-import ThemeToggle from './ThemeToggle';
-import AccentPicker from './AccentPicker';
 import TransitionLink from './TransitionLink';
 import JHMark from './JHMark';
 import { getActiveNav } from '../lib/navbar';
@@ -35,12 +33,6 @@ export default function DesktopNavbar({ scrolled }: DesktopNavbarProps) {
         </div>
         <div className="flex-none">
           <ul className="flex gap-2 items-center">
-            <li className="aspect-square w-[50px] h-[50px] flex items-center justify-center">
-              <AccentPicker />
-            </li>
-            <li className="aspect-square w-[50px] h-[50px] flex items-center justify-center">
-              <ThemeToggle />
-            </li>
             <li className="flex items-center justify-center">
               <TransitionLink
                 href="/about"

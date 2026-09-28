@@ -96,22 +96,30 @@
   }
 }
 
-/* Accent color system - defined via data-accent attribute */
+/* Accent color system - defined via data-accent attribute. The five swatches
+   are variables too, so the appearance dock can show them all before any
+   script runs. */
 :root {
-  --accent-color: hsl(0 0% 9%);
+  --accent-0: hsl(0 0% 9%);
+  --accent-1: hsl(0 72% 50%);
+  --accent-2: hsl(217 80% 50%);
+  --accent-3: hsl(160 65% 40%);
+  --accent-4: hsl(35 90% 48%);
+  --accent-color: var(--accent-0);
 }
-:root[data-accent="1"] { --accent-color: hsl(0 72% 50%); }
-:root[data-accent="2"] { --accent-color: hsl(217 80% 50%); }
-:root[data-accent="3"] { --accent-color: hsl(160 65% 40%); }
-:root[data-accent="4"] { --accent-color: hsl(35 90% 48%); }
 
 .dark {
-  --accent-color: hsl(0 0% 98%);
+  --accent-0: hsl(0 0% 98%);
+  --accent-1: hsl(0 60% 65%);
+  --accent-2: hsl(217 70% 65%);
+  --accent-3: hsl(160 50% 55%);
+  --accent-4: hsl(35 70% 60%);
 }
-.dark[data-accent="1"] { --accent-color: hsl(0 60% 65%); }
-.dark[data-accent="2"] { --accent-color: hsl(217 70% 65%); }
-.dark[data-accent="3"] { --accent-color: hsl(160 50% 55%); }
-.dark[data-accent="4"] { --accent-color: hsl(35 70% 60%); }
+
+:root[data-accent="1"] { --accent-color: var(--accent-1); }
+:root[data-accent="2"] { --accent-color: var(--accent-2); }
+:root[data-accent="3"] { --accent-color: var(--accent-3); }
+:root[data-accent="4"] { --accent-color: var(--accent-4); }
 
 /* Wordmark stack. Sentient Bold loads with font-display: block, so on a cold
    cache the title is laid out invisibly in "Sentient Fallback" until the woff2
