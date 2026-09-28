@@ -26,6 +26,8 @@ export interface FluidOptions {
   heroMode: boolean;
   /** Share of cells kept as still negative space, chosen away from the edges. */
   quietShare: number;
+  /** How long the swell takes to rise after the first frame. */
+  rampMs?: number;
 }
 
 // Wave amplitude ramps 0 -> 1 on mount, then the drift settles to ambient.
@@ -303,7 +305,7 @@ export class PixelFluid {
     const dt = Math.min(100, Math.max(0, now - this.last));
     this.last = now;
     const elapsed = now - this.start;
-    const amplitude = this.still ? 1 : easeOutCubic(Math.min(1, elapsed / RAMP_MS));
+    const amplitude = this.still ? 1 : easeOutCubic(Math.min(1, elapsed / (this.options.rampMs ?? RAMP_MS)));
     const settle = this.still ? 1 : easeOutCubic(clamp01((elapsed - SETTLE_DELAY_MS) / SETTLE_MS));
     if (!this.still) this.phase += lerp(this.speed.intro, this.speed.ambient, settle) * dt / 1000;
     const scrollProgress = clamp01(scrollY / Math.max(viewportHeight * 1.1, 1));
