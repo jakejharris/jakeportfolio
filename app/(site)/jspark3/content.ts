@@ -673,6 +673,14 @@ export const CITE = {
   ] as ReadonlyArray<RichPart>,
   citation: `JSpark3 v1.8.3 (2026)
 https://github.com/jakejharris/jspark3/releases/tag/v1.8.3`,
+  upstreamCitation: `@misc{music2026shapleymcg,
+  author = {Music, Brandon M.},
+  title  = {ShapleyMCG: An Auditable Calibration-to-Encoding Pipeline for
+            Low-Bit Mixture-of-Experts Models},
+  year   = {2026},
+  url    = {https://github.com/brandonmmusic-max/shapleymcg},
+  note   = {Licensed under the ShapleyMcg License v1.0}
+}`,
 };
 
 export const BLOCK_FOOTER: ReadonlyArray<string> = [

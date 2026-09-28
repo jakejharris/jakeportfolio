@@ -129,6 +129,10 @@ export default function GlmArchive() {
           <pre className="mt-2.5 max-w-full overflow-x-auto rounded-lg border border-border bg-muted p-3 text-[12.5px] leading-relaxed">
             <code className="font-mono">{CITE.citation}</code>
           </pre>
+          <p className="mt-4 text-sm text-muted-foreground">ShapleyMcg citation, as provided by its author:</p>
+          <pre className="mt-2.5 max-w-full overflow-x-auto rounded-lg border border-border bg-muted p-3 text-[12.5px] leading-relaxed">
+            <code className="font-mono">{CITE.upstreamCitation}</code>
+          </pre>
         </Card>
       </V11Fold>
       </div>
