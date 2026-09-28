@@ -127,6 +127,12 @@ export const RELEASE = displayBuild(glm.tag);
 /** The tag installers get, as the page names it, independently of the measured build. */
 export const INSTALL_RELEASE = displayBuild(glm.install_tag);
 
+/**
+ * Shown wherever the numbers appear when installers get a later patch than the measured build. The current
+ * install patch changes defaults, so its performance must not be inferred from the measured build.
+ */
+export const INSTALL_NOTE = glm.install_tag === glm.tag ? null : `The numbers were measured on ${glm.tag}. ${glm.install_tag} fixes installation; its default settings have not been benchmarked yet.`;
+
 /** Known unpublished builds before v1.8. A later release cannot change this history. */
 export const INTERNAL_BUILDS = { first: 'v1.2', last: 'v1.7' } as const;
 
@@ -234,6 +240,8 @@ export const HUB_COPY = {
       asterisk: '* Best measured run for each. Full ranges on the release page.',
       none: 'Three DGX Sparks · stock weights by default',
     },
+    /** Under the caption while the card shows figures and installers get a later patch than the measured build. */
+    installNote: INSTALL_NOTE,
     action: 'Recipe, results, and release notes',
   },
   tempoCard: {
@@ -306,6 +314,14 @@ export const GLM_COPY = {
   },
   mia: { series: 'Mia, published' },
   notesLink: { title: 'Release notes and known issues', detail: 'release notes on GitHub' },
+  /**
+   * The results' own release notes: the measured build's, which carry the full results. A later install
+   * patch's notes point back to them, so when the tags differ the link follows the measured tag and names it.
+   */
+  resultsNotes: {
+    label: glm.install_tag === glm.tag ? 'Release notes and full results ↗' : `${glm.tag} release notes and full results ↗`,
+    href: glm.links.release.replace(`/releases/tag/${glm.install_tag}`, `/releases/tag/${glm.tag}`),
+  },
   resultsLinks: [
     { label: 'Results file ↗', href: glm.links.results },
     { label: 'Every number, with how it was measured ↗', href: glm.links.numbers },
@@ -324,11 +340,8 @@ export const GLM_COPY = {
     title: `Run ${INSTALL_RELEASE}`,
     body: 'You need three DGX Sparks, fast direct connections between them (RoCE), and enough disk space. The install guide checks your machines before anything starts.',
     guide: glm.links.install,
-    /**
-     * Shown when installers get a later patch than the measured build. The current install patch
-     * changes defaults, so its performance must not be inferred from the measured build.
-     */
-    note: glm.install_tag === glm.tag ? null : `The numbers were measured on ${glm.tag}. ${glm.install_tag} fixes installation; its default settings have not been benchmarked yet.`,
+    /** The install note beside the hero actions and the decode race. */
+    note: INSTALL_NOTE,
   },
   links: [
     { label: 'GitHub repository', href: glm.links.source, primary: true },

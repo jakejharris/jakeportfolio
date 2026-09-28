@@ -298,7 +298,9 @@ async function check() {
   if (headline.missing) assert.ok(glm.sets.some(set => set.group === 'base_m0'), 'headline.missing is true, but no base_m0 set is there to show the stock-weight figures');
 
   if (live) {
-    for (const url of [links.release, links.source, glm.links.huggingface, links.install, links.results, links.numbers]) {
+    // The results section links the measured tag's release notes, which carry the full results (release-copy.ts resultsNotes).
+    const measuredRelease = `${REPO}/releases/tag/${glm.tag}`;
+    for (const url of [links.release, links.source, glm.links.huggingface, links.install, links.results, links.numbers, measuredRelease]) {
       const response = await fetch(url, { method: 'HEAD', redirect: 'follow' });
       assert.equal(response.status, 200, `${url} returned ${response.status}`);
     }

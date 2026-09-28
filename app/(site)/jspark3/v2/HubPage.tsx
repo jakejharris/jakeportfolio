@@ -57,6 +57,7 @@ export default function HubPage() {
                 </span>)}
               </span> : null}
               <span className="spark-hub-release-detail">{HUB_TILES.length ? HUB_COPY.glmCard.caption[FIGURE] : HUB_COPY.glmCard.caption.none}</span>
+              {HUB_TILES.length && HUB_COPY.glmCard.installNote ? <span className="spark-hub-release-detail" data-hub-install-note>{HUB_COPY.glmCard.installNote}</span> : null}
               <span className="spark-hub-release-action">{HUB_COPY.glmCard.action} <span aria-hidden="true">→</span></span>
             </TransitionLink>
           </li>

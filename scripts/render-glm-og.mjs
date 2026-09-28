@@ -40,6 +40,8 @@ const cells = TILES.flatMap(([id, label]) => {
 });
 if (!cells.length) throw new Error('no figures to show; keep the neutral hub card');
 const caption = 'Best measured run for each. Full ranges on the release page.';
+// When installers get a later patch than the measured build, the card carries the page's install note (release-copy.ts INSTALL_NOTE).
+const note = glm.install_tag === glm.tag ? null : `The numbers were measured on ${glm.tag}. ${glm.install_tag} fixes installation; its default settings have not been benchmarked yet.`;
 // Six characters fill a half-width cell. Longer figures step down, all cells together, so none reaches the next column.
 const longest = Math.max(...cells.map((item) => format(item.hi).length));
 const scale = longest > 9 ? 0.5 : longest > 6 ? 0.68 : 1;
@@ -47,7 +49,8 @@ const size = scale < 1 ? ` style="font-size:calc(var(--grid-num) * ${scale})"` :
 const cell = (item) => `<div class="cell"><div class="eyebrow">${escape(item.label)}</div><div class="num"${size}><span style="font-size:0.32em;font-weight:400;margin-right:0.25em">up to</span>${escape(format(item.hi))}<span class="unit">${escape(item.unit)}</span></div><div class="comparison"></div></div>`;
 // There is no release name; one set anyway is escaped like every other interpolated text.
 const title = escape(glm.name ? `JSPARK3 ${release} ${glm.name}` : `JSPARK3 ${release}`);
-const body = `<div class="tagline">${title}: GLM-5.3 Flash on three DGX Sparks.<div style="margin-top:10px;font-size:18px;font-weight:400;color:var(--muted)">${escape(caption)}</div></div><div class="grid">${cells.map(cell).join('')}</div>`;
+const line = (text) => `<div style="margin-top:10px;font-size:18px;font-weight:400;color:var(--muted)">${escape(text)}</div>`;
+const body = `<div class="tagline">${title}: GLM-5.3 Flash on three DGX Sparks.${line(caption)}${note ? line(note) : ''}</div><div class="grid">${cells.map(cell).join('')}</div>`;
 if (body.includes('—')) throw new Error('em dash in card copy');
 // The shared shell keeps the original series' wordmark; this card uses the current casing.
 const html = shell({ cardId: '07-hero-card', orient: 'og', body, receipt: '' }).replace('<span class="word">JSpark3</span>', '<span class="word">JSPARK3</span>');

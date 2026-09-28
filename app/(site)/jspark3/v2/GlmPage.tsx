@@ -81,7 +81,7 @@ export default function GlmPage() {
         {SHOW_MIA ? <MiaNote /> : null}
         {GLM_COPY.internalBuilds ? <p className="glm-small"><Marked text={GLM_COPY.internalBuilds} /></p> : null}
         <p className="glm-evidence-link">
-          <a href={links.release}>Release notes and full results ↗</a>
+          <a href={GLM_COPY.resultsNotes.href}>{GLM_COPY.resultsNotes.label}</a>
           {GLM_COPY.resultsLinks.map(link => <a key={link.href} href={link.href}>{link.label}</a>)}
           <a href="#benchmarks">v1.1 benchmarks and comparisons ↓</a>
         </p>
