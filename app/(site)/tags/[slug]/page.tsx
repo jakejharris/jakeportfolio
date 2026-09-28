@@ -121,9 +121,9 @@ export default async function TagPage({
     <PageLayout>
       <div className="max-w-none">
         <div className="page-enter mb-6">
-          <h1 className="text-2xl md:text-3xl font-bold mb-2">{tag.title}</h1>
+          <h1 className="text-2xl md:text-3xl font-bold mb-2" data-fluid-island>{tag.title}</h1>
           {tag.description && (
-            <p className="text-muted-foreground">{tag.description}</p>
+            <p className="text-muted-foreground" data-fluid-island>{tag.description}</p>
           )}
         </div>
 

@@ -7,6 +7,7 @@ export type RgbTriplet = [number, number, number];
 interface CanvasColors {
   accent: RgbTriplet;
   fg: RgbTriplet;
+  bg: RgbTriplet;
   isDark: boolean;
   ready: boolean;
 }
@@ -14,6 +15,7 @@ interface CanvasColors {
 const INITIAL_COLORS: CanvasColors = {
   accent: [255, 255, 255],
   fg: [255, 255, 255],
+  bg: [0, 0, 0],
   isDark: false,
   ready: false,
 };
@@ -46,7 +48,7 @@ function parseRgb(value: string): RgbTriplet {
   return [255, 255, 255];
 }
 
-function readCanvasColors(): CanvasColors {
+export function readCanvasColors(): CanvasColors {
   const root = document.documentElement;
   const probe = document.createElement('span');
 
@@ -59,12 +61,15 @@ function readCanvasColors(): CanvasColors {
   const accent = parseRgb(getComputedStyle(probe).color);
   probe.style.color = 'hsl(var(--foreground))';
   const fg = parseRgb(getComputedStyle(probe).color);
+  probe.style.color = 'hsl(var(--background))';
+  const bg = parseRgb(getComputedStyle(probe).color);
 
   probe.remove();
 
   return {
     accent,
     fg,
+    bg,
     isDark: root.classList.contains('dark'),
     ready: true,
   };

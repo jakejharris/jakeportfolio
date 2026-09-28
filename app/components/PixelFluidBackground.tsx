@@ -1,62 +1,20 @@
 "use client";
 
-import { useEffect, useRef, useCallback, useState } from "react";
-import { useTheme } from "next-themes";
+import { useEffect, useRef } from "react";
+import { readCanvasColors } from "./blog-components/canvas-theme";
+import { PixelFluid, type Rgb } from "./pixel-fluid/engine";
+import { ISLAND_SELECTOR, measureIslands } from "./pixel-fluid/islands";
+import { FLUID_DISTURB_EVENT, type FluidDisturbance } from "./pixel-fluid/disturb";
 
 // Feature flag for pixel fluid background
 const ENABLE_PIXEL_FLUID_BACKGROUND = true;
 
-// Duration (ms) for the wave amplitude to ramp from 0 → 1 on mount
-const WAVE_RAMP_DURATION = 4000;
-const AMBIENT_SETTLE_DELAY = 8000;
-const AMBIENT_SETTLE_DURATION = 6000;
-
-// Cubic ease-out: fast through the low range, decelerates into full amplitude
-function easeOutCubic(t: number): number {
-  return 1 - (1 - t) * (1 - t) * (1 - t);
-}
-
-function clamp01(value: number): number {
-  return Math.min(1, Math.max(0, value));
-}
-
-function lerp(from: number, to: number, amount: number): number {
-  return from + (to - from) * amount;
-}
-
-function gaussian(
-  x: number,
-  y: number,
-  centerX: number,
-  centerY: number,
-  radiusX: number,
-  radiusY: number
-): number {
-  const dx = (x - centerX) / radiusX;
-  const dy = (y - centerY) / radiusY;
-  return Math.exp(-(dx * dx + dy * dy) * 2);
-}
-
-// Same colors as AccentPicker for consistency
-const COLORS = [
-  { name: "Default", light: "0 0% 9%", dark: "0 0% 98%" },
-  { name: "Red", light: "0 72% 50%", dark: "0 60% 65%" },
-  { name: "Blue", light: "217 80% 50%", dark: "217 70% 65%" },
-  { name: "Green", light: "160 65% 40%", dark: "160 50% 55%" },
-  { name: "Amber", light: "35 90% 48%", dark: "35 70% 60%" },
-];
-
-// Parse HSL string to get hue value
-function parseHue(hslString: string): number {
-  const parts = hslString.split(" ");
-  return parseFloat(parts[0]) || 0;
-}
-
-// Parse HSL string to get saturation
-function parseSaturation(hslString: string): number {
-  const parts = hslString.split(" ");
-  return parseFloat(parts[1]?.replace("%", "")) || 0;
-}
+// The ambient drift flips a given cell a couple of times a second, so 30 fps
+// looks the same as 60 and costs half. Ripples and dye rings get 60.
+const AMBIENT_FRAME_MS = 1000 / 30;
+const BUSY_FRAME_MS = 1000 / 60;
+// A disturbance announced this recently explains an accent change.
+const DROP_WINDOW_MS = 1000;
 
 interface PixelFluidBackgroundProps {
   className?: string;
@@ -71,455 +29,201 @@ export default function PixelFluidBackground({
   quietShare = 0,
 }: PixelFluidBackgroundProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const animationRef = useRef<number>(0);
-  const timeRef = useRef(0);
-  const startTimeRef = useRef<number | null>(null);
-  const amplitudeRef = useRef(0);
-  const scrollRef = useRef(0);
-  const prefersReducedMotionRef = useRef(false);
-  const isAnimatingRef = useRef(false);
-  const compositionBiasRef = useRef<Float32Array>(new Float32Array(0));
-  const fluidCellsRef = useRef<Uint8Array>(new Uint8Array(0));
-  const pointerRef = useRef({ x: -1000, y: -1000, active: false });
-  const configRef = useRef({
-    pixelSize: 18,
-    introSpeed: 0.0072,
-    ambientSpeed: 0.003,
-    baseHue: 215,
-    baseSaturation: 80,
-    waveScale: 0.09,
-    isGrayscale: false,
-    contourDensity: 12,
-    contourThickness: 0.2,
-  });
-  const [mounted, setMounted] = useState(false);
-  const { theme, resolvedTheme } = useTheme();
-  const isDark = resolvedTheme === "dark";
-
-  // Get the current accent color based on data-accent attribute
-  const getAccentColor = useCallback(() => {
-    const accentAttr = document.documentElement.getAttribute("data-accent");
-    const accentIndex = accentAttr ? parseInt(accentAttr, 10) : 0;
-    const validIndex = accentIndex >= 0 && accentIndex <= 4 ? accentIndex : 0;
-    const color = COLORS[validIndex];
-    return { colorString: isDark ? color.dark : color.light, index: validIndex };
-  }, [isDark]);
-
-  // Update base hue from accent color
-  const updateBaseHue = useCallback(() => {
-    const { colorString, index } = getAccentColor();
-    const hue = parseHue(colorString);
-    const saturation = parseSaturation(colorString);
-
-    if (index === 0 || saturation === 0) {
-      configRef.current.isGrayscale = true;
-      configRef.current.baseHue = 0;
-      configRef.current.baseSaturation = 0;
-    } else {
-      configRef.current.isGrayscale = false;
-      configRef.current.baseHue = hue;
-      configRef.current.baseSaturation = saturation;
-    }
-  }, [getAccentColor]);
-
-  // Wave height calculation with interactive ripple
-  const getWaveHeight = useCallback((x: number, y: number, t: number) => {
-    const scale = configRef.current.waveScale;
-    const pointer = pointerRef.current;
-
-    // Base ocean swell
-    const w1 = Math.sin(x * scale + t);
-    const w2 = Math.cos(y * scale * 0.7 - t * 0.4);
-    const w3 = Math.sin((x - y) * scale * 0.5 + t * 0.3);
-
-    let h = ((w1 + w2 + w3 + 3) / 6) * amplitudeRef.current;
-
-    // Interactive ripple effect (also scaled by amplitude)
-    if (pointer.active && amplitudeRef.current > 0) {
-      const dx = x - pointer.x;
-      const dy = y - pointer.y;
-      const dist = Math.sqrt(dx * dx + dy * dy);
-
-      // Ripple radius: 15 blocks
-      if (dist < 15) {
-        const ripple = Math.cos(dist * 0.6 - t * 4) * 0.25 * amplitudeRef.current;
-        const decay = 1 - dist / 15;
-        h -= ripple * decay;
-      }
-    }
-
-    return h;
-  }, []);
-
-  // Keep the homepage field art-directed even as the waves move: a broad
-  // formation enters from the upper left and a smaller counterweight sits at
-  // the right edge. Other pages retain the neutral procedural field.
-  const getCompositionBias = useCallback((
-    x: number,
-    y: number,
-    cols: number,
-    rows: number,
-    width: number
-  ) => {
-    if (!heroMode || cols <= 1 || rows <= 1) return 0;
-
-    const nx = x / (cols - 1);
-    const ny = y / (rows - 1);
-    const isMobile = width < 768;
-
-    if (isMobile) {
-      const upperRight = gaussian(nx, ny, 0.83, 0.12, 0.5, 0.3) * 0.09;
-      const upperLeft = gaussian(nx, ny, -0.08, 0.06, 0.34, 0.26) * 0.05;
-      return upperRight + upperLeft;
-    }
-
-    const upperLeft = gaussian(nx, ny, 0.08, 0.13, 0.34, 0.3) * 0.09;
-    const rightEdge = gaussian(nx, ny, 1.02, 0.24, 0.28, 0.3) * 0.085;
-    return upperLeft + rightEdge;
-  }, [heroMode]);
-
-  // Draw function
-  const draw = useCallback(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-
-    // Update amplitude ramp (wall-clock time for consistent feel across devices)
-    const now = performance.now();
-    if (startTimeRef.current === null) {
-      startTimeRef.current = now;
-    }
-    const elapsed = now - startTimeRef.current;
-    if (amplitudeRef.current < 1) {
-      amplitudeRef.current = easeOutCubic(Math.min(1, elapsed / WAVE_RAMP_DURATION));
-    }
-
-    const {
-      pixelSize,
-      introSpeed,
-      ambientSpeed,
-      baseHue,
-      baseSaturation,
-      isGrayscale,
-      contourDensity,
-      contourThickness,
-    } = configRef.current;
-    const cols = Math.ceil(canvas.width / pixelSize);
-    const rows = Math.ceil(canvas.height / pixelSize);
-    const settleProgress = easeOutCubic(
-      clamp01((elapsed - AMBIENT_SETTLE_DELAY) / AMBIENT_SETTLE_DURATION)
-    );
-    const scrollProgress = clamp01(
-      scrollRef.current / Math.max(window.innerHeight * 1.1, 1)
-    );
-    const ambientPresence = lerp(1, 0.8, settleProgress) * lerp(1, 0.58, scrollProgress);
-
-    // Fill background first
-    ctx.globalAlpha = 1;
-    ctx.fillStyle = isDark ? "#0a0a0a" : "#ffffff";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    for (let x = 0; x < cols; x++) {
-      for (let y = 0; y < rows; y++) {
-        const cellIndex = x * rows + y;
-        // A fixed spatial mask, independent of time and pointer input, keeps
-        // the requested negative space quiet throughout the animation.
-        if (quietShare > 0 && !fluidCellsRef.current[cellIndex]) continue;
-        const compositionBias = compositionBiasRef.current.length === cols * rows
-          ? compositionBiasRef.current[cellIndex]
-          : 0;
-        const waveHeight = clamp01(
-          getWaveHeight(x, y, timeRef.current) + compositionBias * amplitudeRef.current
-        );
-        const noiseVal = quietShare > 0 ? 0.52 + waveHeight * 0.42 : waveHeight;
-        let color: string | null = null;
-
-        // 1. Pure background (skip drawing for performance)
-        if (noiseVal < 0.45) {
-          continue;
-        }
-
-        // Calculate cursor proximity illumination (Flashlight effect)
-        let illumination = 0;
-        if (pointerRef.current.active) {
-          const dx = x - pointerRef.current.x;
-          const dy = y - pointerRef.current.y;
-          // Fast bounding box check to save CPU before doing Math.sqrt
-          if (Math.abs(dx) < 25 && Math.abs(dy) < 25) {
-            const dist = Math.sqrt(dx * dx + dy * dy);
-            if (dist < 25) {
-              illumination = Math.max(0, 1 - dist / 25); // Range 0 to 1
-            }
-          }
-        }
-
-        // Contour line detection
-        const isContourLine = noiseVal > 0.58 && (noiseVal * contourDensity) % 1 < contourThickness;
-        // Dashed "drafting pen" effect — skip every 3rd pixel along diagonals
-        const isDashedGap = (x + y) % 3 === 0;
-
-        if (isContourLine && !isDashedGap) {
-          // Peak glints — accent color ONLY appears here
-          if (noiseVal > 0.80 && (x * y) % 13 === 0) {
-            if (isGrayscale) {
-              color = isDark ? "#ffffff" : "#000000";
-            } else {
-              let glintLight = isDark ? 70 : 45;
-              // Add a bright flash when the cursor hovers over it
-              glintLight += isDark ? illumination * 20 : -(illumination * 20);
-              color = `hsl(${baseHue}, ${baseSaturation}%, ${glintLight}%)`;
-            }
-          } else {
-            // Neutral grayscale contour line (architectural look)
-            let lineLight = isDark ? 22 : 88;
-            // Highlight the line slightly under the cursor
-            lineLight += isDark ? illumination * 15 : -(illumination * 15);
-            color = `hsl(0, 0%, ${lineLight}%)`;
-          }
-        } else {
-          // Checkerboard "PNG transparency" pattern
-          const isEven = (x + y) % 2 === 0;
-          let baseL = 0;
-
-          if (noiseVal < 0.52) {
-            // Fading edge — sparser checkerboard
-            baseL = isEven ? (isDark ? 4 : 100) : (isDark ? 10 : 96);
-          } else {
-            // Dense checkerboard across the full wave area
-            baseL = isEven ? (isDark ? 10 : 96) : (isDark ? 15 : 92);
-          }
-
-          // Apply flashlight illumination to the checkerboard
-          if (illumination > 0) {
-            baseL += isDark ? illumination * 8 : -(illumination * 8);
-          }
-          
-          color = `hsl(0, 0%, ${baseL}%)`;
-        }
-
-        if (color) {
-          ctx.globalAlpha = ambientPresence * (quietShare > 0 ? amplitudeRef.current : 1);
-          ctx.fillStyle = color;
-          ctx.fillRect(
-            x * pixelSize,
-            y * pixelSize,
-            pixelSize + 0.5,
-            pixelSize + 0.5
-          );
-        }
-      }
-    }
-
-    ctx.globalAlpha = 1;
-    timeRef.current += lerp(introSpeed, ambientSpeed, settleProgress);
-
-    if (isAnimatingRef.current && !prefersReducedMotionRef.current) {
-      animationRef.current = requestAnimationFrame(draw);
-    }
-  }, [getWaveHeight, isDark, quietShare]);
-
-  // Resize handler - mobile settles into a slightly quieter ambient drift.
-  const resize = useCallback(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-
-    const isMobile = window.innerWidth < 768;
-    configRef.current.introSpeed = isMobile ? 0.0065 : 0.0072;
-    configRef.current.ambientSpeed = isMobile ? 0.0024 : 0.003;
-
-    const { pixelSize } = configRef.current;
-    const cols = Math.ceil(canvas.width / pixelSize);
-    const rows = Math.ceil(canvas.height / pixelSize);
-    const compositionBias = new Float32Array(cols * rows);
-
-    for (let x = 0; x < cols; x++) {
-      for (let y = 0; y < rows; y++) {
-        const index = x * rows + y;
-        compositionBias[index] = getCompositionBias(
-          x,
-          y,
-          cols,
-          rows,
-          canvas.width
-        );
-      }
-    }
-
-    compositionBiasRef.current = compositionBias;
-
-    if (quietShare > 0) {
-      // Select the strongest edge formations by rank, rather than a wave
-      // threshold that changes coverage over time. At .75, at least 75% of
-      // cells stay blank. The reading column sits between the formations.
-      const cells = Array.from({ length: cols * rows }, (_, index) => {
-        const x = Math.floor(index / rows);
-        const y = index % rows;
-        const nx = x / Math.max(cols - 1, 1);
-        const ny = y / Math.max(rows - 1, 1);
-        const gutter = Math.max(16, (canvas.width - 640) / 2);
-        const behindMasthead = y * pixelSize >= 90 && y * pixelSize <= 330
-          && (x + 1) * pixelSize >= gutter && x * pixelSize <= canvas.width - gutter;
-        const score = behindMasthead ? 0
-          : gaussian(nx, ny, -0.06, 0.16, 0.34, 0.48)
-            + gaussian(nx, ny, 1.06, 0.72, 0.3, 0.52);
-        return { index, score };
-      }).sort((a, b) => b.score - a.score);
-      const fluidCells = new Uint8Array(cols * rows);
-      const count = Math.floor(cells.length * (1 - clamp01(quietShare)));
-      for (let i = 0; i < count; i++) fluidCells[cells[i].index] = 1;
-      fluidCellsRef.current = fluidCells;
-    }
-  }, [getCompositionBias, quietShare]);
-
-  // Pointer update handler
-  const updatePointer = useCallback((e: MouseEvent | TouchEvent) => {
-    if (prefersReducedMotionRef.current) return;
-
-    let x: number, y: number;
-
-    if ("touches" in e && e.touches.length > 0) {
-      x = e.touches[0].clientX;
-      y = e.touches[0].clientY;
-    } else if ("clientX" in e) {
-      x = e.clientX;
-      y = e.clientY;
-    } else {
-      return;
-    }
-
-    // Convert screen pixels to grid coordinates
-    pointerRef.current.x = x / configRef.current.pixelSize;
-    pointerRef.current.y = y / configRef.current.pixelSize;
-    pointerRef.current.active = true;
-  }, []);
-
-  const clearPointer = useCallback(() => {
-    pointerRef.current.active = false;
-  }, []);
 
   useEffect(() => {
-    setMounted(true);
-  }, []);
+    const canvas = canvasRef.current;
+    if (!canvas || !ENABLE_PIXEL_FLUID_BACKGROUND) return;
 
-  useEffect(() => {
-    if (!mounted || !resolvedTheme) return;
-
+    const fluid = new PixelFluid(canvas, { heroMode, quietShare });
     const motionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
     const finePointerQuery = window.matchMedia("(hover: hover) and (pointer: fine)");
-    prefersReducedMotionRef.current = motionQuery.matches;
-    scrollRef.current = window.scrollY;
+    let frame = 0;
+    let running = false;
+    let disposed = false;
+    let lastDraw = -Infinity;
+    let measureFrame = 0;
+    let accent: Rgb = [255, 255, 255];
+    let pendingDrop: (FluidDisturbance & { at: number }) | null = null;
+    let lastPointer: { x: number; y: number; at: number } | null = null;
 
-    updateBaseHue();
-    resize();
+    const draw = (now: number) => {
+      lastDraw = now;
+      fluid.render(now, window.scrollX, window.scrollY, window.innerHeight);
+    };
+
+    const loop = (now: number) => {
+      frame = requestAnimationFrame(loop);
+      const interval = fluid.busy ? BUSY_FRAME_MS : AMBIENT_FRAME_MS;
+      if (now - lastDraw >= interval - 1) draw(now);
+    };
 
     const renderOnce = () => {
-      cancelAnimationFrame(animationRef.current);
-      isAnimatingRef.current = false;
-      if (document.hidden) return;
-      animationRef.current = requestAnimationFrame(draw);
+      cancelAnimationFrame(frame);
+      running = false;
+      if (!document.hidden && !disposed) frame = requestAnimationFrame(draw);
     };
 
-    const startAnimation = () => {
-      if (document.hidden || prefersReducedMotionRef.current || isAnimatingRef.current) return;
-      isAnimatingRef.current = true;
-      animationRef.current = requestAnimationFrame(draw);
+    const start = () => {
+      if (running || document.hidden || disposed) return;
+      if (fluid.still) {
+        renderOnce();
+        return;
+      }
+      running = true;
+      frame = requestAnimationFrame(loop);
     };
 
-    const stopAnimation = () => {
-      isAnimatingRef.current = false;
-      cancelAnimationFrame(animationRef.current);
+    const stop = () => {
+      running = false;
+      cancelAnimationFrame(frame);
     };
 
-    if (motionQuery.matches) {
-      amplitudeRef.current = 1;
-      renderOnce();
-    } else {
-      startAnimation();
-    }
-
-    const handleResize = () => {
-      resize();
-      if (prefersReducedMotionRef.current) renderOnce();
+    const readColors = () => {
+      const colors = readCanvasColors();
+      fluid.setColors({ background: colors.bg, accent: colors.accent, isDark: colors.isDark });
+      return colors.accent;
     };
+
+    // Land moves when fonts land, the entrance settles or the layout reflows.
+    const measure = () => {
+      if (disposed) return;
+      cancelAnimationFrame(measureFrame);
+      measureFrame = requestAnimationFrame(() => {
+        fluid.setIslands(measureIslands());
+        if (fluid.still) renderOnce();
+      });
+    };
+
+    // A phone's toolbar changes the height while scrolling; only a new width
+    // can move the text, so only that re-traces it.
+    let measuredWidth = -1;
+    const resize = () => {
+      fluid.resize(window.innerWidth, window.innerHeight);
+      if (window.innerWidth === measuredWidth) return;
+      measuredWidth = window.innerWidth;
+      measure();
+    };
+
+    fluid.still = motionQuery.matches;
+    accent = readColors();
+    resize();
+    start();
+    document.fonts?.ready.then(measure);
 
     const handleScroll = () => {
-      scrollRef.current = window.scrollY;
-      if (prefersReducedMotionRef.current) renderOnce();
+      if (fluid.still) renderOnce();
     };
 
-    const handleVisibilityChange = () => {
-      clearPointer();
-      if (document.hidden) {
-        stopAnimation();
-      } else if (prefersReducedMotionRef.current) {
-        renderOnce();
-      } else {
-        startAnimation();
+    const handleVisibility = () => {
+      fluid.clearPointer();
+      if (document.hidden) stop();
+      else start();
+    };
+
+    const handleMotion = (event: MediaQueryListEvent) => {
+      stop();
+      fluid.still = event.matches;
+      fluid.clearPointer();
+      start();
+    };
+
+    const handleAnimationEnd = (event: AnimationEvent) => {
+      const target = event.target;
+      if (target instanceof Element && (target.matches(ISLAND_SELECTOR) || target.querySelector(ISLAND_SELECTOR))) {
+        measure();
       }
     };
 
-    const handleMotionPreference = (event: MediaQueryListEvent) => {
-      prefersReducedMotionRef.current = event.matches;
-      clearPointer();
-
-      if (event.matches) {
-        amplitudeRef.current = 1;
-        stopAnimation();
-        renderOnce();
-      } else {
-        startAnimation();
+    // Cursor ripples are a desktop enhancement: a moving pointer leaves a
+    // wake, a click drops a stone. Touch only splashes on a tap, so
+    // scrolling never does extra work.
+    const handleMouseMove = (event: MouseEvent) => {
+      if (fluid.still) return;
+      fluid.movePointer(event.clientX, event.clientY);
+      const now = performance.now();
+      if (lastPointer && now - lastPointer.at < 40) return;
+      if (lastPointer) {
+        const moved = Math.hypot(event.clientX - lastPointer.x, event.clientY - lastPointer.y) / 18;
+        if (moved > 0.5) fluid.splash(event.clientX, event.clientY, Math.min(0.3, moved * 0.07));
       }
+      lastPointer = { x: event.clientX, y: event.clientY, at: now };
     };
 
-    window.addEventListener("resize", handleResize);
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-    motionQuery.addEventListener("change", handleMotionPreference);
+    const handleMouseLeave = () => {
+      fluid.clearPointer();
+      lastPointer = null;
+    };
 
-    // Cursor physics are a desktop enhancement. Coarse pointers keep the
-    // calmer composed field and avoid work during touch scrolling.
-    if (finePointerQuery.matches) {
-      window.addEventListener("mousemove", updatePointer);
-      window.addEventListener("mouseleave", clearPointer);
-    }
+    let touchStart: { x: number; y: number; at: number } | null = null;
+    const handlePointerDown = (event: PointerEvent) => {
+      if (event.pointerType === "mouse") fluid.splash(event.clientX, event.clientY, 0.8);
+      else touchStart = { x: event.clientX, y: event.clientY, at: performance.now() };
+    };
+    const handlePointerUp = (event: PointerEvent) => {
+      if (!touchStart || event.pointerType === "mouse") return;
+      const tap = performance.now() - touchStart.at < 300
+        && Math.hypot(event.clientX - touchStart.x, event.clientY - touchStart.y) < 10;
+      touchStart = null;
+      if (tap) fluid.splash(event.clientX, event.clientY, 0.8);
+    };
 
-    // Watch for accent changes via MutationObserver
-    const observer = new MutationObserver((mutations) => {
-      mutations.forEach((mutation) => {
-        if (mutation.attributeName === "data-accent" || mutation.attributeName === "class") {
-          updateBaseHue();
-          if (prefersReducedMotionRef.current && !document.hidden) renderOnce();
-        }
-      });
+    const handleDisturb = (event: Event) => {
+      const detail = (event as CustomEvent<FluidDisturbance>).detail;
+      if (!detail) return;
+      if (detail.dye) pendingDrop = { ...detail, at: performance.now() };
+      else fluid.splash(detail.x, detail.y, 0.9);
+    };
+
+    // Theme and accent live on <html>. A new accent announced by a swatch
+    // pours in from that swatch; any other change recolors in place.
+    const observer = new MutationObserver(() => {
+      const previous = accent;
+      accent = readColors();
+      const now = performance.now();
+      const changed = previous.some((channel, i) => channel !== accent[i]);
+      if (changed && pendingDrop && now - pendingDrop.at < DROP_WINDOW_MS && !fluid.still) {
+        fluid.dropDye(pendingDrop.x, pendingDrop.y, previous, now);
+      }
+      pendingDrop = null;
+      if (fluid.still) renderOnce();
     });
-
     observer.observe(document.documentElement, {
       attributes: true,
-      attributeFilter: ["data-accent", "class"],
+      attributeFilter: ["class", "data-accent"],
     });
 
+    window.addEventListener("resize", resize);
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    document.addEventListener("visibilitychange", handleVisibility);
+    document.addEventListener("animationend", handleAnimationEnd);
+    document.fonts?.addEventListener("loadingdone", measure);
+    motionQuery.addEventListener("change", handleMotion);
+    window.addEventListener(FLUID_DISTURB_EVENT, handleDisturb);
+    window.addEventListener("pointerdown", handlePointerDown, { passive: true });
+    window.addEventListener("pointerup", handlePointerUp, { passive: true });
+    if (finePointerQuery.matches) {
+      window.addEventListener("mousemove", handleMouseMove, { passive: true });
+      document.documentElement.addEventListener("mouseleave", handleMouseLeave);
+    }
+
     return () => {
-      stopAnimation();
-      window.removeEventListener("resize", handleResize);
-      window.removeEventListener("scroll", handleScroll);
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-      motionQuery.removeEventListener("change", handleMotionPreference);
-      window.removeEventListener("mousemove", updatePointer);
-      window.removeEventListener("mouseleave", clearPointer);
+      disposed = true;
+      stop();
+      cancelAnimationFrame(measureFrame);
       observer.disconnect();
+      window.removeEventListener("resize", resize);
+      window.removeEventListener("scroll", handleScroll);
+      document.removeEventListener("visibilitychange", handleVisibility);
+      document.removeEventListener("animationend", handleAnimationEnd);
+      document.fonts?.removeEventListener("loadingdone", measure);
+      motionQuery.removeEventListener("change", handleMotion);
+      window.removeEventListener(FLUID_DISTURB_EVENT, handleDisturb);
+      window.removeEventListener("pointerdown", handlePointerDown);
+      window.removeEventListener("pointerup", handlePointerUp);
+      window.removeEventListener("mousemove", handleMouseMove);
+      document.documentElement.removeEventListener("mouseleave", handleMouseLeave);
     };
-  }, [mounted, resolvedTheme, draw, resize, updateBaseHue, updatePointer, clearPointer]);
-
-  // Re-update hue when theme changes
-  useEffect(() => {
-    if (!mounted || !resolvedTheme) return;
-
-    updateBaseHue();
-  }, [mounted, theme, resolvedTheme, updateBaseHue]);
+  }, [heroMode, quietShare]);
 
   // Return null if feature is disabled
   if (!ENABLE_PIXEL_FLUID_BACKGROUND) {
@@ -528,14 +232,10 @@ export default function PixelFluidBackground({
 
   return (
     <div
-      className={`pixel-fluid-background ${quietShare > 0 ? "pixel-fluid-background-quiet" : ""} fixed inset-0 -z-10 ${className || ""}`}
+      className={`pixel-fluid-background fixed inset-0 -z-10 overflow-hidden ${className || ""}`}
       aria-hidden="true"
     >
-      <canvas ref={canvasRef} className="block w-full h-full" />
-
-      {heroMode && (
-        <div className="pixel-fluid-hero-glow" aria-hidden="true" />
-      )}
+      <canvas ref={canvasRef} className="pixel-fluid-canvas" />
 
       {/* Scanlines overlay (static background lines) */}
       <div

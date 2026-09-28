@@ -143,6 +143,14 @@
   background-color: hsl(var(--background));
 }
 
+/* One canvas pixel per lattice cell, scaled up by the browser. The engine sets
+   the CSS size to a whole number of cells. */
+.pixel-fluid-canvas {
+  display: block;
+  image-rendering: crisp-edges;
+  image-rendering: pixelated;
+}
+
 .pixel-fluid-grain {
   opacity: 0.08;
   mix-blend-mode: multiply;
