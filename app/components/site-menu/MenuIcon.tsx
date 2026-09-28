@@ -60,12 +60,17 @@ export default function MenuIcon({ open }: { open: boolean }) {
 
   useEffect(() => {
     const target = open ? LAST : 0;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    const motion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    let timer = 0;
+    const settle = () => {
+      window.clearTimeout(timer);
       frameRef.current = target;
       setFrame(target);
+    };
+    if (motion.matches) {
+      settle();
       return;
     }
-    let timer = 0;
     const step = () => {
       if (frameRef.current === target) return;
       frameRef.current += Math.sign(target - frameRef.current);
@@ -73,7 +78,12 @@ export default function MenuIcon({ open }: { open: boolean }) {
       timer = window.setTimeout(step, FRAME_MS);
     };
     step();
-    return () => window.clearTimeout(timer);
+    const handleMotion = () => { if (motion.matches) settle(); };
+    motion.addEventListener("change", handleMotion);
+    return () => {
+      window.clearTimeout(timer);
+      motion.removeEventListener("change", handleMotion);
+    };
   }, [open]);
 
   return (

@@ -8,7 +8,7 @@
 import { useLayoutEffect, useRef, type RefObject } from "react";
 import { readCanvasColors } from "../blog-components/canvas-theme";
 import { CELL, PixelFluid, type FluidColors, type Rgb } from "../pixel-fluid/engine";
-import { measureIslands } from "../pixel-fluid/islands";
+import { measureIslands, type IslandField } from "../pixel-fluid/islands";
 import { FLUID_DISTURB_EVENT, type FluidDisturbance } from "../pixel-fluid/disturb";
 
 export const MENU_ISLAND = "[data-menu-island]";
@@ -20,7 +20,7 @@ const RAMP_MS = 900;
 // A disturbance announced this recently explains an accent change.
 const DROP_WINDOW_MS = 1000;
 
-export function fluidColors(): FluidColors {
+function fluidColors(): FluidColors {
   const colors = readCanvasColors();
   return { background: colors.bg, accent: colors.accent, isDark: colors.isDark };
 }
@@ -39,6 +39,7 @@ export function useMenuSea(
     const canvas = canvasRef.current;
     const surface = surfaceRef.current;
     if (!active || !canvas || !surface) return;
+    const nav = surface.querySelector<HTMLElement>(".site-menu-nav");
 
     const fluid = new PixelFluid(canvas, { heroMode: false, quietShare: 0, rampMs: RAMP_MS });
     const motionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -49,12 +50,14 @@ export function useMenuSea(
     let pendingDrop: (FluidDisturbance & { at: number }) | null = null;
     let wake: { x: number; y: number; at: number } | null = null;
     let pressed = false;
+    let islands: IslandField | null = null;
+    let layout = "";
+    let height = 0;
 
     const draw = (now: number) => {
       lastDraw = now;
-      // The menu does not scroll, and its islands are measured against the
-      // viewport, so the water sees no scroll either.
-      fluid.render(now, 0, 0, window.innerHeight);
+      // The water stays fixed; only the words can scroll at large text sizes.
+      fluid.render(now, 0, 0, height);
     };
 
     const loop = (now: number) => {
@@ -76,18 +79,37 @@ export function useMenuSea(
       return colors.accent;
     };
 
+    const placeIslands = () => {
+      fluid.setIslands(islands ? { ...islands, top: islands.top - (nav?.scrollTop ?? 0) } : null);
+    };
+
     const measure = () => {
       if (disposed) return;
+      nav?.toggleAttribute("data-scrolls", nav.scrollHeight > nav.clientHeight + 1);
+      // ResizeObserver delivers an initial notification too. Avoid tracing
+      // every glyph twice on open, or when a resize has not moved the words.
+      const nextLayout = Array.from(surface.querySelectorAll(MENU_ISLAND), (element) => {
+        const rect = element.getBoundingClientRect();
+        const style = getComputedStyle(element);
+        return [rect.x, rect.y + (nav?.scrollTop ?? 0), rect.width, rect.height, style.font, style.letterSpacing].join(",");
+      }).join(";");
+      if (nextLayout === layout) return;
+      layout = nextLayout;
       const field = measureIslands(MENU_ISLAND);
       if (field) {
         field.left -= window.scrollX;
-        field.top -= window.scrollY;
+        field.top += (nav?.scrollTop ?? 0) - window.scrollY;
       }
-      fluid.setIslands(field);
+      islands = field;
+      placeIslands();
     };
 
     const resize = () => {
-      fluid.resize(window.innerWidth, window.innerHeight);
+      // The desktop media query hides the surface before React cleans up
+      // this effect. A resize event can arrive in that interval.
+      if (!surface.clientWidth || !surface.clientHeight) return;
+      height = surface.clientHeight;
+      fluid.resize(surface.clientWidth, height);
       measure();
       draw(performance.now());
     };
@@ -96,11 +118,26 @@ export function useMenuSea(
     accent = readColors();
     resize();
     start();
-    document.fonts?.ready.then(() => {
+    const handleLayout = () => {
       if (disposed) return;
       measure();
       if (fluid.still) draw(performance.now());
-    });
+    };
+    const handleFonts = () => {
+      if (disposed) return;
+      layout = "";
+      handleLayout();
+    };
+    if (document.fonts?.status === "loading") document.fonts.ready.then(handleFonts);
+    const resizeObserver = new ResizeObserver(handleLayout);
+    if (nav) {
+      resizeObserver.observe(nav);
+      Array.from(nav.children).forEach((child) => resizeObserver.observe(child));
+    }
+    const handleScroll = () => {
+      placeIslands();
+      if (fluid.still) start();
+    };
 
     const handleVisibility = () => {
       if (document.hidden) cancelAnimationFrame(frame);
@@ -164,6 +201,8 @@ export function useMenuSea(
     };
 
     window.addEventListener("resize", resize);
+    nav?.addEventListener("scroll", handleScroll, { passive: true });
+    document.fonts?.addEventListener("loadingdone", handleFonts);
     document.addEventListener("visibilitychange", handleVisibility);
     motionQuery.addEventListener("change", handleMotion);
     window.addEventListener(FLUID_DISTURB_EVENT, handleDisturb);
@@ -177,7 +216,10 @@ export function useMenuSea(
       disposed = true;
       cancelAnimationFrame(frame);
       observer.disconnect();
+      resizeObserver.disconnect();
       window.removeEventListener("resize", resize);
+      nav?.removeEventListener("scroll", handleScroll);
+      document.fonts?.removeEventListener("loadingdone", handleFonts);
       document.removeEventListener("visibilitychange", handleVisibility);
       motionQuery.removeEventListener("change", handleMotion);
       window.removeEventListener(FLUID_DISTURB_EVENT, handleDisturb);

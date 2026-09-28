@@ -27,6 +27,9 @@ export class MenuTide {
   private travel = 0;
   private hole = false;
   private field: TideField | null = null;
+  private origin = { x: 0, y: 0 };
+  private width = 0;
+  private height = 0;
   private cells = new Uint8Array(0);
   private drawn = new Uint8Array(0);
   private ctx: CanvasRenderingContext2D | null;
@@ -57,6 +60,7 @@ export class MenuTide {
       foamEven: pack(level(isDark ? 10 : 96)),
       foamOdd: pack(level(isDark ? 15 : 92)),
     };
+    if (this.foamShowing && this.field) this.paintFoam(this.field);
   }
 
   /**
@@ -68,10 +72,9 @@ export class MenuTide {
     if (this.frame === 0 && this.level !== target) {
       this.hole = hole;
       this.travel = hole ? 1 - this.level : this.level;
-      this.field = tideField(window.innerWidth, window.innerHeight, x, y, CELL);
-      this.cells = new Uint8Array(this.field.cols * this.field.rows);
-      this.drawn = new Uint8Array(this.cells.length);
-      this.sizeFoam(this.field);
+      const { width, height } = this.viewport();
+      this.origin = { x: x / width, y: y / height };
+      this.resize(width, height);
     }
     this.target = target;
     if (instant) {
@@ -94,6 +97,8 @@ export class MenuTide {
   }
 
   private tick = (now: number) => {
+    const { width, height } = this.viewport();
+    if (this.width !== width || this.height !== height) this.resize(width, height);
     // A slow phone drops frames, not time: the front keeps its schedule.
     const dt = this.last < 0 ? 1000 / 60 : Math.min(64, now - this.last);
     this.last = now;
@@ -119,6 +124,24 @@ export class MenuTide {
     if (clip === this.clip) return;
     this.clip = clip;
     this.root.style.clipPath = clip;
+  }
+
+  private viewport() {
+    // Before React reveals the root it has no box. The document's client
+    // size, unlike innerWidth, excludes enlarged content overflowing a phone.
+    return {
+      width: this.root.clientWidth || document.documentElement.clientWidth,
+      height: this.root.clientHeight || document.documentElement.clientHeight,
+    };
+  }
+
+  private resize(width: number, height: number) {
+    this.width = width;
+    this.height = height;
+    this.field = tideField(this.width, this.height, this.origin.x * this.width, this.origin.y * this.height, CELL);
+    this.cells = new Uint8Array(this.field.cols * this.field.rows);
+    this.drawn = new Uint8Array(this.cells.length);
+    this.sizeFoam(this.field);
   }
 
   private sizeFoam({ cols, rows }: TideField) {

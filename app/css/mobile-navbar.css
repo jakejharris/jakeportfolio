@@ -34,6 +34,11 @@
 .site-menu {
   position: fixed;
   inset: 0;
+  /* An enlarged page can overflow a phone's layout viewport. Keep this
+     overlay inside the actual CSS viewport, including its changing toolbar. */
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
   z-index: 39;
   /* The water is sized in whole cells and runs past the edges; clip, never
      scroll. */
@@ -140,6 +145,12 @@ html[data-menu-open] {
   line-height: 1.08;
 }
 
+/* Enlarged text may wrap instead of disappearing beyond the viewport. */
+.site-menu-link [data-menu-island] {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
 /* A keyboard focus ring hugs the word, not the whole row. */
 .site-menu-link:focus-visible {
   outline: none;
@@ -167,6 +178,8 @@ html[data-menu-open] {
 
 .site-menu-colophon {
   display: flex;
+  flex-wrap: wrap;
+  flex-shrink: 0;
   align-items: center;
   gap: 1.25rem;
   margin: 1.25rem 0 0;

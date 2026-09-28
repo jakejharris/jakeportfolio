@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import type { KeyboardEvent, MouseEvent } from "react";
 import { flushSync } from "react-dom";
 import { useTheme } from "next-themes";
@@ -157,16 +157,19 @@ export default function AppearanceDock() {
     return () => document.removeEventListener("pointerdown", handlePointerDown);
   }, [open]);
 
-  const openPalette = () => {
-    setOpen(true);
-    requestAnimationFrame(() => swatchRefs.current[accent]?.focus());
-  };
+  // The toggle disappears when the palette opens. Move focus in the same
+  // commit so an immediate Escape reaches the palette, not the menu behind it.
+  useLayoutEffect(() => {
+    if (open) swatchRefs.current[accentRef.current]?.focus();
+  }, [open]);
+
+  const openPalette = () => setOpen(true);
 
   // Folding back only means something where the palette folds.
   const closePalette = () => {
     if (!open) return;
-    setOpen(false);
-    requestAnimationFrame(() => toggleRef.current?.focus());
+    flushSync(() => setOpen(false));
+    toggleRef.current?.focus();
   };
 
   const pickAccent = (index: number, from: HTMLElement) => {

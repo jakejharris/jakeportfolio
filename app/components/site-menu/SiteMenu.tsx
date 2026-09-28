@@ -15,7 +15,7 @@ import { disturbWater } from "../pixel-fluid/disturb";
 import type { FluidColors } from "../pixel-fluid/engine";
 import { getActiveNav, NAVBAR_DESKTOP_MEDIA_QUERY } from "../../lib/navbar";
 import { MenuTide } from "./MenuTide";
-import { fluidColors, useMenuSea } from "./useMenuSea";
+import { useMenuSea } from "./useMenuSea";
 
 const LINKS = [
   { href: "/", label: "Home" },
@@ -59,8 +59,8 @@ export function useSiteMenu() {
   const foamRef = useRef<HTMLCanvasElement>(null);
   const tideRef = useRef<MenuTide | null>(null);
   const leaveRef = useRef<{ x: number; y: number; href: string; timer: number } | null>(null);
-  // A page the reader tapped and then overruled with the button. Its arrival
-  // must not undo the last thing they asked for.
+  // A navigation can outlive its departure timer or be canceled with Escape
+  // or the button. Its eventual arrival must not close a newly opened menu.
   const overruledRef = useRef<string | null>(null);
 
   const rest = useCallback((level: number) => {
@@ -78,7 +78,10 @@ export function useSiteMenu() {
   }, [rest]);
 
   const cancelLeave = useCallback(() => {
-    if (leaveRef.current) window.clearTimeout(leaveRef.current.timer);
+    if (leaveRef.current) {
+      overruledRef.current = leaveRef.current.href;
+      window.clearTimeout(leaveRef.current.timer);
+    }
     leaveRef.current = null;
   }, []);
 
@@ -86,9 +89,9 @@ export function useSiteMenu() {
     const current = tide();
     if (!current) return;
     cancelLeave();
+    setGoing(null);
     setShown(true);
     setOpen(true);
-    current.setColors(fluidColors());
     const { x, y } = center(buttonRef.current);
     current.go(1, x, y, false, instant());
   }, [tide, cancelLeave]);
@@ -114,7 +117,6 @@ export function useSiteMenu() {
   }, [cancelLeave]);
 
   const toggle = useCallback(() => {
-    if (leaveRef.current) overruledRef.current = leaveRef.current.href;
     if (tideRef.current?.target === 1) closeMenu(false);
     else openMenu();
   }, [openMenu, closeMenu]);
@@ -146,10 +148,10 @@ export function useSiteMenu() {
   useEffect(() => {
     const leave = leaveRef.current;
     const overruled = overruledRef.current === trimSlash(pathname);
-    overruledRef.current = null;
     if (leave) leaveFrom(leave.x, leave.y);
     // Back, forward or the home mark while the menu is up.
     else if (!overruled && tideRef.current?.target === 1) closeMenu(false);
+    overruledRef.current = null;
     // Only a new page matters here, not new callbacks.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname]);
@@ -179,16 +181,6 @@ export function useSiteMenu() {
     if (open) rootRef.current?.querySelector<HTMLElement>("a")?.focus({ preventScroll: true });
   }, [open]);
 
-  // Very large text can outgrow the screen; only then may the words scroll.
-  useLayoutEffect(() => {
-    const nav = rootRef.current?.querySelector<HTMLElement>(".site-menu-nav");
-    if (!shown || !nav) return;
-    const fit = () => nav.toggleAttribute("data-scrolls", nav.scrollHeight > nav.clientHeight + 1);
-    fit();
-    window.addEventListener("resize", fit);
-    return () => window.removeEventListener("resize", fit);
-  }, [shown]);
-
   useEffect(() => {
     if (!open) return;
     const handleKey = (event: KeyboardEvent) => {
@@ -200,6 +192,16 @@ export function useSiteMenu() {
     document.addEventListener("keydown", handleKey);
     return () => document.removeEventListener("keydown", handleKey);
   }, [open, closeMenu]);
+
+  useEffect(() => {
+    const motion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const handleChange = () => {
+      const current = tideRef.current;
+      if (motion.matches && current) current.go(current.target as 0 | 1, 0, 0, false, true);
+    };
+    motion.addEventListener("change", handleChange);
+    return () => motion.removeEventListener("change", handleChange);
+  }, []);
 
   // Wide enough for the desktop navbar: the menu has nothing to do.
   useEffect(() => {
