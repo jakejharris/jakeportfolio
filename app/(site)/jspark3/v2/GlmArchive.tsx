@@ -108,6 +108,26 @@ export default function GlmArchive() {
         <span>{GLM_COPY.notesLink.title}<small><Ph>{INSTALL_RELEASE}</Ph> {GLM_COPY.notesLink.detail}</small></span>
         <span aria-hidden="true">↗</span>
       </a>
+      <div className="dark glm-archive">
+      <V11Fold id="credits" legacyIds={["js3-credits"]} title="Credits" summary="Built on other people's work">
+        <div className="mt-5 space-y-2.5 leading-relaxed">
+          <p>
+            <Rich parts={CREDITS_ROLL} />
+          </p>
+          <p>{CREDITS_INTRO}</p>
+          <p className="text-sm text-muted-foreground">{CREDITS_NOTE}</p>
+        </div>
+        <Card className="mt-5 p-4">
+          <h3 className="text-[15px] font-semibold">{CITE.title}</h3>
+          <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
+            <Rich parts={CITE.body} />
+          </p>
+          <pre className="mt-2.5 max-w-full overflow-x-auto rounded-lg border border-border bg-muted p-3 text-[12.5px] leading-relaxed">
+            <code className="font-mono">{CITE.citation}</code>
+          </pre>
+        </Card>
+      </V11Fold>
+      </div>
       <p className="glm-notes-label">From the v1.1 page, kept as published</p>
       <div className="dark glm-archive">
       <V11Fold id="architecture" legacyIds={["js3-architecture"]} title="Architecture" summary="How three Sparks become one endpoint" lede={ARCHITECTURE_LEDE}>
@@ -347,24 +367,6 @@ export default function GlmArchive() {
           ))}
         </div>
         <p className="mt-4 text-sm text-muted-foreground">{LICENSING_NOTE}</p>
-      </V11Fold>
-      <V11Fold id="credits" legacyIds={["js3-credits"]} title="Credits" summary="Built on other people's work">
-        <div className="mt-5 space-y-2.5 leading-relaxed">
-          <p>{CREDITS_INTRO}</p>
-          <p>
-            <Rich parts={CREDITS_ROLL} />
-          </p>
-          <p className="text-sm text-muted-foreground">{CREDITS_NOTE}</p>
-        </div>
-        <Card className="mt-5 p-4">
-          <h3 className="text-[15px] font-semibold">{CITE.title}</h3>
-          <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
-            <Rich parts={CITE.body} />
-          </p>
-          <pre className="mt-2.5 max-w-full overflow-x-auto rounded-lg border border-border bg-muted p-3 text-[12.5px] leading-relaxed">
-            <code className="font-mono">{CITE.citation}</code>
-          </pre>
-        </Card>
       </V11Fold>
       </div>
       <details id="releases">
