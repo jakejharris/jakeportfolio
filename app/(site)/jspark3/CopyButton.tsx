@@ -7,7 +7,8 @@ import { Button } from '@/app/components/ui/button';
 /**
  * Copies one verbatim block to the clipboard. The icon turns to a check for two
  * seconds and a polite live region says so; the button keeps its size, so
- * nothing around it moves.
+ * nothing around it moves. Its own focus ring stands in for the page outline,
+ * which would sit on the edge of the block around it.
  */
 export default function CopyButton({ text, label, className = '' }: { text: string; label: string; className?: string }) {
   const [status, setStatus] = React.useState('');
@@ -38,7 +39,7 @@ export default function CopyButton({ text, label, className = '' }: { text: stri
         size="icon"
         onClick={copy}
         aria-label={`Copy ${label}`}
-        className={`h-8 w-8 shrink-0 bg-card text-muted-foreground hover:text-foreground ${className}`}
+        className={`h-8 w-8 shrink-0 bg-card text-muted-foreground hover:text-foreground focus-visible:!outline-none ${className}`}
       >
         <Icon aria-hidden="true" className={`h-3.5 w-3.5 ${copied ? 'text-[color:var(--accent-color)]' : ''}`} />
       </Button>
