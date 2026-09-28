@@ -1,0 +1,36 @@
+name: Checks
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      NEXT_TELEMETRY_DISABLED: '1'
+      # Public content project, also recorded in sanity.cli.ts. No write token is needed.
+      NEXT_PUBLIC_SANITY_PROJECT_ID: q1u033fj
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - run: npm test
+      - name: Release validation and regression tests
+        run: |
+          node scripts/check-glm-release.mjs
+          node --test scripts/check-glm-release.test.mjs
+          npx tsx --test 'app/(site)/jspark3/release-copy.test.ts'
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm run build
