@@ -28,6 +28,18 @@ export default function Rich({ parts }: { parts: ReadonlyArray<RichPart> }) {
   );
 }
 
+/** The same run as plain text, exactly the characters it renders. */
+export function plainText(parts: ReadonlyArray<RichPart>): string {
+  return parts
+    .map((part) => {
+      if (typeof part === 'string') return part;
+      if ('href' in part) return part.text;
+      if ('code' in part) return part.code;
+      return part.strong;
+    })
+    .join('');
+}
+
 /**
  * Under this length a token is kept whole and wraps as a unit onto its own line.
  * At and above it — the 40-character revision hashes, the sha256 digest, the long

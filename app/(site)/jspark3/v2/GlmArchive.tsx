@@ -1,11 +1,12 @@
 import React from 'react';
 import { Card } from '@/app/components/ui/card';
 import ArchitectureDiagram from '../ArchitectureDiagram';
+import CopyButton from '../CopyButton';
 import Fold from '../Fold';
 import { AuthorBenchmarks, SameTaskComparison, ScreenComparison } from '../ComparisonFigures';
 import OverlayDeltaFigure from '../OverlayDeltaFigure';
 import ReferenceRecipes from '../ReferenceRecipes';
-import Rich from '../Rich';
+import Rich, { plainText } from '../Rich';
 import {
   ABLATION_CONTROL,
   ABLATION_NOTES,
@@ -59,6 +60,18 @@ function Subsection({ title, note }: { title: string; note: React.ReactNode }) {
       <h3 className="mt-8 text-lg font-semibold md:text-xl">{title}</h3>
       <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{note}</p>
     </>
+  );
+}
+
+/** A verbatim block with its copy button beside the scroller, so the button never covers the text. */
+function CopyBlock({ text, label }: { text: string; label: string }) {
+  return (
+    <div className="flex items-start rounded-lg border border-border bg-muted">
+      <pre className="min-w-0 flex-1 overflow-x-auto p-3 text-[12.5px] leading-relaxed">
+        <code className="font-mono">{text}</code>
+      </pre>
+      <CopyButton text={text} label={label} className="m-1.5" />
+    </div>
   );
 }
 
@@ -116,23 +129,29 @@ export default function GlmArchive() {
             <Rich parts={CREDITS_ROLL} />
           </p>
           <p>{CREDITS_INTRO}</p>
-          <blockquote className="break-words border-l-2 border-border pl-4 text-sm">
-            <Rich parts={SHAPLEYMCG_ATTRIBUTION} />
-          </blockquote>
+          <div className="flex items-start gap-3">
+            <blockquote className="min-w-0 flex-1 break-words border-l-2 border-border pl-4 text-sm">
+              <Rich parts={SHAPLEYMCG_ATTRIBUTION} />
+            </blockquote>
+            <CopyButton text={plainText(SHAPLEYMCG_ATTRIBUTION)} label="ShapleyMcg attribution notice" />
+          </div>
           <p className="text-sm text-muted-foreground">{CREDITS_NOTE}</p>
         </div>
-        <Card className="mt-5 p-4">
-          <h3 className="text-[15px] font-semibold">{CITE.title}</h3>
-          <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
-            <Rich parts={CITE.body} />
-          </p>
-          <pre className="mt-2.5 max-w-full overflow-x-auto rounded-lg border border-border bg-muted p-3 text-[12.5px] leading-relaxed">
-            <code className="font-mono">{CITE.citation}</code>
-          </pre>
-          <p className="mt-4 text-sm text-muted-foreground">ShapleyMcg citation, as provided by its author:</p>
-          <pre className="mt-2.5 max-w-full overflow-x-auto rounded-lg border border-border bg-muted p-3 text-[12.5px] leading-relaxed">
-            <code className="font-mono">{CITE.upstreamCitation}</code>
-          </pre>
+        {/* .glm zeroes p and h3 margins, so the card spaces its parts with wrappers. */}
+        <Card className="mt-6 space-y-5 p-4">
+          <div className="space-y-3">
+            <div className="space-y-1.5">
+              <h3 className="text-[15px] font-semibold">{CITE.title}</h3>
+              <p className="text-sm leading-relaxed text-muted-foreground">
+                <Rich parts={CITE.body} />
+              </p>
+            </div>
+            <CopyBlock text={CITE.citation} label="release citation" />
+          </div>
+          <div className="space-y-2">
+            <p className="text-sm text-muted-foreground">ShapleyMcg citation, as provided by its author:</p>
+            <CopyBlock text={CITE.upstreamCitation} label="ShapleyMcg BibTeX citation" />
+          </div>
         </Card>
       </V11Fold>
       </div>
