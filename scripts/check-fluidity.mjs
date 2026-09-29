@@ -95,6 +95,39 @@ try {
     assert.equal(await layer.evaluate((node) => node.isConnected), true, "the water was not remounted");
   });
 
+  await check("post previews still open for a mouse and for keyboard focus", {}, async (page) => {
+    const link = firstPost(page);
+    const preview = page.locator("[data-radix-popper-content-wrapper]");
+    await link.hover();
+    await preview.waitFor({ state: "visible" });
+    await page.mouse.move(0, 0);
+    await preview.waitFor({ state: "hidden" });
+    await link.focus();
+    await preview.waitFor({ state: "visible" });
+  });
+
+  await check("phone post taps keep native touch handling without passive-listener errors", { device: phone }, async (page) => {
+    const consoles = [];
+    page.on("console", (message) => {
+      if (message.type() === "error") consoles.push(message.text());
+    });
+    await page.evaluate(() => {
+      window.touchCancellationAttempts = 0;
+      const prevent = Event.prototype.preventDefault;
+      Event.prototype.preventDefault = function (...args) {
+        if (this.type === "touchstart") window.touchCancellationAttempts++;
+        return prevent.apply(this, args);
+      };
+    });
+    const link = firstPost(page);
+    const href = await link.getAttribute("href");
+    await press(page, link);
+    await page.waitForURL(base + href);
+    await waitShore(page);
+    assert.equal(await page.evaluate(() => window.touchCancellationAttempts), 0, "a post link must not try to cancel passive touchstart");
+    assert.deepEqual(consoles, [], "a phone tap must not log a console error");
+  });
+
   for (const [label, device] of [["desktop", desktop], ["phone", phone]]) {
     await check(`the shore keeps clear of every line of text (${label})`, { device, path: "/posts/joining-docusign/" }, async (page) => {
       await waitShore(page);
