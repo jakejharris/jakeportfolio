@@ -300,7 +300,7 @@ export const GLM_COPY = {
   numbersNote: 'Compared with our own v1.1.',
   resultsTitle: 'Measured on our three Sparks.',
   /** Under the results heading: what one headline figure is. */
-  bandLine: `${RELEASE} with stock weights, one serving start. Code: five repeats per measured stream count. Prose and structured: two sweeps. Prefill: eight turns. Ranges describe variation within this start, not confidence intervals.`,
+  bandLine: `${RELEASE} with stock weights, one serving start. Code: five repeats per stream count. Prose and structured: two sweeps. Prefill: eight turns. Ranges describe variation within this start, not confidence intervals.`,
   /** In place of the band line when the release's own start is not in the numbers. No base start is promoted. */
   headlineMissing: `No measured stock-weight start of ${RELEASE} is in this release’s numbers. The stock-weight figures below come from the base recipe, labelled by build.`,
   /** Under a headline figure the release's numbers leave out, such as a prefill with no clean measurement. */
