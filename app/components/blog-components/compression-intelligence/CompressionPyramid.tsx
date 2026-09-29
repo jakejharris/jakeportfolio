@@ -443,7 +443,7 @@ export default function CompressionPyramid() {
       ctx.strokeStyle = `rgba(${teal}, 0.5)`;
       ctx.lineWidth = 1;
       ctx.beginPath();
-      ctx.roundRect(tx, ty, boxW, boxH, 6);
+      ctx.roundRect(tx, ty, boxW, boxH, 4);
       ctx.fill();
       ctx.stroke();
 

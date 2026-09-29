@@ -124,7 +124,7 @@ export default function FabricTriangle() {
             y={leg.y - 10}
             width="124"
             height="20"
-            rx="5"
+            rx="4"
             className={LEG_BOX}
             strokeWidth={1}
           />

@@ -77,9 +77,14 @@ const config = {
   			}
   		},
   		borderRadius: {
-  			lg: 'var(--radius)',
-  			md: 'calc(var(--radius) - 2px)',
-  			sm: 'calc(var(--radius) - 4px)'
+            // Surfaces stop at the base radius; smaller controls step down.
+            DEFAULT: 'max(0px, calc(var(--radius) - 2px))',
+            '3xl': 'var(--radius)',
+            '2xl': 'var(--radius)',
+            xl: 'var(--radius)',
+            lg: 'var(--radius)',
+            md: 'max(0px, calc(var(--radius) - 2px))',
+            sm: 'max(0px, calc(var(--radius) - 4px))'
   		},
   		keyframes: {
   			'accordion-down': {

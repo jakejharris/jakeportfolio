@@ -34,7 +34,7 @@ interface PairedRow {
 /** Node count, kept visible on every bar and on the JSpark3 table columns. */
 function SparkChip({ count }: { count: string }) {
   return (
-    <span className="whitespace-nowrap rounded-full border border-border bg-muted px-1.5 py-px text-[10px] font-semibold uppercase tracking-[0.06em] text-muted-foreground">
+    <span className="whitespace-nowrap rounded-md border border-border bg-muted px-1.5 py-px text-[10px] font-semibold uppercase tracking-[0.06em] text-muted-foreground">
       <span className="tabular-nums">{count}</span> Sparks
     </span>
   );

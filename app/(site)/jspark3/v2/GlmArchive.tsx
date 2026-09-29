@@ -78,7 +78,7 @@ function CopyBlock({ text, label }: { text: string; label: string }) {
 /** Node count, kept visible on every comparison row and card. */
 function SparkCount({ count }: { count: string }) {
   return (
-    <span className="inline-flex items-center gap-1 rounded-full border border-border bg-muted px-2 py-0.5 text-[10.5px] font-semibold uppercase tracking-[0.06em] text-muted-foreground">
+    <span className="inline-flex items-center gap-1 rounded-md border border-border bg-muted px-2 py-0.5 text-[10.5px] font-semibold uppercase tracking-[0.06em] text-muted-foreground">
       <span className="tabular-nums">{count}</span> Sparks
     </span>
   );
@@ -240,7 +240,7 @@ export default function GlmArchive() {
               <div className="mt-2 flex flex-wrap items-center gap-1.5">
                 <SparkCount count={run.sparks} />
                 <span
-                  className={`inline-block rounded-full px-2 py-0.5 text-[10.5px] font-bold uppercase tracking-[0.06em] ${
+                  className={`inline-block rounded-md px-2 py-0.5 text-[10.5px] font-bold uppercase tracking-[0.06em] ${
                     run.ours
                       ? 'bg-[color-mix(in_srgb,var(--accent-color)_16%,transparent)] text-foreground'
                       : 'bg-amber-500/15 text-amber-700 dark:text-amber-300'

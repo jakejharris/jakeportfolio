@@ -7,7 +7,7 @@
   background: repeating-linear-gradient(135deg, var(--ph-a) 0 5px, var(--ph-b) 5px 10px);
   outline: 1.5px dashed var(--ph-edge);
   outline-offset: 1px;
-  border-radius: 3px;
+  border-radius: max(0px, calc(var(--radius) - 4px));
   padding: 0 .18em;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
