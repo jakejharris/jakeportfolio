@@ -574,12 +574,16 @@ export class PixelFluid {
           r = g = b = (level + lightSign * illumination * 8) * 2.55;
         }
 
-        // Where a hot pour passed, the water takes its color for a moment.
+        // Where a hot pour passed, the water takes its color for a moment,
+        // each cell as strongly as it stands out from the page: the pen's
+        // lines take the full color, a quiet cell only a trace of it.
         if (painting && paint.wash > 0) {
           const tint = paint.color;
-          r += (tint[0] - r) * paint.wash;
-          g += (tint[1] - g) * paint.wash;
-          b += (tint[2] - b) * paint.wash;
+          const strength = Math.min(1, Math.max(Math.abs(r - bgR), Math.abs(g - bgG), Math.abs(b - bgB))
+            / Math.max(1, Math.abs(pen - bgR)));
+          r += (bgR + (tint[0] - bgR) * strength - r) * paint.wash;
+          g += (bgG + (tint[1] - bgG) * strength - g) * paint.wash;
+          b += (bgB + (tint[2] - bgB) * strength - b) * paint.wash;
         }
 
         pixels[i] = over(r, g, b, ink);
