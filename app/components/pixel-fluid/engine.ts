@@ -29,6 +29,11 @@ export interface FluidOptions {
   quietShare: number;
   /** How long the swell takes to rise after the first frame. */
   rampMs?: number;
+  /**
+   * Draw the water as a chart: only its contour lines, as small dots at the
+   * cell centers, on the bare page. No checkerboard, no coastline.
+   */
+  chart?: boolean;
 }
 
 // Wave amplitude ramps 0 -> 1 on mount, then the drift settles to ambient.
@@ -72,6 +77,14 @@ const DYE_SPEED = 1100;
 const DYE_BAND = CELL * 1.5;
 
 const FLASHLIGHT_RADIUS = 25;
+
+// Chart drawing: each cell is a 3 x 3 grid of 6px dots and a contour is its
+// middle dot. A dot is a ninth of a cell, so it carries more ink than a cell.
+const SUB = 3;
+const CHART_FLOOR = 0.5;
+// Thin enough that a contour stays one dot wide where the swell is flat.
+const CHART_THICKNESS = 0.13;
+const CHART_PEN = { dark: 38, light: 64 };
 
 function clamp01(value: number) {
   return Math.min(1, Math.max(0, value));
@@ -119,6 +132,8 @@ export class PixelFluid {
   private ctx: CanvasRenderingContext2D | null;
   private image: ImageData | null = null;
   private pixels: Uint32Array = new Uint32Array(0);
+  // Chart drawing: the canvas image, three pixels per cell each way.
+  private dots: Uint32Array | null = null;
   private bias = new Float32Array(0);
   private water = new Uint8Array(0);
   private shore = new Float32Array(0);
@@ -166,12 +181,19 @@ export class PixelFluid {
     this.shelf = mobile ? SHELF.mobile : SHELF.desktop;
     this.cols = cols;
     this.rows = rows;
-    this.canvas.width = cols;
-    this.canvas.height = rows;
+    const sub = this.options.chart ? SUB : 1;
+    this.canvas.width = cols * sub;
+    this.canvas.height = rows * sub;
     this.canvas.style.width = `${cols * CELL}px`;
     this.canvas.style.height = `${rows * CELL}px`;
-    this.image = this.ctx ? this.ctx.createImageData(cols, rows) : null;
-    this.pixels = this.image ? new Uint32Array(this.image.data.buffer) : new Uint32Array(0);
+    this.image = this.ctx ? this.ctx.createImageData(cols * sub, rows * sub) : null;
+    if (this.options.chart) {
+      this.pixels = new Uint32Array(cols * rows);
+      this.dots = this.image ? new Uint32Array(this.image.data.buffer) : null;
+    } else {
+      this.pixels = this.image ? new Uint32Array(this.image.data.buffer) : new Uint32Array(0);
+      this.dots = null;
+    }
     this.shore = new Float32Array(cols * rows);
     this.shoreScroll = NaN;
     this.ripple = new Float32Array(cols * rows);
@@ -409,7 +431,8 @@ export class PixelFluid {
     // Every cell is its color laid over the page background at some strength.
     const over = (r: number, g: number, b: number, a: number) =>
       pack(bgR + (r - bgR) * a, bgG + (g - bgG) * a, bgB + (b - bgB) * a);
-    const pen = (isDark ? 22 : 88) * 2.55;
+    const chart = this.options.chart === true;
+    const pen = (chart ? (isDark ? CHART_PEN.dark : CHART_PEN.light) : (isDark ? 22 : 88)) * 2.55;
     const toward = isDark ? 255 : 0;
     const lightSign = isDark ? 1 : -1;
     const pointer = this.pointer;
@@ -500,7 +523,8 @@ export class PixelFluid {
         }
 
         // Where a swell reaches the shore it breaks as a dashed coastline.
-        if (coast < BEACH + CELL && height > 0.56 && (x + y) % 3 !== 0) {
+        // A chart lets the water thin out instead.
+        if (!chart && coast < BEACH + CELL && height > 0.56 && (x + y) % 3 !== 0) {
           pixels[i] = over(pen, pen, pen, presence * 0.8);
           continue;
         }
@@ -522,8 +546,9 @@ export class PixelFluid {
         let r: number;
         let g: number;
         let b: number;
-        const contour = value > 0.58 && (value * CONTOUR_DENSITY) % 1 < CONTOUR_THICKNESS;
-        if (contour && (x + y) % 3 !== 0) {
+        const contour = value > (chart ? CHART_FLOOR : 0.58)
+          && (value * CONTOUR_DENSITY) % 1 < (chart ? CHART_THICKNESS : CONTOUR_THICKNESS);
+        if (contour && (chart || (x + y) % 3 !== 0)) {
           if (value > 0.8 && (x * y) % 13 === 0 && shelf === 1) {
             // Peak glints: the only place the accent appears.
             const glint = dye && dyeDistance > dyeRadius ? dye.from : accent;
@@ -535,6 +560,9 @@ export class PixelFluid {
             // Neutral drafting-pen contour.
             r = g = b = pen + lightSign * illumination * 15 * 2.55;
           }
+        } else if (chart) {
+          pixels[i] = bgPixel;
+          continue;
         } else {
           // Checkerboard, sparser at the fading edge of each formation.
           const even = (x + y) % 2 === 0;
@@ -548,6 +576,18 @@ export class PixelFluid {
       }
     }
 
+    const dots = this.dots;
+    if (chart && dots) {
+      // Every drawn cell becomes the dot at its center.
+      dots.fill(bgPixel);
+      const stride = cols * SUB;
+      for (let y = 0; y < rows; y++) {
+        for (let x = 0; x < cols; x++) {
+          const color = pixels[y * cols + x];
+          if (color !== bgPixel) dots[(y * SUB + 1) * stride + x * SUB + 1] = color;
+        }
+      }
+    }
     ctx.putImageData(image, 0, 0);
   }
 }

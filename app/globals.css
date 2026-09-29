@@ -159,16 +159,6 @@
   image-rendering: pixelated;
 }
 
-.pixel-fluid-grain {
-  opacity: 0.08;
-  mix-blend-mode: multiply;
-}
-
-.dark .pixel-fluid-grain {
-  opacity: 0.05;
-  mix-blend-mode: screen;
-}
-
 .tag-pill {
   background-color: color-mix(in srgb, hsl(var(--foreground)) 12%, transparent);
   color: hsl(var(--foreground));

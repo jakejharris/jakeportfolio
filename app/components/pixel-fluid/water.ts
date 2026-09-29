@@ -56,7 +56,9 @@ export class SiteWater {
   constructor(private parts: WaterParts, shape: WaterShape, private canRun: () => boolean) {
     this.shape = shape;
     const options = isSea(shape) ? seaOptions(shape) : seaOptions('hero');
-    this.sea = new PixelFluid(parts.seaCanvas, options);
+    // Behind the site's pages the sea is drawn as a chart: its contour
+    // lines in dots on the bare page, mostly still black.
+    this.sea = new PixelFluid(parts.seaCanvas, { ...options, chart: true });
     this.shore = new Shore(parts.shoreCanvas);
   }
 
