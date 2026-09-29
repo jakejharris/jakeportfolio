@@ -10,7 +10,7 @@
 
 import type { IslandField } from './islands';
 import { islandDistance } from './islands';
-import { cellDistance, TideFront } from './tide-front';
+import { cellDistance, cellNoise, TideFront } from './tide-front';
 
 export const CELL = 18;
 
@@ -85,6 +85,19 @@ const CHART_FLOOR = 0.5;
 // Thin enough that a contour stays one dot wide where the swell is flat.
 const CHART_THICKNESS = 0.13;
 const CHART_PEN = { dark: 38, light: 64 };
+// The swell's crests keep a faint checkerboard body, whole cells, much
+// quieter than the old sea's; the troughs stay bare.
+const CHART_BODY_FLOOR = 0.62;
+const CHART_BODY = { dark: [6, 9], light: [97.5, 95] };
+// Glints on a chart are scattered by a per-cell hash, not the old modulo
+// rule that lined them up in columns.
+const CHART_GLINT_SHARE = 0.05;
+// The highest contour dots lean toward the accent.
+const CHART_CREST = 0.88;
+const CHART_CREST_TINT = 0.25;
+// What a drawn cell becomes on the chart canvas.
+const MARK_DOT = 1;
+const MARK_CELL = 2;
 
 function clamp01(value: number) {
   return Math.min(1, Math.max(0, value));
@@ -132,8 +145,10 @@ export class PixelFluid {
   private ctx: CanvasRenderingContext2D | null;
   private image: ImageData | null = null;
   private pixels: Uint32Array = new Uint32Array(0);
-  // Chart drawing: the canvas image, three pixels per cell each way.
+  // Chart drawing: the canvas image, three pixels per cell each way, and per
+  // cell whether it is drawn as a dot or a whole cell.
   private dots: Uint32Array | null = null;
+  private marks = new Uint8Array(0);
   private bias = new Float32Array(0);
   private water = new Uint8Array(0);
   private shore = new Float32Array(0);
@@ -189,6 +204,7 @@ export class PixelFluid {
     this.image = this.ctx ? this.ctx.createImageData(cols * sub, rows * sub) : null;
     if (this.options.chart) {
       this.pixels = new Uint32Array(cols * rows);
+      this.marks = new Uint8Array(cols * rows);
       this.dots = this.image ? new Uint32Array(this.image.data.buffer) : null;
     } else {
       this.pixels = this.image ? new Uint32Array(this.image.data.buffer) : new Uint32Array(0);
@@ -405,7 +421,7 @@ export class PixelFluid {
   }
 
   render(now: number, scrollX: number, scrollY: number, viewportHeight: number) {
-    const { ctx, image, cols, rows, pixels, shore, water, bias, colors } = this;
+    const { ctx, image, cols, rows, pixels, shore, water, bias, colors, marks } = this;
     if (!ctx || !image || !cols) return;
 
     if (this.start < 0) {
@@ -439,6 +455,7 @@ export class PixelFluid {
     const over = (r: number, g: number, b: number, a: number) =>
       pack(bgR + (r - bgR) * a, bgG + (g - bgG) * a, bgB + (b - bgB) * a);
     const chart = this.options.chart === true;
+    if (chart) marks.fill(MARK_DOT);
     const pen = (chart ? (isDark ? CHART_PEN.dark : CHART_PEN.light) : (isDark ? 22 : 88)) * 2.55;
     const toward = isDark ? 255 : 0;
     const lightSign = isDark ? 1 : -1;
@@ -556,20 +573,37 @@ export class PixelFluid {
         const contour = value > (chart ? CHART_FLOOR : 0.58)
           && (value * CONTOUR_DENSITY) % 1 < (chart ? CHART_THICKNESS : CONTOUR_THICKNESS);
         if (contour && (chart || (x + y) % 3 !== 0)) {
-          if (value > 0.8 && (x * y) % 13 === 0 && shelf === 1) {
-            // Peak glints: the only place the accent appears.
-            const glint = dye && dyeDistance > dyeRadius ? dye.from : accent;
+          const glint = dye && dyeDistance > dyeRadius ? dye.from : accent;
+          const peak = chart ? cellNoise(x, y) < CHART_GLINT_SHARE : (x * y) % 13 === 0;
+          if (value > 0.8 && peak && shelf === 1) {
+            // Peak glints: the only place the accent appears whole.
             const shine = illumination * 0.25;
             r = glint[0] + (toward - glint[0]) * shine;
             g = glint[1] + (toward - glint[1]) * shine;
             b = glint[2] + (toward - glint[2]) * shine;
+            if (chart) marks[i] = MARK_CELL;
           } else {
-            // Neutral drafting-pen contour.
+            // Neutral drafting-pen contour; on a chart the crests lean
+            // toward the accent.
             r = g = b = pen + lightSign * illumination * 15 * 2.55;
+            if (chart && value > CHART_CREST) {
+              r += (glint[0] - r) * CHART_CREST_TINT;
+              g += (glint[1] - g) * CHART_CREST_TINT;
+              b += (glint[2] - b) * CHART_CREST_TINT;
+            }
           }
         } else if (chart) {
-          pixels[i] = bgPixel;
-          continue;
+          // Near land the body thins out cell by cell rather than stopping at
+          // a line, so the text never sits in a cut-out box.
+          if (value < CHART_BODY_FLOOR || cellNoise(y, x) > shelf * shelf) {
+            pixels[i] = bgPixel;
+            continue;
+          }
+          // The crest's body: a quiet checkerboard of whole cells.
+          const [low, high] = isDark ? CHART_BODY.dark : CHART_BODY.light;
+          const level = (x + y) % 2 === 0 ? high : low;
+          r = g = b = (level + lightSign * illumination * 6) * 2.55;
+          marks[i] = MARK_CELL;
         } else {
           // Checkerboard, sparser at the fading edge of each formation.
           const even = (x + y) % 2 === 0;
@@ -585,13 +619,20 @@ export class PixelFluid {
 
     const dots = this.dots;
     if (chart && dots) {
-      // Every drawn cell becomes the dot at its center.
+      // A drawn cell becomes the dot at its center, or the whole cell.
       dots.fill(bgPixel);
       const stride = cols * SUB;
       for (let y = 0; y < rows; y++) {
         for (let x = 0; x < cols; x++) {
-          const color = pixels[y * cols + x];
-          if (color !== bgPixel) dots[(y * SUB + 1) * stride + x * SUB + 1] = color;
+          const i = y * cols + x;
+          const color = pixels[i];
+          if (color === bgPixel) continue;
+          const top = y * SUB * stride + x * SUB;
+          if (marks[i] === MARK_CELL) {
+            for (let row = 0; row < SUB; row++) dots.fill(color, top + row * stride, top + row * stride + SUB);
+          } else {
+            dots[top + stride + 1] = color;
+          }
         }
       }
     }

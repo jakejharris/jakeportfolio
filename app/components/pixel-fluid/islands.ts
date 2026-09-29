@@ -4,10 +4,6 @@
 // under or against the letters.
 
 export const ISLAND_SELECTOR = '[data-fluid-island]';
-// Frosted glass cards are land whole: the water behind them would only blur
-// into a smear.
-const GLASS_SELECTOR = '.pageLinkContainer';
-const GLASS_MARGIN = 6;
 
 /** Distance to the nearest land for a document-space box, sampled on a grid. */
 export interface IslandField {
@@ -141,29 +137,16 @@ export function distanceField(mask: Uint8Array, cols: number, rows: number): Flo
   return dist;
 }
 
-/**
- * Trace every island on the page: the glyphs of marked text, and, for the
- * page's own water (the default selector), its glass cards whole. Null when
- * there is none.
- */
+/** Trace every island on the page. Null when the page marks none. */
 export function measureIslands(selector = ISLAND_SELECTOR): IslandField | null {
   const elements = document.querySelectorAll(selector);
-  const boxes: DOMRect[] = [];
-  if (selector === ISLAND_SELECTOR) {
-    document.querySelectorAll(GLASS_SELECTOR).forEach((element) => {
-      const rect = element.getBoundingClientRect();
-      if (rect.width > 0 && rect.height > 0) {
-        boxes.push(new DOMRect(rect.left + window.scrollX, rect.top + window.scrollY, rect.width, rect.height));
-      }
-    });
-  }
-  if (!elements.length && !boxes.length) return null;
+  if (!elements.length) return null;
 
   const probe = document.createElement('canvas').getContext('2d');
   if (!probe) return null;
   const glyphs: Glyph[] = [];
   elements.forEach((element) => glyphsOf(element, probe, glyphs));
-  if (!glyphs.length && !boxes.length) return null;
+  if (!glyphs.length) return null;
 
   let minX = Infinity;
   let minY = Infinity;
@@ -176,12 +159,6 @@ export function measureIslands(selector = ISLAND_SELECTOR): IslandField | null {
     minY = Math.min(minY, g.top - g.margin);
     maxX = Math.max(maxX, g.x + width + g.margin);
     maxY = Math.max(maxY, g.top + g.ascent * 1.5 + g.margin);
-  }
-  for (const box of boxes) {
-    minX = Math.min(minX, box.left - GLASS_MARGIN);
-    minY = Math.min(minY, box.top - GLASS_MARGIN);
-    maxX = Math.max(maxX, box.right + GLASS_MARGIN);
-    maxY = Math.max(maxY, box.bottom + GLASS_MARGIN);
   }
 
   const step = SAMPLE_STEP;
@@ -207,9 +184,6 @@ export function measureIslands(selector = ISLAND_SELECTOR): IslandField | null {
     ctx.lineWidth = g.margin * 2;
     ctx.strokeText(g.text, g.x, baseline);
     ctx.fillText(g.text, g.x, baseline);
-  }
-  for (const box of boxes) {
-    ctx.fillRect(box.left - GLASS_MARGIN, box.top - GLASS_MARGIN, box.width + GLASS_MARGIN * 2, box.height + GLASS_MARGIN * 2);
   }
 
   const alpha = ctx.getImageData(0, 0, cols, rows).data;
