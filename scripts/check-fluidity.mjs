@@ -449,6 +449,27 @@ try {
     assert.equal(await page.evaluate(() => document.activeElement?.getAttribute("href")), "/contact/");
   });
 
+  await check("the article outline respects reduced motion, including preference changes", { path: "/posts/apres-surf-club/", reducedMotion: true }, async (page) => {
+    await page.getByRole("button", { name: "In This Article" }).click();
+    await page.waitForTimeout(400);
+    await page.evaluate(() => {
+      window.outlineScrolls = [];
+      const scroll = window.scrollTo.bind(window);
+      window.scrollTo = (...args) => {
+        if (args[0]?.behavior) window.outlineScrolls.push(args[0]);
+        return scroll(...args);
+      };
+    });
+    const heading = page.getByRole("navigation", { name: "Table of contents" }).getByRole("button").first();
+    await heading.click();
+    const quiet = await page.evaluate(() => window.outlineScrolls.at(-1));
+    assert.equal(quiet.behavior, "instant", "reduced motion must not request an animated scroll");
+    assert.ok(Math.abs(await page.evaluate(() => window.scrollY) - quiet.top) < 2, "the heading is reached immediately");
+    await page.emulateMedia({ reducedMotion: "no-preference" });
+    await heading.click();
+    assert.equal(await page.evaluate(() => window.outlineScrolls.at(-1).behavior), "smooth", "normal outline scrolling keeps its animation");
+  });
+
   await check("the mobile menu still leaves through its own water", { device: phone }, async (page) => {
     await press(page, page.locator(".site-menu-button"));
     await page.waitForFunction(() => {
