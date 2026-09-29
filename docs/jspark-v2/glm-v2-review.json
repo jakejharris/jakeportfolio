@@ -13,7 +13,7 @@
       "same_conditions": false,
       "source": "https://github.com/mmastrac/glm-5.3-flash-4x-gx10/blob/5d3cca861e715860bd1f841a1f25f74320636b18/experimental/tp3/README.md",
       "line_source": "https://github.com/mmastrac/glm-5.3-flash-4x-gx10/blob/5d3cca861e715860bd1f841a1f25f74320636b18/README.md",
-      "conditions": "his published figures, measured on a switched 200G fabric; not a matched-conditions comparison. This recipe uses Sparks cabled as a triangle.",
+      "conditions": "The reference uses mmastrac's published figures, measured on a switched 200G fabric. This is not a matched-conditions comparison. This recipe uses Sparks cabled as a triangle.",
       "engine_weights": "TensorFold uses Vontra's MLX affine weights; the published reference uses NVIDIA's NVFP4 checkpoint. The engines and weight formats differ."
     },
     "limitations": [
