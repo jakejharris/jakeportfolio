@@ -6,11 +6,28 @@ import '../../css/animations.css';
 import '../../css/hero.css';
 import './about.css';
 
+const description = "Jake Harris is a software engineer in Chicago. He co-founded AdventureGenie, started JJH Digital, and now works on Docusign's Workspaces team while running his own AI assistant at home.";
+
 export const metadata = {
     title: "About",
-    description: "Jake Harris is a software engineer in Chicago. He co-founded AdventureGenie, started JJH Digital, and now works on Docusign's Workspaces team while running his own AI assistant at home.",
+    description,
     alternates: {
         canonical: 'https://jakejh.com/about/',
+    },
+    openGraph: {
+        type: 'website',
+        locale: 'en_US',
+        siteName: 'Jake Harris',
+        url: 'https://jakejh.com/about/',
+        title: 'About | Jake Harris',
+        description,
+    },
+    twitter: {
+        card: 'summary',
+        site: '@jakeharrisdev',
+        creator: '@jakeharrisdev',
+        title: 'About | Jake Harris',
+        description,
     },
 };
 

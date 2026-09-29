@@ -8,11 +8,28 @@ import '../../css/animations.css'
 import '../../css/hero.css'
 import './contact.css'
 
+const description = "Get in touch with Jake Harris: email, a call on his calendar, LinkedIn, X or GitHub.";
+
 export const metadata: Metadata = {
   title: "Contact",
-  description: "Get in touch with Jake Harris: email, a call on his calendar, LinkedIn, X or GitHub.",
+  description,
   alternates: {
     canonical: 'https://jakejh.com/contact/',
+  },
+  openGraph: {
+    type: 'website',
+    locale: 'en_US',
+    siteName: 'Jake Harris',
+    url: 'https://jakejh.com/contact/',
+    title: 'Contact | Jake Harris',
+    description,
+  },
+  twitter: {
+    card: 'summary',
+    site: '@jakeharrisdev',
+    creator: '@jakeharrisdev',
+    title: 'Contact | Jake Harris',
+    description,
   },
 };
 

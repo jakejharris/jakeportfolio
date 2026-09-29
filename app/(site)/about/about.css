@@ -92,6 +92,15 @@
   outline-offset: -2px;
 }
 
+/* High contrast themes drop gradient backgrounds, which would take the
+   brackets, and so the only sign of the picked length, with them. */
+@media (forced-colors: active) {
+  .story-length input:checked + span::before {
+    --corner: CanvasText;
+    forced-color-adjust: none;
+  }
+}
+
 .story-count {
   margin: 0;
   color: hsl(var(--muted-foreground));
@@ -159,7 +168,13 @@
   height: 0.5em;
   margin-left: 0.4em;
   background: var(--accent-color);
-  forced-color-adjust: none;
+}
+
+@media (forced-colors: active) {
+  .story-end {
+    background: CanvasText;
+    forced-color-adjust: none;
+  }
 }
 
 .story[data-length="1"] [data-end~="1"] .story-end,

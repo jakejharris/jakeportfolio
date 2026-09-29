@@ -40,6 +40,7 @@ export default function CopyEmail({ address }: { address: string }) {
       await navigator.clipboard.writeText(address);
     } catch {
       if (click !== clickRef.current) return;
+      buttonRef.current?.removeAttribute("data-copied");
       if (textRef.current) window.getSelection()?.selectAllChildren(textRef.current);
       setState("selected");
       timerRef.current = window.setTimeout(reset, HOLD_MS * 2);
@@ -56,11 +57,12 @@ export default function CopyEmail({ address }: { address: string }) {
     }
     setState("copied");
     // The note lasts as long as the sweep; reduced motion has none, so it
-    // gets a timer instead.
+    // gets a timer instead. A sweep cut short (reduced motion switched on
+    // mid-way) resets at once rather than leaving the selection up.
     const sweep = selectionRef.current
       ?.getAnimations()
       .find((animation) => (animation as CSSAnimation).animationName === "contact-select");
-    if (sweep) sweep.finished.then(reset, () => {});
+    if (sweep) sweep.finished.then(reset, reset);
     else timerRef.current = window.setTimeout(reset, HOLD_MS);
   };
 
