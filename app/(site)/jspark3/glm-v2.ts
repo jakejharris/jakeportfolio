@@ -1,5 +1,4 @@
 import data from './glm-v2-release.json';
-import approvedCopy from './glm-v2-copy.json';
 
 export type V2Cell = { lo_text: string; hi_text: string; median_text?: string; samples_text?: string; unit: string; instrument: string };
 type V2Set = { id: string; label: string; build: string; mode: string; toggles: string; serving_starts: string; sweeps: string; cells: Record<string, V2Cell>; prefill_omitted_reason: string | null };
@@ -18,7 +17,6 @@ export const V2_DESCRIPTION = 'GLM-5.3-Flash on three DGX Sparks, based on mmast
 export const V2_DRAFTER_NOTICE = "The default DFlash2 drafter is non-commercial (CC BY-NC-ND 4.0). JSpark3 does not distribute it; the licence's terms go with any copy.";
 export const V2_NO_DRAFTER_NOTICE = 'SPEC_METHOD=none: booted for this release, speed not measured';
 export const V2_MTP_NOTICE = 'SPEC_METHOD=mtp: wired but not booted at TP=3';
-export const V2_KNOWN_ISSUE = approvedCopy.known_issue;
 export const V2_METRICS: Record<string, string> = {
   prefill: 'Prefill · 32k cold', decode_c1: 'Code · 1 stream', decode_c2: 'Code · 2 streams',
   decode_c4: 'Code · 4 streams', decode_c8: 'Code · 8 streams',

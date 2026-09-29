@@ -229,6 +229,7 @@ def project(source, source_sha256):
         prompts = number(quality.get('verdict_bearing_prompts'), 'quality.verdict_bearing_prompts', count=True)
         exact_class = quality.get('exact_class')
         known = text(quality.get('known_issue'), 'quality.known_issue', claims=True)
+        require(not re.search(r'\bfloor\b', known, re.I), 'quality.known_issue: withdrawn wording')
         fields = quality.get('known_issue_fields')
         require(isinstance(fields, list) and fields, 'known-issue structured fields required')
         for item in fields:
@@ -242,6 +243,8 @@ def project(source, source_sha256):
         quality = dict(claim=quality_claim(quality.get('claim'), exact_class, prompts), exact_class=exact_class,
                        verdict_bearing_prompts_text=prompts, known_issue=known,
                        source=url(quality.get('source'), 'quality source'))
+    if fixture or source['state'] != 'final' or not source.get('frozen_at') or not source.get('release_date'):
+        quality = None
     drafter = ext.get('drafter_source')
     if drafter is not None:
         require(isinstance(drafter, dict), 'drafter_source must hold the pinned links and path qualifications')

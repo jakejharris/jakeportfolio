@@ -59,6 +59,7 @@ class PublicationTests(unittest.TestCase):
             self.assertEqual(data['quality']['verdict_bearing_prompts_text'], '2')
             self.assertNotIn('floor_text', data['quality'])
             self.assertEqual(data['quality']['claim'], sample()['site_v2']['quality']['claim'])
+            self.assertEqual(data['quality']['known_issue'], sample()['site_v2']['quality']['known_issue'])
             self.assertFalse(data['comparison']['same_conditions'])
             self.assertTrue(data['comparison']['same_instruments'])
             self.assertEqual(data['comparison']['condition_differences'], sample()['site_v2']['comparison']['condition_differences'])
@@ -71,7 +72,29 @@ class PublicationTests(unittest.TestCase):
         source['site_v2']['quality']['claim'] = claim
         result = gate.project(source, 'a' * 64)
         self.assertEqual(result['quality']['claim'], claim)
+        self.assertEqual(result['quality']['known_issue'], source['site_v2']['quality']['known_issue'])
         self.assertNotIn('lossless', result['quality']['claim'])
+
+    def test_quality_stays_pending_until_final_freeze(self):
+        for changes in ({'state': 'pending'}, {'state': 'interim'}, {'state': 'fixture'},
+                        {'fixture': True}, {'frozen_at': None}, {'release_date': None}):
+            with self.subTest(changes=changes), tempfile.TemporaryDirectory() as directory:
+                source = sample()
+                source.update(changes)
+                paths = self.write_case(directory, source)
+                data = gate.check(*paths, preview=True)
+                self.assertIsNone(data['quality'])
+                with self.assertRaisesRegex(ValueError, 'publication blocked'):
+                    gate.check(*paths)
+
+    def test_known_issue_is_copied_from_source_without_a_fallback(self):
+        source = sample()
+        known = source['site_v2']['quality']['known_issue'] + ' This prompt is excluded from the verdict.'
+        source['site_v2']['quality']['known_issue'] = known
+        self.assertEqual(gate.project(source, 'a' * 64)['quality']['known_issue'], known)
+        source['site_v2']['quality'].pop('known_issue')
+        with self.assertRaisesRegex(ValueError, 'quality.known_issue: text required'):
+            gate.project(source, 'a' * 64)
 
     def test_known_optional_metadata_is_not_copied_into_public_projection(self):
         source = sample()
@@ -140,6 +163,7 @@ class PublicationTests(unittest.TestCase):
             ('failed exactness', lambda s: s['v2']['exact'].update(verdict='FAIL'), 'passing exactness'),
             ('invalid exactness', lambda s: s['v2']['exact'].update(verdict='INVALID'), 'passing exactness'),
             ('withdrawn floor', lambda s: s['site_v2']['quality'].update(floor=gate.Number('0.0400')), 'withdrawn or unsupported'),
+            ('withdrawn known-issue wording', lambda s: s['site_v2']['quality'].update(known_issue=s['site_v2']['quality']['known_issue'] + ' This is a noise floor.'), 'withdrawn wording'),
             ('claim count drift', lambda s: s['site_v2']['quality'].update(verdict_bearing_prompts=gate.Number('3')), 'claim wording or prompt-count'),
             ('class mismatch', lambda s: s['site_v2']['quality'].update(exact_class='NONEXACT-NEARTIE'), 'claim wording'),
             ('overstated MTP path', lambda s: s['site_v2']['drafter_source'].update(mtp='MTP-only: not measured at TP=3'), 'MTP qualification'),

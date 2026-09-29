@@ -61,12 +61,13 @@ The path qualifications are exact:
 - `SPEC_METHOD=mtp: wired but not booted at TP=3`. Its weights reach the shards
   unpadded and may not load; this path is not recommended.
 
-The third amendment supersedes the earlier noise-based claim. No noise-floor
-field or "lossless up to noise" wording is accepted. The approved long-context
-known-issue sentence lives in `glm-v2-copy.json`, copied verbatim from that
-amendment, and is also present with its structured fields in the fixture. At
-freeze the page uses the supplied `quality.known_issue` beside the verdict.
-The cause remains unassigned pending isolation of the serving stack.
+The third amendment replaces the earlier noise-based claim with scoped claims
+and structured known-issue fields. The checker holds the approved wording list;
+the page copies `site_v2.quality.claim` and `site_v2.quality.known_issue` unchanged
+from the frozen file. There is no fallback sentence in the page. Both texts stay
+pending for fixtures and until `state: final`, `frozen_at` and `release_date` are
+present. The unjudged long-context issue accompanies either approved claim and
+never supplies the verdict. Its fixture example is for validation only.
 
 The fixture exercises the confirmed comparison and drafter shapes with invented
 benchmark bands. No interim benchmark figures, prompt count or quality verdict

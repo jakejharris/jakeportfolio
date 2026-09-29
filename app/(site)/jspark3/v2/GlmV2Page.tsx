@@ -2,7 +2,7 @@ import React from 'react';
 import ClusterIllustration from './ClusterIllustration';
 import ProjectHeader from './ProjectHeader';
 import LegacyFragments from '../LegacyFragments';
-import { GLM_V2 as release, V2_NO_DRAFTER_NOTICE, V2_MTP_NOTICE, V2_DRAFTER_NOTICE, V2_KNOWN_ISSUE, V2_METRICS, V2_RELEASE_SET, v2Band } from '../glm-v2';
+import { GLM_V2 as release, V2_NO_DRAFTER_NOTICE, V2_MTP_NOTICE, V2_DRAFTER_NOTICE, V2_METRICS, V2_RELEASE_SET, v2Band } from '../glm-v2';
 
 const NAV = [{ href: '#results', label: 'Results' }, { href: '#license', label: 'License' }, { href: '#releases', label: 'History' }];
 
@@ -87,9 +87,9 @@ export default function GlmV2Page() {
       {release.quality && !release.fixture ? <>
         <p data-quality-claim>{release.quality.claim}</p>
         <a href={release.quality.source}>Quality measurements and scope ↗</a>
-      </> : <p className="glm-v2-empty">Quality result pending. The frozen verdict, prompt count and scoped claim will appear here with their evidence.</p>}
-      <h3 style={{ marginTop: 24 }}>Known issue · long context</h3>
-      <p data-known-issue>{release.quality?.known_issue ?? V2_KNOWN_ISSUE}</p>
+        <h3 style={{ marginTop: 24 }}>Known issue · long context</h3>
+        <p data-known-issue>{release.quality.known_issue}</p>
+      </> : <p className="glm-v2-empty">Quality result and known issue pending. The frozen verdict, prompt count, scoped claim and known-issue details will appear here with their evidence.</p>}
     </section>
 
     <section className="glm-shell glm-v2-section" id="license" aria-labelledby="license-title">

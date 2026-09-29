@@ -1,3 +1,0 @@
-{
-  "known_issue": "The 39,326-token test prompt is reported, not judged. Two no-drafter cold runs of it first differed at output token 45. There the rerun's token was 0.375 nat below the first run's choice, and the first run's token fell outside the rerun's top 5. A separate cold/cold diagnostic of the same prompt diverged at the first generated token. This was measured on this build's own serving path, which includes our arx collectives at TP=3. We haven't yet isolated which part of the stack causes it."
-}
