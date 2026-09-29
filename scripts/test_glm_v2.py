@@ -23,13 +23,19 @@ def sample():
     serving['cells']['decode_c1']['lo'] = gate.Number('11.100')
     reference = {k: v for k, v in serving['cells']['decode_c1'].items() if k in ('lo', 'hi', 'unit', 'instrument')}
     reference['class'] = 'author-reported'
+    drafter = source['site_v2']['drafter_source']
+    differences = source['site_v2']['comparison']['condition_differences']
+    issue = source['site_v2']['quality']
+    source['v2'] = {'exact': {'verdict': 'PASS'}}
     source['site_v2'] = {
         'comparison': {'publisher': 'mmastrac', 'tensor_parallel': gate.Number('3'),
                        'source': 'https://github.com/mmastrac/example/blob/' + 'a' * 40 + '/README.md',
-                       'same_conditions': True, 'cells': {'decode_c1': reference}},
-        'quality': {'claim': "lossless up to this build's measured run-to-run noise", 'floor': gate.Number('0.0400'), 'unit': '%',
-                    'metric': 'Repeat-run token disagreement', 'source': gate.REPO + '/blob/v2.0.0/release/QUALITY.md'},
-        'drafter_source': 'https://huggingface.co/example/drafter',
+                       'same_instruments': True, 'same_conditions': False, 'condition_differences': differences,
+                       'cells': {'decode_c1': reference}},
+        'quality': {**issue, 'claim': "With the DFlash2 drafter, output was byte-identical to the no-drafter reference on the 2 test prompts whose no-drafter cold reruns were themselves identical (greedy, temperature 0, this build).",
+                    'exact_class': 'EXACT-ON-CORPUS', 'verdict_bearing_prompts': gate.Number('2'),
+                    'source': gate.REPO + '/blob/v2.0.0/release/QUALITY.md'},
+        'drafter_source': drafter,
     }
     return source
 
@@ -50,8 +56,30 @@ class PublicationTests(unittest.TestCase):
             data_path, source_path = self.write_case(directory, sample())
             data = gate.check(data_path, source_path, original=source_path)
             self.assertEqual(data['sets'][0]['cells']['decode_c1']['lo_text'], '11.100')
-            self.assertEqual(data['quality']['floor_text'], '0.0400')
+            self.assertEqual(data['quality']['verdict_bearing_prompts_text'], '2')
+            self.assertNotIn('floor_text', data['quality'])
+            self.assertEqual(data['quality']['claim'], sample()['site_v2']['quality']['claim'])
+            self.assertFalse(data['comparison']['same_conditions'])
+            self.assertTrue(data['comparison']['same_instruments'])
+            self.assertEqual(data['comparison']['condition_differences'], sample()['site_v2']['comparison']['condition_differences'])
             self.assertEqual(data['pending'], [])
+
+    def test_tolerance_claim_is_copied_without_promoting_to_lossless(self):
+        source = sample()
+        claim = "Output stayed within the gate's predeclared tolerance: at the first divergence, the token is in the reference's top 5 and at most 0.5 nat below it."
+        source['site_v2']['quality']['exact_class'] = 'NONEXACT-NEARTIE'
+        source['site_v2']['quality']['claim'] = claim
+        result = gate.project(source, 'a' * 64)
+        self.assertEqual(result['quality']['claim'], claim)
+        self.assertNotIn('lossless', result['quality']['claim'])
+
+    def test_known_optional_metadata_is_not_copied_into_public_projection(self):
+        source = sample()
+        source['site_v2']['publication'] = {'receipt': 'private-receipt-location'}
+        source['site_v2']['instruments'] = {'jsbench_build_id': None}
+        public = gate.snapshot(source)
+        self.assertNotIn('private-receipt-location', gate.dump(public))
+        self.assertEqual(gate.project(source, 'a' * 64), gate.project(public, 'a' * 64))
 
     def test_fixture_refused_even_when_marker_is_cleared(self):
         source = gate.read((gate.ROOT / 'scripts/fixtures/glm-v2-results.fixture.json').read_text())
@@ -100,12 +128,23 @@ class PublicationTests(unittest.TestCase):
             ('wrong baseline', lambda s: s['site_v2']['comparison'].update(publisher='another publication'), 'published TP3'),
             ('wrong TP', lambda s: s['site_v2']['comparison'].update(tensor_parallel=gate.Number('2')), 'published TP3'),
             ('moving reference', lambda s: s['site_v2']['comparison'].update(source='https://github.com/mmastrac/example/blob/main/README.md'), 'pinned publication'),
-            ('unmatched conditions', lambda s: s['site_v2']['comparison'].update(same_conditions=False), 'matched conditions'),
+            ('unmatched instruments', lambda s: s['site_v2']['comparison'].update(same_instruments=False), 'matched instruments'),
+            ('false matched conditions', lambda s: s['site_v2']['comparison'].update(same_conditions=True), 'different conditions'),
+            ('missing differences', lambda s: s['site_v2']['comparison'].update(condition_differences=[]), 'condition differences'),
+            ('missing topology', lambda s: s['site_v2']['comparison'].update(condition_differences=['Different machines']), 'topology differences'),
             ('wrong instrument', lambda s: s['site_v2']['comparison']['cells']['decode_c1'].update(instrument='A different instrument'), 'instrument mismatch'),
             ('wrong reference class', lambda s: s['site_v2']['comparison']['cells']['decode_c1'].update(**{'class': 'measured'}), 'author-reported'),
             ('unapproved exactness', lambda s: s['site_v2']['quality'].update(claim='Unqualified exactness'), 'claim wording'),
             ('previous exactness floor', lambda s: s['site_v2']['quality'].update(claim="lossless up to vLLM's own run-to-run noise"), 'claim wording'),
-            ('floor string', lambda s: s['site_v2']['quality'].update(floor='0.0400'), 'literal JSON number'),
+            ('unscoped exactness', lambda s: s['site_v2']['quality'].update(claim="lossless up to this build's measured run-to-run noise"), 'claim wording'),
+            ('failed exactness', lambda s: s['v2']['exact'].update(verdict='FAIL'), 'passing exactness'),
+            ('invalid exactness', lambda s: s['v2']['exact'].update(verdict='INVALID'), 'passing exactness'),
+            ('withdrawn floor', lambda s: s['site_v2']['quality'].update(floor=gate.Number('0.0400')), 'withdrawn or unsupported'),
+            ('claim count drift', lambda s: s['site_v2']['quality'].update(verdict_bearing_prompts=gate.Number('3')), 'claim wording or prompt-count'),
+            ('class mismatch', lambda s: s['site_v2']['quality'].update(exact_class='NONEXACT-NEARTIE'), 'claim wording'),
+            ('overstated MTP path', lambda s: s['site_v2']['drafter_source'].update(mtp='MTP-only: not measured at TP=3'), 'MTP qualification'),
+            ('overstated no-drafter speed', lambda s: s['site_v2']['drafter_source'].update(without_drafter='SPEC_METHOD=none: speed measured'), 'no-drafter qualification'),
+            ('prompt-count string', lambda s: s['site_v2']['quality'].update(verdict_bearing_prompts='2'), 'literal JSON number'),
             ('internal name', lambda s: s.update(conditions='lane 42 results'), 'forbidden public text'),
             ('em dash', lambda s: s.update(conditions='Code\u2014decode'), 'forbidden public text'),
             ('unsupported claim', lambda s: s.update(conditions='Same quality, scaled throughput'), 'unsupported claim'),
@@ -149,10 +188,10 @@ class PublicationTests(unittest.TestCase):
         source = sample()
         source['sets']['base_m0_sample'] = source['sets'].pop('release_m0')
         source['sets']['release_m0'] = None
-        source['site_v2'].pop('comparison')
         data = gate.project(source, '0' * 64)
         self.assertTrue(any('no measured' in p for p in data['pending']))
         self.assertFalse(any(s['id'] == 'release_m0' for s in data['sets']))
+        self.assertEqual(data['comparison']['cells'], {})
 
     def test_historical_measurements_unchanged(self):
         raw = (gate.ROOT / 'app/(site)/jspark3/glm-release.json').read_bytes()

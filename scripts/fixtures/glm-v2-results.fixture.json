@@ -73,9 +73,9 @@
           "build": "v2.0.0",
           "toggles": "none"
         },
-        "decode_prose_c1": {
-          "lo": 16.1,
-          "hi": 27.2,
+        "prefill_128k": {
+          "lo": 11.1,
+          "hi": 22.2,
           "unit": "tok/s",
           "class": "measured",
           "instrument": "FIXTURE instrument, no benchmark was run",
@@ -84,9 +84,31 @@
           "build": "v2.0.0",
           "toggles": "none"
         },
-        "decode_prose_c4": {
-          "lo": 17.1,
-          "hi": 28.2,
+        "rigmark_code": {
+          "lo": 11.1,
+          "hi": 22.2,
+          "unit": "tok/s",
+          "class": "measured",
+          "instrument": "FIXTURE instrument, no benchmark was run",
+          "evidence": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+          "mode": 0,
+          "build": "v2.0.0",
+          "toggles": "none"
+        },
+        "rigmark_prose": {
+          "lo": 11.1,
+          "hi": 22.2,
+          "unit": "tok/s",
+          "class": "measured",
+          "instrument": "FIXTURE instrument, no benchmark was run",
+          "evidence": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+          "mode": 0,
+          "build": "v2.0.0",
+          "toggles": "none"
+        },
+        "rigmark_structured": {
+          "lo": 11.1,
+          "hi": 22.2,
           "unit": "tok/s",
           "class": "measured",
           "instrument": "FIXTURE instrument, no benchmark was run",
@@ -98,5 +120,107 @@
       }
     }
   },
-  "site_v2": null
+  "site_v2": {
+    "comparison": {
+      "publisher": "mmastrac",
+      "tensor_parallel": 3,
+      "source": "https://github.com/mmastrac/glm-5.3-flash-4x-gx10/blob/5d3cca861e715860bd1f841a1f25f74320636b18/experimental/tp3/README.md",
+      "same_instruments": true,
+      "same_conditions": false,
+      "condition_differences": [
+        "upstream: two sets of three boxes through one 200G switch; v2.0.0: three DGX Sparks cabled as a triangle",
+        "upstream figures are author-reported from its README; it keeps no raw receipts"
+      ],
+      "cells": {
+        "prefill": {
+          "lo": 11.1,
+          "hi": 22.2,
+          "unit": "tok/s",
+          "instrument": "FIXTURE instrument, no benchmark was run",
+          "class": "author-reported"
+        },
+        "decode_c1": {
+          "lo": 12.1,
+          "hi": 23.2,
+          "unit": "tok/s",
+          "instrument": "FIXTURE instrument, no benchmark was run",
+          "class": "author-reported"
+        },
+        "decode_c2": {
+          "lo": 13.1,
+          "hi": 24.2,
+          "unit": "tok/s",
+          "instrument": "FIXTURE instrument, no benchmark was run",
+          "class": "author-reported"
+        },
+        "decode_c4": {
+          "lo": 14.1,
+          "hi": 25.2,
+          "unit": "tok/s",
+          "instrument": "FIXTURE instrument, no benchmark was run",
+          "class": "author-reported"
+        },
+        "decode_c8": {
+          "lo": 15.1,
+          "hi": 26.2,
+          "unit": "tok/s",
+          "instrument": "FIXTURE instrument, no benchmark was run",
+          "class": "author-reported"
+        },
+        "prefill_128k": {
+          "lo": 11.1,
+          "hi": 22.2,
+          "unit": "tok/s",
+          "instrument": "FIXTURE instrument, no benchmark was run",
+          "class": "author-reported"
+        },
+        "rigmark_code": {
+          "lo": 11.1,
+          "hi": 22.2,
+          "unit": "tok/s",
+          "instrument": "FIXTURE instrument, no benchmark was run",
+          "class": "author-reported"
+        },
+        "rigmark_prose": {
+          "lo": 11.1,
+          "hi": 22.2,
+          "unit": "tok/s",
+          "instrument": "FIXTURE instrument, no benchmark was run",
+          "class": "author-reported"
+        },
+        "rigmark_structured": {
+          "lo": 11.1,
+          "hi": 22.2,
+          "unit": "tok/s",
+          "instrument": "FIXTURE instrument, no benchmark was run",
+          "class": "author-reported"
+        }
+      }
+    },
+    "quality": {
+      "claim": null,
+      "exact_class": null,
+      "verdict_bearing_prompts": null,
+      "known_issue": "The 39,326-token test prompt is reported, not judged. Two no-drafter cold runs of it first differed at output token 45. There the rerun's token was 0.375 nat below the first run's choice, and the first run's token fell outside the rerun's top 5. A separate cold/cold diagnostic of the same prompt diverged at the first generated token. This was measured on this build's own serving path, which includes our arx collectives at TP=3. We haven't yet isolated which part of the stack causes it.",
+      "known_issue_fields": [
+        {
+          "prompt_tokens": 39326,
+          "first_divergence_output_token": 45,
+          "output_tokens": 512,
+          "rerun_token_gap_nats": 0.375,
+          "first_run_token_in_rerun_top5": false,
+          "cold_cold_first_divergence_token": 1
+        }
+      ],
+      "source": null
+    },
+    "drafter_source": {
+      "url": "https://huggingface.co/incoai/GLM-5.3-Flash-DFlash2/tree/bf582e4eacc1810f76656d1811693ff6c6737d2a",
+      "card": "https://huggingface.co/incoai/GLM-5.3-Flash-DFlash2/blob/bf582e4eacc1810f76656d1811693ff6c6737d2a/README.md",
+      "license": "CC BY-NC-ND 4.0",
+      "license_url": "https://creativecommons.org/licenses/by-nc-nd/4.0/",
+      "without_drafter": "SPEC_METHOD=none: booted for this release, speed not measured",
+      "mtp": "SPEC_METHOD=mtp: wired but not booted at TP=3"
+    }
+  }
 }

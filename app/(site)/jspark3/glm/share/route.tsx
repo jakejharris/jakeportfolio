@@ -1,5 +1,5 @@
 import { ImageResponse } from 'next/og';
-import { GLM_V2, V2_HIGHLIGHTS } from '../../glm-v2';
+import { GLM_V2, V2_HIGHLIGHTS, V2_NO_DRAFTER_NOTICE, V2_MTP_NOTICE } from '../../glm-v2';
 
 export const dynamic = 'force-static';
 const size = { width: 1200, height: 630 };
@@ -16,7 +16,8 @@ export function GET() {
         <div style={{ display: 'flex', fontSize: cell.value.length > 16 ? 26 : 34, color: '#d4b87c', marginTop: 4 }}>{cell.value}</div>
       </div>)}
     </div>
-    <div style={{ display: 'flex', marginTop: 'auto', fontSize: 17, color: '#a9aba8' }}>DFlash2: non-commercial · MTP-only: not measured at TP=3</div>
+    <div style={{ display: 'flex', marginTop: 'auto', fontSize: 17, color: '#a9aba8' }}>DFlash2: non-commercial · {V2_MTP_NOTICE}</div>
+    <div style={{ display: 'flex', marginTop: 6, fontSize: 17, color: '#a9aba8' }}>{V2_NO_DRAFTER_NOTICE}</div>
     <div style={{ display: 'flex', marginTop: 10, fontSize: 17 }}>jakejh.com/jspark3/glm/</div>
   </div>, size);
 }

@@ -13,10 +13,11 @@ ROOT = Path(__file__).resolve().parent.parent
 DATA = ROOT / 'app/(site)/jspark3/glm-v2-release.json'
 SOURCE = ROOT / 'docs/jspark-v2/glm-v2-source.json'
 TITLE = 'JSpark3 v2.0.0 (GLM-5.3-Flash, TP3)'
-CLAIM = "lossless up to this build's measured run-to-run noise"
 REPO = 'https://github.com/jakejharris/jspark3'
 METRICS = ['prefill', 'decode_c1', 'decode_c2', 'decode_c4', 'decode_c8',
-           'decode_prose_c1', 'decode_prose_c2', 'decode_prose_c4', 'decode_prose_c8', 'structured_c8']
+           'prefill_128k', 'rigmark_code', 'rigmark_prose', 'rigmark_structured']
+ISSUE_FIELDS = {'prompt_tokens', 'first_divergence_output_token', 'output_tokens',
+                'rerun_token_gap_nats', 'first_run_token_in_rerun_top5', 'cold_cold_first_divergence_token'}
 # Reuse the existing public-text name screen without printing its private vocabulary.
 NAME_DIGESTS = set(re.findall(r"'([a-f0-9]{64})'", (ROOT / 'scripts/check-glm-release.mjs').read_text()))
 FORBIDDEN = re.compile(
@@ -113,10 +114,24 @@ def band(cell, where):
     return result
 
 
+def quality_claim(value, exact_class, prompts):
+    """Validate the approved forms, then copy the supplied sentence unchanged."""
+    claim = text(value, 'quality.claim', claims=True)
+    forms = {
+        'EXACT-ON-CORPUS': ("With the DFlash2 drafter, output was byte-identical to the no-drafter reference on the "
+                            f"{prompts} test prompts whose no-drafter cold reruns were themselves identical "
+                            "(greedy, temperature 0, this build)."),
+        'NONEXACT-NEARTIE': ("Output stayed within the gate's predeclared tolerance: at the first divergence, the token "
+                             "is in the reference's top 5 and at most 0.5 nat below it."),
+    }
+    require(exact_class in forms and claim == forms[exact_class], 'quality claim wording or prompt-count mismatch')
+    return claim
+
+
 def project(source, source_sha256):
     require(source.get('schema') == 'jspark3-results/1', 'unsupported results schema')
     require(source.get('tag') == 'v2.0.0' and source.get('version') == 'v2.0', 'expected GLM v2.0.0 tag and version')
-    require(source.get('state') in ('fixture', 'interim', 'final'), 'invalid freeze state')
+    require(source.get('state') in ('fixture', 'pending', 'interim', 'final'), 'invalid freeze state')
     require(source.get('fixture') in (None, False, True), 'fixture must be a boolean')
     fixture = source.get('fixture') is True or source['state'] == 'fixture'
     conditions = text(source.get('conditions'), 'conditions')
@@ -180,30 +195,65 @@ def project(source, source_sha256):
     require(isinstance(ext, dict), 'site_v2 must be an object')
     comparison = ext.get('comparison')
     if comparison is not None:
-        require(release is not None, 'comparison requires the release start')
         require(comparison.get('publisher') == 'mmastrac' and comparison.get('tensor_parallel') == Number('3'), 'comparison must be mmastrac published TP3')
         ref = url(comparison.get('source'), 'comparison source')
         require(ref.startswith('https://github.com/mmastrac/') and re.search(r'/blob/[0-9a-f]{40}/', ref), 'comparison needs a pinned publication revision')
-        require(comparison.get('same_conditions') is True, 'comparison requires matched conditions')
+        require(comparison.get('same_instruments') is True, 'comparison requires matched instruments')
+        require(comparison.get('same_conditions') is False, 'comparison must disclose different conditions')
+        differences = comparison.get('condition_differences')
+        require(isinstance(differences, list) and differences, 'comparison condition differences required')
+        differences = [text(item, 'condition difference', claims=True) for item in differences]
+        topology = ' '.join(differences)
+        require('200G switch' in topology and 'cabled as a triangle' in topology, 'comparison topology differences required')
         ref_cells = comparison.get('cells')
         require(isinstance(ref_cells, dict) and ref_cells, 'comparison cells required')
         converted = {}
         for cid, cell in ref_cells.items():
-            require(cid in release['cells'], 'comparison row absent from release')
             require(cell.get('class') == 'author-reported', 'reference must be author-reported')
+            if release is None:
+                continue  # Reference metadata alone never supplies measured headline figures.
+            require(cid in release['cells'], 'comparison row absent from release')
             converted[cid] = band(cell, 'reference cell')
             require(converted[cid]['instrument'] == release['cells'][cid]['instrument'], 'comparison instrument mismatch')
-        comparison = dict(publisher='mmastrac', source=ref, cells=converted)
+        comparison = dict(publisher='mmastrac', source=ref, same_instruments=True,
+                          same_conditions=False, condition_differences=differences, cells=converted)
     quality = ext.get('quality')
     if quality is not None:
-        require(quality.get('claim') == CLAIM, 'quality claim wording mismatch')
-        quality = dict(claim=CLAIM, floor_text=number(quality.get('floor'), 'quality.floor'),
-                       unit=text(quality.get('unit'), 'quality.unit'),
-                       metric=text(quality.get('metric'), 'quality.metric'),
+        require(not (set(quality) - {'claim', 'exact_class', 'verdict_bearing_prompts', 'known_issue', 'known_issue_fields', 'source'}),
+                'quality contains withdrawn or unsupported fields')
+    if quality is not None and quality.get('claim') is None:
+        quality = None
+    if quality is not None:
+        verdict = ((source.get('v2') or {}).get('exact') or {}).get('verdict')
+        require(isinstance(verdict, str) and verdict.startswith('PASS'), 'quality requires a passing exactness verdict')
+        prompts = number(quality.get('verdict_bearing_prompts'), 'quality.verdict_bearing_prompts', count=True)
+        exact_class = quality.get('exact_class')
+        known = text(quality.get('known_issue'), 'quality.known_issue', claims=True)
+        fields = quality.get('known_issue_fields')
+        require(isinstance(fields, list) and fields, 'known-issue structured fields required')
+        for item in fields:
+            require(not (set(item) - ISSUE_FIELDS - {'prompt'}), 'unknown known-issue field')
+            for key in ('prompt_tokens', 'first_divergence_output_token', 'output_tokens', 'rerun_token_gap_nats'):
+                number(item.get(key), 'known_issue.' + key, count=key != 'rerun_token_gap_nats')
+            require(type(item.get('first_run_token_in_rerun_top5')) is bool, 'known-issue token rank must be a boolean')
+            if item.get('cold_cold_first_divergence_token') is not None:
+                number(item['cold_cold_first_divergence_token'], 'known_issue.cold_cold_first_divergence_token', count=True)
+            require(item['rerun_token_gap_nats'] + ' nat' in known, 'known-issue gap token mismatch')
+        quality = dict(claim=quality_claim(quality.get('claim'), exact_class, prompts), exact_class=exact_class,
+                       verdict_bearing_prompts_text=prompts, known_issue=known,
                        source=url(quality.get('source'), 'quality source'))
     drafter = ext.get('drafter_source')
     if drafter is not None:
-        drafter = url(drafter, 'drafter source')
+        require(isinstance(drafter, dict), 'drafter_source must hold the pinned links and path qualifications')
+        require(set(drafter) == {'url', 'card', 'license', 'license_url', 'without_drafter', 'mtp'}, 'unexpected drafter_source fields')
+        require(drafter['license'] == 'CC BY-NC-ND 4.0' and
+                drafter['license_url'] == 'https://creativecommons.org/licenses/by-nc-nd/4.0/', 'drafter license mismatch')
+        require(drafter['without_drafter'] == 'SPEC_METHOD=none: booted for this release, speed not measured', 'no-drafter qualification mismatch')
+        require(drafter['mtp'] == 'SPEC_METHOD=mtp: wired but not booted at TP=3', 'MTP qualification mismatch')
+        for key, kind, suffix in [('url', 'tree', ''), ('card', 'blob', '/README.md')]:
+            value = url(drafter[key], 'drafter ' + key)
+            require(value == 'https://huggingface.co/incoai/GLM-5.3-Flash-DFlash2/' + kind +
+                    '/bf582e4eacc1810f76656d1811693ff6c6737d2a' + suffix, 'drafter pinned revision mismatch')
     pending = []
     if fixture:
         pending.append('Fixture data: no benchmark was run.')
@@ -214,7 +264,7 @@ def project(source, source_sha256):
     if comparison is None:
         pending.append('Published TP3 comparison and matched instruments pending.')
     if quality is None:
-        pending.append('Quality result and measured run-to-run floor pending.')
+        pending.append('Quality verdict and verdict-bearing prompt scope pending.')
     if drafter is None:
         pending.append('DFlash2 upstream license and download link pending.')
     return dict(schema='jspark3-site/2', title=TITLE, fixture=fixture, pending=pending,
@@ -230,7 +280,20 @@ def project(source, source_sha256):
 def snapshot(source):
     """Only the supported contract, with evidence hashes instead of local evidence paths."""
     kept = {key: source.get(key) for key in ('schema', 'state', 'fixture', 'frozen_at', 'tag', 'version',
-            'release_date', 'decode_kind', 'conditions', 'site_v2')}
+            'release_date', 'decode_kind', 'conditions')}
+    ext = source.get('site_v2')
+    if ext:
+        require(not (set(ext) - {'comparison', 'quality', 'drafter_source', 'publication', 'instruments'}),
+                'unknown site_v2 fields; resolve the contract before filling')
+    # Publication receipts and instrument-build metadata remain in the original file.
+    kept['site_v2'] = {key: ext[key] for key in ('comparison', 'quality', 'drafter_source') if key in ext} if ext else None
+    if (ext or {}).get('quality') is not None:
+        quality = ext['quality']
+        kept['site_v2']['quality'] = {**quality, 'known_issue_fields': [
+            {key: value for key, value in item.items() if key in ISSUE_FIELDS}
+            for item in quality.get('known_issue_fields', [])]}
+    if source.get('v2'):
+        kept['v2'] = {'exact': {'verdict': (source['v2'].get('exact') or {}).get('verdict')}}
     kept['sets'] = {}
     for sid, serving in source['sets'].items():
         if serving is None:
@@ -249,8 +312,8 @@ def snapshot(source):
     if kept['site_v2']:
         allowed = {'comparison', 'quality', 'drafter_source'}
         require(not (set(kept['site_v2']) - allowed), 'unknown site_v2 fields; resolve the contract before filling')
-        for key, keys in [('comparison', {'publisher', 'tensor_parallel', 'source', 'same_conditions', 'cells'}),
-                          ('quality', {'claim', 'floor', 'unit', 'metric', 'source'})]:
+        for key, keys in [('comparison', {'publisher', 'tensor_parallel', 'source', 'same_conditions', 'same_instruments', 'condition_differences', 'cells'}),
+                          ('quality', {'claim', 'exact_class', 'verdict_bearing_prompts', 'known_issue', 'known_issue_fields', 'source'})]:
             value = kept['site_v2'].get(key)
             if value:
                 require(not (set(value) - keys), 'unknown public evidence field')

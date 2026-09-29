@@ -5,11 +5,9 @@
   "pending": [
     "Fixture data: no benchmark was run.",
     "Final freeze and release date pending.",
-    "Published TP3 comparison and matched instruments pending.",
-    "Quality result and measured run-to-run floor pending.",
-    "DFlash2 upstream license and download link pending."
+    "Quality verdict and verdict-bearing prompt scope pending."
   ],
-  "source_sha256": "40aa5bb41c52a78e064dc3b4322fdac56245a738ba33201a5aaff64699236cd6",
+  "source_sha256": "9d991a53d106b78d27c0bcb7c20f94e8a6c59a6da9642f09ba9d5d0178e92336",
   "frozen_at": null,
   "published": null,
   "conditions": "FIXTURE ONLY. Invented values for layout. No benchmark was run.",
@@ -53,15 +51,27 @@
           "unit": "tok/s",
           "instrument": "FIXTURE instrument, no benchmark was run"
         },
-        "decode_prose_c1": {
-          "lo_text": "16.1",
-          "hi_text": "27.2",
+        "prefill_128k": {
+          "lo_text": "11.1",
+          "hi_text": "22.2",
           "unit": "tok/s",
           "instrument": "FIXTURE instrument, no benchmark was run"
         },
-        "decode_prose_c4": {
-          "lo_text": "17.1",
-          "hi_text": "28.2",
+        "rigmark_code": {
+          "lo_text": "11.1",
+          "hi_text": "22.2",
+          "unit": "tok/s",
+          "instrument": "FIXTURE instrument, no benchmark was run"
+        },
+        "rigmark_prose": {
+          "lo_text": "11.1",
+          "hi_text": "22.2",
+          "unit": "tok/s",
+          "instrument": "FIXTURE instrument, no benchmark was run"
+        },
+        "rigmark_structured": {
+          "lo_text": "11.1",
+          "hi_text": "22.2",
           "unit": "tok/s",
           "instrument": "FIXTURE instrument, no benchmark was run"
         }
@@ -69,10 +79,82 @@
       "prefill_omitted_reason": null
     }
   ],
-  "comparison": null,
+  "comparison": {
+    "publisher": "mmastrac",
+    "source": "https://github.com/mmastrac/glm-5.3-flash-4x-gx10/blob/5d3cca861e715860bd1f841a1f25f74320636b18/experimental/tp3/README.md",
+    "same_instruments": true,
+    "same_conditions": false,
+    "condition_differences": [
+      "upstream: two sets of three boxes through one 200G switch; v2.0.0: three DGX Sparks cabled as a triangle",
+      "upstream figures are author-reported from its README; it keeps no raw receipts"
+    ],
+    "cells": {
+      "prefill": {
+        "lo_text": "11.1",
+        "hi_text": "22.2",
+        "unit": "tok/s",
+        "instrument": "FIXTURE instrument, no benchmark was run"
+      },
+      "decode_c1": {
+        "lo_text": "12.1",
+        "hi_text": "23.2",
+        "unit": "tok/s",
+        "instrument": "FIXTURE instrument, no benchmark was run"
+      },
+      "decode_c2": {
+        "lo_text": "13.1",
+        "hi_text": "24.2",
+        "unit": "tok/s",
+        "instrument": "FIXTURE instrument, no benchmark was run"
+      },
+      "decode_c4": {
+        "lo_text": "14.1",
+        "hi_text": "25.2",
+        "unit": "tok/s",
+        "instrument": "FIXTURE instrument, no benchmark was run"
+      },
+      "decode_c8": {
+        "lo_text": "15.1",
+        "hi_text": "26.2",
+        "unit": "tok/s",
+        "instrument": "FIXTURE instrument, no benchmark was run"
+      },
+      "prefill_128k": {
+        "lo_text": "11.1",
+        "hi_text": "22.2",
+        "unit": "tok/s",
+        "instrument": "FIXTURE instrument, no benchmark was run"
+      },
+      "rigmark_code": {
+        "lo_text": "11.1",
+        "hi_text": "22.2",
+        "unit": "tok/s",
+        "instrument": "FIXTURE instrument, no benchmark was run"
+      },
+      "rigmark_prose": {
+        "lo_text": "11.1",
+        "hi_text": "22.2",
+        "unit": "tok/s",
+        "instrument": "FIXTURE instrument, no benchmark was run"
+      },
+      "rigmark_structured": {
+        "lo_text": "11.1",
+        "hi_text": "22.2",
+        "unit": "tok/s",
+        "instrument": "FIXTURE instrument, no benchmark was run"
+      }
+    }
+  },
   "quality": null,
-  "drafter_source": null,
-  "social_image": "/jspark3/glm/share/?v=40aa5bb41c52",
+  "drafter_source": {
+    "url": "https://huggingface.co/incoai/GLM-5.3-Flash-DFlash2/tree/bf582e4eacc1810f76656d1811693ff6c6737d2a",
+    "card": "https://huggingface.co/incoai/GLM-5.3-Flash-DFlash2/blob/bf582e4eacc1810f76656d1811693ff6c6737d2a/README.md",
+    "license": "CC BY-NC-ND 4.0",
+    "license_url": "https://creativecommons.org/licenses/by-nc-nd/4.0/",
+    "without_drafter": "SPEC_METHOD=none: booted for this release, speed not measured",
+    "mtp": "SPEC_METHOD=mtp: wired but not booted at TP=3"
+  },
+  "social_image": "/jspark3/glm/share/?v=9d991a53d106",
   "links": {
     "release": "https://github.com/jakejharris/jspark3/releases/tag/v2.0.0",
     "source": "https://github.com/jakejharris/jspark3/tree/v2.0.0",

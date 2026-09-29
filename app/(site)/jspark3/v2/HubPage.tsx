@@ -4,7 +4,7 @@ import PixelFluidBackground from '../../../components/PixelFluidBackground';
 import TransitionLink from '../../../components/TransitionLink';
 import { release } from './release-data';
 import { HUB_COPY, INTERNAL_BUILDS, RELEASE_HISTORY } from '../release-copy';
-import { GLM_V2, V2_HIGHLIGHTS } from '../glm-v2';
+import { GLM_V2, V2_HIGHLIGHTS, V2_NO_DRAFTER_NOTICE, V2_MTP_NOTICE } from '../glm-v2';
 
 function LedgerRow({ href, children }: { href: string; children: React.ReactNode }) {
   return href.startsWith('/')
@@ -35,7 +35,7 @@ export default function HubPage() {
                 </span>)}
               </span>
               <span className="spark-hub-release-detail">{GLM_V2.fixture ? 'Measurements pending. Fixture values are not release results.' : 'Measured ranges. Conditions and every serving start on the release page.'}</span>
-              <span className="spark-hub-release-detail">DFlash2: non-commercial. MTP-only: not measured at TP=3.</span>
+              <span className="spark-hub-release-detail">DFlash2: non-commercial. {V2_NO_DRAFTER_NOTICE}. {V2_MTP_NOTICE}.</span>
               <span className="spark-hub-release-action">Recipe, results, and license scope <span aria-hidden="true">→</span></span>
             </TransitionLink>
           </li>
