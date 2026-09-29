@@ -65,6 +65,37 @@ async function heldNavigation(page, action) {
 }
 
 try {
+  await check("site navigation keeps only Home, About and Contact at every breakpoint", async (page) => {
+    for (const width of [320, 390, 768, 1440]) {
+      await page.setViewportSize({ width, height: 900 });
+      assert.deepEqual(await page.locator("nav.navbar-sticky.hidden a").evaluateAll((links) => links.map((link) => link.getAttribute("href"))), ["/", "/about/", "/contact/"]);
+      assert.equal(await page.locator('nav.navbar-sticky.hidden a[href^="/jspark3"]').count(), 0);
+      assert.equal(await page.locator("nav.navbar-sticky.hidden").isVisible(), width >= 768);
+      assert.deepEqual(await page.locator(".site-menu-link").evaluateAll((links) => links.map((link) => ({ href: link.getAttribute("href"), label: link.textContent }))), [
+        { href: "/", label: "Home" },
+        { href: "/about/", label: "About" },
+        { href: "/contact/", label: "Contact" },
+      ]);
+      if (width < 768) {
+        await toggle(page);
+        await waitOpen(page);
+        assert.equal(await page.getByRole("navigation", { name: "Menu", exact: true }).getByRole("link", { name: "JSPARK3", exact: true }).count(), 0);
+        await toggle(page);
+        await waitClosed(page);
+      }
+    }
+    for (const path of ["/jspark3/", "/jspark3/glm/"]) {
+      const response = await page.request.get(base + path);
+      assert.equal(response.status(), 200, path);
+    }
+    await page.goto(base + "/about/", { waitUntil: "networkidle" });
+    const projects = page.locator('main a[href^="/jspark3/"]');
+    assert.ok(await projects.count(), "About keeps its project links");
+    for (const href of await projects.evaluateAll((links) => links.map((link) => link.getAttribute("href")))) {
+      assert.equal((await page.request.get(base + href)).status(), 200, href);
+    }
+  });
+
   await check("Escape then reopen survives the delayed page arrival", async (page) => {
     await heldNavigation(page, async (release) => {
       await page.keyboard.press("Escape");
@@ -326,7 +357,7 @@ try {
     const tree = await page.locator("body").ariaSnapshot();
     assert.ok(tree.includes('navigation "Menu"'));
     assert.ok(!tree.includes(heading));
-    for (const word of ["JSPARK3", "About", "Contact", "Source"]) {
+    for (const word of ["About", "Contact", "Source"]) {
       await page.keyboard.press("Tab");
       assert.equal(await page.evaluate(() => document.activeElement.textContent), word);
     }

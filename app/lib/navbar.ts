@@ -7,7 +7,6 @@ export function getActiveNav(pathname: string) {
 
   return {
     isHome: normalizedPathname === '/',
-    isJspark3: normalizedPathname === '/jspark3' || normalizedPathname.startsWith('/jspark3/'),
     isAbout: normalizedPathname === '/about',
     isContact: normalizedPathname === '/contact',
   };
