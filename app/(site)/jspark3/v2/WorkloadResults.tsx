@@ -24,6 +24,7 @@ export default function WorkloadResults() {
         <tr role="row"><th scope="row">Structured</th><td data-label="Streams">8 streams</td><td data-label="Range, tok/s"><Band lo={structured_c8.lo_text} hi={structured_c8.hi_text} /></td><td data-label="Median, tok/s">Not reported</td><td data-label="Sweeps">{structured_c8.samples}</td></tr>
       </tbody>
     </table>
-    <p className="glm-small">Code at two streams was not measured. No value is carried over from v1.8.0.</p>
+    {/* PENDING: the release owner's relation label for code at 2 streams against v1.8.0 replaces this marker. Do not ship it. */}
+    <p className="glm-small"><span className="jspark-ph jspark-ph-block" data-pending="code-c2-relation">PENDING: how code at 2 streams compares with v1.8.0, and any updated summary, awaits the release owner.</span></p>
   </div>;
 }
