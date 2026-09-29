@@ -16,10 +16,19 @@ import { Button } from '@/app/components/ui/button';
 import React from 'react';
 import nextDynamic from 'next/dynamic';
 import TableOfContents from '@/app/components/TableOfContents';
+import { getPostHeadings } from '@/app/lib/post-headings';
 import TagPill from '@/app/components/TagPill';
 import type { Metadata } from 'next';
 
-export const dynamic = 'force-dynamic';
+// Published pages refresh in the background; the webhook also expires content.
+export const revalidate = 60;
+
+export async function generateStaticParams() {
+  return sanityFetch<Array<{ slug: string }>>({
+    query: '*[_type == "post" && defined(slug.current)]{ "slug": slug.current }',
+    tags: ['post'],
+  });
+}
 
 // Generate dynamic metadata for each post
 export async function generateMetadata({
@@ -440,7 +449,7 @@ export default async function PostPage({ params }: PageParams) {
   }
 
   const displayDate = post.publishedAt || post._updatedAt;
-  const liveViewCounts = await getLivePostViewCounts([slug]);
+  const liveViewCounts = await getLivePostViewCounts([slug], { revalidate: 60 });
   const displayedViewCount =
     liveViewCounts[slug] ?? post.viewCountBase ?? post.viewCount ?? 0;
 
@@ -542,7 +551,7 @@ export default async function PostPage({ params }: PageParams) {
           {/* Table of Contents */}
           {post.content && (
             <div className="page-enter">
-              <TableOfContents content={post.content} externalLinks={post.externalLinks} />
+              <TableOfContents headings={getPostHeadings(post.content, post.externalLinks)} />
             </div>
           )}
 

@@ -41,11 +41,13 @@ export async function sanityFetch<QueryResponse>({
   tags: string[];
 }): Promise<QueryResponse> {
   return client.fetch(query, params, {
-    // Ensure Next.js uses the tags for revalidation
-    next: { 
-      tags,
-      // Set revalidate to 0 to force revalidation on every request
-      revalidate: 0 
+    next: {
+      // Every published query must expire with the content webhook, including
+      // post bodies whose callers also supply a per-slug tag.
+      tags: [...new Set(['post', ...tags])],
+      // A fallback refresh also covers missed webhooks. Drafts use their own
+      // authenticated, uncached client.
+      revalidate: 300,
     },
   }) as Promise<QueryResponse>;
 }
@@ -58,4 +60,4 @@ type SanityImageSource = {
   };
   _type: 'image';
   [key: string]: unknown;
-}; 
+};

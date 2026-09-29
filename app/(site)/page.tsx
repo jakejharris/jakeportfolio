@@ -15,7 +15,8 @@ import PixelFluidBackground from '../components/PixelFluidBackground';
 import TagPill from '../components/TagPill';
 import Hero from '../components/Hero';
 
-export const dynamic = 'force-dynamic';
+// Published pages refresh in the background; the webhook also expires content.
+export const revalidate = 60;
 
 // Query to fetch posts from Sanity
 const query = `*[_type == "post"] | order(featured desc, publishedAt desc) {
@@ -37,7 +38,8 @@ export default async function HomePage() {
     tags: ['post'],
   });
   const liveViewCounts = await getLivePostViewCounts(
-    posts.map((post) => post.slug.current)
+    posts.map((post) => post.slug.current),
+    { revalidate: 60 }
   );
 
   return (
@@ -60,11 +62,10 @@ export default async function HomePage() {
               <HoverCard>
                 <HoverCardTrigger asChild>
                   <TransitionLink
-                    href={`/posts/${post.slug.current}#`}
+                    href={`/posts/${post.slug.current}/`}
                     className={`pageLinkContainer flex justify-between items-center border p-3 cursor-pointer group ${post.featured ? 'pinnedLinkBorder' : ''}`}
                     aria-label={`View ${post.title}`}
                     scroll={true}
-                    prefetch={false}
                   >
                     <div className="flex items-center gap-3">
                       <div>
@@ -107,7 +108,7 @@ export default async function HomePage() {
                         {post.excerpt}
                       </p>
                     )}
-                    <TransitionLink href={`/posts/${post.slug.current}#`} scroll={true} prefetch={false} className="animated-underline-small-muted pt-2 text-xs text-muted-foreground">
+                    <TransitionLink href={`/posts/${post.slug.current}/`} scroll={true} className="animated-underline-small-muted pt-2 text-xs text-muted-foreground">
                       Click to read full post
                     </TransitionLink>
                   </div>
