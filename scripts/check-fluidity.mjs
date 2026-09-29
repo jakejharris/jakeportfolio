@@ -449,6 +449,29 @@ try {
     assert.equal(await page.evaluate(() => document.activeElement?.getAttribute("href")), "/contact/");
   });
 
+  await check("focus history stays bounded over many page changes", {}, async (page) => {
+    await page.evaluate(() => {
+      const set = Map.prototype.set;
+      Map.prototype.set = function (key, value) {
+        if (key === history.state?.__scroll && typeof value === "string" && value.startsWith("/")) {
+          window.observedFocusHistory = this;
+        }
+        return set.call(this, key, value);
+      };
+    });
+    for (let visit = 0; visit < 20; visit++) {
+      for (const path of ["/about/", "/contact/", "/"]) {
+        await page.locator(`nav a[href='${path}']:visible`).evaluate((link) => link.click());
+        await page.waitForFunction((path) => location.pathname === path, path);
+        await page.waitForFunction((path) => document.querySelector(`nav a[href='${path}'][aria-current='page']`), path);
+        await page.waitForTimeout(300);
+      }
+    }
+    const retained = await page.evaluate(() => window.observedFocusHistory?.size);
+    assert.ok(retained > 0, "the history used to return focus was observed");
+    assert.ok(retained <= 50, `focus history retained ${retained} entries after scroll history expired`);
+  });
+
   await check("the article outline respects reduced motion, including preference changes", { path: "/posts/apres-surf-club/", reducedMotion: true }, async (page) => {
     await page.getByRole("button", { name: "In This Article" }).click();
     await page.waitForTimeout(400);
