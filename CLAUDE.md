@@ -40,8 +40,8 @@ This is a Next.js 15 portfolio and blog site using the App Router with Sanity CM
 | Route | Type | Description |
 |---|---|---|
 | `/` | Server | Homepage with post list (sorted by featured, then publishedAt) and PixelFluidBackground canvas |
-| `/about` | Server | Static bio page with resume PDF and GitHub links |
-| `/contact` | Client | Email copy-to-clipboard and LinkedIn link; metadata exported from `contact/layout.tsx` |
+| `/about` | Server | Bio at three lengths (`about/story.ts`, every sentence tagged with the shortest version that keeps it; `LengthStory` switches in place) and profile links |
+| `/contact` | Server | Email address as the headline (`CopyEmail` copies it), profile links and Chicago local time (`LocalTime`) |
 | `/posts/[slug]` | Server | Full blog post with PortableText, TableOfContents, ViewCounter, and JSON-LD (BlogPosting) |
 | `/viewadmin` | Client | Internal admin panel for view count adjustments (password-protected, blocked in robots.ts) |
 
