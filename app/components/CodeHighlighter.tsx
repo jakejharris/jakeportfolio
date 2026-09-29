@@ -30,7 +30,7 @@ export default function CodeHighlighter({ code, language }: CodeHighlighterProps
     <SyntaxHighlighter
       language={language === 'html' ? 'markup' : language}
       style={isDarkMode ? oneDark : oneLight}
-      customStyle={{ background: 'transparent', padding: 0, margin: 0 }}
+      customStyle={{ background: 'transparent', padding: 0, margin: 0, textShadow: 'none' }}
       wrapLines={true}
       lineProps={{ style: { background: 'transparent' } }}
       codeTagProps={{ style: { background: 'transparent' } }}

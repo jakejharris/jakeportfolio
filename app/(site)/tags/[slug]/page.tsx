@@ -10,8 +10,8 @@ import {
   HoverCardTrigger,
   HoverCardContent,
 } from '@/app/components/hover-card';
-import PixelFluidBackground from '@/app/components/PixelFluidBackground';
 import TagPill from '@/app/components/TagPill';
+import GlassLight from '@/app/components/GlassLight';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 
@@ -126,7 +126,6 @@ export default async function TagPage({
 
   return (
     <>
-    <PixelFluidBackground />
     <PageLayout>
       <div className="max-w-none">
         <div className="page-enter mb-6">
@@ -135,11 +134,12 @@ export default async function TagPage({
             <p className="text-muted-foreground" data-fluid-island>{tag.description}</p>
           )}
         </div>
+        <GlassLight />
 
         {posts.length === 0 ? (
           <p className="page-enter-2 text-muted-foreground">No posts found with this tag.</p>
         ) : (
-          <ul className="page-enter-2 space-y-2 mb-8">
+          <ul className="glass-list page-enter-2 space-y-2 mb-8">
             {posts.map((post) => {
               const displayedViewCount =
                 liveViewCounts === null ? null : liveViewCounts[post.slug.current] ??
@@ -153,13 +153,14 @@ export default async function TagPage({
                   <HoverCardTrigger asChild>
                     <TransitionLink
                       href={`/posts/${post.slug.current}/`}
-                      className={`pageLinkContainer flex justify-between items-center border p-3 cursor-pointer group ${post.featured ? 'pinnedLinkBorder' : ''}`}
+                      className="pageLinkContainer flex justify-between items-center cursor-pointer group"
                       aria-label={`View ${post.title}`}
                       scroll={true}
                     >
                       <div className="flex items-center gap-3">
                         <div>
                           <div className="text-primary text-sm md:text-base font-medium mb-1 leading-tight flex items-center gap-1">
+                            {post.featured && <span className="glass-mark" aria-hidden="true" />}
                             {post.title}
                           </div>
                           <div className="flex items-center gap-2">

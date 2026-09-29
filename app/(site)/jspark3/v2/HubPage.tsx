@@ -1,7 +1,7 @@
 import React from 'react';
 import PageLayout from '../../../components/PageLayout';
-import PixelFluidBackground from '../../../components/PixelFluidBackground';
 import TransitionLink from '../../../components/TransitionLink';
+import GlassLight from '../../../components/GlassLight';
 import { release } from './release-data';
 import { GLM_RELEASE, HEADLINE_ROWS, HUB_COPY, INTERNAL_BUILDS, IS_PLACEHOLDER, RELEASE, RELEASE_HISTORY, RELEASE_SUMMARY, releaseDate, valueText } from '../release-copy';
 import { Ph } from '../Placeholder';
@@ -34,7 +34,6 @@ function LedgerRow({ href, children }: { href: string; children: React.ReactNode
 
 export default function HubPage() {
   return <>
-    <PixelFluidBackground heroMode quietShare={0.75} />
     <PageLayout className="spark-hub">
       <a className="spark-hub-skip" href="#current">Skip to releases</a>
       <header className="hero spark-hub-intro">
@@ -43,9 +42,10 @@ export default function HubPage() {
       </header>
       <section id="current" className="spark-hub-releases" aria-labelledby="spark-releases-title">
         <h2 id="spark-releases-title" className="section-kicker">{HUB_COPY.releasesTitle}</h2>
+        <GlassLight />
         <ol className="spark-hub-list">
           <li>
-            <TransitionLink href="/jspark3/glm/" className="pageLinkContainer pinnedLinkBorder spark-hub-release">
+            <TransitionLink href="/jspark3/glm/" className="pageLinkContainer spark-hub-release">
               <span className="spark-hub-release-meta">{`${HUB_COPY.glmCard.meta} `}<span><Ph>{RELEASE}</Ph>{GLM_RELEASE.published ? <> · <Ph>{releaseDate(GLM_RELEASE.published)}</Ph></> : null}</span></span>
               <span className="spark-hub-release-title">{HUB_COPY.glmCard.title} <span aria-hidden="true">↗</span></span>
               {RELEASE_SUMMARY ? <span className="spark-hub-release-detail">{RELEASE_SUMMARY}</span> : null}

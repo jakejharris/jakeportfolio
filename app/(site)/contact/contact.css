@@ -1,0 +1,183 @@
+/* Contact: the address is the headline, the rest is a ledger. The masthead
+   and kicker come from the homepage (hero.css). */
+
+.contact-page .hero {
+  padding-bottom: 2.75rem;
+}
+
+.contact-email {
+  margin-bottom: 3.25rem;
+}
+
+.contact-address-block {
+  margin-top: 1rem;
+}
+
+/* The two layers share one grid cell: the address, and a copy of it drawn as
+   a selection, revealed left to right when the address is copied. */
+.contact-address {
+  position: relative;
+  display: inline-grid;
+  margin: 0 0 0 -0.08em;
+  padding: 0;
+  border: 0;
+  border-radius: 2px;
+  background: none;
+  color: hsl(var(--foreground));
+  font-family: var(--font-wordmark-stack);
+  font-size: clamp(1.6rem, 7.6vw, 2.75rem);
+  font-weight: 700;
+  letter-spacing: -0.005em;
+  line-height: 1.15;
+  text-align: left;
+  cursor: copy;
+}
+
+.contact-address > span {
+  grid-area: 1 / 1;
+  padding: 0.04em 0.08em 0.1em;
+}
+
+.contact-address-text {
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, currentColor 22%, transparent);
+  text-decoration-style: dotted;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 0.14em;
+  transition: text-decoration-color 0.2s ease;
+}
+
+@media (hover: hover) {
+  .contact-address:hover .contact-address-text {
+    text-decoration-color: var(--accent-color);
+  }
+}
+
+.contact-address:focus-visible {
+  outline: 2px solid hsl(var(--foreground));
+  outline-offset: 4px;
+}
+
+.contact-address-selection {
+  color: hsl(var(--background));
+  background: var(--accent-color);
+  clip-path: inset(0 100% 0 0);
+  opacity: 0;
+  pointer-events: none;
+  forced-color-adjust: none;
+  transition: opacity 0.3s ease;
+}
+
+.contact-address[data-copied] .contact-address-selection {
+  clip-path: inset(0 0 0 0);
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .contact-address[data-copied] .contact-address-selection {
+    animation: contact-select 1800ms both;
+  }
+
+  @keyframes contact-select {
+    0% {
+      clip-path: inset(0 100% 0 0);
+      opacity: 1;
+      animation-timing-function: steps(7, end);
+    }
+    13% {
+      clip-path: inset(0 0 0 0);
+      opacity: 1;
+    }
+    82% {
+      opacity: 1;
+    }
+    100% {
+      clip-path: inset(0 0 0 0);
+      opacity: 0;
+    }
+  }
+}
+
+.contact-address-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.25rem 0.6rem;
+  margin: 0.55rem 0 0;
+  color: color-mix(in srgb, hsl(var(--foreground)) 25%, hsl(var(--muted-foreground)));
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.contact-address-or {
+  opacity: 0.6;
+}
+
+/* The longer note after a refused copy takes its own line. */
+.contact-address-actions[data-state="selected"] .contact-address-hint {
+  flex-basis: 100%;
+}
+
+.contact-address-actions[data-state="selected"] .contact-address-or {
+  display: none;
+}
+
+.contact-address-actions a {
+  color: hsl(var(--foreground));
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-decoration-color: color-mix(in srgb, currentColor 35%, transparent);
+  text-underline-offset: 3px;
+  transition: text-decoration-color 0.2s ease;
+}
+
+.contact-address-actions a:hover {
+  text-decoration-color: var(--accent-color);
+}
+
+.contact-address-actions a:focus-visible {
+  outline: 2px solid hsl(var(--foreground));
+  outline-offset: 2px;
+}
+
+.contact-hint-touch {
+  display: none;
+}
+
+@media (hover: none) {
+  .contact-hint-pointer {
+    display: none;
+  }
+
+  .contact-hint-touch {
+    display: inline;
+  }
+}
+
+.contact-local {
+  margin: 1.25rem 0 0;
+  color: color-mix(in srgb, hsl(var(--foreground)) 25%, hsl(var(--muted-foreground)));
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.contact-time {
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 767px) {
+  .contact-page .hero {
+    padding-bottom: 2.25rem;
+  }
+}
+
+/* On paper the address is for reading, not clicking. */
+@media print {
+  .contact-address-actions {
+    display: none;
+  }
+
+  .contact-address-text {
+    text-decoration: none;
+  }
+}

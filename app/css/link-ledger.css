@@ -1,0 +1,79 @@
+/* Ruled link rows, the same ledger the JSPARK3 hub lists its releases in:
+   label, mono detail, and an arrow that leans out on hover. */
+
+.link-ledger {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid hsl(var(--border));
+}
+
+.link-ledger > li {
+  border-bottom: 1px solid hsl(var(--border));
+}
+
+.link-ledger-row {
+  display: grid;
+  grid-template-columns: minmax(6.5rem, 9.5rem) 1fr auto;
+  align-items: baseline;
+  gap: 0.25rem 1rem;
+  min-height: 48px;
+  padding: 0.8rem 0.125rem;
+  color: hsl(var(--foreground));
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  text-decoration: none;
+}
+
+.link-ledger-label {
+  font-weight: 500;
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 4px;
+  transition: text-decoration-color 0.2s ease;
+}
+
+.link-ledger-detail {
+  overflow: hidden;
+  color: color-mix(in srgb, hsl(var(--foreground)) 25%, hsl(var(--muted-foreground)));
+  font-family: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.8125rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.link-ledger-arrow {
+  color: hsl(var(--muted-foreground));
+  transition: transform 0.2s ease, color 0.2s ease;
+}
+
+@media (hover: hover) {
+  .link-ledger-row:hover .link-ledger-label {
+    text-decoration-color: var(--accent-color);
+  }
+
+  .link-ledger-row:hover .link-ledger-arrow {
+    color: var(--accent-color);
+    transform: translate(2px, -2px);
+  }
+}
+
+.link-ledger-row:focus-visible {
+  outline: 2px solid hsl(var(--foreground));
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+@media (max-width: 479px) {
+  .link-ledger-row {
+    grid-template-columns: 6.75rem 1fr auto;
+    gap: 0.25rem 0.75rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .link-ledger-arrow {
+    transition: none;
+  }
+}

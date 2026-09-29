@@ -1,0 +1,65 @@
+/* Moving between pages. Behavior lives in components/navigation. */
+
+/* While the next page loads, the one being left dims, only if the wait is
+   long enough to notice. The water and the site's frame stay as they are.
+   The flag sits on the page's own wrapper, so setting it restyles one
+   element, not the document. */
+[data-page-frame][data-leaving] {
+  opacity: 0.5;
+  transition: opacity 260ms cubic-bezier(0.4, 0, 1, 1) 110ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-page-frame][data-leaving] {
+    transition: opacity 0s linear 160ms;
+  }
+}
+
+/* A page reached from a link settles in quickly: the first load's entrance,
+   shortened, so the words are readable within a third of a second. */
+@media (prefers-reduced-motion: no-preference) {
+  html[data-arrival="push"] .page-enter,
+  html[data-arrival="push"] .page-enter-2,
+  html[data-arrival="push"] .page-enter-3 {
+    transform: translateY(8px);
+    animation-duration: 320ms;
+  }
+
+  html[data-arrival="push"] .page-enter-2 {
+    animation-delay: 40ms;
+  }
+
+  html[data-arrival="push"] .page-enter-3 {
+    animation-delay: 80ms;
+  }
+
+  html[data-arrival="push"] .hero-wordmark,
+  html[data-arrival="push"] .hero-standfirst {
+    transform: translateY(8px);
+    animation-duration: 380ms;
+  }
+
+  html[data-arrival="push"] .hero-standfirst {
+    animation-delay: 60ms;
+  }
+}
+
+/* A page returned to with back or forward is simply there, as it was left. */
+html[data-arrival="restore"] :is(.page-enter, .page-enter-2, .page-enter-3, .hero-wordmark, .hero-standfirst) {
+  animation: none;
+  opacity: 1;
+  transform: none;
+}
+
+/* Focus moves to a new page's heading so screen readers and keyboards start
+   there. It is a place to start from, not a control, so no ring. */
+[data-nav-focus]:focus {
+  outline: none;
+}
+
+/* Focus a script moved after a tap (lib/focus-intent.ts): the reader is not
+   using a keyboard, so no ring, even where the browser would draw one. */
+[data-quiet-focus],
+[data-quiet-focus] * {
+  outline: none !important;
+}

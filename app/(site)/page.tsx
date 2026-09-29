@@ -11,9 +11,9 @@ import {
   HoverCardTrigger,
   HoverCardContent
 } from '../components/hover-card';
-import PixelFluidBackground from '../components/PixelFluidBackground';
 import TagPill from '../components/TagPill';
 import Hero from '../components/Hero';
+import GlassLight from '../components/GlassLight';
 
 // Published pages refresh in the background; the webhook also expires content.
 export const revalidate = 60;
@@ -44,11 +44,11 @@ export default async function HomePage() {
 
   return (
     <>
-      <PixelFluidBackground heroMode />
       <PageLayout>
       <Hero />
       <div className="max-w-none">
-        <div className="section-kicker">Writing &amp; work</div>
+        <div className="section-kicker" data-fluid-island>Writing &amp; work</div>
+        <GlassLight />
         <ul className="space-y-2 pb-8">
           {posts.map((post) => {
             const displayedViewCount =
@@ -63,13 +63,14 @@ export default async function HomePage() {
                 <HoverCardTrigger asChild>
                   <TransitionLink
                     href={`/posts/${post.slug.current}/`}
-                    className={`pageLinkContainer flex justify-between items-center border p-3 cursor-pointer group ${post.featured ? 'pinnedLinkBorder' : ''}`}
+                    className="pageLinkContainer flex justify-between items-center cursor-pointer group"
                     aria-label={`View ${post.title}`}
                     scroll={true}
                   >
                     <div className="flex items-center gap-3">
                       <div>
                         <div className="text-primary text-sm md:text-base font-medium mb-1 leading-tight flex items-center gap-1">
+                          {post.featured && <span className="glass-mark" aria-hidden="true" />}
                           {post.title}
                         </div>
                         <div className="flex items-center gap-2">
