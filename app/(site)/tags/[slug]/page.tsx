@@ -10,10 +10,11 @@ import {
   HoverCardTrigger,
   HoverCardContent,
 } from '@/app/components/hover-card';
-import PixelFluidBackground from '@/app/components/PixelFluidBackground';
 import TagPill from '@/app/components/TagPill';
+import GlassLight from '@/app/components/GlassLight';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
+import PinnedBadge from '@/app/components/PinnedBadge';
 
 // Published pages refresh in the background; the webhook also expires content.
 export const revalidate = 60;
@@ -126,7 +127,6 @@ export default async function TagPage({
 
   return (
     <>
-    <PixelFluidBackground />
     <PageLayout>
       <div className="max-w-none">
         <div className="page-enter mb-6">
@@ -135,11 +135,12 @@ export default async function TagPage({
             <p className="text-muted-foreground" data-fluid-island>{tag.description}</p>
           )}
         </div>
+        <GlassLight />
 
         {posts.length === 0 ? (
           <p className="page-enter-2 text-muted-foreground">No posts found with this tag.</p>
         ) : (
-          <ul className="page-enter-2 space-y-2 mb-8">
+          <ul className="glass-list page-enter-2 space-y-2 mb-8">
             {posts.map((post) => {
               const displayedViewCount =
                 liveViewCounts === null ? null : liveViewCounts[post.slug.current] ??
@@ -153,14 +154,19 @@ export default async function TagPage({
                   <HoverCardTrigger asChild>
                     <TransitionLink
                       href={`/posts/${post.slug.current}/`}
-                      className={`pageLinkContainer flex justify-between items-center border p-3 cursor-pointer group ${post.featured ? 'pinnedLinkBorder' : ''}`}
-                      aria-label={`View ${post.title}`}
+                      className="pageLinkContainer flex justify-between items-center cursor-pointer group"
+                      aria-label={`View ${post.featured ? "pinned post: " : ""}${post.title}`}
                       scroll={true}
                     >
                       <div className="flex items-center gap-3">
                         <div>
                           <div className="text-primary text-sm md:text-base font-medium mb-1 leading-tight flex items-center gap-1">
-                            {post.title}
+                            {post.featured ? (
+                              <span className="pinned-title-anchor">
+                                {post.title}
+                                <PinnedBadge />
+                              </span>
+                            ) : post.title}
                           </div>
                           <div className="flex items-center gap-2">
                             <div className="text-sm text-muted-foreground">

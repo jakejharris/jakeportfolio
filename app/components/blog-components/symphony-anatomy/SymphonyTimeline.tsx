@@ -186,16 +186,16 @@ function drawTrackFill(
   if (fillWidth <= 0) return;
 
   ctx.save();
-  roundedRect(ctx, barLeft, track.top, barRight - barLeft, track.height, 3);
+  roundedRect(ctx, barLeft, track.top, barRight - barLeft, track.height, 0);
   ctx.clip();
   ctx.fillStyle = fillColor(track.kind, palette);
-  roundedRect(ctx, barLeft, track.top, fillWidth, track.height, 3);
+  roundedRect(ctx, barLeft, track.top, fillWidth, track.height, 0);
   ctx.fill();
 
   if (track.kind === 'build') {
     ctx.globalCompositeOperation = 'lighter';
     ctx.fillStyle = rgba(palette.accent, 0.14);
-    roundedRect(ctx, barLeft, track.top - 1, fillWidth, track.height + 2, 4);
+    roundedRect(ctx, barLeft, track.top - 1, fillWidth, track.height + 2, 2);
     ctx.fill();
   }
 
@@ -491,7 +491,7 @@ export default function SymphonyTimeline() {
               className="relative h-3.5 sm:h-4"
             >
               <div
-                className="absolute inset-y-0 rounded-[3px]"
+                className="absolute inset-y-0 rounded-sm"
                 style={{
                   left: `${(row.start / AXIS_TOTAL) * 100}%`,
                   width: `${(row.duration / AXIS_TOTAL) * 100}%`,
@@ -517,7 +517,7 @@ export default function SymphonyTimeline() {
             className="flex items-center gap-1.5 text-[9px] text-muted-foreground sm:text-[10px]"
           >
             <span
-              className="inline-block h-2 w-3 rounded-[2px]"
+              className="inline-block h-2 w-3 rounded-sm"
               style={legendStyle(kind)}
             />
             {label}

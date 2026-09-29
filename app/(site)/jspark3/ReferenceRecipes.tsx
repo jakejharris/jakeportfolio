@@ -12,7 +12,7 @@ const OURS_TINT = 'bg-[color-mix(in_srgb,var(--accent-color)_10%,transparent)]';
 
 function SparkCount({ count }: { count: string }) {
   return (
-    <span className="inline-flex items-center gap-1 whitespace-nowrap rounded-full border border-border bg-muted px-2 py-0.5 text-[10.5px] font-semibold uppercase tracking-[0.06em] text-muted-foreground">
+    <span className="inline-flex items-center gap-1 whitespace-nowrap rounded-md border border-border bg-muted px-2 py-0.5 text-[10.5px] font-semibold uppercase tracking-[0.06em] text-muted-foreground">
       <span className="tabular-nums">{count}</span> Sparks
     </span>
   );

@@ -40,8 +40,8 @@
 .glm-author { color: var(--glm-muted) !important; }
 .glm-hero { display: grid; grid-template-columns: 1.12fr 1fr; align-items: center; gap: 32px; padding-block: 64px 50px; }
 .glm-kicker { color: var(--glm-muted); font: 14px/1.5 var(--font-geist-mono), monospace; letter-spacing: .5px; }
-.glm h1 { color: var(--glm-gold); font: 700 clamp(70px, 7.2vw, 104px)/1.06 var(--font-wordmark), Georgia, serif; letter-spacing: -.05em; margin-top: 12px; overflow-wrap: anywhere; }
-.glm-lede { font-size: clamp(22px, 2.2vw, 29px); letter-spacing: -.6px; line-height: 1.4; margin-top: 24px !important; }
+.glm-version { display: block; color: var(--glm-gold); font: 700 clamp(70px, 7.2vw, 104px)/1.06 var(--font-wordmark), Georgia, serif; letter-spacing: -.05em; margin-top: 12px; overflow-wrap: anywhere; }
+.glm-lede { display: block; font-size: clamp(22px, 2.2vw, 29px); letter-spacing: -.6px; line-height: 1.4; margin-top: 24px !important; }
 /* The speed headline: the lead line under the lede, with its figures in gold. */
 .glm-speed { max-width: 520px; margin-top: 22px; padding-left: 16px; border-left: 2px solid var(--glm-gold); }
 .glm-speed-line { font-size: 19px; line-height: 1.45; letter-spacing: -.2px; }
@@ -246,7 +246,7 @@
   .glm-header nav { gap: 18px; }
   .glm-author { display: none !important; }
   .glm-hero { padding-top: 38px; }
-  .glm h1 { font-size: clamp(56px, 18vw, 78px); }
+  .glm-version { font-size: clamp(56px, 18vw, 78px); }
   .glm-lede { font-size: 23px; }
   .glm-speed-line { font-size: 18px; }
   .glm-actions { gap: 12px 20px; }

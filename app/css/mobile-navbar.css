@@ -9,7 +9,7 @@
   height: 44px;
   margin-right: -4px;
   color: hsl(var(--foreground));
-  border-radius: 4px;
+  border-radius: max(0px, calc(var(--radius) - 2px));
   -webkit-tap-highlight-color: transparent;
 }
 

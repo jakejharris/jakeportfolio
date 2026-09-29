@@ -3,6 +3,7 @@
 // node scripts/check-navigation-cache.mjs /tmp/navigation-cache-check [3873]
 // NAV_BROWSER_CHECKS=1 adds returning-reader and standalone HTML syntax checks.
 // NAV_OUTAGE_CHECKS=1 tests a real ISR interval and cold-slug recovery on failure.
+// NAV_BROWSER=webkit selects WebKit for the browser checks.
 import assert from 'node:assert/strict';
 import { createHmac } from 'node:crypto';
 import { cp, mkdir, readFile, writeFile, symlink, open } from 'node:fs/promises';
@@ -120,8 +121,11 @@ try {
     await invalidate('views');
     await get('/'); await get(post);
     await state('reader', 600, { html: true });
-    const { chromium } = await import(process.env.PLAYWRIGHT_MODULE || 'playwright-core');
-    const browser = await chromium.launch({ executablePath: process.env.CHROME_PATH });
+    const playwright = await import(process.env.PLAYWRIGHT_MODULE || 'playwright-core');
+    const browserName = process.env.NAV_BROWSER || 'chromium';
+    const browser = await playwright[browserName].launch(
+      browserName === 'chromium' ? { executablePath: process.env.CHROME_PATH } : {}
+    );
     try {
       const context = await browser.newContext({ viewport: { width: 1440, height: 1000 },
         userAgent: 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36',
@@ -162,13 +166,15 @@ try {
       await state('reader', 601, { viewFail: true, html: true });
       await invalidate('views');
       assert.match((await get(post, { RSC: '1' })).body, /"initialCount":null/);
-      await page.reload({ waitUntil: 'networkidle' });
+      await page.reload({ waitUntil: 'domcontentloaded' });
       await waitCount(601);
       // An unknown server count still restores a returning reader's maximum.
       const freshContext = await browser.newContext();
       const freshPage = await freshContext.newPage();
       await freshPage.route('**/api/views/', (route) => route.fulfill({ status: 204 }));
-      await freshPage.goto(base + post, { waitUntil: 'networkidle' });
+      // Prefetched routes retry the unavailable upstream too. Wait for the
+      // reader-visible state instead of requiring all network traffic to end.
+      await freshPage.goto(base + post, { waitUntil: 'domcontentloaded' });
       await freshPage.getByText('— views', { exact: true }).waitFor();
       const counterStyle = await freshPage.getByText('— views', { exact: true }).evaluate((el) => ({
         minWidth: parseFloat(getComputedStyle(el).minWidth), digits: getComputedStyle(el).fontVariantNumeric,

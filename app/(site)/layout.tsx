@@ -7,19 +7,22 @@ import { ThemeProvider } from "../components/theme-provider";
 import { Toaster } from "../components/ui/sonner";
 import { GoogleAnalytics } from '@next/third-parties/google'
 import AccentScript from "../components/AccentScript";
-import { TransitionProvider } from "../components/TransitionProvider";
-import TransitionOverlay from "../components/TransitionOverlay";
+import PixelFluidBackground from "../components/PixelFluidBackground";
+import NavigationFlow from "../components/navigation/NavigationFlow";
 import type { Metadata } from "next";
+import { ABOUT_URL, PERSON_DESCRIPTION, SHARE_IMAGE, SITE_URL, jsonLd, personNode, websiteNode } from "../lib/entity";
+
+const title = "Jake Harris | ML Researcher";
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://jakejh.com'),
+  metadataBase: new URL(SITE_URL),
   title: {
-    default: "Jake Harris - Full Stack Developer",
+    default: title,
     template: "%s | Jake Harris"
   },
-  description: "Jake Harris is a Full Stack Developer building AI-powered web applications, custom platforms, and digital experiences. Explore projects, insights, and more.",
-  keywords: ["Jake Harris", "Full Stack Developer", "AI Developer", "Web Development", "React", "Next.js", "TypeScript"],
-  authors: [{ name: "Jake Harris" }],
+  description: PERSON_DESCRIPTION,
+  keywords: ["Jake Harris", "ML Researcher", "Machine learning", "LLM inference", "Agent systems"],
+  authors: [{ name: "Jake Harris", url: ABOUT_URL }],
   creator: "Jake Harris",
   alternates: {
     canonical: '/',
@@ -27,43 +30,24 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "en_US",
-    url: "https://jakejh.com",
+    url: `${SITE_URL}/`,
     siteName: "Jake Harris",
-    title: "Jake Harris - Full Stack Developer",
-    description: "Full Stack Developer building AI-powered web applications, custom platforms, and digital experiences.",
+    title,
+    description: PERSON_DESCRIPTION,
+    images: [SHARE_IMAGE],
   },
   twitter: {
-    card: "summary",
+    card: "summary_large_image",
     site: '@jakeharrisdev',
     creator: '@jakeharrisdev',
-    title: "Jake Harris - Full Stack Developer",
-    description: "Full Stack Developer building AI-powered web applications, custom platforms, and digital experiences.",
+    title,
+    description: PERSON_DESCRIPTION,
+    images: [SHARE_IMAGE],
   },
   robots: {
     index: true,
     follow: true,
   },
-};
-
-const websiteSchema = {
-  "@context": "https://schema.org",
-  "@type": "WebSite",
-  "name": "Jake Harris",
-  "url": "https://jakejh.com",
-  "description": "Jake Harris is a Full Stack Developer building AI-powered web applications, custom platforms, and digital experiences.",
-};
-
-const personSchema = {
-  "@context": "https://schema.org",
-  "@type": "Person",
-  "name": "Jake Harris",
-  "url": "https://jakejh.com",
-  "jobTitle": "Full Stack Developer",
-  "sameAs": [
-    "https://github.com/jakejharris",
-    "https://linkedin.com/in/jakejh",
-    "https://x.com/jakeharrisdev",
-  ],
 };
 
 export default function SiteLayout({ children }: { children: React.ReactNode }) {
@@ -72,9 +56,7 @@ export default function SiteLayout({ children }: { children: React.ReactNode }) 
       <AccentScript />
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify([websiteSchema, personSchema]),
-        }}
+        dangerouslySetInnerHTML={{ __html: jsonLd(websiteNode, personNode) }}
       />
       <Toaster />
       <ThemeProvider
@@ -83,20 +65,21 @@ export default function SiteLayout({ children }: { children: React.ReactNode }) 
         enableSystem={false}
         disableTransitionOnChange
       >
-        <TransitionProvider>
-          <TransitionOverlay />
-          <NavbarScrollProvider>
-            <PortfolioChrome><Navbar /></PortfolioChrome>
-            <PortfolioChrome><AppearanceDock /></PortfolioChrome>
-            <main className="flex-1">
-              {children}
-              {process.env.NODE_ENV === 'production' && (
-                <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID!} />
-              )}
-            </main>
-            <PortfolioChrome><Footer /></PortfolioChrome>
-          </NavbarScrollProvider>
-        </TransitionProvider>
+        <NavbarScrollProvider>
+          <PortfolioChrome><Navbar /></PortfolioChrome>
+          <PortfolioChrome><AppearanceDock /></PortfolioChrome>
+          {/* The water lives here, under every page, so it moves with page
+              changes instead of being replaced by them. */}
+          <main className="relative flex-1">
+            <PixelFluidBackground />
+            <div data-page-frame="">{children}</div>
+            {process.env.NODE_ENV === 'production' && (
+              <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID!} />
+            )}
+          </main>
+          <NavigationFlow />
+          <PortfolioChrome><Footer /></PortfolioChrome>
+        </NavbarScrollProvider>
       </ThemeProvider>
     </>
   );

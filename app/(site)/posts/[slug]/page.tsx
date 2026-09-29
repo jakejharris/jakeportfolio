@@ -4,6 +4,9 @@ import Image from 'next/image';
 import { sanityFetch, urlFor } from '@/app/lib/sanity.client';
 import { getLivePostViewCounts } from '@/app/lib/live-post-views';
 import { draftRenderPerspective, draftSanityFetch } from '@/app/lib/sanity.draft-client';
+import { SITE_URL, WEBSITE_ID, jsonLd, personRef } from '@/app/lib/entity';
+import { getPostModifiedAt } from '@/app/lib/post-dates';
+import Link from 'next/link';
 import { getDraftsConfigStatus, isDraftsAuthed } from '@/app/lib/drafts-auth';
 import { PortableText, PortableTextReactComponents } from '@portabletext/react';
 import { notFound, redirect } from 'next/navigation';
@@ -56,7 +59,8 @@ export async function generateMetadata({
     };
   }
 
-  const title = post.seo?.metaTitle || post.title;
+  // The layout's title template adds the name, so a CMS title that already ends with it would say it twice.
+  const title = (post.seo?.metaTitle || post.title).replace(/\s*[|-]\s*Jake Harris\s*$/, '');
   const description = post.seo?.metaDescription || post.excerpt || `Read ${post.title} by Jake Harris`;
 
   // Check SEO share image first, fall back to mainImage
@@ -349,7 +353,7 @@ async function exitDraftPreview() {
 
 function DraftPreviewBanner({ title }: { title: string }) {
   return (
-    <div className="fixed left-0 right-0 top-16 z-50 border-b border-border bg-background/95 px-3 py-2 shadow-sm backdrop-blur">
+    <div className="fixed left-0 right-0 top-16 z-50 border-b border-border bg-background/95 px-3 py-2 backdrop-blur">
       <div className="mx-auto flex max-w-2xl items-center justify-between gap-3 text-sm">
         <p className="min-w-0 truncate font-medium">
           Draft preview: {title}
@@ -458,27 +462,22 @@ export default async function PostPage({ params }: PageParams) {
     ? urlFor(post.mainImage).width(1200).height(630).url()
     : null;
 
-  const jsonLd = {
-    '@context': 'https://schema.org',
+  const dateModified = getPostModifiedAt(post.publishedAt, post._updatedAt);
+  const postUrl = `${SITE_URL}/posts/${post.slug.current}/`;
+  const blogPosting = {
     '@type': 'BlogPosting',
+    '@id': `${postUrl}#article`,
     headline: post.title,
     description: post.excerpt || '',
     datePublished: post.publishedAt,
-    dateModified: post.publishedAt,
-    author: {
-      '@type': 'Person',
-      name: 'Jake Harris',
-      url: 'https://jakejh.com/about/',
-    },
-    publisher: {
-      '@type': 'Organization',
-      name: 'Jake Harris',
-      url: 'https://jakejh.com',
-    },
-    url: `https://jakejh.com/posts/${post.slug.current}/`,
+    dateModified,
+    author: personRef,
+    publisher: personRef,
+    isPartOf: { '@id': WEBSITE_ID },
+    url: postUrl,
     mainEntityOfPage: {
       '@type': 'WebPage',
-      '@id': `https://jakejh.com/posts/${post.slug.current}/`,
+      '@id': postUrl,
     },
     ...(imageUrl && { image: imageUrl }),
     ...(post.tags?.length && { keywords: post.tags.map(t => t.title) }),
@@ -488,7 +487,7 @@ export default async function PostPage({ params }: PageParams) {
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{ __html: jsonLd(blogPosting) }}
       />
       {canRenderDraft && <DraftPreviewBanner title={post.title} />}
       <PageLayout>
@@ -518,7 +517,11 @@ export default async function PostPage({ params }: PageParams) {
             {post.title}
           </h1>
 
-          <div className="page-enter flex items-center gap-4 mb-6 text-sm text-muted-foreground">
+          <div className="page-enter flex flex-wrap items-center gap-x-4 gap-y-2 mb-6 text-sm text-muted-foreground">
+            <span className="w-full md:w-auto">
+              By{' '}
+              <Link href="/about/" rel="author" className="animated-underline text-foreground">Jake Harris</Link>
+            </span>
             {displayDate && (
               <time dateTime={displayDate}>
                 {new Date(displayDate).toLocaleDateString('en-US', {

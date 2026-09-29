@@ -363,15 +363,12 @@ export default function HeroCompression() {
       if (ty < 8) ty = 8;
       if (ty + boxH > h - 8) ty = h - boxH - 8;
 
-      ctx.shadowColor = 'rgba(0,0,0,0.5)';
-      ctx.shadowBlur = 10;
       ctx.fillStyle = isDark ? 'rgba(15, 15, 20, 0.9)' : 'rgba(240, 242, 248, 0.95)';
       ctx.strokeStyle = `rgba(${theme.signal}, 0.5)`;
       ctx.beginPath();
-      ctx.roundRect(tx, ty, boxW, boxH, 6);
+      ctx.roundRect(tx, ty, boxW, boxH, 4);
       ctx.fill();
       ctx.stroke();
-      ctx.shadowColor = 'transparent';
 
       const col = getLayerColor(mouse.activeNormX, layerColors);
       ctx.fillStyle = `rgb(${col.r}, ${col.g}, ${col.b})`;
@@ -486,10 +483,10 @@ export default function HeroCompression() {
   return (
     <div className="w-full flex justify-center items-center">
       <div className="w-full max-w-5xl">
-        <div className={`relative rounded-xl overflow-hidden border shadow-2xl group ${
+        <div className={`relative rounded-xl overflow-hidden border group ${
           isDark
-            ? 'border-white/10 shadow-purple-900/20'
-            : 'border-black/10 shadow-purple-200/20'
+            ? 'border-white/10'
+            : 'border-black/10'
         }`}>
           <canvas
             ref={canvasRef}

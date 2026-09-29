@@ -1,0 +1,49 @@
+/* The site's pixel water: the open sea fixed behind the pages that list work,
+   and the shore lying on the pages people read. Only one shows at a time;
+   the other waits hidden. See components/pixel-fluid/water.ts. */
+
+/* Leaving with its page, the sea fades rather than blinks out. Coming back
+   it shows at once: its canvas starts bare and the tide brings it in. */
+.pixel-fluid-background[data-water="off"] {
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 180ms linear, visibility 0s linear 180ms;
+}
+
+/* The shore spans the page itself (main is its box), so it scrolls with the
+   text and scrolling never redraws it. */
+.pixel-shore {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+  contain: strict;
+}
+
+.pixel-shore[data-water="off"] {
+  display: none;
+}
+
+/* One canvas pixel per lattice cell, scaled up crisply like the sea's. */
+.pixel-shore-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: block;
+  image-rendering: crisp-edges;
+  image-rendering: pixelated;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pixel-fluid-background[data-water="off"] {
+    transition: none;
+  }
+}
+
+@media print {
+  .pixel-fluid-background,
+  .pixel-shore {
+    display: none;
+  }
+}

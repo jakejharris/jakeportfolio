@@ -10,6 +10,7 @@ import {
   useState,
 } from 'react';
 import { NAVBAR_DESKTOP_MEDIA_QUERY } from '../lib/navbar';
+import { NAV_ARRIVE_EVENT } from './navigation/navigation-events';
 
 interface NavbarScrollState {
   scrolled: boolean;
@@ -64,12 +65,21 @@ export function NavbarScrollProvider({ children }: { children: React.ReactNode }
       userInput.current = true;
     };
     const inputEvents = ['pointerdown', 'touchstart', 'wheel', 'keydown'] as const;
+    // A new page starts with the navbar showing. Back and forward scroll to
+    // where the reader was; that is not the reader scrolling down.
+    const handleArrive = () => {
+      userInput.current = false;
+      prevScrollPos.current = window.scrollY;
+      setScrolled(window.scrollY > 10);
+      setMobileVisible(true);
+    };
 
     // A restore that already happened before hydration must not count as a
     // scroll-down on the reader's first real gesture.
     prevScrollPos.current = window.scrollY;
 
     window.addEventListener('scroll', handleScroll, { passive: true });
+    window.addEventListener(NAV_ARRIVE_EVENT, handleArrive);
     inputEvents.forEach((name) => {
       window.addEventListener(name, markUserInput, { passive: true, capture: true });
     });
@@ -77,6 +87,7 @@ export function NavbarScrollProvider({ children }: { children: React.ReactNode }
 
     return () => {
       window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener(NAV_ARRIVE_EVENT, handleArrive);
       inputEvents.forEach((name) => {
         window.removeEventListener(name, markUserInput, { capture: true });
       });

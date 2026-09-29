@@ -354,20 +354,16 @@ export default function LossyDrift() {
       if (ty + tHeight > h) ty = mouse.y - tHeight - 15;
 
       ctx.save();
-      ctx.shadowColor = 'rgba(0,0,0,0.6)';
-      ctx.shadowBlur = 12;
-      ctx.shadowOffsetY = 4;
 
       // Tooltip BG
       ctx.fillStyle = isDark ? 'rgba(15, 15, 25, 0.95)' : 'rgba(240, 242, 248, 0.95)';
       ctx.strokeStyle = `rgba(${theme.filterLine}, 0.5)`;
       ctx.lineWidth = 1.5;
       ctx.beginPath();
-      ctx.roundRect(tx, ty, tWidth, tHeight, 6);
+      ctx.roundRect(tx, ty, tWidth, tHeight, 4);
       ctx.fill();
       ctx.stroke();
 
-      ctx.shadowColor = 'transparent';
       const pad = 12;
       const lh = 20;
 
@@ -487,10 +483,10 @@ export default function LossyDrift() {
       <div className="w-full max-w-5xl">
         <div
           ref={containerRef}
-          className={`relative rounded-xl overflow-hidden border shadow-2xl group ${
+          className={`relative rounded-xl overflow-hidden border group ${
             isDark
-              ? 'border-white/10 shadow-blue-900/10'
-              : 'border-black/10 shadow-blue-200/20'
+              ? 'border-white/10'
+              : 'border-black/10'
           }`}
         >
           <canvas

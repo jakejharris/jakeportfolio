@@ -32,7 +32,7 @@ export default function TableOfContents({ headings }: TableOfContentsProps) {
       // Scroll to the element with offset
       window.scrollTo({
         top: offsetPosition,
-        behavior: 'smooth'
+        behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth'
       })
       
       // Add a highlight effect

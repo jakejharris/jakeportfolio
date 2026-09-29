@@ -132,8 +132,9 @@ try {
     await toggle(page);
     await waitOpen(page);
     await page.addStyleTag({ content: ".site-menu-link { font-size: 224px !important; }" });
-    await page.waitForTimeout(100);
-    assert.equal(await page.locator(".site-menu-nav").getAttribute("data-scrolls"), "");
+    // ResizeObserver schedules the update on a frame; a loaded browser may
+    // take more than a fixed 100ms to deliver it.
+    await page.waitForFunction(() => document.querySelector(".site-menu-nav").hasAttribute("data-scrolls"), null, { timeout: 2000 });
   });
 
   await check("200 percent root text keeps the menu inside the phone viewport", async (page) => {
@@ -274,16 +275,58 @@ try {
     assert.equal(await page.locator('[role="switch"]').getAttribute("aria-checked"), "true");
   });
 
+  await check("taps leave no focus ring in the menu or on its button", async (page) => {
+    // iOS Safari does not focus a tapped button or link, so script focus that
+    // follows a tap has no earlier focus to go by. Stand in for that here.
+    await page.evaluate(() => document.addEventListener("mousedown", (event) => {
+      if (event.target.closest("a, button")) event.preventDefault();
+    }, true));
+    const tap = async (locator) => {
+      const box = await locator.boundingBox();
+      await page.touchscreen.tap(box.x + Math.min(20, box.width / 2), box.y + box.height / 2);
+    };
+    // A drawn ring, on the focused element or the word inside it.
+    const ringed = () => page.evaluate(() => {
+      const active = document.activeElement;
+      const drawn = [active, ...active.querySelectorAll("*")].some((element) => getComputedStyle(element).outlineStyle !== "none");
+      return active !== document.body && drawn ? active.textContent || active.className : null;
+    });
+    const button = page.locator(".site-menu-button");
+    const word = (href) => page.locator(`.site-menu-link[href="${href}"] [data-menu-island]`);
+    // Each way out of the menu, then the menu opened again on what follows.
+    for (const [label, leave] of [
+      ["the X", async () => { await tap(button); await waitClosed(page); }],
+      ["Home while home", async () => { await tap(word("/")); await waitClosed(page); }],
+      ["About", async () => { await tap(word("/about/")); await page.waitForURL("**/about/"); await waitClosed(page); }],
+      ["back", async () => {
+        await tap(button);
+        await waitClosed(page);
+        await page.goBack();
+        await page.waitForURL(base.replace(/\/?$/, "/"));
+      }],
+    ]) {
+      await tap(button);
+      await waitOpen(page);
+      assert.equal(await ringed(), null, `ring on opening before ${label}`);
+      await leave();
+      assert.equal(await ringed(), null, `ring after ${label}`);
+    }
+    await tap(button);
+    await waitOpen(page);
+    assert.equal(await ringed(), null, "ring on opening after back");
+  });
+
   await check("keyboard access and page isolation survive opening and closing", async (page) => {
     const heading = await page.locator("h1").first().innerText();
     await page.locator(".site-menu-button").focus();
     await page.keyboard.press("Enter");
     await waitOpen(page);
     assert.equal(await page.evaluate(() => document.activeElement.textContent), "Home");
+    assert.equal(await page.evaluate(() => getComputedStyle(document.activeElement.querySelector("[data-menu-island]")).outlineStyle), "solid", "keyboard focus shows its ring");
     const tree = await page.locator("body").ariaSnapshot();
     assert.ok(tree.includes('navigation "Menu"'));
     assert.ok(!tree.includes(heading));
-    for (const word of ["About", "Contact", "Source"]) {
+    for (const word of ["JSPARK3", "About", "Contact", "Source"]) {
       await page.keyboard.press("Tab");
       assert.equal(await page.evaluate(() => document.activeElement.textContent), word);
     }
@@ -294,6 +337,7 @@ try {
     await page.keyboard.press("Escape");
     await waitClosed(page);
     assert.equal(await page.evaluate(() => document.activeElement.className), "site-menu-button");
+    assert.equal(await page.evaluate(() => getComputedStyle(document.activeElement).outlineStyle), "solid", "keyboard focus returns with its ring");
     assert.deepEqual(await state(page), closedState);
   });
 

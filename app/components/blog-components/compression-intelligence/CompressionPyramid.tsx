@@ -439,18 +439,13 @@ export default function CompressionPyramid() {
       if (ty < 8) ty = 8;
 
       ctx.save();
-      ctx.shadowColor = 'rgba(0,0,0,0.6)';
-      ctx.shadowBlur = 12;
-      ctx.shadowOffsetY = 6;
-
       ctx.fillStyle = isDark ? 'rgba(10, 10, 20, 0.95)' : 'rgba(240, 242, 248, 0.95)';
       ctx.strokeStyle = `rgba(${teal}, 0.5)`;
       ctx.lineWidth = 1;
       ctx.beginPath();
-      ctx.roundRect(tx, ty, boxW, boxH, 6);
+      ctx.roundRect(tx, ty, boxW, boxH, 4);
       ctx.fill();
       ctx.stroke();
-      ctx.shadowColor = 'transparent';
 
       ctx.fillStyle = isDark ? '#FFFFFF' : '#1a1a2e';
       ctx.font = 'bold 13px ui-sans-serif, system-ui, sans-serif';
@@ -565,10 +560,10 @@ export default function CompressionPyramid() {
   return (
     <div className="w-full flex justify-center items-center">
       <div className="w-full max-w-5xl">
-        <div className={`relative rounded-xl overflow-hidden border shadow-2xl group ${
+        <div className={`relative rounded-xl overflow-hidden border group ${
           isDark
-            ? 'border-white/10 shadow-purple-900/20'
-            : 'border-black/10 shadow-purple-200/20'
+            ? 'border-white/10'
+            : 'border-black/10'
         }`}>
           <canvas
             ref={canvasRef}
