@@ -1,32 +1,20 @@
 "use client";
 
 import Link, { LinkProps } from "next/link";
-import { useTransition } from "./TransitionProvider";
 import { ReactNode, MouseEvent } from "react";
 
+// Internal links. How a page change looks and feels is handled once for the
+// whole site (components/navigation and the pixel water), whatever started
+// it, so this is Next's Link.
 interface TransitionLinkProps extends LinkProps {
   children: ReactNode;
   className?: string;
   onClickCapture?: (event: MouseEvent<HTMLAnchorElement>) => void;
 }
 
-export default function TransitionLink({ children, className, href, ...props }: TransitionLinkProps) {
-  const { setOrigin } = useTransition();
-
-  const handleClick = (e: MouseEvent<HTMLAnchorElement>) => {
-    // Extract pathname without hash
-    const hrefString = typeof href === "string" ? href : href.pathname || "/";
-    const destination = hrefString.split("#")[0] || "/";
-
-    setOrigin({
-      x: e.clientX,
-      y: e.clientY,
-      destination,
-    });
-  };
-
+export default function TransitionLink({ children, className, ...props }: TransitionLinkProps) {
   return (
-    <Link href={href} {...props} className={className} onClick={handleClick}>
+    <Link {...props} className={className}>
       {children}
     </Link>
   );

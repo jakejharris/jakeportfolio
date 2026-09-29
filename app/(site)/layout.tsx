@@ -7,8 +7,8 @@ import { ThemeProvider } from "../components/theme-provider";
 import { Toaster } from "../components/ui/sonner";
 import { GoogleAnalytics } from '@next/third-parties/google'
 import AccentScript from "../components/AccentScript";
-import { TransitionProvider } from "../components/TransitionProvider";
-import TransitionOverlay from "../components/TransitionOverlay";
+import PixelFluidBackground from "../components/PixelFluidBackground";
+import NavigationFlow from "../components/navigation/NavigationFlow";
 import type { Metadata } from "next";
 import { ABOUT_URL, PERSON_DESCRIPTION, SHARE_IMAGE, SITE_URL, jsonLd, personNode, websiteNode } from "../lib/entity";
 
@@ -65,20 +65,21 @@ export default function SiteLayout({ children }: { children: React.ReactNode }) 
         enableSystem={false}
         disableTransitionOnChange
       >
-        <TransitionProvider>
-          <TransitionOverlay />
-          <NavbarScrollProvider>
-            <PortfolioChrome><Navbar /></PortfolioChrome>
-            <PortfolioChrome><AppearanceDock /></PortfolioChrome>
-            <main className="flex-1">
-              {children}
-              {process.env.NODE_ENV === 'production' && (
-                <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID!} />
-              )}
-            </main>
-            <PortfolioChrome><Footer /></PortfolioChrome>
-          </NavbarScrollProvider>
-        </TransitionProvider>
+        <NavbarScrollProvider>
+          <PortfolioChrome><Navbar /></PortfolioChrome>
+          <PortfolioChrome><AppearanceDock /></PortfolioChrome>
+          {/* The water lives here, under every page, so it moves with page
+              changes instead of being replaced by them. */}
+          <main className="relative flex-1">
+            <PixelFluidBackground />
+            <div data-page-frame="">{children}</div>
+            {process.env.NODE_ENV === 'production' && (
+              <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID!} />
+            )}
+          </main>
+          <NavigationFlow />
+          <PortfolioChrome><Footer /></PortfolioChrome>
+        </NavbarScrollProvider>
       </ThemeProvider>
     </>
   );

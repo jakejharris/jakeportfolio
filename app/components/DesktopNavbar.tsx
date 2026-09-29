@@ -4,13 +4,17 @@ import { usePathname } from 'next/navigation';
 import TransitionLink from './TransitionLink';
 import JHMark from './JHMark';
 import { getActiveNav } from '../lib/navbar';
+import { usePendingPath } from './navigation/navigation-events';
 
 interface DesktopNavbarProps {
   scrolled: boolean;
 }
 
 export default function DesktopNavbar({ scrolled }: DesktopNavbarProps) {
-  const { isHome, isJspark3, isAbout, isContact } = getActiveNav(usePathname());
+  const pathname = usePathname();
+  const { isHome, isJspark3, isAbout, isContact } = getActiveNav(pathname);
+  // The underline moves to where the reader is going the moment they tap.
+  const shown = getActiveNav(usePendingPath() ?? pathname);
 
   return (
     <nav
@@ -26,7 +30,7 @@ export default function DesktopNavbar({ scrolled }: DesktopNavbarProps) {
             scroll={true}
             aria-label="Jake Harris — home"
             aria-current={isHome ? 'page' : undefined}
-            className={`animated-underline inline-flex items-center py-1 ${isHome ? 'nav-active' : ''}`}
+            className={`animated-underline inline-flex items-center py-1 ${shown.isHome ? 'nav-active' : ''}`}
           >
             <JHMark className="h-5" />
           </TransitionLink>
@@ -40,7 +44,7 @@ export default function DesktopNavbar({ scrolled }: DesktopNavbarProps) {
                 aria-current={isJspark3 ? 'page' : undefined}
                 className="px-3 py-2"
               >
-                <span className={`animated-underline font-semibold ${isJspark3 ? 'nav-active' : ''}`}>JSPARK3</span>
+                <span className={`animated-underline font-semibold ${shown.isJspark3 ? 'nav-active' : ''}`}>JSPARK3</span>
               </TransitionLink>
             </li>
             <li className="flex items-center justify-center">
@@ -50,7 +54,7 @@ export default function DesktopNavbar({ scrolled }: DesktopNavbarProps) {
                 aria-current={isAbout ? 'page' : undefined}
                 className="px-3 py-2"
               >
-                <span className={`animated-underline font-semibold ${isAbout ? 'nav-active' : ''}`}>About</span>
+                <span className={`animated-underline font-semibold ${shown.isAbout ? 'nav-active' : ''}`}>About</span>
               </TransitionLink>
             </li>
             <li className="flex items-center justify-center">
@@ -60,7 +64,7 @@ export default function DesktopNavbar({ scrolled }: DesktopNavbarProps) {
                 aria-current={isContact ? 'page' : undefined}
                 className="px-3 py-2"
               >
-                <span className={`animated-underline font-semibold ${isContact ? 'nav-active' : ''}`}>Contact</span>
+                <span className={`animated-underline font-semibold ${shown.isContact ? 'nav-active' : ''}`}>Contact</span>
               </TransitionLink>
             </li>
           </ul>

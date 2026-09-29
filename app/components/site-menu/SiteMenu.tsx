@@ -13,6 +13,7 @@ import { FaGithub } from "react-icons/fa";
 import TransitionLink from "../TransitionLink";
 import { disturbWater } from "../pixel-fluid/disturb";
 import type { FluidColors } from "../pixel-fluid/engine";
+import { focusQuietly } from "../../lib/focus-intent";
 import { getActiveNav, NAVBAR_DESKTOP_MEDIA_QUERY } from "../../lib/navbar";
 import { MenuTide } from "./MenuTide";
 import { useMenuSea } from "./useMenuSea";
@@ -106,7 +107,7 @@ export function useSiteMenu() {
     current.go(0, origin.x, origin.y, false, instant());
     // The water drains back into the page's own.
     disturbWater(origin);
-    if (focusButton) buttonRef.current?.focus({ preventScroll: true });
+    if (focusButton) focusQuietly(buttonRef.current);
   }, [cancelLeave]);
 
   const leaveFrom = useCallback((x: number, y: number) => {
@@ -173,13 +174,13 @@ export function useSiteMenu() {
       // Focus left with the menu: hand it back to the button.
       const active = document.activeElement;
       if (!active || active === document.body || menu?.contains(active)) {
-        button?.focus({ preventScroll: true });
+        focusQuietly(button);
       }
     };
   }, [shown]);
 
   useLayoutEffect(() => {
-    if (open) rootRef.current?.querySelector<HTMLElement>("a")?.focus({ preventScroll: true });
+    if (open) focusQuietly(rootRef.current?.querySelector<HTMLElement>("a"));
   }, [open]);
 
   useEffect(() => {
