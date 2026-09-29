@@ -1,99 +1,238 @@
+/* Liquid glass post links. The pixel water runs under them and shows through,
+   softened by a light frost: in the dark the glass gathers its light, so the
+   water glows a little brighter under it; in the light it takes a shade out.
+   The glass is drawn with light alone, never a shadow: a rim lit from the
+   upper left, edges that catch more light than the middle, a window of light
+   across the surface, and, where the pointer or finger is, light that blooms
+   inside the glass (GlassLight.tsx places it). */
+
+/* How strongly the glass is lit: 0 at rest, up on hover, 1 pressed. A
+   registered number, so it eases; inherited, so the rim sees it too. */
+@property --glass-glow {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 0;
+}
+
 :root {
-  --page-border-color: rgba(255, 255, 255, 0.4);
-  --page-hover-transform: translateY(-2px) scale(1.01);
-  --glass-bg: rgba(255, 255, 255, 0.25);
-  --glass-bg-hover: rgba(255, 255, 255, 0.45);
-  --glass-shadow:
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.6),
-    0 8px 32px rgba(0, 0, 0, 0.1);
-  --glass-shadow-hover:
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.8),
-    0 12px 40px rgba(0, 0, 0, 0.12);
+  --glass-radius: 10px;
+  --glass-lens: blur(3px) saturate(1.5) brightness(0.955);
+  --glass-lens-lit: blur(3.5px) saturate(1.7) brightness(0.935);
+  --glass-tint: hsl(0 0% 100% / 0);
+  --glass-edge: hsl(0 0% 100% / 0.55);
+  --glass-top-line: hsl(0 0% 100% / 1);
+  --glass-window: hsl(0 0% 100% / 0.5);
+  --glass-rim-top: hsl(0 0% 0% / 0.09);
+  --glass-rim-side: hsl(0 0% 0% / 0.1);
+  --glass-rim-bottom: hsl(0 0% 0% / 0.2);
+  --glass-rim-light: hsl(0 0% 0% / 0);
+  /* Where the pointer is: the rim darkens a touch on white. */
+  --glass-glint: 0 0% 0%;
+  --glass-glint-alpha: 0.2;
+  --glass-bloom: 0 0% 100%;
+  --glass-bloom-alpha: 0.7;
+  --glass-accent-wash: 12%;
 }
 
 .dark {
-  --page-border-color: rgba(255, 255, 255, 0.15);
-  --page-hover-transform: translateY(-2px) scale(1.01);
-  --glass-bg: rgba(0, 0, 0, 0.35);
-  --glass-bg-hover: rgba(0, 0, 0, 0.5);
-  --glass-shadow:
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.1),
-    0 8px 32px rgba(0, 0, 0, 0.3);
-  --glass-shadow-hover:
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.15),
-    0 12px 40px rgba(0, 0, 0, 0.4);
-}
-
-.pinnedLinkBorder {
-    border-left: 2px solid var(--accent-color)!important;
+  --glass-lens: blur(3px) saturate(1.6) brightness(1.4);
+  --glass-lens-lit: blur(3.5px) saturate(1.8) brightness(1.65);
+  --glass-tint: hsl(0 0% 100% / 0.01);
+  --glass-edge: hsl(0 0% 100% / 0.04);
+  --glass-top-line: hsl(0 0% 100% / 0.09);
+  --glass-window: hsl(0 0% 100% / 0.025);
+  --glass-rim-top: hsl(0 0% 100% / 0.3);
+  --glass-rim-side: hsl(0 0% 100% / 0.08);
+  --glass-rim-bottom: hsl(0 0% 100% / 0.14);
+  --glass-rim-light: hsl(0 0% 100% / 0.5);
+  --glass-glint: 0 0% 100%;
+  --glass-glint-alpha: 0.75;
+  --glass-bloom-alpha: 0.13;
+  --glass-accent-wash: 9%;
 }
 
 .pageLinkContainer {
-    /* Layout */
-    position: relative;
-    padding: 12px 16px;
-    overflow: hidden;
-    cursor: pointer;
-
-    /* Glass Effect */
-    background: var(--glass-bg);
-    backdrop-filter: blur(16px) saturate(120%);
-    -webkit-backdrop-filter: blur(16px) saturate(120%);
-
-    /* Border & Shape */
-    border: 1px solid var(--page-border-color);
-    border-radius: 6px;
-
-    /* Lighting */
-    box-shadow: var(--glass-shadow);
-
-    /* Transitions */
-    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  --glass-x: 24%;
+  --glass-y: 0%;
+  --glass-accent: transparent;
+  position: relative;
+  padding: 12px 16px;
+  overflow: hidden;
+  cursor: pointer;
+  border: 1px solid transparent;
+  border-radius: var(--glass-radius);
+  background:
+    /* light blooming inside the glass from the pointer or finger */
+    radial-gradient(circle at var(--glass-x) var(--glass-y), hsl(var(--glass-bloom) / calc(var(--glass-glow) * var(--glass-bloom-alpha))), transparent 70%),
+    /* the inner surface catching the light just under the top rim */
+    linear-gradient(to bottom, var(--glass-top-line), transparent 1px),
+    /* a window of light reflected across the surface */
+    linear-gradient(104deg, transparent 16%, var(--glass-window) 28%, transparent 42%),
+    /* a featured post's accent edge tints the glass it enters */
+    linear-gradient(to right, var(--glass-accent), transparent 28px),
+    /* the glass is thicker at its edges, and they gather more light */
+    linear-gradient(to bottom, var(--glass-edge), transparent 12px),
+    linear-gradient(to top, var(--glass-edge), transparent 8px),
+    linear-gradient(to right, var(--glass-edge), transparent 10px),
+    linear-gradient(to left, var(--glass-edge), transparent 10px),
+    var(--glass-tint);
+  /* Drawn once over the padding box, not repeated into the border. */
+  background-repeat: no-repeat;
+  -webkit-backdrop-filter: var(--glass-lens);
+  backdrop-filter: var(--glass-lens);
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    transform 520ms cubic-bezier(0.2, 1.5, 0.4, 1),
+    --glass-glow 420ms ease,
+    -webkit-backdrop-filter 320ms ease,
+    backdrop-filter 320ms ease;
 }
 
-/* Hover State */
-@media (hover: hover) {
-    .pageLinkContainer:hover {
-        background: var(--glass-bg-hover);
-        box-shadow: var(--glass-shadow-hover);
-    }
+/* The rim: a hairline lit from the upper left, catching the pointer's light. */
+.pageLinkContainer::before {
+  --glass-edge-color: transparent;
+  content: "";
+  position: absolute;
+  inset: -1px;
+  z-index: 1;
+  padding: 1px;
+  border-radius: inherit;
+  background:
+    linear-gradient(to right, var(--glass-edge-color) var(--glass-radius), transparent var(--glass-radius)),
+    radial-gradient(220px 110px at var(--glass-x) var(--glass-y), hsl(var(--glass-glint) / calc(var(--glass-glow) * var(--glass-glint-alpha))), transparent 70%),
+    radial-gradient(55% 160% at 14% 0%, var(--glass-rim-light), transparent 72%),
+    radial-gradient(35% 130% at 90% 100%, var(--glass-rim-light), transparent 72%),
+    linear-gradient(to bottom, var(--glass-rim-top), var(--glass-rim-side) 30%, var(--glass-rim-side) 70%, var(--glass-rim-bottom));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+  pointer-events: none;
 }
 
-.pageLinkContainer:hover {
-    transform: var(--page-hover-transform);
+/* Featured: the glass's left edge is the accent. */
+.pinnedLinkBorder {
+  --glass-accent: color-mix(in srgb, var(--accent-color) var(--glass-accent-wash), transparent);
 }
 
-.pageLinkContainer:hover .text-primary {
-    color: hsl(var(--primary) / 0.9);
-    font-weight: 500;
+.pinnedLinkBorder::before {
+  --glass-edge-color: var(--accent-color);
+  padding-left: 2px;
 }
 
-/* Active/Click State */
-.pageLinkContainer:active {
-    transform: translateY(0) scale(0.98);
-    box-shadow:
-        inset 0 2px 4px rgba(0, 0, 0, 0.1),
-        0 4px 16px rgba(0, 0, 0, 0.1);
-}
-
-/* Accent line animation for list items */
+/* The accent line drawn along the bottom edge on hover. */
 .pageLinkContainer:not(.pinnedLinkBorder)::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    height: 2px;
-    background-color: var(--accent-color);
-    transform: scaleX(0);
-    transform-origin: bottom right;
-    transition: transform 0.3s ease;
-    z-index: 2;
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background-color: var(--accent-color);
+  transform: scaleX(0);
+  transform-origin: bottom right;
+  transition: transform 0.3s ease;
+  z-index: 2;
 }
 
 @media (hover: hover) {
-    .pageLinkContainer:not(.pinnedLinkBorder):hover::after {
-        transform: scaleX(1);
-        transform-origin: bottom left;
+  .pageLinkContainer:hover {
+    --glass-glow: 0.45;
+    transform: translateY(-2px) scale(1.008);
+    -webkit-backdrop-filter: var(--glass-lens-lit);
+    backdrop-filter: var(--glass-lens-lit);
+  }
+
+  .pageLinkContainer:not(.pinnedLinkBorder):hover::after {
+    transform: scaleX(1);
+    transform-origin: bottom left;
+  }
+}
+
+/* Pressed, the glass gives a little and lights up from the finger. */
+.pageLinkContainer:active {
+  --glass-glow: 1;
+  transform: scale(0.985);
+  transition-duration: 110ms;
+}
+
+/* A list of glass that enters with the page (.page-enter-*) only rises; each
+   glass fades in by itself. Glass cannot see the water through a fading
+   ancestor (Chrome keeps treating a finished fade that way too), so a list
+   that faded as a whole would show the water sharp through it. The glass
+   borrows the list's timing, so the shorter entrance after a tap and none
+   on back and forward (navigation.css) still hold. */
+@media (prefers-reduced-motion: no-preference) {
+  .glass-list:is(.page-enter, .page-enter-2, .page-enter-3) {
+    opacity: 1;
+    animation-name: glass-list-rise;
+  }
+
+  .glass-list > li {
+    animation-duration: inherit;
+    animation-delay: inherit;
+    animation-timing-function: inherit;
+  }
+
+  .glass-list > li > .pageLinkContainer {
+    animation-name: glass-fade-in;
+    animation-duration: inherit;
+    animation-delay: inherit;
+    animation-timing-function: inherit;
+    animation-fill-mode: backwards;
+  }
+
+  @keyframes glass-list-rise {
+    to {
+      transform: translateY(0);
     }
+  }
+
+  @keyframes glass-fade-in {
+    from {
+      opacity: 0;
+    }
+  }
+}
+
+/* On touch the press waits a moment, so a finger that starts a scroll on a
+   card does not squeeze it. */
+@media (hover: none) {
+  .pageLinkContainer:active {
+    transition-delay: 50ms;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pageLinkContainer,
+  .pageLinkContainer::after {
+    transition: none;
+  }
+
+  .pageLinkContainer:hover,
+  .pageLinkContainer:active {
+    transform: none;
+  }
+}
+
+/* Asked for less transparency: solid glass, the same edges and light. */
+@media (prefers-reduced-transparency: reduce) {
+  .pageLinkContainer {
+    --glass-tint: hsl(var(--card));
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+
+/* Forced colors: a solid link with a plain outline. */
+@media (forced-colors: active) {
+  .pageLinkContainer {
+    background: Canvas;
+    border-color: CanvasText;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+
+  .pageLinkContainer::before {
+    display: none;
+  }
 }

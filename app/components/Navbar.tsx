@@ -6,7 +6,6 @@ import { useNavbarScroll } from './NavbarScrollContext';
 import '../css/navbar.css';
 import '../css/mobile-navbar.css';
 import '../css/animations.css';
-import '../css/magical-button.css';
 
 export default function Navbar() {
   const { scrolled, mobileVisible } = useNavbarScroll();

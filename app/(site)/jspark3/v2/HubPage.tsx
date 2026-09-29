@@ -1,6 +1,7 @@
 import React from 'react';
 import PageLayout from '../../../components/PageLayout';
 import TransitionLink from '../../../components/TransitionLink';
+import GlassLight from '../../../components/GlassLight';
 import { release } from './release-data';
 import { GLM_RELEASE, HEADLINE_ROWS, HUB_COPY, INTERNAL_BUILDS, IS_PLACEHOLDER, RELEASE, RELEASE_HISTORY, RELEASE_SUMMARY, releaseDate, valueText } from '../release-copy';
 import { Ph } from '../Placeholder';
@@ -41,6 +42,7 @@ export default function HubPage() {
       </header>
       <section id="current" className="spark-hub-releases" aria-labelledby="spark-releases-title">
         <h2 id="spark-releases-title" className="section-kicker">{HUB_COPY.releasesTitle}</h2>
+        <GlassLight />
         <ol className="spark-hub-list">
           <li>
             <TransitionLink href="/jspark3/glm/" className="pageLinkContainer pinnedLinkBorder spark-hub-release">

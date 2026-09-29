@@ -13,6 +13,7 @@ import {
 } from '../components/hover-card';
 import TagPill from '../components/TagPill';
 import Hero from '../components/Hero';
+import GlassLight from '../components/GlassLight';
 
 // Published pages refresh in the background; the webhook also expires content.
 export const revalidate = 60;
@@ -47,6 +48,7 @@ export default async function HomePage() {
       <Hero />
       <div className="max-w-none">
         <div className="section-kicker">Writing &amp; work</div>
+        <GlassLight />
         <ul className="space-y-2 pb-8">
           {posts.map((post) => {
             const displayedViewCount =

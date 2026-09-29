@@ -11,6 +11,7 @@ import {
   HoverCardContent,
 } from '@/app/components/hover-card';
 import TagPill from '@/app/components/TagPill';
+import GlassLight from '@/app/components/GlassLight';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 
@@ -133,11 +134,12 @@ export default async function TagPage({
             <p className="text-muted-foreground" data-fluid-island>{tag.description}</p>
           )}
         </div>
+        <GlassLight />
 
         {posts.length === 0 ? (
           <p className="page-enter-2 text-muted-foreground">No posts found with this tag.</p>
         ) : (
-          <ul className="page-enter-2 space-y-2 mb-8">
+          <ul className="glass-list page-enter-2 space-y-2 mb-8">
             {posts.map((post) => {
               const displayedViewCount =
                 liveViewCounts === null ? null : liveViewCounts[post.slug.current] ??

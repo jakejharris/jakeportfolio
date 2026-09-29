@@ -411,7 +411,7 @@ const NodeCard = forwardRef<
     <div
       ref={ref}
       className={cn(
-        'rounded-md border bg-background/95 text-center shadow-[0_0_0_1px_rgba(255,255,255,0.02)] transition-[box-shadow,border-color] duration-150',
+        'rounded-md border bg-background/95 text-center transition-[box-shadow,border-color] duration-150',
         compact
           ? 'mx-1 px-1 py-0.5 sm:mx-2 sm:px-2 sm:py-1'
           : 'px-1.5 py-1 sm:px-3 sm:py-2'
