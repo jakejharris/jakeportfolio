@@ -1,0 +1,247 @@
+/* About: the story at three lengths. The masthead, kicker and ledger come
+   from the homepage (hero.css, link-ledger.css). */
+
+.about-page .hero {
+  padding-bottom: 2.25rem;
+}
+
+/* The length switch, drawn like the appearance dock: square cells in a
+   frosted strip, pixel brackets around the one that is on. */
+.story-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.625rem 1rem;
+  margin-bottom: 2rem;
+}
+
+.story-lengths {
+  display: inline-flex;
+  min-inline-size: 0;
+  margin: 0;
+  padding: 3px;
+  border: 1px solid hsl(var(--foreground) / 0.14);
+  border-radius: 6px;
+  background: hsl(var(--background) / 0.72);
+}
+
+.story-length {
+  position: relative;
+  display: grid;
+}
+
+.story-length input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.story-length span {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-width: 4.75rem;
+  height: 38px;
+  padding: 0 0.875rem;
+  border-radius: 4px;
+  color: hsl(var(--muted-foreground));
+  font-family: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  line-height: 1;
+  text-transform: uppercase;
+  pointer-events: none;
+  transition: color 0.15s ease, background-color 0.15s ease;
+}
+
+@media (hover: hover) {
+  .story-length:hover span {
+    background: hsl(var(--foreground) / 0.08);
+    color: hsl(var(--foreground));
+  }
+}
+
+.story-length input:checked + span {
+  color: hsl(var(--foreground));
+}
+
+.story-length input:checked + span::before {
+  content: "";
+  position: absolute;
+  inset: 6px 7px;
+  --corner: hsl(var(--foreground));
+  background:
+    linear-gradient(var(--corner), var(--corner)) top left / 5px 2px,
+    linear-gradient(var(--corner), var(--corner)) top left / 2px 5px,
+    linear-gradient(var(--corner), var(--corner)) top right / 5px 2px,
+    linear-gradient(var(--corner), var(--corner)) top right / 2px 5px,
+    linear-gradient(var(--corner), var(--corner)) bottom left / 5px 2px,
+    linear-gradient(var(--corner), var(--corner)) bottom left / 2px 5px,
+    linear-gradient(var(--corner), var(--corner)) bottom right / 5px 2px,
+    linear-gradient(var(--corner), var(--corner)) bottom right / 2px 5px;
+  background-repeat: no-repeat;
+}
+
+.story-length input:focus-visible + span {
+  outline: 2px solid hsl(var(--foreground));
+  outline-offset: -2px;
+}
+
+.story-count {
+  margin: 0;
+  color: hsl(var(--muted-foreground));
+  font-family: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+}
+
+/* The story. Paragraphs run inline so a shorter version can close up into
+   fewer of them; the ones that start a new paragraph at this length open a
+   gap above themselves. */
+.story {
+  color: hsl(var(--foreground));
+  font-size: 1.125rem;
+  line-height: 1.7;
+}
+
+.story p {
+  display: inline;
+  margin: 0;
+}
+
+.story[data-length="3"] p:not(:first-child)::before,
+.story[data-length="2"] p:is([data-break="1"], [data-break="2"]):not(:first-child)::before,
+.story[data-length="1"] p[data-break="1"]:not(:first-child)::before {
+  content: "";
+  display: block;
+  height: 1.1em;
+}
+
+.story[data-length="1"] :is([data-min="2"], [data-min="3"]),
+.story[data-length="2"] [data-min="3"] {
+  display: none;
+}
+
+.story-link {
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-decoration-color: color-mix(in srgb, currentColor 35%, transparent);
+  text-underline-offset: 3px;
+  transition: text-decoration-color 0.2s ease;
+}
+
+.story-link:hover {
+  text-decoration-color: var(--accent-color);
+}
+
+.story-link:focus-visible {
+  outline: 2px solid hsl(var(--foreground));
+  outline-offset: 2px;
+  border-radius: 1px;
+}
+
+/* A magazine end mark in the accent color: one lattice cell on the baseline
+   after the last word of whichever version is showing. */
+.story-tail {
+  white-space: nowrap;
+}
+
+.story-end {
+  display: none;
+  width: 0.5em;
+  height: 0.5em;
+  margin-left: 0.4em;
+  background: var(--accent-color);
+  forced-color-adjust: none;
+}
+
+.story[data-length="1"] [data-end~="1"] .story-end,
+.story[data-length="2"] [data-end~="2"] .story-end,
+.story[data-length="3"] [data-end~="3"] .story-end {
+  display: inline-block;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .story-end {
+    animation: story-end-pop 180ms steps(3, end) both;
+  }
+
+  @keyframes story-end-pop {
+    from {
+      opacity: 0;
+      transform: scale(0.34);
+    }
+  }
+
+  /* Taken out: an editor's line through the sentence, drawn left to right
+     across every line it spans, then it dims before the gap closes. */
+  .story-sentence.is-cut {
+    background-image: linear-gradient(var(--accent-color), var(--accent-color));
+    background-position: 0 56%;
+    background-repeat: no-repeat;
+    background-size: 100% 2px;
+    animation:
+      story-strike 240ms steps(12, end) both,
+      story-dim 120ms 240ms ease-out forwards;
+  }
+
+  @keyframes story-strike {
+    from {
+      background-size: 0% 2px;
+    }
+  }
+
+  @keyframes story-dim {
+    to {
+      opacity: 0.3;
+    }
+  }
+
+  /* Put back: set in lit, then the light fades so the text settles in with
+     the rest. */
+  .story-sentence.is-new {
+    animation: story-set 1600ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  @keyframes story-set {
+    0% {
+      opacity: 0;
+      background-color: color-mix(in srgb, var(--accent-color) 24%, transparent);
+    }
+    14% {
+      opacity: 1;
+      background-color: color-mix(in srgb, var(--accent-color) 24%, transparent);
+    }
+    100% {
+      background-color: transparent;
+    }
+  }
+}
+
+.about-elsewhere {
+  margin-top: 3.5rem;
+}
+
+@media (max-width: 767px) {
+  .about-page .hero {
+    padding-bottom: 1.75rem;
+  }
+
+  .story {
+    font-size: 1.0625rem;
+  }
+}
+
+/* A printout is the version on screen, without the switch. */
+@media print {
+  .story-controls {
+    display: none;
+  }
+}
