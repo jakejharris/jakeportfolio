@@ -6,6 +6,7 @@ import { flushSync } from "react-dom";
 import { useTheme } from "next-themes";
 import { useNavbarScroll } from "./NavbarScrollContext";
 import { disturbWater } from "./pixel-fluid/disturb";
+import { focusQuietly } from "../lib/focus-intent";
 import { floodTheme, isThemeFloodActive } from "../lib/pixel-tide";
 import { BURST_GAP_MS, Burst, dropFlight, dropsFor, heatOf, MAX_DROPS } from "../lib/dock-play";
 import "../css/appearance-dock.css";
@@ -187,7 +188,7 @@ export default function AppearanceDock() {
       for (const button of buttons) {
         const rect = button.getBoundingClientRect();
         if (rect.width && rect.height && x >= rect.left && x < rect.right && y >= rect.top && y < rect.bottom) {
-          button.focus({ preventScroll: true });
+          focusQuietly(button);
           button.click();
           return;
         }
@@ -270,7 +271,7 @@ export default function AppearanceDock() {
   // The toggle disappears when the palette opens. Move focus in the same
   // commit so an immediate Escape reaches the palette, not the menu behind it.
   useLayoutEffect(() => {
-    if (open) swatchRefs.current[accentRef.current]?.focus();
+    if (open) focusQuietly(swatchRefs.current[accentRef.current]);
   }, [open]);
 
   // Every press counts toward the burst and answers in the dock: the cell
@@ -304,7 +305,7 @@ export default function AppearanceDock() {
   const closePalette = () => {
     if (!open) return;
     flushSync(() => setOpen(false));
-    toggleRef.current?.focus();
+    focusQuietly(toggleRef.current);
   };
 
   // Only the last press before paint needs a pour or a page-wide restyle.
@@ -381,7 +382,7 @@ export default function AppearanceDock() {
       const index = (accentRef.current + step + ACCENTS.length) % ACCENTS.length;
       const swatch = swatchRefs.current[index];
       if (swatch) {
-        swatch.focus();
+        focusQuietly(swatch);
         pickAccent(index, swatch);
       }
     }

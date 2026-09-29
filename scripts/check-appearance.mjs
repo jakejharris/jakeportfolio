@@ -598,6 +598,59 @@ try {
     await context.close();
   }
 
+  await test("phone taps leave no focus ring in the dock; keys still show one", async () => {
+    const context = await browser.newContext({
+      viewport: { width: 390, height: 844 },
+      isMobile: !webkit,
+      hasTouch: true,
+    });
+    await context.addInitScript(() => {
+      localStorage.setItem("theme", "dark");
+      localStorage.setItem("accent-index", "1");
+      // iOS Safari does not focus a tapped button, so script focus that
+      // follows a tap has no earlier focus to go by. Stand in for that here.
+      document.addEventListener("mousedown", (event) => {
+        if (event.target.closest("a, button")) event.preventDefault();
+      }, true);
+    });
+    const page = await context.newPage();
+    const errors = [];
+    page.on("pageerror", (e) => errors.push(e.message));
+    await page.goto(base, { waitUntil: "networkidle" });
+    const tap = async (selector) => {
+      const box = await page.locator(selector).boundingBox();
+      await page.touchscreen.tap(box.x + box.width / 2, box.y + box.height / 2);
+    };
+    const open = () => page.evaluate(() => document.querySelector(".appearance-dock").hasAttribute("data-open"));
+    // The focused control and whether a ring is drawn on it.
+    const focus = () => page.evaluate(() => {
+      const active = document.activeElement;
+      return {
+        control: active.getAttribute("data-swatch") ?? (active.classList.contains("appearance-dock-toggle") ? "toggle" : active.tagName),
+        ring: getComputedStyle(active).outlineStyle !== "none",
+      };
+    });
+    await tap(".appearance-dock-toggle");
+    await page.waitForFunction(() => document.querySelector(".appearance-dock").hasAttribute("data-open"));
+    assert.deepEqual(await focus(), { control: "1", ring: false }, "unfolding by tap");
+    await page.waitForTimeout(BURST_GAP_MS + 100);
+    await tap('[data-swatch="1"]');
+    await page.waitForFunction(() => !document.querySelector(".appearance-dock").hasAttribute("data-open"));
+    assert.deepEqual(await focus(), { control: "toggle", ring: false }, "folding by tap");
+    await page.waitForTimeout(BURST_GAP_MS + 100);
+    await page.focus(".appearance-dock-toggle");
+    await page.keyboard.press("Enter");
+    await page.waitForFunction(() => document.querySelector(".appearance-dock").hasAttribute("data-open"));
+    assert.deepEqual(await focus(), { control: "1", ring: true }, "unfolding by key");
+    await page.keyboard.press("ArrowRight");
+    assert.deepEqual(await focus(), { control: "2", ring: true }, "arrow key");
+    await page.keyboard.press("Escape");
+    assert.equal(await open(), false);
+    assert.deepEqual(await focus(), { control: "toggle", ring: true }, "folding by Escape");
+    assert.deepEqual(errors, []);
+    await context.close();
+  });
+
   await test("desktop a burst paints a reading page's shore, then it settles", async () => {
     const context = await browser.newContext({ viewport: { width: 1440, height: 900 } });
     const page = await context.newPage();
