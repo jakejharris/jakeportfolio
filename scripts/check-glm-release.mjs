@@ -303,13 +303,11 @@ async function check() {
     }
     if (glm.tag === 'v1.8.4') {
       assert.ok(headline.prose_rows && headline.structured_c8, 'v1.8.4 requires its workload measurements');
-      for (const id of ['decode_c1', 'decode_c4', 'decode_c8']) {
+      for (const id of ['decode_c1', 'decode_c2', 'decode_c4', 'decode_c8']) {
         const row = rows.find(row => row.id === id);
         assert.ok(finite(row.median), `v1.8.4 ${id} requires its code median`);
         assert.equal(row.samples, headline.sweeps, `v1.8.4 ${id} repeats must match the code ladder`);
       }
-      const c2 = rows.find(row => row.id === 'decode_c2');
-      assert.ok(c2.omitted_reason && c2.lo === null && c2.hi === null, 'v1.8.4 code c2 was not measured');
       assert.equal(headline.speed.rule, 'off', 'v1.8.4 has no reference benchmark comparison');
     }
   }

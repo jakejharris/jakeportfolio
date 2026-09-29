@@ -41,15 +41,23 @@ const edited = edit => {
 const set = (glm, id) => glm.sets.find(item => item.id === id);
 const row = (rows, id) => rows.find(item => item.id === id);
 
-test('accepts the current release with recorded medians and an explicitly unmeasured code c2', () => {
+test('accepts the current release with recorded medians at every code stream count', () => {
   const result = check(current);
   assert.equal(result.status, 0, result.stderr);
-  assert.deepEqual(JSON.parse(result.stdout).headline_omitted, ['decode_c2']);
+  assert.deepEqual(JSON.parse(result.stdout).headline_omitted, []);
 });
 
+/** Code c2 set back to not measured: an omission reason and no band, median or repeats. */
+const c2Omitted = glm => {
+  const c2 = row(glm.headline.rows, 'decode_c2');
+  Object.assign(c2, { lo: null, hi: null, lo_text: null, hi_text: null, omitted_reason: 'Not measured.' });
+  for (const key of ['median', 'median_text', 'samples']) delete c2[key];
+};
+
 for (const [what, edit, reason] of [
-  ['a missing omission reason', glm => { delete row(glm.headline.rows, 'decode_c2').omitted_reason; }, /lo and hi must both be numbers/],
-  ['a fabricated code c2', glm => { Object.assign(row(glm.headline.rows, 'decode_c2'), { lo: 1, hi: 2, lo_text: '1', hi_text: '2' }); }, /omitted row must have null values/],
+  ['code c2 left out', c2Omitted, /decode_c2 requires its code median/],
+  ['an omission reason on the measured code c2', glm => { row(glm.headline.rows, 'decode_c2').omitted_reason = 'Not measured.'; }, /omitted row must have null values/],
+  ['a code c2 median outside its range', glm => { row(glm.headline.rows, 'decode_c2').median = 110; }, /median must be within its range/],
   ['a median outside its range', glm => { row(glm.headline.rows, 'decode_c1').median = 0; }, /median must be within its range/],
   ['a rounded median token', glm => { row(glm.headline.rows, 'decode_c1').median_text = '73'; }, /median_text .* does not equal/],
   ['a missing code median', glm => { delete row(glm.headline.rows, 'decode_c4').median; delete row(glm.headline.rows, 'decode_c4').median_text; }, /requires its code median/],

@@ -83,14 +83,16 @@
         "label": "Decode",
         "concurrency": "c2",
         "unit": "tok/s",
-        "lo": null,
-        "hi": null,
-        "lo_text": null,
-        "hi_text": null,
+        "lo": 103.0,
+        "hi": 106.4,
+        "lo_text": "103.0",
+        "hi_text": "106.4",
         "v1_1": null,
         "v1_1_text": null,
         "mia": null,
-        "omitted_reason": "Not measured: the code ladder runs c1, c4 and c8 only."
+        "median": 105.4,
+        "median_text": "105.4",
+        "samples": 5
       },
       {
         "id": "decode_c4",
