@@ -14,7 +14,7 @@ export default function TagPill({ tag, linked }: TagPillProps) {
   if (linked) {
     return (
       <TransitionLink
-        href={`/tags/${tag.slug.current}#`}
+        href={`/tags/${tag.slug.current}/`}
         scroll={true}
         className="tag-pill text-[10px] px-1.5 py-0.5 rounded-md font-medium inline-flex items-center cursor-pointer no-underline"
       >
@@ -28,7 +28,7 @@ export default function TagPill({ tag, linked }: TagPillProps) {
       onClick={(e) => {
         e.stopPropagation();
         e.preventDefault();
-        router.push("/tags/" + tag.slug.current + "#");
+        router.push(`/tags/${tag.slug.current}/`);
       }}
       className="tag-pill text-[10px] px-1.5 py-0.5 rounded-md font-medium inline-flex items-center cursor-pointer no-underline"
     >

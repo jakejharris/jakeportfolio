@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
-    "test": "tsx --test app/lib/post-views.test.ts scripts/seed-postviews.test.mjs 'app/(site)/jspark3/v2/decode-race-data.test.ts' app/lib/pixel-tide.test.ts app/lib/menu-tide.test.ts app/components/pixel-fluid/islands.test.ts app/components/site-menu/MenuTide.test.ts",
+    "test": "tsx --test app/lib/remembered-view-count.test.ts app/lib/post-headings.test.ts app/lib/post-views.test.ts scripts/seed-postviews.test.mjs 'app/(site)/jspark3/v2/decode-race-data.test.ts' app/lib/pixel-tide.test.ts app/lib/menu-tide.test.ts app/components/pixel-fluid/islands.test.ts app/components/site-menu/MenuTide.test.ts",
     "seed:postviews": "node scripts/seed-postviews.mjs"
   },
   "dependencies": {

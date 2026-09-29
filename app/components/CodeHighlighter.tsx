@@ -1,8 +1,9 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { oneDark, oneLight } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import { PrismAsyncLight as SyntaxHighlighter } from 'react-syntax-highlighter';
+import oneDark from 'react-syntax-highlighter/dist/esm/styles/prism/one-dark';
+import oneLight from 'react-syntax-highlighter/dist/esm/styles/prism/one-light';
 import { useTheme } from 'next-themes';
 
 interface CodeHighlighterProps {
@@ -27,7 +28,7 @@ export default function CodeHighlighter({ code, language }: CodeHighlighterProps
 
   return (
     <SyntaxHighlighter
-      language={language}
+      language={language === 'html' ? 'markup' : language}
       style={isDarkMode ? oneDark : oneLight}
       customStyle={{ background: 'transparent', padding: 0, margin: 0 }}
       wrapLines={true}
@@ -37,4 +38,4 @@ export default function CodeHighlighter({ code, language }: CodeHighlighterProps
       {code}
     </SyntaxHighlighter>
   );
-} 
+}

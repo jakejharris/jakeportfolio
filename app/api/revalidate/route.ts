@@ -21,6 +21,9 @@ export async function POST(req: NextRequest) {
     // Extract the document type if available in the payload
     // Sanity webhooks typically include _type in the body
     const documentType = body?._type || 'post';
+    if (documentType === 'postView' || (typeof body?._id === 'string' && body._id.startsWith('views.'))) {
+      return NextResponse.json({ revalidated: false });
+    }
     
     console.log(`Document type from webhook: ${documentType}`);
     
@@ -46,4 +49,4 @@ export async function POST(req: NextRequest) {
     console.error('Error revalidating:', error);
     return NextResponse.json({ message: 'Error revalidating', error: String(error) }, { status: 500 });
   }
-} 
+}
