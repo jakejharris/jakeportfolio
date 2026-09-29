@@ -45,10 +45,10 @@ const FLOOD_RAMP_MS = 360;
 const FOAM_BAND = CELL * 1.5;
 const SETTLE_DELAY_MS = 8000;
 const SETTLE_MS = 6000;
-// Radians per second: half the old per-frame steps at 60 fps, which read as busy.
+// Radians per second: a slow first swell easing into the ambient drift.
 const SPEED = {
-  desktop: { intro: 0.216, ambient: 0.09 },
-  mobile: { intro: 0.195, ambient: 0.072 },
+  desktop: { intro: 0.108, ambient: 0.045 },
+  mobile: { intro: 0.0975, ambient: 0.036 },
 };
 const WAVE_SCALE = 0.09;
 const CONTOUR_DENSITY = 12;

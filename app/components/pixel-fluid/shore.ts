@@ -17,7 +17,7 @@ import { cellDistance, farthest, TideFront } from './tide-front';
 
 // Same swell as the sea, so contours line up across a front.
 const WAVE_SCALE = 0.09;
-const SPEED = { desktop: 0.09, mobile: 0.072 };
+const SPEED = { desktop: 0.045, mobile: 0.036 };
 // The drift fades to nothing over this long after the water was last stirred.
 const SETTLE_MS = 2600;
 // How long a restored page's water takes to rise in place.
