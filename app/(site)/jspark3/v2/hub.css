@@ -41,9 +41,9 @@
 .spark-hub-release-detail { color: var(--hub-muted); font-size: 0.875rem; line-height: 1.5; }
 .spark-hub-release-action { margin-top: 0.625rem; font-size: 0.875rem; line-height: 1.6; }
 .spark-hub-release-action > span { white-space: nowrap; }
-/* The latest release's four figures: recorded medians and ranges in gold, in the wordmark serif, two across where they fit and stacked on a phone. */
-.spark-hub { --hub-gold: #80611d; }
-.dark .spark-hub { --hub-gold: #d4b87c; }
+/* The latest release's figures follow the active accent. Mix the number ink
+   toward the theme foreground for contrast, keeping labels and units neutral. */
+.spark-hub { --hub-accent-ink: color-mix(in srgb, var(--accent-color) 65%, hsl(var(--foreground))); }
 .spark-hub-figures {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
@@ -56,13 +56,13 @@
   gap: 0.35rem;
   min-width: 0;
   padding: 0.75rem 0.9rem 0.8rem;
-  border-top: 2px solid var(--hub-gold);
+  border-top: 2px solid var(--accent-color);
   border-radius: 0 0 var(--radius) var(--radius);
-  background: color-mix(in srgb, var(--hub-gold) 8%, transparent);
+  background: color-mix(in srgb, var(--accent-color) 8%, transparent);
 }
 .spark-hub-figure-label { color: var(--hub-muted); font: 500 0.6875rem/1.3 var(--font-geist-mono), monospace; letter-spacing: 0.06em; text-transform: uppercase; }
 .spark-hub-figure-value {
-  color: var(--hub-gold);
+  color: var(--hub-accent-ink);
   font: 700 clamp(1.25rem, 2.3vw, 1.75rem)/1.15 var(--font-wordmark-stack);
   letter-spacing: -0.03em;
   font-variant-numeric: tabular-nums;
