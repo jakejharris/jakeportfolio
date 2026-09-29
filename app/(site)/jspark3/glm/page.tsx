@@ -9,4 +9,6 @@ export const metadata = {
   robots: { index: false, follow: false },
 };
 
-export default GlmV2Page;
+export default function Page() {
+  return <GlmV2Page />;
+}

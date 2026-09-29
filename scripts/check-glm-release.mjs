@@ -372,7 +372,7 @@ try {
   // The default ship gate covers the current GLM page as well as its preserved history.
   // Explicit paths still validate a historical snapshot independently.
   if (!process.argv.slice(2).some(arg => !arg.startsWith('--'))) {
-    const current = spawnSync('python3', ['scripts/glm_v2.py', '--check'], { encoding: 'utf8' });
+    const current = spawnSync('python3', ['scripts/glm_v2.py', '--check', ...(process.argv.includes('--preview') ? ['--preview'] : [])], { encoding: 'utf8' });
     assert.equal(current.status, 0, current.stderr.trim() || 'current release validation failed');
   }
   console.log(JSON.stringify(await check()));

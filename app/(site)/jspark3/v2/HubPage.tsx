@@ -34,7 +34,7 @@ export default function HubPage() {
                   <span className="spark-hub-figure-value">{cell.value}{GLM_V2.rows.length > 0 ? <small>tok/s</small> : null}</span>
                 </span>)}
               </span>
-              <span className="spark-hub-release-detail">{GLM_V2.rows.length ? 'Single-stream RigMark medians. Conditions and receipts on the release page.' : 'TensorFold engine. Measurements and exactness check pending.'}</span>
+              <span className="spark-hub-release-detail">{GLM_V2.rows.length ? GLM_V2.multistream.every(row => row.status === 'measured') ? 'Single-stream RigMark medians. Multi-stream results and receipts on the release page.' : 'Earlier sealed single-stream medians. Final multi-stream results pending.' : 'TensorFold engine. Measurements and qualification pending.'}</span>
               <span className="spark-hub-release-detail">{V2_DRAFTER_NOTICE}</span>
               <span className="spark-hub-release-action">Recipe, results, and license scope <span aria-hidden="true">→</span></span>
             </TransitionLink>

@@ -10,7 +10,7 @@ export function GET() {
     <div style={{ display: 'flex', fontSize: 55, marginTop: 20 }}>JSpark3 v2.0.0</div>
     <div style={{ display: 'flex', fontSize: 30, marginTop: 6 }}>(GLM-5.3-Flash, TP3)</div>
     <div style={{ display: 'flex', fontSize: 20, color: '#a9aba8', marginTop: 18 }}>RELEASE PREVIEW · PUBLICATION PENDING</div>
-    <div style={{ display: 'flex', fontSize: 23, marginTop: 20 }}>{GLM_V2.quality?.claim ?? 'Exactness check and frozen measurements pending.'}</div>
+    <div style={{ display: 'flex', fontSize: 23, marginTop: 20 }}>{GLM_V2.quality?.claim ?? 'Multi-stream results and candidate qualification pending.'}</div>
     {GLM_V2.quality ? <div style={{ display: 'flex', fontSize: 15, color: '#a9aba8', marginTop: 8 }}>{GLM_V2.quality.scope}</div> : null}
     <div style={{ display: 'flex', marginTop: 28, gap: 24 }}>
       {V2_HIGHLIGHTS.map(cell => <div key={cell.id} style={{ display: 'flex', flexDirection: 'column', width: 344, borderTop: '1px solid #373b40', paddingTop: 12 }}>
@@ -18,7 +18,7 @@ export function GET() {
         <div style={{ display: 'flex', fontSize: 34, color: '#d4b87c', marginTop: 4 }}>{cell.value}</div>
       </div>)}
     </div>
-    <div style={{ display: 'flex', fontSize: 16, color: '#a9aba8', marginTop: 12 }}>Single-stream medians · tok/s</div>
+    <div style={{ display: 'flex', fontSize: 16, color: '#a9aba8', marginTop: 12 }}>{GLM_V2.multistream.every(row => row.status === 'measured') ? 'Single-stream medians · tok/s' : 'Earlier sealed single-stream medians · tok/s'}</div>
     <div style={{ display: 'flex', marginTop: 'auto', fontSize: 17, color: '#a9aba8' }}>Default DFlash2 drafter: non-commercial. No mode cleared for commercial use.</div>
     <div style={{ display: 'flex', marginTop: 10, fontSize: 17 }}>jakejh.com/jspark3/glm/</div>
   </div>, size);

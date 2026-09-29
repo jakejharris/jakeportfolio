@@ -4,7 +4,10 @@
   "engine": "TensorFold",
   "fixture": false,
   "publication_hold": true,
-  "pending": [],
+  "pending": [
+    "Sealed multi-stream results and source mapping pending.",
+    "Updated per-check qualification and evidence pending."
+  ],
   "source_sha256": "917196d3b8180a6d8ac365569d14cbf8ce7cc1b9f076dab4e8dea58d41bd2b40",
   "review_commit": "d62319334312f33c4a5bf4b338885f012139b746",
   "published": null,
@@ -20,17 +23,12 @@
         "87.694"
       ],
       "instrument": "RigMark c5a0db0, gate/run.sh flags (decode 4096 tokens, reasoning effort low), single stream, median of 3 receipts",
-      "vs_line": "above",
-      "margin_text": "4.795454545454536",
       "evidence": [
         "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/speed-result.json",
         "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/lfl-r1.json",
         "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/lfl-r2.json",
         "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/lfl-r3.json"
       ],
-      "line_text": "83.6",
-      "upstream_tp3_set1_text": "75.7",
-      "upstream_tp3_set2_text": "76.2",
       "display": {
         "median": "87.6",
         "worst": "87.5",
@@ -38,11 +36,7 @@
           "87.5",
           "87.6",
           "87.7"
-        ],
-        "margin": "+4.8%",
-        "line": "83.6",
-        "upstream_tp3_set1": "75.7",
-        "upstream_tp3_set2": "76.2"
+        ]
       }
     },
     {
@@ -56,17 +50,12 @@
         "47.214"
       ],
       "instrument": "RigMark c5a0db0, gate/run.sh flags (decode 4096 tokens, reasoning effort low), single stream, median of 3 receipts",
-      "vs_line": "below",
-      "margin_text": "-1.6375000000000028",
       "evidence": [
         "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/speed-result.json",
         "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/lfl-r1.json",
         "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/lfl-r2.json",
         "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/lfl-r3.json"
       ],
-      "line_text": "48.0",
-      "upstream_tp3_set1_text": "43.8",
-      "upstream_tp3_set2_text": "44.0",
       "display": {
         "median": "47.2",
         "worst": "47.0",
@@ -74,11 +63,7 @@
           "47.0",
           "47.2",
           "47.2"
-        ],
-        "margin": "-1.6%",
-        "line": "48.0",
-        "upstream_tp3_set1": "43.8",
-        "upstream_tp3_set2": "44.0"
+        ]
       }
     },
     {
@@ -92,17 +77,12 @@
         "126.442"
       ],
       "instrument": "RigMark c5a0db0, gate/run.sh flags (decode 4096 tokens, reasoning effort low), single stream, median of 3 receipts",
-      "vs_line": "above",
-      "margin_text": "0.3925159235668829",
       "evidence": [
         "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/speed-result.json",
         "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/lfl-r1.json",
         "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/lfl-r2.json",
         "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/lfl-r3.json"
       ],
-      "line_text": "125.6",
-      "upstream_tp3_set1_text": "113.8",
-      "upstream_tp3_set2_text": "114.0",
       "display": {
         "median": "126.1",
         "worst": "126.1",
@@ -110,27 +90,11 @@
           "126.1",
           "126.1",
           "126.4"
-        ],
-        "margin": "+0.4%",
-        "margin_tps": "+0.5",
-        "line": "125.6",
-        "upstream_tp3_set1": "113.8",
-        "upstream_tp3_set2": "114.0"
+        ]
       }
     }
   ],
-  "comparison": {
-    "source": "https://github.com/mmastrac/glm-5.3-flash-4x-gx10/blob/5d3cca861e715860bd1f841a1f25f74320636b18/experimental/tp3/README.md",
-    "line_source": "https://github.com/mmastrac/glm-5.3-flash-4x-gx10/blob/5d3cca861e715860bd1f841a1f25f74320636b18/README.md",
-    "conditions": {
-      "line": "The line is derived from mmastrac's published TP=2 and TP=4 figures, measured on a switched 200G fabric; this is not a matched-conditions comparison.",
-      "upstream_tp3_set1": "These are mmastrac's published TP=3 figures, measured on a switched 200G fabric; this is not a matched-conditions comparison.",
-      "upstream_tp3_set2": "These are mmastrac's published TP=3 figures, measured on a switched 200G fabric; this is not a matched-conditions comparison."
-    },
-    "topology": "This recipe uses Sparks cabled as a triangle.",
-    "engine_weights": "TensorFold uses Vontra's MLX affine weights; the published reference uses NVIDIA's NVFP4 checkpoint. The engines and weight formats differ.",
-    "same_conditions": false
-  },
+  "comparison": null,
   "latency": [
     {
       "id": "ttft_short_cold",
@@ -1922,69 +1886,6 @@
   ],
   "decode": [
     {
-      "id": "code_c2",
-      "unit": "tok/s",
-      "better": "higher",
-      "status": "not-supported",
-      "evidence": [
-        "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/conc-mvp.json"
-      ],
-      "reason": "This recipe serves one request at a time; a second waits, with no timeout and no refusal.",
-      "label": "2 streams",
-      "instrument": "Two-client queue check and verified source read",
-      "source_read": {
-        "status": "VERIFIED",
-        "engine_commit": "8141957",
-        "citations": [
-          "cuda/server.py:310",
-          "server/http.py:41-44"
-        ],
-        "finding": "App.lock is held for prefill and decode, with no timeout; ThreadingHTTPServer accepts waiting requests."
-      }
-    },
-    {
-      "id": "code_c4",
-      "unit": "tok/s",
-      "better": "higher",
-      "status": "not-supported",
-      "evidence": [
-        "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/conc-mvp.json"
-      ],
-      "reason": "This recipe serves one request at a time; a second waits, with no timeout and no refusal.",
-      "label": "4 streams",
-      "instrument": "Two-client queue check and verified source read",
-      "source_read": {
-        "status": "VERIFIED",
-        "engine_commit": "8141957",
-        "citations": [
-          "cuda/server.py:310",
-          "server/http.py:41-44"
-        ],
-        "finding": "App.lock is held for prefill and decode, with no timeout; ThreadingHTTPServer accepts waiting requests."
-      }
-    },
-    {
-      "id": "code_c8",
-      "unit": "tok/s",
-      "better": "higher",
-      "status": "not-supported",
-      "evidence": [
-        "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/conc-mvp.json"
-      ],
-      "reason": "This recipe serves one request at a time; a second waits, with no timeout and no refusal.",
-      "label": "8 streams",
-      "instrument": "Two-client queue check and verified source read",
-      "source_read": {
-        "status": "VERIFIED",
-        "engine_commit": "8141957",
-        "citations": [
-          "cuda/server.py:310",
-          "server/http.py:41-44"
-        ],
-        "finding": "App.lock is held for prefill and decode, with no timeout; ThreadingHTTPServer accepts waiting requests."
-      }
-    },
-    {
       "id": "decode_after_5k",
       "unit": "tok/s",
       "better": "higher",
@@ -2012,114 +1913,53 @@
       "label": "After 128k"
     }
   ],
-  "comparison_claim": "Code and structured are above the reference line on every repeat; prose is below.",
-  "quality": {
-    "claim": "Output byte-identical to serial decoding at TP=3 on its own 8-prompt greedy check, with speculative decoding on",
-    "scope": "greedy (temperature 0), non-streaming; measured on this serving start's 8-prompt corpus, not a guarantee",
-    "display": {
-      "prompts": "8",
-      "tested": "8",
-      "long_prompt_tokens": "39,326",
-      "generated_tokens": "4,434"
-    },
-    "proof_display": {
-      "tokens_after_first_on": "4,426",
-      "verify_cycles_on": "1,412",
-      "tokens_per_cycle": "3.13",
-      "serial_rounds_off": "4,426"
-    },
-    "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/exact-result.json",
-    "prompt_set_note": "The measured prompt set is not published. scripts/exactness.py uses a different public set."
-  },
-  "checks": [
+  "multistream": [
     {
-      "id": "smoketest",
-      "status": "PASS",
-      "display": {
-        "passed": "8",
-        "total": "8"
-      },
-      "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/quality-result.json",
-      "failed_cases": []
+      "id": "streams-2",
+      "streams": "2",
+      "workload_label": null,
+      "status": "pending",
+      "aggregate": null,
+      "instrument": null,
+      "workload": null,
+      "timing": null,
+      "cache": null,
+      "samples": null,
+      "evidence": []
     },
     {
-      "id": "nll",
-      "status": "not run",
-      "display": null,
-      "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/quality-result.json",
-      "failed_cases": []
+      "id": "streams-4",
+      "streams": "4",
+      "workload_label": null,
+      "status": "pending",
+      "aggregate": null,
+      "instrument": null,
+      "workload": null,
+      "timing": null,
+      "cache": null,
+      "samples": null,
+      "evidence": []
     },
     {
-      "id": "gsm8k",
-      "status": "PASS",
-      "display": {
-        "passed": "241",
-        "total": "250",
-        "percentage": "96.4%"
-      },
-      "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/quality-result.json",
-      "failed_cases": []
-    },
-    {
-      "id": "humaneval",
-      "status": "PASS",
-      "display": {
-        "passed": "153",
-        "total": "164"
-      },
-      "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/quality-result.json",
-      "failed_cases": []
-    },
-    {
-      "id": "count",
-      "status": "PASS",
-      "display": {
-        "corrupt": "0",
-        "total": "5"
-      },
-      "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/quality-result.json",
-      "failed_cases": []
-    },
-    {
-      "id": "toolcall",
-      "status": "not run",
-      "display": null,
-      "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/quality-result.json",
-      "failed_cases": []
-    },
-    {
-      "id": "agent_tools",
-      "status": "not run",
-      "display": null,
-      "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/quality-result.json",
-      "failed_cases": []
-    },
-    {
-      "id": "needle",
-      "status": "not run",
-      "display": null,
-      "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/quality-result.json",
-      "failed_cases": []
-    },
-    {
-      "id": "rigmark_gates",
-      "status": "PASS",
-      "display": null,
-      "source": null,
-      "failed_cases": []
-    },
-    {
-      "id": "audit_code",
-      "status": "not run",
-      "display": null,
-      "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/quality-result.json",
-      "failed_cases": []
+      "id": "streams-8",
+      "streams": "8",
+      "workload_label": null,
+      "status": "pending",
+      "aggregate": null,
+      "instrument": null,
+      "workload": null,
+      "timing": null,
+      "cache": null,
+      "samples": null,
+      "evidence": []
     }
   ],
-  "panel_note": "INCOMPLETE: not passed: nll (NOT-RUN), toolcall (NOT-RUN), agent_tools (NOT-RUN), needle (NOT-RUN), rigmark_gates (NOT-RUN)",
-  "quality_notes": [
-    "The source summary marks RigMark gates as not run, while its per-check record marks them PASS. Both source records are retained here."
-  ],
+  "comparison_claim": null,
+  "quality": null,
+  "checks": [],
+  "panel_note": null,
+  "quality_notes": [],
+  "quality_run_sha256": null,
   "limitations": [
     "No swapcheck receipt for this configuration.",
     "A complete clean-room install on fresh hardware is still pending.",

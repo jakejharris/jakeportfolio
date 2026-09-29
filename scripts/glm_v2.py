@@ -9,6 +9,8 @@ import re
 import sys
 from urllib.parse import urlparse
 
+import glm_v2_multistream as multistream
+
 ROOT = Path(__file__).resolve().parent.parent
 DATA = ROOT / 'app/(site)/jspark3/glm-v2-release.json'
 SOURCE = ROOT / 'docs/jspark-v2/glm-v2-source.json'
@@ -21,7 +23,7 @@ NAME_DIGESTS = set(re.findall(r"'([a-f0-9]{64})'", (ROOT / 'scripts/check-glm-re
 FORBIDDEN = re.compile(
     r'\u2014|/home/|/tmp/|/mnt/|~/|\\Users\\|\b[\w-]+\.local\b|'
     r'\b\d{1,3}(?:\.\d{1,3}){3}\b|boot[\s_-]*\d+|\bA\d+[\s_-]*[A-Z]\d*\b|'
-    r'FINAL-|KGATE|\bfa\d+\b|\blane[\s_-]*\d+|%\d+|\bmia\b|flycockpit|byte[ -]exact', re.I)
+    r'\bW_[A-Z]\b|\b(?:codex|astra|sol|luna|terra|claude|sonnet|chatgpt)\b|FINAL-|KGATE|\bfa\d+\b|\blane[\s_-]*\d+|%\d+|\bmia\b|flycockpit|byte[ -]exact', re.I)
 
 
 
@@ -162,7 +164,7 @@ def traces(items, ref):
             require(re.fullmatch(r'[a-f0-9]{64}', item['sha256']), 'trace hash required')
         pointers = {key: text(value, 'trace pointer') for key, value in item.items()
                     if key in ('pointer', 'numerator', 'denominator')}
-        require(pointers and all(value.startswith('/requests/') for value in pointers.values()), 'request trace required')
+        require(pointers and all(value.startswith(('/requests/', '/phases/')) for value in pointers.values()), 'request or phase trace required')
         result.append(dict(source=receipt(item.get('receipt'), ref), **pointers))
     return result
 
@@ -216,11 +218,11 @@ def project_measurements(tf, ref):
     latency_ids = [f'ttft_{prompt}_{case}{suffix}' for suffix in ('', '_think_off')
                    for prompt in ('short', '5k', '32k') for case in ('cold', 'warm', 'turn')]
     prefill_ids = [f'prefill_{prompt}{suffix}' for prompt in ('5k', '32k') for suffix in ('', '_think_off')] + ['prefill_128k']
-    decode_ids = ['code_c2', 'code_c4', 'code_c8', 'decode_after_5k', 'decode_after_32k', 'decode_after_128k']
+    decode_ids = ['decode_after_5k', 'decode_after_32k', 'decode_after_128k']
     result = {}
     for family, ids in [('latency', latency_ids), ('prefill', prefill_ids), ('decode', decode_ids)]:
         supplied = tf.get(family) or {}
-        require(set(supplied) == set(ids), family + ': complete checkpoint matrix required')
+        require(set(supplied) - ({'code_c2', 'code_c4', 'code_c8'} if family == 'decode' else set()) == set(ids), family + ': complete checkpoint matrix required')
         rows = []
         for cid in ids:
             row = supplied[cid]
@@ -278,7 +280,8 @@ def project_measurements(tf, ref):
     return result
 
 
-def project(source, source_sha256, review=None):
+def project(source, source_sha256, review=None, rehearsal=False):
+    source = multistream.adapt_source(source)
     require(source.get('schema') == 'jspark3-results/1', 'unsupported results schema')
     require(source.get('tag') in (None, 'v2.0.0') and source.get('version') in (None, 'v2.0', 'v2.0.0'),
             'expected JSpark3 v2.0.0 identity')
@@ -310,25 +313,10 @@ def project(source, source_sha256, review=None):
         require(review.get('results_path') == (review.get('site_v2') or {}).get('results_path'), 'sealed results path mismatch')
     site = review['site_v2'] if review is not None else source.get('site_v2') or {}
     release_ref = review['commit'] if review is not None else 'v2.0.0'
-    comparison = site.get('comparison')
-    references = tf.get('reference') or {}
-    if comparison is not None:
-        require(comparison.get('same_conditions') is False, 'comparison must not claim matched conditions')
-        conditions = {}
-        for key in ('line', 'upstream_tp3_set1', 'upstream_tp3_set2'):
-            conditions[key] = public_copy((references.get(key) or {}).get('conditions'), 'reference conditions')
-            require('switched 200G fabric' in conditions[key] and
-                    'not a matched-conditions comparison' in conditions[key], 'comparison fabric caveat required')
-        comparison = dict(source=pinned(comparison.get('source')), line_source=pinned(comparison.get('line_source')),
-                          conditions=conditions,
-                          topology=public_copy(comparison.get('topology'), 'recipe topology'),
-                          engine_weights=public_copy(comparison.get('engine_weights'), 'comparison engine/weights'),
-                          same_conditions=False)
-        require('cabled as a triangle' in comparison['topology'], 'recipe fabric caveat required')
-        require('TensorFold' in comparison['engine_weights'] and 'MLX' in comparison['engine_weights'] and
-                'NVFP4' in comparison['engine_weights'], 'engine and weight differences required')
+    # The public TP2 comparison remains unproven. Legacy comparison facts stay
+    # in the source snapshot, but no comparative values or claims reach the view.
+    comparison = None
     rows = []
-    references = tf.get('reference') or {}
     supplied = tf.get('rows') or {}
     require(not (set(supplied) - set(METRICS)), 'unsupported workload; only single-stream RigMark is in scope')
     require('display_rows' not in site, 'display strings must come from the numbers file')
@@ -347,37 +335,15 @@ def project(source, source_sha256, review=None):
         values = [number(value, cid + '.values') for value in values]
         require(min(map(Decimal, values)) == Decimal(worst) and min(map(Decimal, values)) <= Decimal(median) <= max(map(Decimal, values)),
                 'median or slowest inconsistent with repeats')
-        reference_values = {}
-        reference_displays = {}
-        for key, expected_class in [('line', 'derived-midpoint'), ('upstream_tp3_set1', 'author-reported'), ('upstream_tp3_set2', 'author-reported')]:
-            ref = references.get(key) or {}
-            require(ref.get('class') == expected_class, 'reference provenance mismatch')
-            reference_values[key + '_text'] = number(ref.get(cid), 'reference.' + key + '.' + cid)
-            reference_displays[key] = display_token((ref.get('display') or {}).get(cid), ref[cid], 1)
-        verdict = row.get('vs_line')
-        expected_verdict = 'below' if cid == 'rigmark_prose' else 'above'
-        require(verdict == expected_verdict, 'line verdict differs from approved release scope')
-        line = Decimal(reference_values['line_text'])
-        require(all(Decimal(v) > line for v in values) if verdict == 'above' else all(Decimal(v) < line for v in values),
-                'every-repeat line claim unsupported')
-        require(all(Decimal(v) > Decimal(reference_values[key + '_text']) for v in values for key in ('upstream_tp3_set1', 'upstream_tp3_set2')),
-                'published TP3 comparison unsupported')
-        require(row.get('vs_upstream_tp3') == 'above', 'neutral TP3 verdict required')
-        margin = row.get('vs_line_pct')
-        require(isinstance(margin, Number) and re.fullmatch(r'-?\d+(?:\.\d+)?', margin), 'literal margin token required')
-        require((Decimal(margin) < 0) == (verdict == 'below'), 'margin sign disagrees with verdict')
         evidence = row.get('evidence')
         require(isinstance(evidence, list) and evidence, 'row evidence required')
         rows.append(dict(id=cid, median_text=median, worst_text=worst, samples_text=samples,
-                         values_text=values, instrument=instrument, vs_line=verdict, margin_text=str(margin),
-                         evidence=[receipt(path, release_ref) for path in evidence], **reference_values))
-        display = stats_display(row, 1)
-        display['margin'] = display_token(row['display'].get('vs_line_pct'), margin, 1, signed=True, percent=True)
-        if 'vs_line_tps' in row['display']:
-            # The source supplies this as display-only, without a raw sibling.
-            display['margin_tps'] = display_token(row['display']['vs_line_tps'], None, 1, signed=True)
-        rows[-1]['display'] = dict(display, **reference_displays)
-    measurements = ({key: [] for key in ('latency', 'prefill', 'decode')} if fixture else project_measurements(tf, release_ref))
+                         values_text=values, instrument=instrument,
+                         evidence=[receipt(path, release_ref) for path in evidence]))
+        rows[-1]['display'] = stats_display(row, 1)
+    measurements = ({key: [] for key in ('latency', 'prefill', 'decode')} if fixture and not rehearsal else project_measurements(tf, release_ref))
+    concurrent = multistream.project(source, release_ref, require=require, number=number, public_copy=public_copy,
+                                     receipt=receipt, measured_stats=measured_stats)
     exact = tf.get('exact') or {}
     quality = None
     claim = site.get('exactness_claim')
@@ -411,28 +377,37 @@ def project(source, source_sha256, review=None):
         quality = dict(claim=claim, scope=scope, display=exact_display, proof_display=proof_display,
                        source=receipt(exact.get('receipt'), release_ref),
                        prompt_set_note=public_copy(exact.get('prompt_set_note'), 'prompt-set note'))
-    summary = site.get('comparison_claim')
-    if summary == 'Code and structured are above the reference line on every repeat; prose is below.':
-        require(len(rows) == len(METRICS), 'comparison rows missing')
-    elif summary is not None:
-        above = number(site.get('above_line_rows'), 'above_line_rows', count=True)
-        total = number(site.get('total_rows'), 'total_rows', count=True)
-        require(above == '2' and total == '3' and len(rows) == int(total), 'comparison count mismatch')
-        require(summary == f'{above} of {total} single-stream RigMark rows are above the TP=2 to TP=4 line on every repeat; prose is below.',
-                'unapproved comparison wording')
-        public_copy(summary, 'comparison claim')
     limitations = site.get('limitations')
     require(limitations is None or isinstance(limitations, list), 'limitations must be a list')
     limitations = [public_copy(v, 'limitation') for v in limitations or []]
-    checks = []
+    # A quality document must have been read and hashed by the fill command.
+    # The old checkpoint does not contain the updated per-check panel.
+    quality_hash = (review or {}).get('quality_run_sha256')
+    require(quality_hash is None or re.fullmatch(r'[a-f0-9]{64}', quality_hash), 'quality document hash required')
     panel = tf.get('quality') or {}
-    for key, result in panel.items():
-        if isinstance(result, dict) and result.get('status'):
-            checks.append(dict(id=public_copy(key, 'check name'), status=public_copy(result['status'], 'check status'),
-                               display=quality_display(result.get('display')),
-                               source=receipt(result['evidence'], release_ref) if result.get('evidence') else None,
-                               failed_cases=[public_copy(case, 'failed case') for case in result.get('failed_cases', [])]))
-    panel_note = public_copy(panel['overall'], 'quality scope') if panel.get('overall') else None
+    panel_ready = quality_hash is not None
+    checks = []
+    if panel_ready:
+        require(all((panel.get(key) or {}).get('evidence') for key in ('agent_tools', 'needle', 'nll', 'toolcall')),
+                'per-check qualification receipts required')
+        for key in ('nll', 'toolcall'):
+            require((panel.get(key) or {}).get('status') == 'N/A', 'TensorFold logprob checks must be N/A')
+        require((panel.get('agent_tools') or {}).get('status') in ('PASS', 'FAIL', 'INVESTIGATE'),
+                'agent_tools result required')
+        require((panel.get('needle') or {}).get('status') in ('PASS', 'FAIL', 'INVESTIGATE'), 'raw needle result required')
+        for key, result in panel.items():
+            if isinstance(result, dict) and result.get('status'):
+                require(not re.search(r'CONTENDERS[ _-]*ONLY', string_values(result), re.I), 'raw needle result required')
+                checks.append(dict(id=public_copy(key, 'check name'), status=public_copy(result['status'], 'check status'),
+                                   display=quality_display(result.get('display')),
+                                   observed=public_copy(result['observed'], 'check result') if result.get('observed') else None,
+                                   reason=public_copy(result['reason'], 'check reason') if result.get('reason') else None,
+                                   source=receipt(result['evidence'], release_ref) if result.get('evidence') else None,
+                                   failed_cases=[public_copy(case, 'failed case') for case in result.get('failed_cases', [])]))
+        require((panel['agent_tools'].get('observed') or panel['agent_tools'].get('display')) and
+                (panel['needle'].get('observed') or panel['needle'].get('display')), 'per-check results required')
+        require(not re.search(r'\bPASS(?:ED)?\b', panel.get('overall', ''), re.I), 'no overall PASS allowed')
+    panel_note = 'No overall claim is made. Each check is listed with its own status.' if panel_ready else None
     license_info = site.get('license')
     if license_info is not None:
         require(license_info.get('notice') == 'The default DFlash2 drafter is non-commercial (CC BY-NC-ND 4.0). No mode is cleared for commercial use.',
@@ -445,28 +420,24 @@ def project(source, source_sha256, review=None):
         pending.append('Fixture data: no benchmark was run.')
     if not final:
         pending.append('Final freeze, release identity and date pending.')
-    if len(rows) != len(METRICS) or comparison is None or summary is None:
-        pending.append('RigMark results and comparison qualification pending.')
-    if quality is None:
-        pending.append('Scoped exactness claim and evidence pending.')
-    if not limitations or not panel_note:
-        pending.append('Quality and release limitations pending.')
+    if len(rows) != len(METRICS):
+        pending.append('Single-stream RigMark results pending.')
+    if any(row['status'] != 'measured' for row in concurrent):
+        pending.append('Sealed multi-stream results and source mapping pending.')
+    if not panel_ready:
+        pending.append('Updated per-check qualification and evidence pending.')
     if license_info is None or result_file is None:
         pending.append('Release links and license qualification pending.')
-    # Only an explicit review mapping bound to the original bytes can expose a pending seal.
-    qualified = (len(rows) == len(METRICS) and comparison is not None and summary is not None and
-                 quality is not None and bool(limitations) and bool(panel_note) and
-                 license_info is not None and result_file is not None)
-    visible = not fixture and qualified and (final or review is not None)
+    visible = (not fixture and (final or review is not None)) or rehearsal
+    require(not rehearsal or fixture, 'rehearsal requires fixture data')
     return dict(schema='jspark3-site/2', title=TITLE, engine='TensorFold', fixture=fixture, publication_hold=True,
                 pending=pending, source_sha256=source_sha256, review_commit=review['commit'] if review else None, published=None,
                 rows=rows if visible else [], comparison=comparison,
                 **{key: value if visible else [] for key, value in measurements.items()},
-                comparison_claim=summary if visible else None, quality=quality if visible else None,
-                checks=checks if visible else [], panel_note=panel_note if visible else None,
-                quality_notes=(["The source summary marks RigMark gates as not run, while its per-check record marks them PASS. Both source records are retained here."]
-                               if visible and 'rigmark_gates (NOT-RUN)' in (panel_note or '') and
-                               (panel.get('rigmark_gates') or {}).get('status') == 'PASS' else []),
+                multistream=concurrent if visible else multistream.pending(),
+                comparison_claim=None, quality=quality if visible and panel_ready else None,
+                checks=checks if visible and panel_ready else [], panel_note=panel_note if visible else None,
+                quality_notes=[], quality_run_sha256=quality_hash,
                 limitations=limitations if visible else [], license=license_info,
                 social_image='/jspark3/glm/share/?v=' + source_sha256[:12],
                 links=dict(release=REPO + '/releases/tag/v2.0.0', source=REPO + '/tree/' + release_ref,
@@ -475,6 +446,7 @@ def project(source, source_sha256, review=None):
 
 def snapshot(source):
     """Keep only consumed fields; private boot metadata never enters the public repo."""
+    source = multistream.adapt_source(source)
     def keep(value, keys):
         return {k: value[k] for k in keys if k in value}
     out = keep(source, ['schema', 'state', 'fixture', 'frozen_at', 'tag', 'version', 'release_date'])
@@ -487,7 +459,7 @@ def snapshot(source):
                                             'vs_upstream_tp3', 'evidence', 'display']) for key, value in (tf.get('rows') or {}).items()},
                      reference={key: keep(value, ['class', 'conditions', 'display'] + METRICS) for key, value in (tf.get('reference') or {}).items()
                                 if key in ('line', 'upstream_tp3_set1', 'upstream_tp3_set2')},
-                     quality={key: keep(value, ['status', 'observed', 'failed_cases', 'display', 'evidence']) if isinstance(value, dict) else value
+                     quality={key: keep(value, ['status', 'observed', 'reason', 'failed_cases', 'display', 'evidence']) if isinstance(value, dict) else value
                               for key, value in (tf.get('quality') or {}).items() if isinstance(value, dict) or key == 'overall'})
     if out['tf']['exact'].get('drafting_proof'):
         out['tf']['exact']['drafting_proof'] = keep(out['tf']['exact']['drafting_proof'],
@@ -510,6 +482,7 @@ def snapshot(source):
         out['site_v2']['comparison'] = keep(site['comparison'], ['source', 'line_source', 'topology', 'engine_weights', 'same_conditions'])
     if site.get('license') is not None:
         out['site_v2']['license'] = keep(site['license'], ['notice', 'source'])
+    out.update(multistream.snapshot(source, require))
     text(string_values(out), 'public source')
     return out
 
@@ -536,6 +509,8 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--fill', type=Path)
     parser.add_argument('--check', action='store_true')
+    parser.add_argument('--rehearsal', type=Path, help='write fixture projection outside the repository only')
+    parser.add_argument('--quality-run', type=Path, help='read the completed quality document before admitting its sealed per-check results')
     parser.add_argument('--preview', action='store_true')
     parser.add_argument('--fixture', action='store_true')
     parser.add_argument('--original', type=Path)
@@ -546,7 +521,19 @@ def main():
         source = read(raw)
         digest = hashlib.sha256(raw).hexdigest()
         review = read(args.review.read_text()) if args.review else None
-        data = project(source, digest, review)
+        if args.quality_run:
+            require(review is not None, 'quality document requires a hash-bound review mapping')
+            quality_doc = args.quality_run.read_bytes()
+            require(b'PUBLIC-WORDS-BEGIN' in quality_doc and b'agent_tools' in quality_doc, 'completed quality document required')
+            review['quality_run_sha256'] = hashlib.sha256(quality_doc).hexdigest()
+        data = project(source, digest, review, rehearsal=args.rehearsal is not None)
+        if args.rehearsal:
+            require(data['fixture'], 'rehearsal requires fixture data')
+            destination = args.rehearsal.resolve()
+            require(not destination.is_relative_to(ROOT), 'rehearsal output must stay outside the public repository')
+            destination.write_text(json.dumps(data, indent=2, ensure_ascii=False) + '\n')
+            print('Wrote private fixture rehearsal. Publication remains blocked.')
+            return
         require(args.fixture or not data['fixture'], 'fixture requires --fixture')
         public_source = snapshot(source)
         require(data == project(public_source, digest, review), 'snapshot would drop visible data')

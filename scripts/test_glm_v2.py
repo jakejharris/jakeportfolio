@@ -56,6 +56,22 @@ def measurement_fixture():
     return dict(latency=latency,prefill=prefill,decode=decode)
 
 
+def multistream_fixture():
+    """Invented site contract, deliberately not the producer's release schema."""
+    rows = []
+    for streams in ('2', '4', '8'):
+        rows.append(dict(streams=streams, workload_label='Synthetic code', status='measured', unit='tok/s', better='higher',
+                         instrument='Synthetic serving ruler', workload='Invented code prompts, fixed output budget.',
+                         timing='Aggregate output tokens / wave wall seconds, from first request opening to final request completion.',
+                         cache='Cold requests; no shared prefix reuse.', evidence=['release/receipts/rehearsal.json'],
+                         aggregate=dict(median=gate.Number('901.2'), worst=gate.Number('901.1'),
+                                        values=[gate.Number('901.1'),gate.Number('901.2'),gate.Number('901.3')],n=gate.Number('3'),
+                                        display=dict(median='901.2',worst='901.1',values=['901.1','901.2','901.3']),
+                                        trace=[dict(receipt='release/receipts/rehearsal.json',sha256='f'*64,
+                                                    pointer=f'/phases/code/{streams}/{i}/aggregate') for i in range(3)])))
+    return rows
+
+
 def sample():
     """Invented complete input, never a benchmark or a release receipt."""
     source = gate.read((gate.ROOT / 'scripts/fixtures/glm-v2-results.fixture.json').read_text())
@@ -103,20 +119,18 @@ class PublicationTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             paths = self.paths(directory, source)
             data = gate.check(*paths, preview=True, original=paths[1])
-        self.assertEqual(data['pending'], [])
+        self.assertTrue(data['pending'])
         self.assertEqual([row['id'] for row in data['rows']], ['rigmark_code','rigmark_prose','rigmark_structured'])
         self.assertEqual(data['rows'][0]['median_text'], '11.200')
-        self.assertEqual(data['rows'][0]['margin_text'], '5.500')
-        self.assertEqual(data['rows'][1]['margin_text'], '-2.500')
         self.assertEqual(data['rows'][0]['values_text'], ['11.100','11.200','11.300'])
-        self.assertEqual(data['quality']['claim'], source['site_v2']['exactness_claim'])
-        self.assertEqual(data['comparison_claim'], source['site_v2']['comparison_claim'])
-        self.assertEqual(data['checks'][1]['status'], 'NOT-RUN')
+        self.assertIsNone(data['quality'])
+        self.assertIsNone(data['comparison_claim'])
+        self.assertEqual(data['checks'], [])
 
     def test_final_numbers_do_not_lift_publication_hold(self):
         with tempfile.TemporaryDirectory() as directory:
             paths = self.paths(directory, sample())
-            with self.assertRaisesRegex(ValueError, 'preview-only hold'):
+            with self.assertRaisesRegex(ValueError, 'publication blocked'):
                 gate.check(*paths)
 
     def test_interim_and_fixture_results_never_reach_consumers(self):
@@ -132,13 +146,14 @@ class PublicationTests(unittest.TestCase):
                 self.assertEqual(data['checks'], [])
                 self.assertTrue(data['pending'])
 
-    def test_incomplete_qualification_keeps_all_results_pending(self):
+    def test_single_stream_is_independent_of_pending_other_sections(self):
         for field in ['exactness_claim','comparison_claim','limitations','license','results_path','comparison']:
             with self.subTest(field=field):
                 source = sample()
                 source['site_v2'].pop(field)
                 data = gate.project(source, 'b'*64)
-                self.assertEqual(data['rows'], [])
+                self.assertEqual(len(data['rows']), 3)
+                self.assertIsNone(data['comparison'])
                 self.assertIsNone(data['quality'])
                 self.assertTrue(data['pending'])
 
@@ -156,7 +171,7 @@ class PublicationTests(unittest.TestCase):
                 if mutation == 'rounding': data['rows'][0]['median_text']='11.2'
                 elif mutation == 'wrong cell': data['rows'][0]['median_text']=data['rows'][1]['median_text']
                 elif mutation == 'omitted row': data['rows'].pop(1)
-                elif mutation == 'claim rewrite': data['quality']['claim']='Always exact'
+                elif mutation == 'claim rewrite': data['comparison_claim']='Always faster'
                 else: data['publication_hold']=False
                 paths[0].write_text(json.dumps(data))
                 with self.assertRaisesRegex(ValueError, 'differs from source'):
@@ -175,18 +190,10 @@ class PublicationTests(unittest.TestCase):
             ('wrong engine', lambda s:s['tf']['identity'].update(engine_repo='another/engine'), 'engine identity'),
             ('number string', lambda s:s['tf']['rows']['rigmark_code'].update(median='11.200'), 'literal JSON'),
             ('missing repeat', lambda s:s['tf']['rows']['rigmark_code']['values'].pop(), 'repeat count'),
-            ('one repeat under line', lambda s:s['tf']['rows']['rigmark_code'].update(worst=gate.Number('9.500'),values=[gate.Number('9.500'),gate.Number('11.200'),gate.Number('11.300')]), 'every-repeat'),
-            ('prose promoted', lambda s:s['tf']['rows']['rigmark_prose'].update(vs_line='above'), 'line verdict'),
-            ('intensifier enum', lambda s:s['tf']['rows']['rigmark_code'].update(vs_upstream_tp3='clearly beats'), 'neutral TP3'),
-            ('wrong sign', lambda s:s['tf']['rows']['rigmark_prose'].update(vs_line_pct=gate.Number('2.500')), 'margin sign'),
             ('derived own row', lambda s:s['tf']['rows']['rigmark_code'].update(**{'class':'derived'}), 'measured tok/s'),
             ('missing evidence', lambda s:s['tf']['rows']['rigmark_code'].update(evidence=[]), 'row evidence'),
             ('private evidence', lambda s:s['tf']['rows']['rigmark_code'].update(evidence=['/home/operator/result.json']), 'forbidden public text'),
             ('wrong workload', lambda s:s['tf']['rows'].update(decode_c4=s['tf']['rows']['rigmark_code']), 'only single-stream'),
-            ('matched conditions', lambda s:s['site_v2']['comparison'].update(same_conditions=True), 'matched conditions'),
-            ('lost caveat', lambda s:s['tf']['reference']['line'].update(conditions='Different machines.'), 'fabric caveat'),
-            ('lost weights caveat', lambda s:s['site_v2']['comparison'].update(engine_weights='Different machines.'), 'weight differences'),
-            ('moving reference', lambda s:s['site_v2']['comparison'].update(source='https://github.com/mmastrac/example/blob/main/README.md'), 'pinned'),
             ('failed exactness', lambda s:s['tf']['exact'].update(verdict='FAIL'), 'passing TensorFold'),
             ('invalid exactness', lambda s:s['tf']['exact'].update(verdict='INVALID'), 'passing TensorFold'),
             ('wrong count', lambda s:s['tf']['exact'].update(prompts=gate.Number('7')), 'corpus mismatch'),
@@ -196,7 +203,6 @@ class PublicationTests(unittest.TestCase):
             ('unscoped exactness', lambda s:s['site_v2'].update(exactness_claim='Speculative output is byte-identical to serial.'), 'unapproved exactness'),
             ('lost corpus scope', lambda s:s['tf']['exact'].update(scope='Measured result.'), 'scope missing'),
             ('missing receipt hash', lambda s:s['tf']['exact'].pop('sha256'), 'receipt hash'),
-            ('wrong row count', lambda s:s['site_v2'].update(above_line_rows=gate.Number('3')), 'count mismatch'),
             ('wrong drafter clearance', lambda s:s['site_v2']['license'].update(notice='Commercial use cleared.'), 'drafter qualification'),
         ]
         for name,edit,reason in cases:
@@ -252,14 +258,38 @@ class PublicationTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'cannot authorize fixture'):
             gate.project(source, 'b'*64, review)
 
-    def test_quality_summary_disagreement_is_visible(self):
+    def quality_source(self):
         source = sample()
-        source['tf']['quality']['overall'] = 'INCOMPLETE: rigmark_gates (NOT-RUN)'
-        source['tf']['quality']['rigmark_gates'] = {'status':'PASS','observed':'Recorded gates passed.'}
-        result = gate.project(source, 'a'*64)
-        self.assertEqual(result['panel_note'], source['tf']['quality']['overall'])
-        self.assertTrue(result['quality_notes'])
-        self.assertEqual(next(c for c in result['checks'] if c['id']=='rigmark_gates')['status'], 'PASS')
+        source['tf']['quality'] = {
+            'agent_tools': {'status':'PASS', 'observed':'10/10 (5 tasks, each whole and streamed)', 'evidence':'release/receipts/quality-agent-tools.json'},
+            'needle': {'status':'INVESTIGATE', 'observed':'9/9 found', 'reason':'The full ladder is not evaluable at this window.', 'evidence':'release/receipts/quality-needle.json'},
+            'nll': {'status':'N/A', 'reason':'Needs token logprobs, which TensorFold does not return', 'evidence':'release/receipts/quality-nll.json'},
+            'toolcall': {'status':'N/A', 'reason':'Needs token logprobs, which TensorFold does not return', 'evidence':'release/receipts/quality-nll.json'},
+            'overall':'No overall claim is made.'}
+        review = dict(commit='a'*40, source_sha256='b'*64, results_path=source['site_v2']['results_path'],
+                      copy_source=dict(path='README.md',sha256='c'*64), site_v2=source['site_v2'], quality_run_sha256='d'*64)
+        return source, review
+
+    def test_quality_requires_document_and_preserves_raw_per_check_results(self):
+        source, review = self.quality_source()
+        self.assertEqual(gate.project(source, 'b'*64)['checks'], [])
+        result = gate.project(source, 'b'*64, review)
+        self.assertEqual(result['checks'][0]['observed'], source['tf']['quality']['agent_tools']['observed'])
+        self.assertEqual(result['checks'][1]['status'], 'INVESTIGATE')
+        self.assertEqual(result['checks'][2]['status'], 'N/A')
+        self.assertNotIn('PASS', result['panel_note'])
+        self.assertTrue(result['quality'])
+        self.assertEqual(result, gate.project(gate.snapshot(source), 'b'*64, review))
+
+    def test_quality_refuses_overall_pass_logprob_pass_and_contender_flag(self):
+        for kind in ['overall', 'nll', 'toolcall', 'needle', 'receipt']:
+            source, review = self.quality_source()
+            if kind == 'receipt': source['tf']['quality']['agent_tools'].pop('evidence')
+            elif kind == 'overall': source['tf']['quality']['overall'] = 'PASS'
+            elif kind == 'needle': source['tf']['quality']['needle']['observed'] = 'CONTENDERS ONLY'
+            else: source['tf']['quality'][kind]['status'] = 'PASS'
+            with self.subTest(kind=kind), self.assertRaises(ValueError):
+                gate.project(source, 'b'*64, review)
 
     def test_committed_review_mapping_matches_source_and_preserves_hold(self):
         data = gate.check(preview=True)
@@ -279,11 +309,11 @@ class PublicationTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
     def test_display_strings_cannot_rewrite_sealed_measurements(self):
-        for value in ['+4.9%', '4.8%', '+4.80%']:
+        for value in ['87.9', '87.6%', '87.60']:
             with self.subTest(value=value):
                 source = gate.read(gate.SOURCE.read_text())
                 review = gate.read(gate.REVIEW.read_text())
-                source['tf']['rows']['rigmark_code']['display']['vs_line_pct'] = value
+                source['tf']['rows']['rigmark_code']['display']['median'] = value
                 with self.assertRaisesRegex(ValueError, 'display string'):
                     gate.project(source, review['source_sha256'], review)
 
@@ -291,8 +321,10 @@ class PublicationTests(unittest.TestCase):
         source = gate.read(gate.SOURCE.read_text())
         data = gate.check(preview=True)
         self.assertEqual(source['state'], 'final')
-        self.assertEqual([len(data[k]) for k in ('latency','prefill','decode')], [18,5,6])
-        self.assertEqual(data['comparison']['conditions'], {k:v['conditions'] for k,v in source['tf']['reference'].items()})
+        self.assertEqual([len(data[k]) for k in ('latency','prefill','decode')], [18,5,3])
+        self.assertIsNone(data['comparison'])
+        self.assertIsNone(data['comparison_claim'])
+        self.assertEqual([row['status'] for row in data['multistream']], ['pending']*3)
         for family in ('latency','prefill'):
             for row in data[family]:
                 original = source['tf'][family][row['id']]
@@ -300,7 +332,6 @@ class PublicationTests(unittest.TestCase):
                     self.assertEqual(row[key]['display'], original[key]['display'])
                 if family == 'prefill' and row['status'] == 'measured':
                     self.assertEqual(row['display'], original['display'])
-        self.assertEqual(data['rows'][2]['display']['margin_tps'], '+0.5')
         self.assertTrue(data['publication_hold'])
         self.assertIsNone(data['published'])
 
@@ -316,7 +347,6 @@ class PublicationTests(unittest.TestCase):
             ('missing trace', lambda s:s['tf']['latency']['ttft_short_cold']['first_token']['trace'].pop(), 'trace count'),
             ('uncounted missing', lambda s:s['tf']['latency']['ttft_short_cold']['first_content'].update(missing=gate.Number('1')), 'accounting'),
             ('zero disguised as missing', lambda s:s['tf']['decode']['decode_after_5k'].update(median=gate.Number('0')), 'must not contain'),
-            ('unverified unsupported', lambda s:s['tf']['decode']['code_c2']['source_read'].update(status='PENDING'), 'verified source'),
             ('private source read', lambda s:s['tf']['decode']['code_c2']['source_read'].update(finding='/home/operator/file'), 'forbidden public text'),
         ]
         for name, edit, message in cases:
@@ -343,6 +373,75 @@ class PublicationTests(unittest.TestCase):
         source=sample()
         source['site_v2']['display_rows']={}
         with self.assertRaisesRegex(ValueError,'unknown site fields'): gate.project(source,'a'*64)
+
+    def test_multi_stream_rehearsal_preserves_single_stream_and_literal_displays(self):
+        source=sample()
+        source.update(fixture=True, site_rehearsal=multistream_fixture())
+        result=gate.project(source,'a'*64,rehearsal=True)
+        self.assertEqual([r['streams'] for r in result['multistream']],['2','4','8'])
+        self.assertEqual(result['multistream'][0]['aggregate']['display']['median'],'901.2')
+        self.assertEqual(result['rows'][0]['median_text'],'11.200')
+        self.assertEqual(len(result['latency']),18)
+        self.assertTrue(result['publication_hold'])
+        self.assertIsNone(result['published'])
+        self.assertEqual(result,gate.project(gate.snapshot(source),'a'*64,rehearsal=True))
+        self.assertEqual([r['status'] for r in gate.project(source,'a'*64)['multistream']],['pending']*3)
+        source['fixture']=False
+        with self.assertRaisesRegex(ValueError,'rehearsal requires fixture'):
+            gate.project(source,'a'*64)
+
+    def test_multi_stream_normalized_contract_refuses_misleading_cells(self):
+        for kind in ('missing streams','wrong order','wrong display','wrong unit','no workload','no timing','no cache','no receipt','no trace','private copy'):
+            source=sample()
+            source.update(fixture=True,site_rehearsal=multistream_fixture())
+            row=source['site_rehearsal'][0]
+            if kind=='missing streams': source['site_rehearsal'].pop()
+            elif kind=='wrong order': source['site_rehearsal'].reverse()
+            elif kind=='wrong display': row['aggregate']['display']['median']='910.2'
+            elif kind=='wrong unit': row['unit']='s'
+            elif kind=='no workload': row.pop('workload')
+            elif kind=='no timing': row['timing']='Per-request timing.'
+            elif kind=='no cache': row.pop('cache')
+            elif kind=='no receipt': row['evidence']=[]
+            elif kind=='no trace': row['aggregate']['trace']=[]
+            else: row['workload']='W_C /home/operator/private'
+            with self.subTest(kind=kind),self.assertRaises(ValueError):
+                gate.project(source,'a'*64,rehearsal=True)
+
+    def test_multi_stream_keeps_workload_groups_separate(self):
+        source=sample()
+        code=multistream_fixture()
+        prose=copy.deepcopy(code)
+        for row in prose: row['workload_label']='Synthetic prose'
+        source.update(fixture=True,site_rehearsal=code+prose)
+        result=gate.project(source,'a'*64,rehearsal=True)
+        self.assertEqual(len(result['multistream']),6)
+        self.assertEqual(len({row['id'] for row in result['multistream']}),6)
+        self.assertEqual([row['workload_label'] for row in result['multistream']],['Synthetic code']*3+['Synthetic prose']*3)
+
+    def test_unsettled_real_schema_is_never_guessed(self):
+        source=sample()
+        source['tf']['decode']['code_c2']['class']='measured'
+        with self.assertRaisesRegex(ValueError,'mapping is not sealed'):
+            gate.project(source,'a'*64)
+
+    def test_rehearsal_cli_writes_only_private_output_and_public_check_refuses_it(self):
+        source=sample()
+        source.update(fixture=True,site_rehearsal=multistream_fixture())
+        original={p:p.read_bytes() for p in (gate.DATA,gate.SOURCE,gate.REVIEW)}
+        with tempfile.TemporaryDirectory() as folder:
+            input_path=Path(folder)/'input.json'; output_path=Path(folder)/'data.json'
+            input_path.write_text(gate.dump(source))
+            command=['python3','scripts/glm_v2.py','--fill',str(input_path),'--fixture','--rehearsal']
+            result=subprocess.run(command+[str(output_path)],cwd=gate.ROOT,capture_output=True,text=True)
+            self.assertEqual(result.returncode,0,result.stderr)
+            self.assertTrue(json.loads(output_path.read_text())['fixture'])
+            with self.assertRaisesRegex(ValueError,'differs from source'):
+                gate.check(output_path,input_path,preview=True)
+            result=subprocess.run(command+[str(gate.ROOT/'fixture-output.json')],cwd=gate.ROOT,capture_output=True,text=True)
+            self.assertNotEqual(result.returncode,0)
+            self.assertIn('outside the public repository',result.stderr)
+        self.assertEqual(original,{p:p.read_bytes() for p in original})
 
     def test_real_publication_commands_refuse_preview(self):
         import os

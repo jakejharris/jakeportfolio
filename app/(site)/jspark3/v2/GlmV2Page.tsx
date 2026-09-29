@@ -2,20 +2,21 @@ import React from 'react';
 import ClusterIllustration from './ClusterIllustration';
 import ProjectHeader from './ProjectHeader';
 import GlmV2Measurements from './GlmV2Measurements';
+import GlmV2Multistream from './GlmV2Multistream';
 import LegacyFragments from '../LegacyFragments';
-import { GLM_V2 as release, V2_DRAFTER_NOTICE, V2_METRICS } from '../glm-v2';
+import { GLM_V2, V2_DRAFTER_NOTICE, V2_METRICS, V2Release } from '../glm-v2';
 
 const NAV = [{ href: '#results', label: 'Results' }, { href: '#license', label: 'License' }, { href: '#releases', label: 'History' }];
 
-export default function GlmV2Page() {
+export default function GlmV2Page({ release = GLM_V2 }: { release?: V2Release } = {}) {
   return <div className="glm glm-v2" id="glm-top">
     <LegacyFragments />
     <a className="glm-skip" href="#results">Skip to results</a>
     <div className="glm-shell">
       <ProjectHeader prefix="glm" nav={NAV} />
       <aside className="glm-v2-preview" aria-label="Release preview">
-        <strong>Release preview · publication pending</strong>
-        <p>{release.rows.length ? 'Measured results from a checkpoint seal. Publication remains on hold; evidence links await publication of the checkpoint.' : 'The frozen results and release qualifications are pending.'}</p>
+        <strong>{release.fixture ? 'Synthetic rehearsal · invented values' : 'Release preview · publication pending'}</strong>
+        <p>{release.fixture ? 'Invented values for layout verification. Publication remains blocked.' : release.multistream.every(row => row.status === 'measured') ? 'Sealed candidate measurements. Publication remains on hold; evidence links await publication of the checkpoint.' : release.rows.length ? 'Earlier sealed single-stream checkpoint. Final candidate measurements are pending; publication remains on hold.' : 'The frozen results and release qualifications are pending.'}</p>
       </aside>
       <header className="glm-hero">
         <div>
@@ -24,8 +25,8 @@ export default function GlmV2Page() {
           <p className="glm-lede">TensorFold, on three Sparks.</p>
           <p className="glm-intro">The TensorFold engine, ported to TP=3, serving GLM-5.3-Flash with speculative decoding.</p>
           <div className="glm-speed">
-            <p className="glm-speed-line" data-quality-headline>{release.quality?.claim ?? 'Exactness check pending.'}</p>
-            <p className="glm-speed-sub">{release.quality?.scope ?? 'The scoped result will follow the frozen numbers and its receipt.'}</p>
+            <p className="glm-speed-line" data-quality-headline>{release.quality?.claim ?? 'Candidate qualification pending.'}</p>
+            <p className="glm-speed-sub">{release.quality?.scope ?? 'The final results will follow the sealed numbers and their receipts.'}</p>
           </div>
           <nav className="glm-actions" aria-label="Release resources">
             <a className="glm-button" href="#results">Explore the results ↓</a>
@@ -45,42 +46,22 @@ export default function GlmV2Page() {
       <div className="glm-shell">
         <div className="glm-section-heading">
           <p className="glm-v2-eyebrow">Single-stream RigMark</p>
-          <h2 id="results-title">Each row, with its reference.</h2>
-          <nav className="glm-v2-jumps" aria-label="Measurement sections"><a href="#latency">Latency ↓</a><a href="#prefill">Prefill ↓</a><a href="#decode">Decode coverage ↓</a></nav>
-          <p data-comparison-claim>{release.comparison_claim ?? 'Measurements and comparison verdicts pending.'}</p>
+          <h2 id="results-title">One request at a time.</h2>
+          <nav className="glm-v2-jumps" aria-label="Measurement sections"><a href="#latency">Latency ↓</a><a href="#prefill">Prefill ↓</a><a href="#multistream">Multi-stream ↓</a><a href="#decode">Decode coverage ↓</a></nav>
           <p>Decode throughput in tok/s, higher is better, one request at a time. These rows make no claim about prefill or concurrent requests.</p>
-          {release.comparison ? <div data-condition-differences>
-            <p>{release.comparison.topology}</p>
-            <p>{release.comparison.engine_weights}</p>
-          </div> : null}
         </div>
         <div className="glm-v2-table-wrap">
           <table className="glm-v2-table">
-            <caption>{release.comparison?.conditions.line ?? 'Reference conditions pending.'}</caption>
-            <thead><tr><th scope="col">Workload</th><th scope="col">Median</th><th scope="col">Slowest</th><th scope="col">Line</th></tr></thead>
+            <caption>Single-stream RigMark · tok/s · higher is better</caption>
+            <thead><tr><th scope="col">Workload</th><th scope="col">Median</th><th scope="col">Slowest repeat</th></tr></thead>
             <tbody>{Object.entries(V2_METRICS).map(([id, label]) => {
               const row = release.rows.find(item => item.id === id);
               return <tr key={id}><th scope="row">{label}</th>
-                <td>{row?.display.median ?? 'Pending'}</td><td>{row?.display.worst ?? 'Pending'}</td><td>{row?.display.line ?? 'Pending'}</td>
+                <td>{row?.display.median ?? 'Pending'}</td><td>{row?.display.worst ?? 'Pending'}</td>
               </tr>;
             })}</tbody>
           </table>
-          <div className="glm-v2-margins" aria-label="Percentage differences from the line">
-            {release.rows.map(row => <p key={row.id}><strong>{V2_METRICS[row.id]}</strong><span>{row.display.margin} · {row.vs_line} the line{row.display.margin_tps ? ` (${row.display.margin_tps} tok/s)` : ''}</span></p>)}
-          </div>
         </div>
-        <div className="glm-v2-table-wrap">
-          <table className="glm-v2-table">
-            <caption>mmastrac’s published TP3 results, author-reported.<span className="glm-v2-reference-conditions">First set: {release.comparison?.conditions.upstream_tp3_set1}</span><span className="glm-v2-reference-conditions">Second set: {release.comparison?.conditions.upstream_tp3_set2}</span></caption>
-            <thead><tr><th scope="col">Workload</th><th scope="col">JSpark3 median</th><th scope="col">Published first set</th><th scope="col">Published second set</th></tr></thead>
-            <tbody>{Object.entries(V2_METRICS).map(([id, label]) => {
-              const row = release.rows.find(item => item.id === id);
-              return <tr key={id}><th scope="row">{label}</th><td>{row?.display.median ?? 'Pending'}</td>
-                <td>{row?.display.upstream_tp3_set1 ?? 'Pending'}</td><td>{row?.display.upstream_tp3_set2 ?? 'Pending'}</td></tr>;
-            })}</tbody>
-          </table>
-        </div>
-        {release.comparison ? <p className="glm-evidence-link"><a href={release.comparison.source}>Pinned TP3 publication ↗</a><a href={release.comparison.line_source}>Reference line source ↗</a></p> : null}
         {release.rows.length ? <details className="glm-history-results">
           <summary>Instruments, repeats and evidence</summary>
           {release.rows.map(row => <div key={row.id} className="glm-v2-start"><h3>{V2_METRICS[row.id]}</h3>
@@ -92,7 +73,8 @@ export default function GlmV2Page() {
       </div>
     </section>
 
-    <GlmV2Measurements />
+    <GlmV2Multistream rows={release.multistream} />
+    <GlmV2Measurements release={release} />
 
     <section className="glm-shell glm-v2-section" id="quality" aria-labelledby="quality-title">
       <p className="glm-v2-eyebrow">Qualification</p>
@@ -106,9 +88,10 @@ export default function GlmV2Page() {
         </details>
         <p><a href={release.quality.source}>Exactness receipt ↗</a></p>
       </> : <p className="glm-v2-empty">Quality result pending. The frozen result will supply the exactness claim, its scope and its evidence.</p>}
-      {release.panel_note ? <><p>{release.panel_note}</p><ul>{release.checks.map(check => <li key={check.id}>{check.id}: {check.status}{check.display?.passed !== undefined ? ` · ${check.display.passed}/${check.display.total}` : ''}{check.display?.corrupt !== undefined ? ` · ${check.display.corrupt} corrupt of ${check.display.total}` : ''}{check.display?.percentage ? ` (${check.display.percentage})` : ''}{check.source ? <> · <a href={check.source}>Receipt ↗</a></> : null}{check.failed_cases.length ? ` · Reported failures: ${check.failed_cases.join(', ')}` : ''}</li>)}</ul></> : null}
+      {release.panel_note ? <><p>{release.panel_note}</p><ul>{release.checks.map(check => <li key={check.id}>{check.id}: {check.status}{check.observed ? ` · ${check.observed}` : ''}{check.reason ? ` · ${check.reason}` : ''}{!check.observed && check.display?.passed !== undefined ? ` · ${check.display.passed}/${check.display.total}` : ''}{!check.observed && check.display?.corrupt !== undefined ? ` · ${check.display.corrupt} corrupt of ${check.display.total}` : ''}{!check.observed && check.display?.percentage ? ` (${check.display.percentage})` : ''}{check.source ? <> · <a href={check.source}>Receipt ↗</a></> : null}{check.failed_cases.length ? ` · Reported failures: ${check.failed_cases.join(', ')}` : ''}</li>)}</ul></> : null}
       {release.quality_notes.map(note => <p key={note} className="glm-v2-empty">{note}</p>)}
       <h3 style={{ marginTop: 24 }}>Release limitations</h3>
+      <p data-memory-limitation>Text preparation runs outside the 5.5 GiB memory envelope. That envelope remains an ESTIMATE; the fix is planned for v2.0.1.</p>
       {release.limitations.length ? <ul>{release.limitations.map(item => <li key={item}>{item}</li>)}</ul> : <p className="glm-v2-empty">Release-specific limitations and installation qualification are pending.</p>}
     </section>
 

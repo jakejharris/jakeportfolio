@@ -1,5 +1,5 @@
 import React from 'react';
-import { GLM_V2 as release, V2Latency, V2Stats, V2Trace, V2Unmeasured } from '../glm-v2';
+import { GLM_V2, V2Release, V2Latency, V2Stats, V2Trace, V2Unmeasured } from '../glm-v2';
 
 const CASES: Record<string, string> = { cold: 'Cold', warm: 'Warm resend', turn: 'Appended turn' };
 const MODES = ['Max (default)', 'Low'] as const;
@@ -56,25 +56,28 @@ function StatusCard({ row }: { row: V2Unmeasured }) {
   </article>;
 }
 
-export default function GlmV2Measurements() {
+export default function GlmV2Measurements({ release = GLM_V2 }: { release?: V2Release } = {}) {
+  const checkpointPending = release.multistream.some(row => row.status === 'pending');
   return <>
     <section className="glm-shell glm-v2-section" id="latency" aria-labelledby="latency-title">
       <p className="glm-v2-eyebrow">Latency · streamed requests</p>
       <h2 id="latency-title">First token. First answer text.</h2>
-      <p>These timings come from a later serving start of the same build as the RigMark and exactness checks. The engine, weights and draft policy are unchanged. They are single-request, greedy measurements, with no comparison against another recipe.</p>
+      <p>{checkpointPending ? 'These are single-request, greedy timings from the earlier sealed checkpoint. Final candidate timings are pending.' : 'These are single-request, greedy timings from the sealed candidate.'}</p>
       <dl className="glm-v2-definitions">
         <div><dt>First token</dt><dd>Client time from before opening the request to the first streamed reasoning or content text. Seconds, lower is better.</dd></div>
         <div><dt>First answer text</dt><dd>Client time to the first content text, after any reasoning. This is the start of the answer, not the completed answer. Seconds, lower is better.</dd></div>
       </dl>
       <p><strong>Max (default)</strong> uses the serving default. <strong>Low</strong> still reasons briefly. The response budgets differ by mode, so read each mode separately.</p>
-      <p className="glm-v2-empty"><strong>Cache behavior:</strong> cold uses a new prompt; warm resends the identical prompt but currently misses the cache and pays full prefill again. An appended turn reuses cached prompt tokens.</p>
+      <p className="glm-v2-empty"><strong>Cache conditions:</strong> cold uses a new prompt; warm resends the identical prompt; an appended turn extends the conversation. Each receipt records the cached tokens for its requests.</p>
+      {release.latency.length ? null : <p className="glm-v2-empty">Latency measurements pending.</p>}
       <div className="glm-v2-mode-tables">{MODES.map(mode => <LatencyTable key={mode} mode={mode} rows={release.latency.filter(row => row.effort === mode)} />)}</div>
     </section>
 
     <section className="glm-shell glm-v2-section" id="prefill" aria-labelledby="prefill-title">
       <p className="glm-v2-eyebrow">Client-effective prefill</p>
       <h2 id="prefill-title">Prompt work, including client overhead.</h2>
-      <p>Cold-request prompt tokens divided by time to the first streamed text. This is a client-effective rate, including request overhead, rather than a GPU-only prefill measurement. It uses the same later serving start and mode-specific response budgets as the latency table.</p>
+      <p>Cold-request prompt tokens divided by time to the first streamed text. This is a client-effective rate, including request overhead, rather than a GPU-only prefill measurement. Read it with the mode-specific response budgets in the latency receipts.</p>
+      {!release.prefill.length ? <p className="glm-v2-empty">Prefill measurements pending.</p> : null}
       <div className="glm-v2-table-wrap glm-v2-measure-table">
         <table className="glm-v2-table">
           <caption>Cold requests <span>tok/s · higher is better</span></caption>
@@ -95,7 +98,7 @@ export default function GlmV2Measurements() {
     <section className="glm-shell glm-v2-section" id="decode" aria-labelledby="decode-title">
       <p className="glm-v2-eyebrow">Decode coverage</p>
       <h2 id="decode-title">The limits of this recipe.</h2>
-      <p>Decode throughput would be reported in tok/s, higher is better. These workloads have no measured figures. Concurrent requests queue; the recipe serves a single request at a time.</p>
+      <p>Decode throughput would be reported in tok/s, higher is better. Post-context workloads have no measured figures yet. Multi-stream results appear in their own section above.</p>
       <div className="glm-v2-status-grid">{release.decode.map(row => <StatusCard key={row.id} row={row} />)}</div>
     </section>
   </>;
