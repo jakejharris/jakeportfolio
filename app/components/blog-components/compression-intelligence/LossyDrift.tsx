@@ -360,7 +360,7 @@ export default function LossyDrift() {
       ctx.strokeStyle = `rgba(${theme.filterLine}, 0.5)`;
       ctx.lineWidth = 1.5;
       ctx.beginPath();
-      ctx.roundRect(tx, ty, tWidth, tHeight, 6);
+      ctx.roundRect(tx, ty, tWidth, tHeight, 4);
       ctx.fill();
       ctx.stroke();
 
