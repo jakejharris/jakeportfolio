@@ -1,10 +1,10 @@
 {
   "schema": "jspark3-results/1",
-  "state": "pending",
-  "frozen_at": null,
+  "state": "final",
+  "frozen_at": "2026-09-29T15:27:27Z",
   "tag": "v2.0.0",
   "version": "v2.0.0",
-  "release_date": null,
+  "release_date": "2026-09-29",
   "tf": {
     "identity": {
       "engine_repo": "taussoe/TensorFold",
@@ -20,10 +20,28 @@
       "prompts": 8,
       "tested": 8,
       "diverging": 0,
+      "long_prompt_tokens": 39326,
+      "generated_tokens": 4434,
+      "display": {
+        "prompts": "8",
+        "long_prompt_tokens": "39,326",
+        "generated_tokens": "4,434",
+        "tested": "8"
+      },
       "drafting_proof": {
         "counters_rose_on": true,
         "counters_flat_off": true,
-        "per_reply_agree": true
+        "per_reply_agree": true,
+        "display": {
+          "tokens_after_first_on": "4,426",
+          "verify_cycles_on": "1,412",
+          "tokens_per_cycle": "3.13",
+          "serial_rounds_off": "4,426"
+        },
+        "tokens_after_first_on": 4426,
+        "verify_cycles_on": 1412,
+        "tokens_per_cycle": 3.13,
+        "serial_rounds_off": 4426
       },
       "off_source": "same-boot switch: \"draft\": false",
       "receipt": "release/receipts/exact-result.json",
@@ -51,7 +69,17 @@
           "release/receipts/lfl-r1.json",
           "release/receipts/lfl-r2.json",
           "release/receipts/lfl-r3.json"
-        ]
+        ],
+        "display": {
+          "median": "87.6",
+          "worst": "87.5",
+          "vs_line_pct": "+4.8%",
+          "values": [
+            "87.5",
+            "87.6",
+            "87.7"
+          ]
+        }
       },
       "rigmark_prose": {
         "median": 47.214,
@@ -73,7 +101,17 @@
           "release/receipts/lfl-r1.json",
           "release/receipts/lfl-r2.json",
           "release/receipts/lfl-r3.json"
-        ]
+        ],
+        "display": {
+          "median": "47.2",
+          "worst": "47.0",
+          "vs_line_pct": "-1.6%",
+          "values": [
+            "47.0",
+            "47.2",
+            "47.2"
+          ]
+        }
       },
       "rigmark_structured": {
         "median": 126.093,
@@ -95,24 +133,53 @@
           "release/receipts/lfl-r1.json",
           "release/receipts/lfl-r2.json",
           "release/receipts/lfl-r3.json"
-        ]
+        ],
+        "display": {
+          "median": "126.1",
+          "worst": "126.1",
+          "vs_line_pct": "+0.4%",
+          "vs_line_tps": "+0.5",
+          "values": [
+            "126.1",
+            "126.1",
+            "126.4"
+          ]
+        }
       }
     },
     "reference": {
       "line": {
         "class": "derived-midpoint",
+        "conditions": "The line is derived from mmastrac's published TP=2 and TP=4 figures, measured on a switched 200G fabric; this is not a matched-conditions comparison.",
+        "display": {
+          "rigmark_code": "83.6",
+          "rigmark_prose": "48.0",
+          "rigmark_structured": "125.6"
+        },
         "rigmark_code": 83.6,
         "rigmark_prose": 48.0,
         "rigmark_structured": 125.6
       },
       "upstream_tp3_set1": {
         "class": "author-reported",
+        "conditions": "These are mmastrac's published TP=3 figures, measured on a switched 200G fabric; this is not a matched-conditions comparison.",
+        "display": {
+          "rigmark_code": "75.7",
+          "rigmark_prose": "43.8",
+          "rigmark_structured": "113.8"
+        },
         "rigmark_code": 75.7,
         "rigmark_prose": 43.8,
         "rigmark_structured": 113.8
       },
       "upstream_tp3_set2": {
         "class": "author-reported",
+        "conditions": "These are mmastrac's published TP=3 figures, measured on a switched 200G fabric; this is not a matched-conditions comparison.",
+        "display": {
+          "rigmark_code": "76.2",
+          "rigmark_prose": "44.0",
+          "rigmark_structured": "114.0"
+        },
         "rigmark_code": 76.2,
         "rigmark_prose": 44.0,
         "rigmark_structured": 114.0
@@ -122,35 +189,60 @@
       "smoketest": {
         "status": "PASS",
         "observed": "8/8",
-        "failed_cases": []
+        "failed_cases": [],
+        "display": {
+          "passed": "8",
+          "total": "8"
+        },
+        "evidence": "release/receipts/quality-result.json"
       },
       "nll": {
         "status": "not run",
-        "observed": null
+        "observed": null,
+        "evidence": "release/receipts/quality-result.json"
       },
       "gsm8k": {
         "status": "PASS",
-        "observed": "241/250 = 96.4%"
+        "observed": "241/250 = 96.4%",
+        "display": {
+          "passed": "241",
+          "total": "250",
+          "percentage": "96.4%"
+        },
+        "evidence": "release/receipts/quality-result.json"
       },
       "humaneval": {
         "status": "PASS",
-        "observed": "153/164"
+        "observed": "153/164",
+        "display": {
+          "passed": "153",
+          "total": "164"
+        },
+        "evidence": "release/receipts/quality-result.json"
       },
       "count": {
         "status": "PASS",
-        "observed": "0 corrupt of 5"
+        "observed": "0 corrupt of 5",
+        "display": {
+          "corrupt": "0",
+          "total": "5"
+        },
+        "evidence": "release/receipts/quality-result.json"
       },
       "toolcall": {
         "status": "not run",
-        "observed": null
+        "observed": null,
+        "evidence": "release/receipts/quality-result.json"
       },
       "agent_tools": {
         "status": "not run",
-        "observed": null
+        "observed": null,
+        "evidence": "release/receipts/quality-result.json"
       },
       "needle": {
         "status": "not run",
-        "observed": null
+        "observed": null,
+        "evidence": "release/receipts/quality-result.json"
       },
       "rigmark_gates": {
         "status": "PASS",
@@ -158,9 +250,3669 @@
       },
       "audit_code": {
         "status": "not run",
-        "observed": null
+        "observed": null,
+        "evidence": "release/receipts/quality-result.json"
       },
       "overall": "INCOMPLETE: not passed: nll (NOT-RUN), toolcall (NOT-RUN), agent_tools (NOT-RUN), needle (NOT-RUN), rigmark_gates (NOT-RUN)"
+    },
+    "latency": {
+      "ttft_32k_cold_think_off": {
+        "unit": "s",
+        "better": "lower",
+        "class": "measured",
+        "conditions": {
+          "prompt": "32k",
+          "case": "cold",
+          "thinking": false,
+          "reasoning_effort": null,
+          "rendered_effort": "low",
+          "effort_label": "Low",
+          "serving_default": false,
+          "prompt_tokens": [
+            32013,
+            32014,
+            32014
+          ],
+          "cached_tokens": [
+            0,
+            0,
+            0
+          ],
+          "rendered_sha": [
+            "891c4a9399c4cb02",
+            "063100ca571a9a1d",
+            "3f207755c53a18ec"
+          ],
+          "render_evidence": [
+            {
+              "receipt": "release/receipts/ttft-1a-r-low.json",
+              "pointer": "/requests/18/rendered_sha"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-low.json",
+              "pointer": "/requests/21/rendered_sha"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-low.json",
+              "pointer": "/requests/24/rendered_sha"
+            }
+          ],
+          "max_tokens": 256,
+          "temperature": 0,
+          "top_p": 1,
+          "seed": 20260929,
+          "stream": true,
+          "streams": 1,
+          "planned_n": 3,
+          "clock_start": "client, before the request opens",
+          "first_token_end": "first SSE event with non-empty reasoning or content text",
+          "first_content_end": "first SSE event with non-empty content text"
+        },
+        "instrument": {
+          "name": "TTFT probe",
+          "version": 3,
+          "sha256": "3e67dfa991461a937c32e4aa1289193c6628cb663ee0421be00d333ba8d42f54"
+        },
+        "evidence": [
+          "release/receipts/ttft-1a-r-low.json"
+        ],
+        "first_token": {
+          "median": 22.597059579973575,
+          "worst": 22.6759857290308,
+          "values": [
+            22.6759857290308,
+            22.597059579973575,
+            22.584729333000723
+          ],
+          "n": 3,
+          "display": {
+            "median": "22.60",
+            "worst": "22.68",
+            "values": [
+              "22.68",
+              "22.60",
+              "22.58"
+            ]
+          },
+          "unit": "s",
+          "better": "lower",
+          "trace": [
+            {
+              "receipt": "release/receipts/ttft-1a-r-low.json",
+              "sha256": "90ebd8ef916ac0279542f3dc969e2f27e0f7af95217b822ca9097579889b8112",
+              "pointer": "/requests/18/ttft_any"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-low.json",
+              "sha256": "90ebd8ef916ac0279542f3dc969e2f27e0f7af95217b822ca9097579889b8112",
+              "pointer": "/requests/21/ttft_any"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-low.json",
+              "sha256": "90ebd8ef916ac0279542f3dc969e2f27e0f7af95217b822ca9097579889b8112",
+              "pointer": "/requests/24/ttft_any"
+            }
+          ]
+        },
+        "first_content": {
+          "median": 23.02643440797692,
+          "worst": 23.032286560046487,
+          "values": [
+            23.032286560046487,
+            22.9726053919876,
+            23.02643440797692
+          ],
+          "n": 3,
+          "display": {
+            "median": "23.03",
+            "worst": "23.03",
+            "values": [
+              "23.03",
+              "22.97",
+              "23.03"
+            ]
+          },
+          "unit": "s",
+          "better": "lower",
+          "trace": [
+            {
+              "receipt": "release/receipts/ttft-1a-r-low.json",
+              "sha256": "90ebd8ef916ac0279542f3dc969e2f27e0f7af95217b822ca9097579889b8112",
+              "pointer": "/requests/18/ttft_content"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-low.json",
+              "sha256": "90ebd8ef916ac0279542f3dc969e2f27e0f7af95217b822ca9097579889b8112",
+              "pointer": "/requests/21/ttft_content"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-low.json",
+              "sha256": "90ebd8ef916ac0279542f3dc969e2f27e0f7af95217b822ca9097579889b8112",
+              "pointer": "/requests/24/ttft_content"
+            }
+          ],
+          "missing": 0,
+          "conditional": false,
+          "censored_trace": []
+        },
+        "reasoning_tokens": {
+          "median": 19,
+          "worst": 19,
+          "values": [
+            19,
+            19,
+            19
+          ],
+          "n": 3,
+          "display": {
+            "median": "19",
+            "worst": "19",
+            "values": [
+              "19",
+              "19",
+              "19"
+            ]
+          },
+          "trace": [
+            {
+              "receipt": "release/receipts/ttft-1a-r-low.json",
+              "pointer": "/requests/18/reasoning_tokens"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-low.json",
+              "pointer": "/requests/21/reasoning_tokens"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-low.json",
+              "pointer": "/requests/24/reasoning_tokens"
+            }
+          ]
+        }
+      },
+      "ttft_32k_cold": {
+        "unit": "s",
+        "better": "lower",
+        "class": "measured",
+        "conditions": {
+          "prompt": "32k",
+          "case": "cold",
+          "thinking": null,
+          "reasoning_effort": null,
+          "rendered_effort": "max",
+          "effort_label": "Max (default)",
+          "serving_default": true,
+          "prompt_tokens": [
+            32015,
+            32015,
+            32013
+          ],
+          "cached_tokens": [
+            0,
+            0,
+            0
+          ],
+          "rendered_sha": [
+            "fec90a2c8dc7c191",
+            "40fd71f59114feb3",
+            "9c8dbd5aa86196ba"
+          ],
+          "render_evidence": [
+            {
+              "receipt": "release/receipts/ttft-1a-r-unset.json",
+              "pointer": "/requests/18/rendered_sha"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-unset.json",
+              "pointer": "/requests/21/rendered_sha"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-unset.json",
+              "pointer": "/requests/24/rendered_sha"
+            }
+          ],
+          "max_tokens": 1536,
+          "temperature": 0,
+          "top_p": 1,
+          "seed": 20260929,
+          "stream": true,
+          "streams": 1,
+          "planned_n": 3,
+          "clock_start": "client, before the request opens",
+          "first_token_end": "first SSE event with non-empty reasoning or content text",
+          "first_content_end": "first SSE event with non-empty content text"
+        },
+        "instrument": {
+          "name": "TTFT probe",
+          "version": 3,
+          "sha256": "3e67dfa991461a937c32e4aa1289193c6628cb663ee0421be00d333ba8d42f54"
+        },
+        "evidence": [
+          "release/receipts/ttft-1a-r-unset.json"
+        ],
+        "first_token": {
+          "median": 22.61625321797328,
+          "worst": 22.742109707032796,
+          "values": [
+            22.61625321797328,
+            22.60046692896867,
+            22.742109707032796
+          ],
+          "n": 3,
+          "display": {
+            "median": "22.62",
+            "worst": "22.74",
+            "values": [
+              "22.62",
+              "22.60",
+              "22.74"
+            ]
+          },
+          "unit": "s",
+          "better": "lower",
+          "trace": [
+            {
+              "receipt": "release/receipts/ttft-1a-r-unset.json",
+              "sha256": "96fe1a1dab191557b7792b9965da79c9f5d880408ee44bec505c92741ddafaa3",
+              "pointer": "/requests/18/ttft_any"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-unset.json",
+              "sha256": "96fe1a1dab191557b7792b9965da79c9f5d880408ee44bec505c92741ddafaa3",
+              "pointer": "/requests/21/ttft_any"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-unset.json",
+              "sha256": "96fe1a1dab191557b7792b9965da79c9f5d880408ee44bec505c92741ddafaa3",
+              "pointer": "/requests/24/ttft_any"
+            }
+          ]
+        },
+        "first_content": {
+          "median": 23.501522924983874,
+          "worst": 23.738606979954056,
+          "values": [
+            23.738606979954056,
+            23.501522924983874,
+            23.345367575006094
+          ],
+          "n": 3,
+          "display": {
+            "median": "23.50",
+            "worst": "23.74",
+            "values": [
+              "23.74",
+              "23.50",
+              "23.35"
+            ]
+          },
+          "unit": "s",
+          "better": "lower",
+          "trace": [
+            {
+              "receipt": "release/receipts/ttft-1a-r-unset.json",
+              "sha256": "96fe1a1dab191557b7792b9965da79c9f5d880408ee44bec505c92741ddafaa3",
+              "pointer": "/requests/18/ttft_content"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-unset.json",
+              "sha256": "96fe1a1dab191557b7792b9965da79c9f5d880408ee44bec505c92741ddafaa3",
+              "pointer": "/requests/21/ttft_content"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-unset.json",
+              "sha256": "96fe1a1dab191557b7792b9965da79c9f5d880408ee44bec505c92741ddafaa3",
+              "pointer": "/requests/24/ttft_content"
+            }
+          ],
+          "missing": 0,
+          "conditional": false,
+          "censored_trace": []
+        },
+        "reasoning_tokens": {
+          "median": 77,
+          "worst": 81,
+          "values": [
+            77,
+            81,
+            47
+          ],
+          "n": 3,
+          "display": {
+            "median": "77",
+            "worst": "81",
+            "values": [
+              "77",
+              "81",
+              "47"
+            ]
+          },
+          "trace": [
+            {
+              "receipt": "release/receipts/ttft-1a-r-unset.json",
+              "pointer": "/requests/18/reasoning_tokens"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-unset.json",
+              "pointer": "/requests/21/reasoning_tokens"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-unset.json",
+              "pointer": "/requests/24/reasoning_tokens"
+            }
+          ]
+        }
+      },
+      "ttft_32k_turn_think_off": {
+        "unit": "s",
+        "better": "lower",
+        "class": "measured",
+        "conditions": {
+          "prompt": "32k",
+          "case": "turn",
+          "thinking": false,
+          "reasoning_effort": null,
+          "rendered_effort": "low",
+          "effort_label": "Low",
+          "serving_default": false,
+          "prompt_tokens": [
+            32047,
+            32050,
+            32048
+          ],
+          "cached_tokens": [
+            32013,
+            32014,
+            32014
+          ],
+          "rendered_sha": [
+            "09cd04880e2b9fae",
+            "e794ae390c89fa57",
+            "7c759949f5c6cd66"
+          ],
+          "render_evidence": [
+            {
+              "receipt": "release/receipts/ttft-1a-r-low.json",
+              "pointer": "/requests/20/rendered_sha"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-low.json",
+              "pointer": "/requests/23/rendered_sha"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-low.json",
+              "pointer": "/requests/26/rendered_sha"
+            }
+          ],
+          "max_tokens": 256,
+          "temperature": 0,
+          "top_p": 1,
+          "seed": 20260929,
+          "stream": true,
+          "streams": 1,
+          "planned_n": 3,
+          "clock_start": "client, before the request opens",
+          "first_token_end": "first SSE event with non-empty reasoning or content text",
+          "first_content_end": "first SSE event with non-empty content text"
+        },
+        "instrument": {
+          "name": "TTFT probe",
+          "version": 3,
+          "sha256": "3e67dfa991461a937c32e4aa1289193c6628cb663ee0421be00d333ba8d42f54"
+        },
+        "evidence": [
+          "release/receipts/ttft-1a-r-low.json"
+        ],
+        "first_token": {
+          "median": 0.25510127597954124,
+          "worst": 0.2626218619989231,
+          "values": [
+            0.25510127597954124,
+            0.2626218619989231,
+            0.24970901501365006
+          ],
+          "n": 3,
+          "display": {
+            "median": "0.26",
+            "worst": "0.26",
+            "values": [
+              "0.26",
+              "0.26",
+              "0.25"
+            ]
+          },
+          "unit": "s",
+          "better": "lower",
+          "trace": [
+            {
+              "receipt": "release/receipts/ttft-1a-r-low.json",
+              "sha256": "90ebd8ef916ac0279542f3dc969e2f27e0f7af95217b822ca9097579889b8112",
+              "pointer": "/requests/20/ttft_any"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-low.json",
+              "sha256": "90ebd8ef916ac0279542f3dc969e2f27e0f7af95217b822ca9097579889b8112",
+              "pointer": "/requests/23/ttft_any"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-low.json",
+              "sha256": "90ebd8ef916ac0279542f3dc969e2f27e0f7af95217b822ca9097579889b8112",
+              "pointer": "/requests/26/ttft_any"
+            }
+          ]
+        },
+        "first_content": {
+          "median": 0.25510127597954124,
+          "worst": 0.2626218619989231,
+          "values": [
+            0.25510127597954124,
+            0.2626218619989231,
+            0.24970901501365006
+          ],
+          "n": 3,
+          "display": {
+            "median": "0.26",
+            "worst": "0.26",
+            "values": [
+              "0.26",
+              "0.26",
+              "0.25"
+            ]
+          },
+          "unit": "s",
+          "better": "lower",
+          "trace": [
+            {
+              "receipt": "release/receipts/ttft-1a-r-low.json",
+              "sha256": "90ebd8ef916ac0279542f3dc969e2f27e0f7af95217b822ca9097579889b8112",
+              "pointer": "/requests/20/ttft_content"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-low.json",
+              "sha256": "90ebd8ef916ac0279542f3dc969e2f27e0f7af95217b822ca9097579889b8112",
+              "pointer": "/requests/23/ttft_content"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-low.json",
+              "sha256": "90ebd8ef916ac0279542f3dc969e2f27e0f7af95217b822ca9097579889b8112",
+              "pointer": "/requests/26/ttft_content"
+            }
+          ],
+          "missing": 0,
+          "conditional": false,
+          "censored_trace": []
+        },
+        "reasoning_tokens": {
+          "median": 0,
+          "worst": 0,
+          "values": [
+            0,
+            0,
+            0
+          ],
+          "n": 3,
+          "display": {
+            "median": "0",
+            "worst": "0",
+            "values": [
+              "0",
+              "0",
+              "0"
+            ]
+          },
+          "trace": [
+            {
+              "receipt": "release/receipts/ttft-1a-r-low.json",
+              "pointer": "/requests/20/reasoning_tokens"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-low.json",
+              "pointer": "/requests/23/reasoning_tokens"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-low.json",
+              "pointer": "/requests/26/reasoning_tokens"
+            }
+          ]
+        }
+      },
+      "ttft_32k_turn": {
+        "unit": "s",
+        "better": "lower",
+        "class": "measured",
+        "conditions": {
+          "prompt": "32k",
+          "case": "turn",
+          "thinking": null,
+          "reasoning_effort": null,
+          "rendered_effort": "max",
+          "effort_label": "Max (default)",
+          "serving_default": true,
+          "prompt_tokens": [
+            32131,
+            32133,
+            32094
+          ],
+          "cached_tokens": [
+            32015,
+            32015,
+            32013
+          ],
+          "rendered_sha": [
+            "7ea6523a20c3f965",
+            "3938b3dff4ded4a9",
+            "7832d162b5600dca"
+          ],
+          "render_evidence": [
+            {
+              "receipt": "release/receipts/ttft-1a-r-unset.json",
+              "pointer": "/requests/20/rendered_sha"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-unset.json",
+              "pointer": "/requests/23/rendered_sha"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-unset.json",
+              "pointer": "/requests/26/rendered_sha"
+            }
+          ],
+          "max_tokens": 1536,
+          "temperature": 0,
+          "top_p": 1,
+          "seed": 20260929,
+          "stream": true,
+          "streams": 1,
+          "planned_n": 3,
+          "clock_start": "client, before the request opens",
+          "first_token_end": "first SSE event with non-empty reasoning or content text",
+          "first_content_end": "first SSE event with non-empty content text"
+        },
+        "instrument": {
+          "name": "TTFT probe",
+          "version": 3,
+          "sha256": "3e67dfa991461a937c32e4aa1289193c6628cb663ee0421be00d333ba8d42f54"
+        },
+        "evidence": [
+          "release/receipts/ttft-1a-r-unset.json"
+        ],
+        "first_token": {
+          "median": 0.2885551459621638,
+          "worst": 0.3019909549620934,
+          "values": [
+            0.2885551459621638,
+            0.3019909549620934,
+            0.24768544000107795
+          ],
+          "n": 3,
+          "display": {
+            "median": "0.29",
+            "worst": "0.30",
+            "values": [
+              "0.29",
+              "0.30",
+              "0.25"
+            ]
+          },
+          "unit": "s",
+          "better": "lower",
+          "trace": [
+            {
+              "receipt": "release/receipts/ttft-1a-r-unset.json",
+              "sha256": "96fe1a1dab191557b7792b9965da79c9f5d880408ee44bec505c92741ddafaa3",
+              "pointer": "/requests/20/ttft_any"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-unset.json",
+              "sha256": "96fe1a1dab191557b7792b9965da79c9f5d880408ee44bec505c92741ddafaa3",
+              "pointer": "/requests/23/ttft_any"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-unset.json",
+              "sha256": "96fe1a1dab191557b7792b9965da79c9f5d880408ee44bec505c92741ddafaa3",
+              "pointer": "/requests/26/ttft_any"
+            }
+          ]
+        },
+        "first_content": {
+          "median": 1.6882733309757896,
+          "worst": 2.811698517005425,
+          "values": [
+            2.811698517005425,
+            1.6882733309757896,
+            1.4124702949775383
+          ],
+          "n": 3,
+          "display": {
+            "median": "1.69",
+            "worst": "2.81",
+            "values": [
+              "2.81",
+              "1.69",
+              "1.41"
+            ]
+          },
+          "unit": "s",
+          "better": "lower",
+          "trace": [
+            {
+              "receipt": "release/receipts/ttft-1a-r-unset.json",
+              "sha256": "96fe1a1dab191557b7792b9965da79c9f5d880408ee44bec505c92741ddafaa3",
+              "pointer": "/requests/20/ttft_content"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-unset.json",
+              "sha256": "96fe1a1dab191557b7792b9965da79c9f5d880408ee44bec505c92741ddafaa3",
+              "pointer": "/requests/23/ttft_content"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-unset.json",
+              "sha256": "96fe1a1dab191557b7792b9965da79c9f5d880408ee44bec505c92741ddafaa3",
+              "pointer": "/requests/26/ttft_content"
+            }
+          ],
+          "missing": 0,
+          "conditional": false,
+          "censored_trace": []
+        },
+        "reasoning_tokens": {
+          "median": 76,
+          "worst": 151,
+          "values": [
+            151,
+            76,
+            69
+          ],
+          "n": 3,
+          "display": {
+            "median": "76",
+            "worst": "151",
+            "values": [
+              "151",
+              "76",
+              "69"
+            ]
+          },
+          "trace": [
+            {
+              "receipt": "release/receipts/ttft-1a-r-unset.json",
+              "pointer": "/requests/20/reasoning_tokens"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-unset.json",
+              "pointer": "/requests/23/reasoning_tokens"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-unset.json",
+              "pointer": "/requests/26/reasoning_tokens"
+            }
+          ]
+        }
+      },
+      "ttft_32k_warm_think_off": {
+        "unit": "s",
+        "better": "lower",
+        "class": "measured",
+        "conditions": {
+          "prompt": "32k",
+          "case": "warm",
+          "thinking": false,
+          "reasoning_effort": null,
+          "rendered_effort": "low",
+          "effort_label": "Low",
+          "serving_default": false,
+          "prompt_tokens": [
+            32013,
+            32014,
+            32014
+          ],
+          "cached_tokens": [
+            0,
+            0,
+            0
+          ],
+          "rendered_sha": [
+            "891c4a9399c4cb02",
+            "063100ca571a9a1d",
+            "3f207755c53a18ec"
+          ],
+          "render_evidence": [
+            {
+              "receipt": "release/receipts/ttft-1a-r-low.json",
+              "pointer": "/requests/19/rendered_sha"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-low.json",
+              "pointer": "/requests/22/rendered_sha"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-low.json",
+              "pointer": "/requests/25/rendered_sha"
+            }
+          ],
+          "max_tokens": 256,
+          "temperature": 0,
+          "top_p": 1,
+          "seed": 20260929,
+          "stream": true,
+          "streams": 1,
+          "planned_n": 3,
+          "clock_start": "client, before the request opens",
+          "first_token_end": "first SSE event with non-empty reasoning or content text",
+          "first_content_end": "first SSE event with non-empty content text"
+        },
+        "instrument": {
+          "name": "TTFT probe",
+          "version": 3,
+          "sha256": "3e67dfa991461a937c32e4aa1289193c6628cb663ee0421be00d333ba8d42f54"
+        },
+        "evidence": [
+          "release/receipts/ttft-1a-r-low.json"
+        ],
+        "first_token": {
+          "median": 22.621140273986384,
+          "worst": 22.708460576017387,
+          "values": [
+            22.708460576017387,
+            22.616802058997564,
+            22.621140273986384
+          ],
+          "n": 3,
+          "display": {
+            "median": "22.62",
+            "worst": "22.71",
+            "values": [
+              "22.71",
+              "22.62",
+              "22.62"
+            ]
+          },
+          "unit": "s",
+          "better": "lower",
+          "trace": [
+            {
+              "receipt": "release/receipts/ttft-1a-r-low.json",
+              "sha256": "90ebd8ef916ac0279542f3dc969e2f27e0f7af95217b822ca9097579889b8112",
+              "pointer": "/requests/19/ttft_any"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-low.json",
+              "sha256": "90ebd8ef916ac0279542f3dc969e2f27e0f7af95217b822ca9097579889b8112",
+              "pointer": "/requests/22/ttft_any"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-low.json",
+              "sha256": "90ebd8ef916ac0279542f3dc969e2f27e0f7af95217b822ca9097579889b8112",
+              "pointer": "/requests/25/ttft_any"
+            }
+          ]
+        },
+        "first_content": {
+          "median": 23.060048023995478,
+          "worst": 23.064175592036918,
+          "values": [
+            23.060048023995478,
+            22.997508074971847,
+            23.064175592036918
+          ],
+          "n": 3,
+          "display": {
+            "median": "23.06",
+            "worst": "23.06",
+            "values": [
+              "23.06",
+              "23.00",
+              "23.06"
+            ]
+          },
+          "unit": "s",
+          "better": "lower",
+          "trace": [
+            {
+              "receipt": "release/receipts/ttft-1a-r-low.json",
+              "sha256": "90ebd8ef916ac0279542f3dc969e2f27e0f7af95217b822ca9097579889b8112",
+              "pointer": "/requests/19/ttft_content"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-low.json",
+              "sha256": "90ebd8ef916ac0279542f3dc969e2f27e0f7af95217b822ca9097579889b8112",
+              "pointer": "/requests/22/ttft_content"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-low.json",
+              "sha256": "90ebd8ef916ac0279542f3dc969e2f27e0f7af95217b822ca9097579889b8112",
+              "pointer": "/requests/25/ttft_content"
+            }
+          ],
+          "missing": 0,
+          "conditional": false,
+          "censored_trace": []
+        },
+        "reasoning_tokens": {
+          "median": 19,
+          "worst": 19,
+          "values": [
+            19,
+            19,
+            19
+          ],
+          "n": 3,
+          "display": {
+            "median": "19",
+            "worst": "19",
+            "values": [
+              "19",
+              "19",
+              "19"
+            ]
+          },
+          "trace": [
+            {
+              "receipt": "release/receipts/ttft-1a-r-low.json",
+              "pointer": "/requests/19/reasoning_tokens"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-low.json",
+              "pointer": "/requests/22/reasoning_tokens"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-low.json",
+              "pointer": "/requests/25/reasoning_tokens"
+            }
+          ]
+        }
+      },
+      "ttft_32k_warm": {
+        "unit": "s",
+        "better": "lower",
+        "class": "measured",
+        "conditions": {
+          "prompt": "32k",
+          "case": "warm",
+          "thinking": null,
+          "reasoning_effort": null,
+          "rendered_effort": "max",
+          "effort_label": "Max (default)",
+          "serving_default": true,
+          "prompt_tokens": [
+            32015,
+            32015,
+            32013
+          ],
+          "cached_tokens": [
+            0,
+            0,
+            0
+          ],
+          "rendered_sha": [
+            "fec90a2c8dc7c191",
+            "40fd71f59114feb3",
+            "9c8dbd5aa86196ba"
+          ],
+          "render_evidence": [
+            {
+              "receipt": "release/receipts/ttft-1a-r-unset.json",
+              "pointer": "/requests/19/rendered_sha"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-unset.json",
+              "pointer": "/requests/22/rendered_sha"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-unset.json",
+              "pointer": "/requests/25/rendered_sha"
+            }
+          ],
+          "max_tokens": 1536,
+          "temperature": 0,
+          "top_p": 1,
+          "seed": 20260929,
+          "stream": true,
+          "streams": 1,
+          "planned_n": 3,
+          "clock_start": "client, before the request opens",
+          "first_token_end": "first SSE event with non-empty reasoning or content text",
+          "first_content_end": "first SSE event with non-empty content text"
+        },
+        "instrument": {
+          "name": "TTFT probe",
+          "version": 3,
+          "sha256": "3e67dfa991461a937c32e4aa1289193c6628cb663ee0421be00d333ba8d42f54"
+        },
+        "evidence": [
+          "release/receipts/ttft-1a-r-unset.json"
+        ],
+        "first_token": {
+          "median": 22.696277320967056,
+          "worst": 22.700446367962286,
+          "values": [
+            22.628107854980044,
+            22.696277320967056,
+            22.700446367962286
+          ],
+          "n": 3,
+          "display": {
+            "median": "22.70",
+            "worst": "22.70",
+            "values": [
+              "22.63",
+              "22.70",
+              "22.70"
+            ]
+          },
+          "unit": "s",
+          "better": "lower",
+          "trace": [
+            {
+              "receipt": "release/receipts/ttft-1a-r-unset.json",
+              "sha256": "96fe1a1dab191557b7792b9965da79c9f5d880408ee44bec505c92741ddafaa3",
+              "pointer": "/requests/19/ttft_any"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-unset.json",
+              "sha256": "96fe1a1dab191557b7792b9965da79c9f5d880408ee44bec505c92741ddafaa3",
+              "pointer": "/requests/22/ttft_any"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-unset.json",
+              "sha256": "96fe1a1dab191557b7792b9965da79c9f5d880408ee44bec505c92741ddafaa3",
+              "pointer": "/requests/25/ttft_any"
+            }
+          ]
+        },
+        "first_content": {
+          "median": 23.600835873978212,
+          "worst": 23.74698263697792,
+          "values": [
+            23.74698263697792,
+            23.600835873978212,
+            23.304352041974198
+          ],
+          "n": 3,
+          "display": {
+            "median": "23.60",
+            "worst": "23.75",
+            "values": [
+              "23.75",
+              "23.60",
+              "23.30"
+            ]
+          },
+          "unit": "s",
+          "better": "lower",
+          "trace": [
+            {
+              "receipt": "release/receipts/ttft-1a-r-unset.json",
+              "sha256": "96fe1a1dab191557b7792b9965da79c9f5d880408ee44bec505c92741ddafaa3",
+              "pointer": "/requests/19/ttft_content"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-unset.json",
+              "sha256": "96fe1a1dab191557b7792b9965da79c9f5d880408ee44bec505c92741ddafaa3",
+              "pointer": "/requests/22/ttft_content"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-unset.json",
+              "sha256": "96fe1a1dab191557b7792b9965da79c9f5d880408ee44bec505c92741ddafaa3",
+              "pointer": "/requests/25/ttft_content"
+            }
+          ],
+          "missing": 0,
+          "conditional": false,
+          "censored_trace": []
+        },
+        "reasoning_tokens": {
+          "median": 77,
+          "worst": 81,
+          "values": [
+            77,
+            81,
+            47
+          ],
+          "n": 3,
+          "display": {
+            "median": "77",
+            "worst": "81",
+            "values": [
+              "77",
+              "81",
+              "47"
+            ]
+          },
+          "trace": [
+            {
+              "receipt": "release/receipts/ttft-1a-r-unset.json",
+              "pointer": "/requests/19/reasoning_tokens"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-unset.json",
+              "pointer": "/requests/22/reasoning_tokens"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-unset.json",
+              "pointer": "/requests/25/reasoning_tokens"
+            }
+          ]
+        }
+      },
+      "ttft_5k_cold_think_off": {
+        "unit": "s",
+        "better": "lower",
+        "class": "measured",
+        "conditions": {
+          "prompt": "5k",
+          "case": "cold",
+          "thinking": false,
+          "reasoning_effort": null,
+          "rendered_effort": "low",
+          "effort_label": "Low",
+          "serving_default": false,
+          "prompt_tokens": [
+            5038,
+            5040,
+            5040
+          ],
+          "cached_tokens": [
+            0,
+            0,
+            0
+          ],
+          "rendered_sha": [
+            "5a4a4ae004c55017",
+            "b563c313f3066198",
+            "f979b3d09c97b322"
+          ],
+          "render_evidence": [
+            {
+              "receipt": "release/receipts/ttft-1a-r-low.json",
+              "pointer": "/requests/9/rendered_sha"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-low.json",
+              "pointer": "/requests/12/rendered_sha"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-low.json",
+              "pointer": "/requests/15/rendered_sha"
+            }
+          ],
+          "max_tokens": 256,
+          "temperature": 0,
+          "top_p": 1,
+          "seed": 20260929,
+          "stream": true,
+          "streams": 1,
+          "planned_n": 3,
+          "clock_start": "client, before the request opens",
+          "first_token_end": "first SSE event with non-empty reasoning or content text",
+          "first_content_end": "first SSE event with non-empty content text"
+        },
+        "instrument": {
+          "name": "TTFT probe",
+          "version": 3,
+          "sha256": "3e67dfa991461a937c32e4aa1289193c6628cb663ee0421be00d333ba8d42f54"
+        },
+        "evidence": [
+          "release/receipts/ttft-1a-r-low.json"
+        ],
+        "first_token": {
+          "median": 3.7719743699999526,
+          "worst": 3.807879235013388,
+          "values": [
+            3.807879235013388,
+            3.7510047890245914,
+            3.7719743699999526
+          ],
+          "n": 3,
+          "display": {
+            "median": "3.77",
+            "worst": "3.81",
+            "values": [
+              "3.81",
+              "3.75",
+              "3.77"
+            ]
+          },
+          "unit": "s",
+          "better": "lower",
+          "trace": [
+            {
+              "receipt": "release/receipts/ttft-1a-r-low.json",
+              "sha256": "90ebd8ef916ac0279542f3dc969e2f27e0f7af95217b822ca9097579889b8112",
+              "pointer": "/requests/9/ttft_any"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-low.json",
+              "sha256": "90ebd8ef916ac0279542f3dc969e2f27e0f7af95217b822ca9097579889b8112",
+              "pointer": "/requests/12/ttft_any"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-low.json",
+              "sha256": "90ebd8ef916ac0279542f3dc969e2f27e0f7af95217b822ca9097579889b8112",
+              "pointer": "/requests/15/ttft_any"
+            }
+          ]
+        },
+        "first_content": {
+          "median": 4.113059443014208,
+          "worst": 4.114623809000477,
+          "values": [
+            4.113059443014208,
+            4.114623809000477,
+            4.038098243996501
+          ],
+          "n": 3,
+          "display": {
+            "median": "4.11",
+            "worst": "4.11",
+            "values": [
+              "4.11",
+              "4.11",
+              "4.04"
+            ]
+          },
+          "unit": "s",
+          "better": "lower",
+          "trace": [
+            {
+              "receipt": "release/receipts/ttft-1a-r-low.json",
+              "sha256": "90ebd8ef916ac0279542f3dc969e2f27e0f7af95217b822ca9097579889b8112",
+              "pointer": "/requests/9/ttft_content"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-low.json",
+              "sha256": "90ebd8ef916ac0279542f3dc969e2f27e0f7af95217b822ca9097579889b8112",
+              "pointer": "/requests/12/ttft_content"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-low.json",
+              "sha256": "90ebd8ef916ac0279542f3dc969e2f27e0f7af95217b822ca9097579889b8112",
+              "pointer": "/requests/15/ttft_content"
+            }
+          ],
+          "missing": 0,
+          "conditional": false,
+          "censored_trace": []
+        },
+        "reasoning_tokens": {
+          "median": 16,
+          "worst": 16,
+          "values": [
+            16,
+            16,
+            16
+          ],
+          "n": 3,
+          "display": {
+            "median": "16",
+            "worst": "16",
+            "values": [
+              "16",
+              "16",
+              "16"
+            ]
+          },
+          "trace": [
+            {
+              "receipt": "release/receipts/ttft-1a-r-low.json",
+              "pointer": "/requests/9/reasoning_tokens"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-low.json",
+              "pointer": "/requests/12/reasoning_tokens"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-low.json",
+              "pointer": "/requests/15/reasoning_tokens"
+            }
+          ]
+        }
+      },
+      "ttft_5k_cold": {
+        "unit": "s",
+        "better": "lower",
+        "class": "measured",
+        "conditions": {
+          "prompt": "5k",
+          "case": "cold",
+          "thinking": null,
+          "reasoning_effort": null,
+          "rendered_effort": "max",
+          "effort_label": "Max (default)",
+          "serving_default": true,
+          "prompt_tokens": [
+            5036,
+            5039,
+            5038
+          ],
+          "cached_tokens": [
+            0,
+            0,
+            0
+          ],
+          "rendered_sha": [
+            "404fc757c7e0abd2",
+            "7f3ce984b3565b14",
+            "bb6fcee0cdbb6569"
+          ],
+          "render_evidence": [
+            {
+              "receipt": "release/receipts/ttft-1a-r-unset.json",
+              "pointer": "/requests/9/rendered_sha"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-unset.json",
+              "pointer": "/requests/12/rendered_sha"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-unset.json",
+              "pointer": "/requests/15/rendered_sha"
+            }
+          ],
+          "max_tokens": 1536,
+          "temperature": 0,
+          "top_p": 1,
+          "seed": 20260929,
+          "stream": true,
+          "streams": 1,
+          "planned_n": 3,
+          "clock_start": "client, before the request opens",
+          "first_token_end": "first SSE event with non-empty reasoning or content text",
+          "first_content_end": "first SSE event with non-empty content text"
+        },
+        "instrument": {
+          "name": "TTFT probe",
+          "version": 3,
+          "sha256": "3e67dfa991461a937c32e4aa1289193c6628cb663ee0421be00d333ba8d42f54"
+        },
+        "evidence": [
+          "release/receipts/ttft-1a-r-unset.json"
+        ],
+        "first_token": {
+          "median": 3.810011084016878,
+          "worst": 3.8131041579763405,
+          "values": [
+            3.805989212996792,
+            3.810011084016878,
+            3.8131041579763405
+          ],
+          "n": 3,
+          "display": {
+            "median": "3.81",
+            "worst": "3.81",
+            "values": [
+              "3.81",
+              "3.81",
+              "3.81"
+            ]
+          },
+          "unit": "s",
+          "better": "lower",
+          "trace": [
+            {
+              "receipt": "release/receipts/ttft-1a-r-unset.json",
+              "sha256": "96fe1a1dab191557b7792b9965da79c9f5d880408ee44bec505c92741ddafaa3",
+              "pointer": "/requests/9/ttft_any"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-unset.json",
+              "sha256": "96fe1a1dab191557b7792b9965da79c9f5d880408ee44bec505c92741ddafaa3",
+              "pointer": "/requests/12/ttft_any"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-unset.json",
+              "sha256": "96fe1a1dab191557b7792b9965da79c9f5d880408ee44bec505c92741ddafaa3",
+              "pointer": "/requests/15/ttft_any"
+            }
+          ]
+        },
+        "first_content": {
+          "median": 4.807292765006423,
+          "worst": 4.859215555014089,
+          "values": [
+            4.7731670559733175,
+            4.859215555014089,
+            4.807292765006423
+          ],
+          "n": 3,
+          "display": {
+            "median": "4.81",
+            "worst": "4.86",
+            "values": [
+              "4.77",
+              "4.86",
+              "4.81"
+            ]
+          },
+          "unit": "s",
+          "better": "lower",
+          "trace": [
+            {
+              "receipt": "release/receipts/ttft-1a-r-unset.json",
+              "sha256": "96fe1a1dab191557b7792b9965da79c9f5d880408ee44bec505c92741ddafaa3",
+              "pointer": "/requests/9/ttft_content"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-unset.json",
+              "sha256": "96fe1a1dab191557b7792b9965da79c9f5d880408ee44bec505c92741ddafaa3",
+              "pointer": "/requests/12/ttft_content"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-unset.json",
+              "sha256": "96fe1a1dab191557b7792b9965da79c9f5d880408ee44bec505c92741ddafaa3",
+              "pointer": "/requests/15/ttft_content"
+            }
+          ],
+          "missing": 0,
+          "conditional": false,
+          "censored_trace": []
+        },
+        "reasoning_tokens": {
+          "median": 82,
+          "worst": 86,
+          "values": [
+            86,
+            78,
+            82
+          ],
+          "n": 3,
+          "display": {
+            "median": "82",
+            "worst": "86",
+            "values": [
+              "86",
+              "78",
+              "82"
+            ]
+          },
+          "trace": [
+            {
+              "receipt": "release/receipts/ttft-1a-r-unset.json",
+              "pointer": "/requests/9/reasoning_tokens"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-unset.json",
+              "pointer": "/requests/12/reasoning_tokens"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-unset.json",
+              "pointer": "/requests/15/reasoning_tokens"
+            }
+          ]
+        }
+      },
+      "ttft_5k_turn_think_off": {
+        "unit": "s",
+        "better": "lower",
+        "class": "measured",
+        "conditions": {
+          "prompt": "5k",
+          "case": "turn",
+          "thinking": false,
+          "reasoning_effort": null,
+          "rendered_effort": "low",
+          "effort_label": "Low",
+          "serving_default": false,
+          "prompt_tokens": [
+            5083,
+            5088,
+            5085
+          ],
+          "cached_tokens": [
+            5038,
+            5040,
+            5040
+          ],
+          "rendered_sha": [
+            "19dae5ae0d40789f",
+            "d33b02edcec9613d",
+            "93ae110160b3f788"
+          ],
+          "render_evidence": [
+            {
+              "receipt": "release/receipts/ttft-1a-r-low.json",
+              "pointer": "/requests/11/rendered_sha"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-low.json",
+              "pointer": "/requests/14/rendered_sha"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-low.json",
+              "pointer": "/requests/17/rendered_sha"
+            }
+          ],
+          "max_tokens": 256,
+          "temperature": 0,
+          "top_p": 1,
+          "seed": 20260929,
+          "stream": true,
+          "streams": 1,
+          "planned_n": 3,
+          "clock_start": "client, before the request opens",
+          "first_token_end": "first SSE event with non-empty reasoning or content text",
+          "first_content_end": "first SSE event with non-empty content text"
+        },
+        "instrument": {
+          "name": "TTFT probe",
+          "version": 3,
+          "sha256": "3e67dfa991461a937c32e4aa1289193c6628cb663ee0421be00d333ba8d42f54"
+        },
+        "evidence": [
+          "release/receipts/ttft-1a-r-low.json"
+        ],
+        "first_token": {
+          "median": 0.22652998799458146,
+          "worst": 0.4620347420568578,
+          "values": [
+            0.22341905697248876,
+            0.4620347420568578,
+            0.22652998799458146
+          ],
+          "n": 3,
+          "display": {
+            "median": "0.23",
+            "worst": "0.46",
+            "values": [
+              "0.22",
+              "0.46",
+              "0.23"
+            ]
+          },
+          "unit": "s",
+          "better": "lower",
+          "trace": [
+            {
+              "receipt": "release/receipts/ttft-1a-r-low.json",
+              "sha256": "90ebd8ef916ac0279542f3dc969e2f27e0f7af95217b822ca9097579889b8112",
+              "pointer": "/requests/11/ttft_any"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-low.json",
+              "sha256": "90ebd8ef916ac0279542f3dc969e2f27e0f7af95217b822ca9097579889b8112",
+              "pointer": "/requests/14/ttft_any"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-low.json",
+              "sha256": "90ebd8ef916ac0279542f3dc969e2f27e0f7af95217b822ca9097579889b8112",
+              "pointer": "/requests/17/ttft_any"
+            }
+          ]
+        },
+        "first_content": {
+          "median": 0.22652998799458146,
+          "worst": 0.4620347420568578,
+          "values": [
+            0.22341905697248876,
+            0.4620347420568578,
+            0.22652998799458146
+          ],
+          "n": 3,
+          "display": {
+            "median": "0.23",
+            "worst": "0.46",
+            "values": [
+              "0.22",
+              "0.46",
+              "0.23"
+            ]
+          },
+          "unit": "s",
+          "better": "lower",
+          "trace": [
+            {
+              "receipt": "release/receipts/ttft-1a-r-low.json",
+              "sha256": "90ebd8ef916ac0279542f3dc969e2f27e0f7af95217b822ca9097579889b8112",
+              "pointer": "/requests/11/ttft_content"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-low.json",
+              "sha256": "90ebd8ef916ac0279542f3dc969e2f27e0f7af95217b822ca9097579889b8112",
+              "pointer": "/requests/14/ttft_content"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-low.json",
+              "sha256": "90ebd8ef916ac0279542f3dc969e2f27e0f7af95217b822ca9097579889b8112",
+              "pointer": "/requests/17/ttft_content"
+            }
+          ],
+          "missing": 0,
+          "conditional": false,
+          "censored_trace": []
+        },
+        "reasoning_tokens": {
+          "median": 0,
+          "worst": 0,
+          "values": [
+            0,
+            0,
+            0
+          ],
+          "n": 3,
+          "display": {
+            "median": "0",
+            "worst": "0",
+            "values": [
+              "0",
+              "0",
+              "0"
+            ]
+          },
+          "trace": [
+            {
+              "receipt": "release/receipts/ttft-1a-r-low.json",
+              "pointer": "/requests/11/reasoning_tokens"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-low.json",
+              "pointer": "/requests/14/reasoning_tokens"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-low.json",
+              "pointer": "/requests/17/reasoning_tokens"
+            }
+          ]
+        }
+      },
+      "ttft_5k_turn": {
+        "unit": "s",
+        "better": "lower",
+        "class": "measured",
+        "conditions": {
+          "prompt": "5k",
+          "case": "turn",
+          "thinking": null,
+          "reasoning_effort": null,
+          "rendered_effort": "max",
+          "effort_label": "Max (default)",
+          "serving_default": true,
+          "prompt_tokens": [
+            5137,
+            5132,
+            5135
+          ],
+          "cached_tokens": [
+            5036,
+            5039,
+            5038
+          ],
+          "rendered_sha": [
+            "b14fcf85eecaea40",
+            "8ed0d6f751ac9d46",
+            "16595adf3050c5a2"
+          ],
+          "render_evidence": [
+            {
+              "receipt": "release/receipts/ttft-1a-r-unset.json",
+              "pointer": "/requests/11/rendered_sha"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-unset.json",
+              "pointer": "/requests/14/rendered_sha"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-unset.json",
+              "pointer": "/requests/17/rendered_sha"
+            }
+          ],
+          "max_tokens": 1536,
+          "temperature": 0,
+          "top_p": 1,
+          "seed": 20260929,
+          "stream": true,
+          "streams": 1,
+          "planned_n": 3,
+          "clock_start": "client, before the request opens",
+          "first_token_end": "first SSE event with non-empty reasoning or content text",
+          "first_content_end": "first SSE event with non-empty content text"
+        },
+        "instrument": {
+          "name": "TTFT probe",
+          "version": 3,
+          "sha256": "3e67dfa991461a937c32e4aa1289193c6628cb663ee0421be00d333ba8d42f54"
+        },
+        "evidence": [
+          "release/receipts/ttft-1a-r-unset.json"
+        ],
+        "first_token": {
+          "median": 0.244758702989202,
+          "worst": 0.25408996996702626,
+          "values": [
+            0.25408996996702626,
+            0.23809333302779123,
+            0.244758702989202
+          ],
+          "n": 3,
+          "display": {
+            "median": "0.24",
+            "worst": "0.25",
+            "values": [
+              "0.25",
+              "0.24",
+              "0.24"
+            ]
+          },
+          "unit": "s",
+          "better": "lower",
+          "trace": [
+            {
+              "receipt": "release/receipts/ttft-1a-r-unset.json",
+              "sha256": "96fe1a1dab191557b7792b9965da79c9f5d880408ee44bec505c92741ddafaa3",
+              "pointer": "/requests/11/ttft_any"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-unset.json",
+              "sha256": "96fe1a1dab191557b7792b9965da79c9f5d880408ee44bec505c92741ddafaa3",
+              "pointer": "/requests/14/ttft_any"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-unset.json",
+              "sha256": "96fe1a1dab191557b7792b9965da79c9f5d880408ee44bec505c92741ddafaa3",
+              "pointer": "/requests/17/ttft_any"
+            }
+          ]
+        },
+        "first_content": {
+          "median": 4.816019686986692,
+          "worst": 17.0185044289683,
+          "values": [
+            17.0185044289683,
+            4.816019686986692,
+            0.9388633570051752
+          ],
+          "n": 3,
+          "display": {
+            "median": "4.82",
+            "worst": "17.02",
+            "values": [
+              "17.02",
+              "4.82",
+              "0.94"
+            ]
+          },
+          "unit": "s",
+          "better": "lower",
+          "trace": [
+            {
+              "receipt": "release/receipts/ttft-1a-r-unset.json",
+              "sha256": "96fe1a1dab191557b7792b9965da79c9f5d880408ee44bec505c92741ddafaa3",
+              "pointer": "/requests/11/ttft_content"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-unset.json",
+              "sha256": "96fe1a1dab191557b7792b9965da79c9f5d880408ee44bec505c92741ddafaa3",
+              "pointer": "/requests/14/ttft_content"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-unset.json",
+              "sha256": "96fe1a1dab191557b7792b9965da79c9f5d880408ee44bec505c92741ddafaa3",
+              "pointer": "/requests/17/ttft_content"
+            }
+          ],
+          "missing": 0,
+          "conditional": false,
+          "censored_trace": []
+        },
+        "reasoning_tokens": {
+          "median": 285,
+          "worst": 920,
+          "values": [
+            920,
+            285,
+            50
+          ],
+          "n": 3,
+          "display": {
+            "median": "285",
+            "worst": "920",
+            "values": [
+              "920",
+              "285",
+              "50"
+            ]
+          },
+          "trace": [
+            {
+              "receipt": "release/receipts/ttft-1a-r-unset.json",
+              "pointer": "/requests/11/reasoning_tokens"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-unset.json",
+              "pointer": "/requests/14/reasoning_tokens"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-unset.json",
+              "pointer": "/requests/17/reasoning_tokens"
+            }
+          ]
+        }
+      },
+      "ttft_5k_warm_think_off": {
+        "unit": "s",
+        "better": "lower",
+        "class": "measured",
+        "conditions": {
+          "prompt": "5k",
+          "case": "warm",
+          "thinking": false,
+          "reasoning_effort": null,
+          "rendered_effort": "low",
+          "effort_label": "Low",
+          "serving_default": false,
+          "prompt_tokens": [
+            5038,
+            5040,
+            5040
+          ],
+          "cached_tokens": [
+            0,
+            0,
+            0
+          ],
+          "rendered_sha": [
+            "5a4a4ae004c55017",
+            "b563c313f3066198",
+            "f979b3d09c97b322"
+          ],
+          "render_evidence": [
+            {
+              "receipt": "release/receipts/ttft-1a-r-low.json",
+              "pointer": "/requests/10/rendered_sha"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-low.json",
+              "pointer": "/requests/13/rendered_sha"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-low.json",
+              "pointer": "/requests/16/rendered_sha"
+            }
+          ],
+          "max_tokens": 256,
+          "temperature": 0,
+          "top_p": 1,
+          "seed": 20260929,
+          "stream": true,
+          "streams": 1,
+          "planned_n": 3,
+          "clock_start": "client, before the request opens",
+          "first_token_end": "first SSE event with non-empty reasoning or content text",
+          "first_content_end": "first SSE event with non-empty content text"
+        },
+        "instrument": {
+          "name": "TTFT probe",
+          "version": 3,
+          "sha256": "3e67dfa991461a937c32e4aa1289193c6628cb663ee0421be00d333ba8d42f54"
+        },
+        "evidence": [
+          "release/receipts/ttft-1a-r-low.json"
+        ],
+        "first_token": {
+          "median": 3.763293944997713,
+          "worst": 3.7843096760334447,
+          "values": [
+            3.7603135249810293,
+            3.763293944997713,
+            3.7843096760334447
+          ],
+          "n": 3,
+          "display": {
+            "median": "3.76",
+            "worst": "3.78",
+            "values": [
+              "3.76",
+              "3.76",
+              "3.78"
+            ]
+          },
+          "unit": "s",
+          "better": "lower",
+          "trace": [
+            {
+              "receipt": "release/receipts/ttft-1a-r-low.json",
+              "sha256": "90ebd8ef916ac0279542f3dc969e2f27e0f7af95217b822ca9097579889b8112",
+              "pointer": "/requests/10/ttft_any"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-low.json",
+              "sha256": "90ebd8ef916ac0279542f3dc969e2f27e0f7af95217b822ca9097579889b8112",
+              "pointer": "/requests/13/ttft_any"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-low.json",
+              "sha256": "90ebd8ef916ac0279542f3dc969e2f27e0f7af95217b822ca9097579889b8112",
+              "pointer": "/requests/16/ttft_any"
+            }
+          ]
+        },
+        "first_content": {
+          "median": 4.067435072967783,
+          "worst": 4.129957831988577,
+          "values": [
+            4.067435072967783,
+            4.129957831988577,
+            4.053964100021403
+          ],
+          "n": 3,
+          "display": {
+            "median": "4.07",
+            "worst": "4.13",
+            "values": [
+              "4.07",
+              "4.13",
+              "4.05"
+            ]
+          },
+          "unit": "s",
+          "better": "lower",
+          "trace": [
+            {
+              "receipt": "release/receipts/ttft-1a-r-low.json",
+              "sha256": "90ebd8ef916ac0279542f3dc969e2f27e0f7af95217b822ca9097579889b8112",
+              "pointer": "/requests/10/ttft_content"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-low.json",
+              "sha256": "90ebd8ef916ac0279542f3dc969e2f27e0f7af95217b822ca9097579889b8112",
+              "pointer": "/requests/13/ttft_content"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-low.json",
+              "sha256": "90ebd8ef916ac0279542f3dc969e2f27e0f7af95217b822ca9097579889b8112",
+              "pointer": "/requests/16/ttft_content"
+            }
+          ],
+          "missing": 0,
+          "conditional": false,
+          "censored_trace": []
+        },
+        "reasoning_tokens": {
+          "median": 16,
+          "worst": 16,
+          "values": [
+            16,
+            16,
+            16
+          ],
+          "n": 3,
+          "display": {
+            "median": "16",
+            "worst": "16",
+            "values": [
+              "16",
+              "16",
+              "16"
+            ]
+          },
+          "trace": [
+            {
+              "receipt": "release/receipts/ttft-1a-r-low.json",
+              "pointer": "/requests/10/reasoning_tokens"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-low.json",
+              "pointer": "/requests/13/reasoning_tokens"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-low.json",
+              "pointer": "/requests/16/reasoning_tokens"
+            }
+          ]
+        }
+      },
+      "ttft_5k_warm": {
+        "unit": "s",
+        "better": "lower",
+        "class": "measured",
+        "conditions": {
+          "prompt": "5k",
+          "case": "warm",
+          "thinking": null,
+          "reasoning_effort": null,
+          "rendered_effort": "max",
+          "effort_label": "Max (default)",
+          "serving_default": true,
+          "prompt_tokens": [
+            5036,
+            5039,
+            5038
+          ],
+          "cached_tokens": [
+            0,
+            0,
+            0
+          ],
+          "rendered_sha": [
+            "404fc757c7e0abd2",
+            "7f3ce984b3565b14",
+            "bb6fcee0cdbb6569"
+          ],
+          "render_evidence": [
+            {
+              "receipt": "release/receipts/ttft-1a-r-unset.json",
+              "pointer": "/requests/10/rendered_sha"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-unset.json",
+              "pointer": "/requests/13/rendered_sha"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-unset.json",
+              "pointer": "/requests/16/rendered_sha"
+            }
+          ],
+          "max_tokens": 1536,
+          "temperature": 0,
+          "top_p": 1,
+          "seed": 20260929,
+          "stream": true,
+          "streams": 1,
+          "planned_n": 3,
+          "clock_start": "client, before the request opens",
+          "first_token_end": "first SSE event with non-empty reasoning or content text",
+          "first_content_end": "first SSE event with non-empty content text"
+        },
+        "instrument": {
+          "name": "TTFT probe",
+          "version": 3,
+          "sha256": "3e67dfa991461a937c32e4aa1289193c6628cb663ee0421be00d333ba8d42f54"
+        },
+        "evidence": [
+          "release/receipts/ttft-1a-r-unset.json"
+        ],
+        "first_token": {
+          "median": 3.8064663920085877,
+          "worst": 3.822798053966835,
+          "values": [
+            3.7787007620208897,
+            3.822798053966835,
+            3.8064663920085877
+          ],
+          "n": 3,
+          "display": {
+            "median": "3.81",
+            "worst": "3.82",
+            "values": [
+              "3.78",
+              "3.82",
+              "3.81"
+            ]
+          },
+          "unit": "s",
+          "better": "lower",
+          "trace": [
+            {
+              "receipt": "release/receipts/ttft-1a-r-unset.json",
+              "sha256": "96fe1a1dab191557b7792b9965da79c9f5d880408ee44bec505c92741ddafaa3",
+              "pointer": "/requests/10/ttft_any"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-unset.json",
+              "sha256": "96fe1a1dab191557b7792b9965da79c9f5d880408ee44bec505c92741ddafaa3",
+              "pointer": "/requests/13/ttft_any"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-unset.json",
+              "sha256": "96fe1a1dab191557b7792b9965da79c9f5d880408ee44bec505c92741ddafaa3",
+              "pointer": "/requests/16/ttft_any"
+            }
+          ]
+        },
+        "first_content": {
+          "median": 4.802838322997559,
+          "worst": 4.8673688269918784,
+          "values": [
+            4.747309379046783,
+            4.8673688269918784,
+            4.802838322997559
+          ],
+          "n": 3,
+          "display": {
+            "median": "4.80",
+            "worst": "4.87",
+            "values": [
+              "4.75",
+              "4.87",
+              "4.80"
+            ]
+          },
+          "unit": "s",
+          "better": "lower",
+          "trace": [
+            {
+              "receipt": "release/receipts/ttft-1a-r-unset.json",
+              "sha256": "96fe1a1dab191557b7792b9965da79c9f5d880408ee44bec505c92741ddafaa3",
+              "pointer": "/requests/10/ttft_content"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-unset.json",
+              "sha256": "96fe1a1dab191557b7792b9965da79c9f5d880408ee44bec505c92741ddafaa3",
+              "pointer": "/requests/13/ttft_content"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-unset.json",
+              "sha256": "96fe1a1dab191557b7792b9965da79c9f5d880408ee44bec505c92741ddafaa3",
+              "pointer": "/requests/16/ttft_content"
+            }
+          ],
+          "missing": 0,
+          "conditional": false,
+          "censored_trace": []
+        },
+        "reasoning_tokens": {
+          "median": 82,
+          "worst": 86,
+          "values": [
+            86,
+            78,
+            82
+          ],
+          "n": 3,
+          "display": {
+            "median": "82",
+            "worst": "86",
+            "values": [
+              "86",
+              "78",
+              "82"
+            ]
+          },
+          "trace": [
+            {
+              "receipt": "release/receipts/ttft-1a-r-unset.json",
+              "pointer": "/requests/10/reasoning_tokens"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-unset.json",
+              "pointer": "/requests/13/reasoning_tokens"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-unset.json",
+              "pointer": "/requests/16/reasoning_tokens"
+            }
+          ]
+        }
+      },
+      "ttft_short_cold_think_off": {
+        "unit": "s",
+        "better": "lower",
+        "class": "measured",
+        "conditions": {
+          "prompt": "short",
+          "case": "cold",
+          "thinking": false,
+          "reasoning_effort": null,
+          "rendered_effort": "low",
+          "effort_label": "Low",
+          "serving_default": false,
+          "prompt_tokens": [
+            37,
+            34,
+            34
+          ],
+          "cached_tokens": [
+            0,
+            0,
+            0
+          ],
+          "rendered_sha": [
+            "4e89641e038e2c9e",
+            "a748778602ac5447",
+            "f6a1c758f8a49c72"
+          ],
+          "render_evidence": [
+            {
+              "receipt": "release/receipts/ttft-1a-r-low.json",
+              "pointer": "/requests/0/rendered_sha"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-low.json",
+              "pointer": "/requests/3/rendered_sha"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-low.json",
+              "pointer": "/requests/6/rendered_sha"
+            }
+          ],
+          "max_tokens": 256,
+          "temperature": 0,
+          "top_p": 1,
+          "seed": 20260929,
+          "stream": true,
+          "streams": 1,
+          "planned_n": 3,
+          "clock_start": "client, before the request opens",
+          "first_token_end": "first SSE event with non-empty reasoning or content text",
+          "first_content_end": "first SSE event with non-empty content text"
+        },
+        "instrument": {
+          "name": "TTFT probe",
+          "version": 3,
+          "sha256": "3e67dfa991461a937c32e4aa1289193c6628cb663ee0421be00d333ba8d42f54"
+        },
+        "evidence": [
+          "release/receipts/ttft-1a-r-low.json"
+        ],
+        "first_token": {
+          "median": 0.14494129101512954,
+          "worst": 0.14672380103729665,
+          "values": [
+            0.14672380103729665,
+            0.14494129101512954,
+            0.13863316900096834
+          ],
+          "n": 3,
+          "display": {
+            "median": "0.14",
+            "worst": "0.15",
+            "values": [
+              "0.15",
+              "0.14",
+              "0.14"
+            ]
+          },
+          "unit": "s",
+          "better": "lower",
+          "trace": [
+            {
+              "receipt": "release/receipts/ttft-1a-r-low.json",
+              "sha256": "90ebd8ef916ac0279542f3dc969e2f27e0f7af95217b822ca9097579889b8112",
+              "pointer": "/requests/0/ttft_any"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-low.json",
+              "sha256": "90ebd8ef916ac0279542f3dc969e2f27e0f7af95217b822ca9097579889b8112",
+              "pointer": "/requests/3/ttft_any"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-low.json",
+              "sha256": "90ebd8ef916ac0279542f3dc969e2f27e0f7af95217b822ca9097579889b8112",
+              "pointer": "/requests/6/ttft_any"
+            }
+          ]
+        },
+        "first_content": {
+          "median": 0.18908316199667752,
+          "worst": 0.1907469800207764,
+          "values": [
+            0.18908316199667752,
+            0.1907469800207764,
+            0.17961268103681505
+          ],
+          "n": 3,
+          "display": {
+            "median": "0.19",
+            "worst": "0.19",
+            "values": [
+              "0.19",
+              "0.19",
+              "0.18"
+            ]
+          },
+          "unit": "s",
+          "better": "lower",
+          "trace": [
+            {
+              "receipt": "release/receipts/ttft-1a-r-low.json",
+              "sha256": "90ebd8ef916ac0279542f3dc969e2f27e0f7af95217b822ca9097579889b8112",
+              "pointer": "/requests/0/ttft_content"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-low.json",
+              "sha256": "90ebd8ef916ac0279542f3dc969e2f27e0f7af95217b822ca9097579889b8112",
+              "pointer": "/requests/3/ttft_content"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-low.json",
+              "sha256": "90ebd8ef916ac0279542f3dc969e2f27e0f7af95217b822ca9097579889b8112",
+              "pointer": "/requests/6/ttft_content"
+            }
+          ],
+          "missing": 0,
+          "conditional": false,
+          "censored_trace": []
+        },
+        "reasoning_tokens": {
+          "median": 2,
+          "worst": 2,
+          "values": [
+            2,
+            2,
+            2
+          ],
+          "n": 3,
+          "display": {
+            "median": "2",
+            "worst": "2",
+            "values": [
+              "2",
+              "2",
+              "2"
+            ]
+          },
+          "trace": [
+            {
+              "receipt": "release/receipts/ttft-1a-r-low.json",
+              "pointer": "/requests/0/reasoning_tokens"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-low.json",
+              "pointer": "/requests/3/reasoning_tokens"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-low.json",
+              "pointer": "/requests/6/reasoning_tokens"
+            }
+          ]
+        }
+      },
+      "ttft_short_cold": {
+        "unit": "s",
+        "better": "lower",
+        "class": "measured",
+        "conditions": {
+          "prompt": "short",
+          "case": "cold",
+          "thinking": null,
+          "reasoning_effort": null,
+          "rendered_effort": "max",
+          "effort_label": "Max (default)",
+          "serving_default": true,
+          "prompt_tokens": [
+            33,
+            35,
+            34
+          ],
+          "cached_tokens": [
+            0,
+            0,
+            0
+          ],
+          "rendered_sha": [
+            "4e3c7e58b7d8ce18",
+            "908ff36e1ff83992",
+            "643f3a17378962b7"
+          ],
+          "render_evidence": [
+            {
+              "receipt": "release/receipts/ttft-1a-r-unset.json",
+              "pointer": "/requests/0/rendered_sha"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-unset.json",
+              "pointer": "/requests/3/rendered_sha"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-unset.json",
+              "pointer": "/requests/6/rendered_sha"
+            }
+          ],
+          "max_tokens": 1536,
+          "temperature": 0,
+          "top_p": 1,
+          "seed": 20260929,
+          "stream": true,
+          "streams": 1,
+          "planned_n": 3,
+          "clock_start": "client, before the request opens",
+          "first_token_end": "first SSE event with non-empty reasoning or content text",
+          "first_content_end": "first SSE event with non-empty content text"
+        },
+        "instrument": {
+          "name": "TTFT probe",
+          "version": 3,
+          "sha256": "3e67dfa991461a937c32e4aa1289193c6628cb663ee0421be00d333ba8d42f54"
+        },
+        "evidence": [
+          "release/receipts/ttft-1a-r-unset.json"
+        ],
+        "first_token": {
+          "median": 0.1536546119605191,
+          "worst": 0.15777939202962443,
+          "values": [
+            0.15777939202962443,
+            0.1526081709889695,
+            0.1536546119605191
+          ],
+          "n": 3,
+          "display": {
+            "median": "0.15",
+            "worst": "0.16",
+            "values": [
+              "0.16",
+              "0.15",
+              "0.15"
+            ]
+          },
+          "unit": "s",
+          "better": "lower",
+          "trace": [
+            {
+              "receipt": "release/receipts/ttft-1a-r-unset.json",
+              "sha256": "96fe1a1dab191557b7792b9965da79c9f5d880408ee44bec505c92741ddafaa3",
+              "pointer": "/requests/0/ttft_any"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-unset.json",
+              "sha256": "96fe1a1dab191557b7792b9965da79c9f5d880408ee44bec505c92741ddafaa3",
+              "pointer": "/requests/3/ttft_any"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-unset.json",
+              "sha256": "96fe1a1dab191557b7792b9965da79c9f5d880408ee44bec505c92741ddafaa3",
+              "pointer": "/requests/6/ttft_any"
+            }
+          ]
+        },
+        "first_content": {
+          "median": 0.5755294970003888,
+          "worst": 1.016773366020061,
+          "values": [
+            1.016773366020061,
+            0.5755294970003888,
+            0.5657440570066683
+          ],
+          "n": 3,
+          "display": {
+            "median": "0.58",
+            "worst": "1.02",
+            "values": [
+              "1.02",
+              "0.58",
+              "0.57"
+            ]
+          },
+          "unit": "s",
+          "better": "lower",
+          "trace": [
+            {
+              "receipt": "release/receipts/ttft-1a-r-unset.json",
+              "sha256": "96fe1a1dab191557b7792b9965da79c9f5d880408ee44bec505c92741ddafaa3",
+              "pointer": "/requests/0/ttft_content"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-unset.json",
+              "sha256": "96fe1a1dab191557b7792b9965da79c9f5d880408ee44bec505c92741ddafaa3",
+              "pointer": "/requests/3/ttft_content"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-unset.json",
+              "sha256": "96fe1a1dab191557b7792b9965da79c9f5d880408ee44bec505c92741ddafaa3",
+              "pointer": "/requests/6/ttft_content"
+            }
+          ],
+          "missing": 0,
+          "conditional": false,
+          "censored_trace": []
+        },
+        "reasoning_tokens": {
+          "median": 35,
+          "worst": 67,
+          "values": [
+            67,
+            35,
+            35
+          ],
+          "n": 3,
+          "display": {
+            "median": "35",
+            "worst": "67",
+            "values": [
+              "67",
+              "35",
+              "35"
+            ]
+          },
+          "trace": [
+            {
+              "receipt": "release/receipts/ttft-1a-r-unset.json",
+              "pointer": "/requests/0/reasoning_tokens"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-unset.json",
+              "pointer": "/requests/3/reasoning_tokens"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-unset.json",
+              "pointer": "/requests/6/reasoning_tokens"
+            }
+          ]
+        }
+      },
+      "ttft_short_turn_think_off": {
+        "unit": "s",
+        "better": "lower",
+        "class": "measured",
+        "conditions": {
+          "prompt": "short",
+          "case": "turn",
+          "thinking": false,
+          "reasoning_effort": null,
+          "rendered_effort": "low",
+          "effort_label": "Low",
+          "serving_default": false,
+          "prompt_tokens": [
+            55,
+            52,
+            52
+          ],
+          "cached_tokens": [
+            37,
+            34,
+            34
+          ],
+          "rendered_sha": [
+            "326888a04f89178c",
+            "1e71ce9ff007dc22",
+            "ea1aff085d7dd6ab"
+          ],
+          "render_evidence": [
+            {
+              "receipt": "release/receipts/ttft-1a-r-low.json",
+              "pointer": "/requests/2/rendered_sha"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-low.json",
+              "pointer": "/requests/5/rendered_sha"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-low.json",
+              "pointer": "/requests/8/rendered_sha"
+            }
+          ],
+          "max_tokens": 256,
+          "temperature": 0,
+          "top_p": 1,
+          "seed": 20260929,
+          "stream": true,
+          "streams": 1,
+          "planned_n": 3,
+          "clock_start": "client, before the request opens",
+          "first_token_end": "first SSE event with non-empty reasoning or content text",
+          "first_content_end": "first SSE event with non-empty content text"
+        },
+        "instrument": {
+          "name": "TTFT probe",
+          "version": 3,
+          "sha256": "3e67dfa991461a937c32e4aa1289193c6628cb663ee0421be00d333ba8d42f54"
+        },
+        "evidence": [
+          "release/receipts/ttft-1a-r-low.json"
+        ],
+        "first_token": {
+          "median": 0.09668349096318707,
+          "worst": 0.0967162600136362,
+          "values": [
+            0.09386898897355422,
+            0.0967162600136362,
+            0.09668349096318707
+          ],
+          "n": 3,
+          "display": {
+            "median": "0.10",
+            "worst": "0.10",
+            "values": [
+              "0.09",
+              "0.10",
+              "0.10"
+            ]
+          },
+          "unit": "s",
+          "better": "lower",
+          "trace": [
+            {
+              "receipt": "release/receipts/ttft-1a-r-low.json",
+              "sha256": "90ebd8ef916ac0279542f3dc969e2f27e0f7af95217b822ca9097579889b8112",
+              "pointer": "/requests/2/ttft_any"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-low.json",
+              "sha256": "90ebd8ef916ac0279542f3dc969e2f27e0f7af95217b822ca9097579889b8112",
+              "pointer": "/requests/5/ttft_any"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-low.json",
+              "sha256": "90ebd8ef916ac0279542f3dc969e2f27e0f7af95217b822ca9097579889b8112",
+              "pointer": "/requests/8/ttft_any"
+            }
+          ]
+        },
+        "first_content": {
+          "median": 0.22223437699722126,
+          "worst": 0.22713442897656932,
+          "values": [
+            0.22223437699722126,
+            0.21872224396793172,
+            0.22713442897656932
+          ],
+          "n": 3,
+          "display": {
+            "median": "0.22",
+            "worst": "0.23",
+            "values": [
+              "0.22",
+              "0.22",
+              "0.23"
+            ]
+          },
+          "unit": "s",
+          "better": "lower",
+          "trace": [
+            {
+              "receipt": "release/receipts/ttft-1a-r-low.json",
+              "sha256": "90ebd8ef916ac0279542f3dc969e2f27e0f7af95217b822ca9097579889b8112",
+              "pointer": "/requests/2/ttft_content"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-low.json",
+              "sha256": "90ebd8ef916ac0279542f3dc969e2f27e0f7af95217b822ca9097579889b8112",
+              "pointer": "/requests/5/ttft_content"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-low.json",
+              "sha256": "90ebd8ef916ac0279542f3dc969e2f27e0f7af95217b822ca9097579889b8112",
+              "pointer": "/requests/8/ttft_content"
+            }
+          ],
+          "missing": 0,
+          "conditional": false,
+          "censored_trace": []
+        },
+        "reasoning_tokens": {
+          "median": 4,
+          "worst": 4,
+          "values": [
+            4,
+            4,
+            4
+          ],
+          "n": 3,
+          "display": {
+            "median": "4",
+            "worst": "4",
+            "values": [
+              "4",
+              "4",
+              "4"
+            ]
+          },
+          "trace": [
+            {
+              "receipt": "release/receipts/ttft-1a-r-low.json",
+              "pointer": "/requests/2/reasoning_tokens"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-low.json",
+              "pointer": "/requests/5/reasoning_tokens"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-low.json",
+              "pointer": "/requests/8/reasoning_tokens"
+            }
+          ]
+        }
+      },
+      "ttft_short_turn": {
+        "unit": "s",
+        "better": "lower",
+        "class": "measured",
+        "conditions": {
+          "prompt": "short",
+          "case": "turn",
+          "thinking": null,
+          "reasoning_effort": null,
+          "rendered_effort": "max",
+          "effort_label": "Max (default)",
+          "serving_default": true,
+          "prompt_tokens": [
+            116,
+            86,
+            85
+          ],
+          "cached_tokens": [
+            33,
+            35,
+            34
+          ],
+          "rendered_sha": [
+            "c92320143758990b",
+            "6ef0a511c0776fe4",
+            "15d2b625b4d3847a"
+          ],
+          "render_evidence": [
+            {
+              "receipt": "release/receipts/ttft-1a-r-unset.json",
+              "pointer": "/requests/2/rendered_sha"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-unset.json",
+              "pointer": "/requests/5/rendered_sha"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-unset.json",
+              "pointer": "/requests/8/rendered_sha"
+            }
+          ],
+          "max_tokens": 1536,
+          "temperature": 0,
+          "top_p": 1,
+          "seed": 20260929,
+          "stream": true,
+          "streams": 1,
+          "planned_n": 3,
+          "clock_start": "client, before the request opens",
+          "first_token_end": "first SSE event with non-empty reasoning or content text",
+          "first_content_end": "first SSE event with non-empty content text"
+        },
+        "instrument": {
+          "name": "TTFT probe",
+          "version": 3,
+          "sha256": "3e67dfa991461a937c32e4aa1289193c6628cb663ee0421be00d333ba8d42f54"
+        },
+        "evidence": [
+          "release/receipts/ttft-1a-r-unset.json"
+        ],
+        "first_token": {
+          "median": 0.17565763799939305,
+          "worst": 0.21838925103656948,
+          "values": [
+            0.21838925103656948,
+            0.16432327299844474,
+            0.17565763799939305
+          ],
+          "n": 3,
+          "display": {
+            "median": "0.18",
+            "worst": "0.22",
+            "values": [
+              "0.22",
+              "0.16",
+              "0.18"
+            ]
+          },
+          "unit": "s",
+          "better": "lower",
+          "trace": [
+            {
+              "receipt": "release/receipts/ttft-1a-r-unset.json",
+              "sha256": "96fe1a1dab191557b7792b9965da79c9f5d880408ee44bec505c92741ddafaa3",
+              "pointer": "/requests/2/ttft_any"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-unset.json",
+              "sha256": "96fe1a1dab191557b7792b9965da79c9f5d880408ee44bec505c92741ddafaa3",
+              "pointer": "/requests/5/ttft_any"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-unset.json",
+              "sha256": "96fe1a1dab191557b7792b9965da79c9f5d880408ee44bec505c92741ddafaa3",
+              "pointer": "/requests/8/ttft_any"
+            }
+          ]
+        },
+        "first_content": {
+          "median": 0.5710224899812602,
+          "worst": 0.7250520500238054,
+          "values": [
+            0.7250520500238054,
+            0.5710224899812602,
+            0.49364133295603096
+          ],
+          "n": 3,
+          "display": {
+            "median": "0.57",
+            "worst": "0.73",
+            "values": [
+              "0.73",
+              "0.57",
+              "0.49"
+            ]
+          },
+          "unit": "s",
+          "better": "lower",
+          "trace": [
+            {
+              "receipt": "release/receipts/ttft-1a-r-unset.json",
+              "sha256": "96fe1a1dab191557b7792b9965da79c9f5d880408ee44bec505c92741ddafaa3",
+              "pointer": "/requests/2/ttft_content"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-unset.json",
+              "sha256": "96fe1a1dab191557b7792b9965da79c9f5d880408ee44bec505c92741ddafaa3",
+              "pointer": "/requests/5/ttft_content"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-unset.json",
+              "sha256": "96fe1a1dab191557b7792b9965da79c9f5d880408ee44bec505c92741ddafaa3",
+              "pointer": "/requests/8/ttft_content"
+            }
+          ],
+          "missing": 0,
+          "conditional": false,
+          "censored_trace": []
+        },
+        "reasoning_tokens": {
+          "median": 26,
+          "worst": 33,
+          "values": [
+            33,
+            26,
+            19
+          ],
+          "n": 3,
+          "display": {
+            "median": "26",
+            "worst": "33",
+            "values": [
+              "33",
+              "26",
+              "19"
+            ]
+          },
+          "trace": [
+            {
+              "receipt": "release/receipts/ttft-1a-r-unset.json",
+              "pointer": "/requests/2/reasoning_tokens"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-unset.json",
+              "pointer": "/requests/5/reasoning_tokens"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-unset.json",
+              "pointer": "/requests/8/reasoning_tokens"
+            }
+          ]
+        }
+      },
+      "ttft_short_warm_think_off": {
+        "unit": "s",
+        "better": "lower",
+        "class": "measured",
+        "conditions": {
+          "prompt": "short",
+          "case": "warm",
+          "thinking": false,
+          "reasoning_effort": null,
+          "rendered_effort": "low",
+          "effort_label": "Low",
+          "serving_default": false,
+          "prompt_tokens": [
+            37,
+            34,
+            34
+          ],
+          "cached_tokens": [
+            0,
+            0,
+            0
+          ],
+          "rendered_sha": [
+            "4e89641e038e2c9e",
+            "a748778602ac5447",
+            "f6a1c758f8a49c72"
+          ],
+          "render_evidence": [
+            {
+              "receipt": "release/receipts/ttft-1a-r-low.json",
+              "pointer": "/requests/1/rendered_sha"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-low.json",
+              "pointer": "/requests/4/rendered_sha"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-low.json",
+              "pointer": "/requests/7/rendered_sha"
+            }
+          ],
+          "max_tokens": 256,
+          "temperature": 0,
+          "top_p": 1,
+          "seed": 20260929,
+          "stream": true,
+          "streams": 1,
+          "planned_n": 3,
+          "clock_start": "client, before the request opens",
+          "first_token_end": "first SSE event with non-empty reasoning or content text",
+          "first_content_end": "first SSE event with non-empty content text"
+        },
+        "instrument": {
+          "name": "TTFT probe",
+          "version": 3,
+          "sha256": "3e67dfa991461a937c32e4aa1289193c6628cb663ee0421be00d333ba8d42f54"
+        },
+        "evidence": [
+          "release/receipts/ttft-1a-r-low.json"
+        ],
+        "first_token": {
+          "median": 0.14471853896975517,
+          "worst": 0.14569923200178891,
+          "values": [
+            0.14569923200178891,
+            0.14095488202292472,
+            0.14471853896975517
+          ],
+          "n": 3,
+          "display": {
+            "median": "0.14",
+            "worst": "0.15",
+            "values": [
+              "0.15",
+              "0.14",
+              "0.14"
+            ]
+          },
+          "unit": "s",
+          "better": "lower",
+          "trace": [
+            {
+              "receipt": "release/receipts/ttft-1a-r-low.json",
+              "sha256": "90ebd8ef916ac0279542f3dc969e2f27e0f7af95217b822ca9097579889b8112",
+              "pointer": "/requests/1/ttft_any"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-low.json",
+              "sha256": "90ebd8ef916ac0279542f3dc969e2f27e0f7af95217b822ca9097579889b8112",
+              "pointer": "/requests/4/ttft_any"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-low.json",
+              "sha256": "90ebd8ef916ac0279542f3dc969e2f27e0f7af95217b822ca9097579889b8112",
+              "pointer": "/requests/7/ttft_any"
+            }
+          ]
+        },
+        "first_content": {
+          "median": 0.18788656097603962,
+          "worst": 0.18891679000807926,
+          "values": [
+            0.18891679000807926,
+            0.18212741799652576,
+            0.18788656097603962
+          ],
+          "n": 3,
+          "display": {
+            "median": "0.19",
+            "worst": "0.19",
+            "values": [
+              "0.19",
+              "0.18",
+              "0.19"
+            ]
+          },
+          "unit": "s",
+          "better": "lower",
+          "trace": [
+            {
+              "receipt": "release/receipts/ttft-1a-r-low.json",
+              "sha256": "90ebd8ef916ac0279542f3dc969e2f27e0f7af95217b822ca9097579889b8112",
+              "pointer": "/requests/1/ttft_content"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-low.json",
+              "sha256": "90ebd8ef916ac0279542f3dc969e2f27e0f7af95217b822ca9097579889b8112",
+              "pointer": "/requests/4/ttft_content"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-low.json",
+              "sha256": "90ebd8ef916ac0279542f3dc969e2f27e0f7af95217b822ca9097579889b8112",
+              "pointer": "/requests/7/ttft_content"
+            }
+          ],
+          "missing": 0,
+          "conditional": false,
+          "censored_trace": []
+        },
+        "reasoning_tokens": {
+          "median": 2,
+          "worst": 2,
+          "values": [
+            2,
+            2,
+            2
+          ],
+          "n": 3,
+          "display": {
+            "median": "2",
+            "worst": "2",
+            "values": [
+              "2",
+              "2",
+              "2"
+            ]
+          },
+          "trace": [
+            {
+              "receipt": "release/receipts/ttft-1a-r-low.json",
+              "pointer": "/requests/1/reasoning_tokens"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-low.json",
+              "pointer": "/requests/4/reasoning_tokens"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-low.json",
+              "pointer": "/requests/7/reasoning_tokens"
+            }
+          ]
+        }
+      },
+      "ttft_short_warm": {
+        "unit": "s",
+        "better": "lower",
+        "class": "measured",
+        "conditions": {
+          "prompt": "short",
+          "case": "warm",
+          "thinking": null,
+          "reasoning_effort": null,
+          "rendered_effort": "max",
+          "effort_label": "Max (default)",
+          "serving_default": true,
+          "prompt_tokens": [
+            33,
+            35,
+            34
+          ],
+          "cached_tokens": [
+            0,
+            0,
+            0
+          ],
+          "rendered_sha": [
+            "4e3c7e58b7d8ce18",
+            "908ff36e1ff83992",
+            "643f3a17378962b7"
+          ],
+          "render_evidence": [
+            {
+              "receipt": "release/receipts/ttft-1a-r-unset.json",
+              "pointer": "/requests/1/rendered_sha"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-unset.json",
+              "pointer": "/requests/4/rendered_sha"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-unset.json",
+              "pointer": "/requests/7/rendered_sha"
+            }
+          ],
+          "max_tokens": 1536,
+          "temperature": 0,
+          "top_p": 1,
+          "seed": 20260929,
+          "stream": true,
+          "streams": 1,
+          "planned_n": 3,
+          "clock_start": "client, before the request opens",
+          "first_token_end": "first SSE event with non-empty reasoning or content text",
+          "first_content_end": "first SSE event with non-empty content text"
+        },
+        "instrument": {
+          "name": "TTFT probe",
+          "version": 3,
+          "sha256": "3e67dfa991461a937c32e4aa1289193c6628cb663ee0421be00d333ba8d42f54"
+        },
+        "evidence": [
+          "release/receipts/ttft-1a-r-unset.json"
+        ],
+        "first_token": {
+          "median": 0.1422555249882862,
+          "worst": 0.14495109696872532,
+          "values": [
+            0.1422555249882862,
+            0.14495109696872532,
+            0.1397946790093556
+          ],
+          "n": 3,
+          "display": {
+            "median": "0.14",
+            "worst": "0.14",
+            "values": [
+              "0.14",
+              "0.14",
+              "0.14"
+            ]
+          },
+          "unit": "s",
+          "better": "lower",
+          "trace": [
+            {
+              "receipt": "release/receipts/ttft-1a-r-unset.json",
+              "sha256": "96fe1a1dab191557b7792b9965da79c9f5d880408ee44bec505c92741ddafaa3",
+              "pointer": "/requests/1/ttft_any"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-unset.json",
+              "sha256": "96fe1a1dab191557b7792b9965da79c9f5d880408ee44bec505c92741ddafaa3",
+              "pointer": "/requests/4/ttft_any"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-unset.json",
+              "sha256": "96fe1a1dab191557b7792b9965da79c9f5d880408ee44bec505c92741ddafaa3",
+              "pointer": "/requests/7/ttft_any"
+            }
+          ]
+        },
+        "first_content": {
+          "median": 0.5669020159984939,
+          "worst": 0.9988668740261346,
+          "values": [
+            0.9988668740261346,
+            0.5669020159984939,
+            0.5467370980186388
+          ],
+          "n": 3,
+          "display": {
+            "median": "0.57",
+            "worst": "1.00",
+            "values": [
+              "1.00",
+              "0.57",
+              "0.55"
+            ]
+          },
+          "unit": "s",
+          "better": "lower",
+          "trace": [
+            {
+              "receipt": "release/receipts/ttft-1a-r-unset.json",
+              "sha256": "96fe1a1dab191557b7792b9965da79c9f5d880408ee44bec505c92741ddafaa3",
+              "pointer": "/requests/1/ttft_content"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-unset.json",
+              "sha256": "96fe1a1dab191557b7792b9965da79c9f5d880408ee44bec505c92741ddafaa3",
+              "pointer": "/requests/4/ttft_content"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-unset.json",
+              "sha256": "96fe1a1dab191557b7792b9965da79c9f5d880408ee44bec505c92741ddafaa3",
+              "pointer": "/requests/7/ttft_content"
+            }
+          ],
+          "missing": 0,
+          "conditional": false,
+          "censored_trace": []
+        },
+        "reasoning_tokens": {
+          "median": 35,
+          "worst": 67,
+          "values": [
+            67,
+            35,
+            35
+          ],
+          "n": 3,
+          "display": {
+            "median": "35",
+            "worst": "67",
+            "values": [
+              "67",
+              "35",
+              "35"
+            ]
+          },
+          "trace": [
+            {
+              "receipt": "release/receipts/ttft-1a-r-unset.json",
+              "pointer": "/requests/1/reasoning_tokens"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-unset.json",
+              "pointer": "/requests/4/reasoning_tokens"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-unset.json",
+              "pointer": "/requests/7/reasoning_tokens"
+            }
+          ]
+        }
+      }
+    },
+    "prefill": {
+      "prefill_32k_think_off": {
+        "unit": "tok/s",
+        "better": "higher",
+        "class": "measured",
+        "conditions": {
+          "prompt": "32k",
+          "case": "cold",
+          "thinking": false,
+          "reasoning_effort": null,
+          "rendered_effort": "low",
+          "effort_label": "Low",
+          "serving_default": false,
+          "prompt_tokens": [
+            32013,
+            32014,
+            32014
+          ],
+          "cached_tokens": [
+            0,
+            0,
+            0
+          ],
+          "rendered_sha": [
+            "891c4a9399c4cb02",
+            "063100ca571a9a1d",
+            "3f207755c53a18ec"
+          ],
+          "render_evidence": [
+            {
+              "receipt": "release/receipts/ttft-1a-r-low.json",
+              "pointer": "/requests/18/rendered_sha"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-low.json",
+              "pointer": "/requests/21/rendered_sha"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-low.json",
+              "pointer": "/requests/24/rendered_sha"
+            }
+          ],
+          "max_tokens": 256,
+          "temperature": 0,
+          "top_p": 1,
+          "seed": 20260929,
+          "stream": true,
+          "streams": 1,
+          "planned_n": 3,
+          "clock_start": "client, before the request opens",
+          "first_token_end": "first SSE event with non-empty reasoning or content text",
+          "first_content_end": "first SSE event with non-empty content text",
+          "rate": "usage.prompt_tokens / client ttft_any",
+          "measurement": "client-effective prefill; includes client overhead"
+        },
+        "instrument": {
+          "name": "TTFT probe",
+          "version": 3,
+          "sha256": "3e67dfa991461a937c32e4aa1289193c6628cb663ee0421be00d333ba8d42f54"
+        },
+        "evidence": [
+          "release/receipts/ttft-1a-r-low.json"
+        ],
+        "median": 1416.7329995612392,
+        "worst": 1411.7578120987941,
+        "values": [
+          1411.7578120987941,
+          1416.7329995612392,
+          1417.5064720931264
+        ],
+        "n": 3,
+        "display": {
+          "median": "1416.7",
+          "worst": "1411.8",
+          "values": [
+            "1411.8",
+            "1416.7",
+            "1417.5"
+          ]
+        },
+        "trace": [
+          {
+            "receipt": "release/receipts/ttft-1a-r-low.json",
+            "sha256": "90ebd8ef916ac0279542f3dc969e2f27e0f7af95217b822ca9097579889b8112",
+            "numerator": "/requests/18/usage/prompt_tokens",
+            "denominator": "/requests/18/ttft_any"
+          },
+          {
+            "receipt": "release/receipts/ttft-1a-r-low.json",
+            "sha256": "90ebd8ef916ac0279542f3dc969e2f27e0f7af95217b822ca9097579889b8112",
+            "numerator": "/requests/21/usage/prompt_tokens",
+            "denominator": "/requests/21/ttft_any"
+          },
+          {
+            "receipt": "release/receipts/ttft-1a-r-low.json",
+            "sha256": "90ebd8ef916ac0279542f3dc969e2f27e0f7af95217b822ca9097579889b8112",
+            "numerator": "/requests/24/usage/prompt_tokens",
+            "denominator": "/requests/24/ttft_any"
+          }
+        ]
+      },
+      "prefill_32k": {
+        "unit": "tok/s",
+        "better": "higher",
+        "class": "measured",
+        "conditions": {
+          "prompt": "32k",
+          "case": "cold",
+          "thinking": null,
+          "reasoning_effort": null,
+          "rendered_effort": "max",
+          "effort_label": "Max (default)",
+          "serving_default": true,
+          "prompt_tokens": [
+            32015,
+            32015,
+            32013
+          ],
+          "cached_tokens": [
+            0,
+            0,
+            0
+          ],
+          "rendered_sha": [
+            "fec90a2c8dc7c191",
+            "40fd71f59114feb3",
+            "9c8dbd5aa86196ba"
+          ],
+          "render_evidence": [
+            {
+              "receipt": "release/receipts/ttft-1a-r-unset.json",
+              "pointer": "/requests/18/rendered_sha"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-unset.json",
+              "pointer": "/requests/21/rendered_sha"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-unset.json",
+              "pointer": "/requests/24/rendered_sha"
+            }
+          ],
+          "max_tokens": 1536,
+          "temperature": 0,
+          "top_p": 1,
+          "seed": 20260929,
+          "stream": true,
+          "streams": 1,
+          "planned_n": 3,
+          "clock_start": "client, before the request opens",
+          "first_token_end": "first SSE event with non-empty reasoning or content text",
+          "first_content_end": "first SSE event with non-empty content text",
+          "rate": "usage.prompt_tokens / client ttft_any",
+          "measurement": "client-effective prefill; includes client overhead"
+        },
+        "instrument": {
+          "name": "TTFT probe",
+          "version": 3,
+          "sha256": "3e67dfa991461a937c32e4aa1289193c6628cb663ee0421be00d333ba8d42f54"
+        },
+        "evidence": [
+          "release/receipts/ttft-1a-r-unset.json"
+        ],
+        "median": 1415.5748828704072,
+        "worst": 1407.6530459309263,
+        "values": [
+          1415.5748828704072,
+          1416.5636533360305,
+          1407.6530459309263
+        ],
+        "n": 3,
+        "display": {
+          "median": "1415.6",
+          "worst": "1407.7",
+          "values": [
+            "1415.6",
+            "1416.6",
+            "1407.7"
+          ]
+        },
+        "trace": [
+          {
+            "receipt": "release/receipts/ttft-1a-r-unset.json",
+            "sha256": "96fe1a1dab191557b7792b9965da79c9f5d880408ee44bec505c92741ddafaa3",
+            "numerator": "/requests/18/usage/prompt_tokens",
+            "denominator": "/requests/18/ttft_any"
+          },
+          {
+            "receipt": "release/receipts/ttft-1a-r-unset.json",
+            "sha256": "96fe1a1dab191557b7792b9965da79c9f5d880408ee44bec505c92741ddafaa3",
+            "numerator": "/requests/21/usage/prompt_tokens",
+            "denominator": "/requests/21/ttft_any"
+          },
+          {
+            "receipt": "release/receipts/ttft-1a-r-unset.json",
+            "sha256": "96fe1a1dab191557b7792b9965da79c9f5d880408ee44bec505c92741ddafaa3",
+            "numerator": "/requests/24/usage/prompt_tokens",
+            "denominator": "/requests/24/ttft_any"
+          }
+        ]
+      },
+      "prefill_5k_think_off": {
+        "unit": "tok/s",
+        "better": "higher",
+        "class": "measured",
+        "conditions": {
+          "prompt": "5k",
+          "case": "cold",
+          "thinking": false,
+          "reasoning_effort": null,
+          "rendered_effort": "low",
+          "effort_label": "Low",
+          "serving_default": false,
+          "prompt_tokens": [
+            5038,
+            5040,
+            5040
+          ],
+          "cached_tokens": [
+            0,
+            0,
+            0
+          ],
+          "rendered_sha": [
+            "5a4a4ae004c55017",
+            "b563c313f3066198",
+            "f979b3d09c97b322"
+          ],
+          "render_evidence": [
+            {
+              "receipt": "release/receipts/ttft-1a-r-low.json",
+              "pointer": "/requests/9/rendered_sha"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-low.json",
+              "pointer": "/requests/12/rendered_sha"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-low.json",
+              "pointer": "/requests/15/rendered_sha"
+            }
+          ],
+          "max_tokens": 256,
+          "temperature": 0,
+          "top_p": 1,
+          "seed": 20260929,
+          "stream": true,
+          "streams": 1,
+          "planned_n": 3,
+          "clock_start": "client, before the request opens",
+          "first_token_end": "first SSE event with non-empty reasoning or content text",
+          "first_content_end": "first SSE event with non-empty content text",
+          "rate": "usage.prompt_tokens / client ttft_any",
+          "measurement": "client-effective prefill; includes client overhead"
+        },
+        "instrument": {
+          "name": "TTFT probe",
+          "version": 3,
+          "sha256": "3e67dfa991461a937c32e4aa1289193c6628cb663ee0421be00d333ba8d42f54"
+        },
+        "evidence": [
+          "release/receipts/ttft-1a-r-low.json"
+        ],
+        "median": 1336.1702667136794,
+        "worst": 1323.0461600976396,
+        "values": [
+          1323.0461600976396,
+          1343.6399800786705,
+          1336.1702667136794
+        ],
+        "n": 3,
+        "display": {
+          "median": "1336.2",
+          "worst": "1323.0",
+          "values": [
+            "1323.0",
+            "1343.6",
+            "1336.2"
+          ]
+        },
+        "trace": [
+          {
+            "receipt": "release/receipts/ttft-1a-r-low.json",
+            "sha256": "90ebd8ef916ac0279542f3dc969e2f27e0f7af95217b822ca9097579889b8112",
+            "numerator": "/requests/9/usage/prompt_tokens",
+            "denominator": "/requests/9/ttft_any"
+          },
+          {
+            "receipt": "release/receipts/ttft-1a-r-low.json",
+            "sha256": "90ebd8ef916ac0279542f3dc969e2f27e0f7af95217b822ca9097579889b8112",
+            "numerator": "/requests/12/usage/prompt_tokens",
+            "denominator": "/requests/12/ttft_any"
+          },
+          {
+            "receipt": "release/receipts/ttft-1a-r-low.json",
+            "sha256": "90ebd8ef916ac0279542f3dc969e2f27e0f7af95217b822ca9097579889b8112",
+            "numerator": "/requests/15/usage/prompt_tokens",
+            "denominator": "/requests/15/ttft_any"
+          }
+        ]
+      },
+      "prefill_5k": {
+        "unit": "tok/s",
+        "better": "higher",
+        "class": "measured",
+        "conditions": {
+          "prompt": "5k",
+          "case": "cold",
+          "thinking": null,
+          "reasoning_effort": null,
+          "rendered_effort": "max",
+          "effort_label": "Max (default)",
+          "serving_default": true,
+          "prompt_tokens": [
+            5036,
+            5039,
+            5038
+          ],
+          "cached_tokens": [
+            0,
+            0,
+            0
+          ],
+          "rendered_sha": [
+            "404fc757c7e0abd2",
+            "7f3ce984b3565b14",
+            "bb6fcee0cdbb6569"
+          ],
+          "render_evidence": [
+            {
+              "receipt": "release/receipts/ttft-1a-r-unset.json",
+              "pointer": "/requests/9/rendered_sha"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-unset.json",
+              "pointer": "/requests/12/rendered_sha"
+            },
+            {
+              "receipt": "release/receipts/ttft-1a-r-unset.json",
+              "pointer": "/requests/15/rendered_sha"
+            }
+          ],
+          "max_tokens": 1536,
+          "temperature": 0,
+          "top_p": 1,
+          "seed": 20260929,
+          "stream": true,
+          "streams": 1,
+          "planned_n": 3,
+          "clock_start": "client, before the request opens",
+          "first_token_end": "first SSE event with non-empty reasoning or content text",
+          "first_content_end": "first SSE event with non-empty content text",
+          "rate": "usage.prompt_tokens / client ttft_any",
+          "measurement": "client-effective prefill; includes client overhead"
+        },
+        "instrument": {
+          "name": "TTFT probe",
+          "version": 3,
+          "sha256": "3e67dfa991461a937c32e4aa1289193c6628cb663ee0421be00d333ba8d42f54"
+        },
+        "evidence": [
+          "release/receipts/ttft-1a-r-unset.json"
+        ],
+        "median": 1322.568330874094,
+        "worst": 1321.2332502015172,
+        "values": [
+          1323.1776860541104,
+          1322.568330874094,
+          1321.2332502015172
+        ],
+        "n": 3,
+        "display": {
+          "median": "1322.6",
+          "worst": "1321.2",
+          "values": [
+            "1323.2",
+            "1322.6",
+            "1321.2"
+          ]
+        },
+        "trace": [
+          {
+            "receipt": "release/receipts/ttft-1a-r-unset.json",
+            "sha256": "96fe1a1dab191557b7792b9965da79c9f5d880408ee44bec505c92741ddafaa3",
+            "numerator": "/requests/9/usage/prompt_tokens",
+            "denominator": "/requests/9/ttft_any"
+          },
+          {
+            "receipt": "release/receipts/ttft-1a-r-unset.json",
+            "sha256": "96fe1a1dab191557b7792b9965da79c9f5d880408ee44bec505c92741ddafaa3",
+            "numerator": "/requests/12/usage/prompt_tokens",
+            "denominator": "/requests/12/ttft_any"
+          },
+          {
+            "receipt": "release/receipts/ttft-1a-r-unset.json",
+            "sha256": "96fe1a1dab191557b7792b9965da79c9f5d880408ee44bec505c92741ddafaa3",
+            "numerator": "/requests/15/usage/prompt_tokens",
+            "denominator": "/requests/15/ttft_any"
+          }
+        ]
+      },
+      "prefill_128k": {
+        "unit": "tok/s",
+        "better": "higher",
+        "class": "not-measured",
+        "instrument": null,
+        "evidence": [],
+        "median": null,
+        "worst": null,
+        "values": [],
+        "n": 0,
+        "display": null,
+        "reason": "128k is outside the MVP set; no countable receipt."
+      }
+    },
+    "decode": {
+      "code_c2": {
+        "unit": "tok/s",
+        "better": "higher",
+        "class": "not-supported",
+        "conditions": {
+          "workload": "code",
+          "streams": 2
+        },
+        "instrument": "Two-client queue check and verified source read",
+        "evidence": [
+          "release/receipts/conc-mvp.json"
+        ],
+        "median": null,
+        "worst": null,
+        "values": [],
+        "n": 0,
+        "display": null,
+        "reason": "This recipe serves one request at a time; a second waits, with no timeout and no refusal.",
+        "label": "2 streams",
+        "source_read": {
+          "status": "VERIFIED",
+          "engine_commit": "8141957",
+          "citations": [
+            "cuda/server.py:310",
+            "server/http.py:41-44"
+          ],
+          "finding": "App.lock is held for prefill and decode, with no timeout; ThreadingHTTPServer accepts waiting requests."
+        }
+      },
+      "code_c4": {
+        "unit": "tok/s",
+        "better": "higher",
+        "class": "not-supported",
+        "conditions": {
+          "workload": "code",
+          "streams": 4
+        },
+        "instrument": "Two-client queue check and verified source read",
+        "evidence": [
+          "release/receipts/conc-mvp.json"
+        ],
+        "median": null,
+        "worst": null,
+        "values": [],
+        "n": 0,
+        "display": null,
+        "reason": "This recipe serves one request at a time; a second waits, with no timeout and no refusal.",
+        "label": "4 streams",
+        "source_read": {
+          "status": "VERIFIED",
+          "engine_commit": "8141957",
+          "citations": [
+            "cuda/server.py:310",
+            "server/http.py:41-44"
+          ],
+          "finding": "App.lock is held for prefill and decode, with no timeout; ThreadingHTTPServer accepts waiting requests."
+        }
+      },
+      "code_c8": {
+        "unit": "tok/s",
+        "better": "higher",
+        "class": "not-supported",
+        "conditions": {
+          "workload": "code",
+          "streams": 8
+        },
+        "instrument": "Two-client queue check and verified source read",
+        "evidence": [
+          "release/receipts/conc-mvp.json"
+        ],
+        "median": null,
+        "worst": null,
+        "values": [],
+        "n": 0,
+        "display": null,
+        "reason": "This recipe serves one request at a time; a second waits, with no timeout and no refusal.",
+        "label": "8 streams",
+        "source_read": {
+          "status": "VERIFIED",
+          "engine_commit": "8141957",
+          "citations": [
+            "cuda/server.py:310",
+            "server/http.py:41-44"
+          ],
+          "finding": "App.lock is held for prefill and decode, with no timeout; ThreadingHTTPServer accepts waiting requests."
+        }
+      },
+      "decode_after_5k": {
+        "unit": "tok/s",
+        "better": "higher",
+        "class": "not-measured",
+        "instrument": null,
+        "evidence": [],
+        "median": null,
+        "worst": null,
+        "values": [],
+        "n": 0,
+        "display": null,
+        "reason": "Command-3 long-context decode is outside the MVP set."
+      },
+      "decode_after_32k": {
+        "unit": "tok/s",
+        "better": "higher",
+        "class": "not-measured",
+        "instrument": null,
+        "evidence": [],
+        "median": null,
+        "worst": null,
+        "values": [],
+        "n": 0,
+        "display": null,
+        "reason": "Command-3 long-context decode is outside the MVP set."
+      },
+      "decode_after_128k": {
+        "unit": "tok/s",
+        "better": "higher",
+        "class": "not-measured",
+        "instrument": null,
+        "evidence": [],
+        "median": null,
+        "worst": null,
+        "values": [],
+        "n": 0,
+        "display": null,
+        "reason": "Command-3 long-context decode is outside the MVP set."
+      }
     }
   },
   "site_v2": {}

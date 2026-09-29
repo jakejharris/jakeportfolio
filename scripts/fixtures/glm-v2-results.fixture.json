@@ -32,7 +32,17 @@
         "vs_upstream_tp3": "above",
         "evidence": [
           "release/receipts/fixture.json"
-        ]
+        ],
+        "display": {
+          "median": "11.2",
+          "worst": "11.1",
+          "values": [
+            "11.1",
+            "11.2",
+            "11.3"
+          ],
+          "vs_line_pct": "+5.5%"
+        }
       },
       "rigmark_prose": {
         "median": 8.200,
@@ -51,7 +61,17 @@
         "vs_upstream_tp3": "above",
         "evidence": [
           "release/receipts/fixture.json"
-        ]
+        ],
+        "display": {
+          "median": "8.2",
+          "worst": "8.1",
+          "values": [
+            "8.1",
+            "8.2",
+            "8.3"
+          ],
+          "vs_line_pct": "-2.5%"
+        }
       },
       "rigmark_structured": {
         "median": 12.200,
@@ -70,7 +90,17 @@
         "vs_upstream_tp3": "above",
         "evidence": [
           "release/receipts/fixture.json"
-        ]
+        ],
+        "display": {
+          "median": "12.2",
+          "worst": "12.1",
+          "values": [
+            "12.1",
+            "12.2",
+            "12.3"
+          ],
+          "vs_line_pct": "+3.3%"
+        }
       }
     },
     "reference": {
@@ -78,19 +108,37 @@
         "class": "derived-midpoint",
         "rigmark_code": 10.000,
         "rigmark_prose": 10.000,
-        "rigmark_structured": 11.000
+        "rigmark_structured": 11.000,
+        "display": {
+          "rigmark_code": "10.0",
+          "rigmark_prose": "10.0",
+          "rigmark_structured": "11.0"
+        },
+        "conditions": "These are published figures, measured on a switched 200G fabric; this is not a matched-conditions comparison."
       },
       "upstream_tp3_set1": {
         "class": "author-reported",
         "rigmark_code": 7.100,
         "rigmark_prose": 7.100,
-        "rigmark_structured": 7.100
+        "rigmark_structured": 7.100,
+        "display": {
+          "rigmark_code": "7.1",
+          "rigmark_prose": "7.1",
+          "rigmark_structured": "7.1"
+        },
+        "conditions": "These are published figures, measured on a switched 200G fabric; this is not a matched-conditions comparison."
       },
       "upstream_tp3_set2": {
         "class": "author-reported",
         "rigmark_code": 7.200,
         "rigmark_prose": 7.200,
-        "rigmark_structured": 7.200
+        "rigmark_structured": 7.200,
+        "display": {
+          "rigmark_code": "7.2",
+          "rigmark_prose": "7.2",
+          "rigmark_structured": "7.2"
+        },
+        "conditions": "These are published figures, measured on a switched 200G fabric; this is not a matched-conditions comparison."
       }
     },
     "quality": {}
@@ -104,8 +152,8 @@
       "same_conditions": false,
       "source": "https://github.com/mmastrac/glm-5.3-flash-4x-gx10/blob/5d3cca861e715860bd1f841a1f25f74320636b18/experimental/tp3/README.md",
       "line_source": "https://github.com/mmastrac/glm-5.3-flash-4x-gx10/blob/5d3cca861e715860bd1f841a1f25f74320636b18/README.md",
-      "conditions": "mmastrac's published figures were measured on a switched 200G fabric; this recipe uses Sparks cabled as a triangle. This is not a matched-conditions comparison.",
-      "engine_weights": "TensorFold uses Vontra's MLX affine weights; the published reference uses NVIDIA's NVFP4 checkpoint. The engines and weight formats differ."
+      "engine_weights": "TensorFold uses Vontra's MLX affine weights; the published reference uses NVIDIA's NVFP4 checkpoint. The engines and weight formats differ.",
+      "topology": "This recipe uses Sparks cabled as a triangle."
     },
     "limitations": [],
     "license": {

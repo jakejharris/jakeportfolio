@@ -4,11 +4,9 @@
   "engine": "TensorFold",
   "fixture": false,
   "publication_hold": true,
-  "pending": [
-    "Final freeze, release identity and date pending."
-  ],
-  "source_sha256": "d07ff5f6ebcb0910e73398ab4b78b3fed434ccaca3cc4361d9eaa08ec7fbcc26",
-  "review_commit": "6fffe3a34a44fc87ea1acc84841b58ecd35718cc",
+  "pending": [],
+  "source_sha256": "917196d3b8180a6d8ac365569d14cbf8ce7cc1b9f076dab4e8dea58d41bd2b40",
+  "review_commit": "d62319334312f33c4a5bf4b338885f012139b746",
   "published": null,
   "rows": [
     {
@@ -25,10 +23,10 @@
       "vs_line": "above",
       "margin_text": "4.795454545454536",
       "evidence": [
-        "https://github.com/jakejharris/jspark3/blob/6fffe3a34a44fc87ea1acc84841b58ecd35718cc/release/receipts/speed-result.json",
-        "https://github.com/jakejharris/jspark3/blob/6fffe3a34a44fc87ea1acc84841b58ecd35718cc/release/receipts/lfl-r1.json",
-        "https://github.com/jakejharris/jspark3/blob/6fffe3a34a44fc87ea1acc84841b58ecd35718cc/release/receipts/lfl-r2.json",
-        "https://github.com/jakejharris/jspark3/blob/6fffe3a34a44fc87ea1acc84841b58ecd35718cc/release/receipts/lfl-r3.json"
+        "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/speed-result.json",
+        "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/lfl-r1.json",
+        "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/lfl-r2.json",
+        "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/lfl-r3.json"
       ],
       "line_text": "83.6",
       "upstream_tp3_set1_text": "75.7",
@@ -36,10 +34,15 @@
       "display": {
         "median": "87.6",
         "worst": "87.5",
+        "values": [
+          "87.5",
+          "87.6",
+          "87.7"
+        ],
+        "margin": "+4.8%",
         "line": "83.6",
         "upstream_tp3_set1": "75.7",
-        "upstream_tp3_set2": "76.2",
-        "margin": "+4.8%"
+        "upstream_tp3_set2": "76.2"
       }
     },
     {
@@ -56,10 +59,10 @@
       "vs_line": "below",
       "margin_text": "-1.6375000000000028",
       "evidence": [
-        "https://github.com/jakejharris/jspark3/blob/6fffe3a34a44fc87ea1acc84841b58ecd35718cc/release/receipts/speed-result.json",
-        "https://github.com/jakejharris/jspark3/blob/6fffe3a34a44fc87ea1acc84841b58ecd35718cc/release/receipts/lfl-r1.json",
-        "https://github.com/jakejharris/jspark3/blob/6fffe3a34a44fc87ea1acc84841b58ecd35718cc/release/receipts/lfl-r2.json",
-        "https://github.com/jakejharris/jspark3/blob/6fffe3a34a44fc87ea1acc84841b58ecd35718cc/release/receipts/lfl-r3.json"
+        "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/speed-result.json",
+        "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/lfl-r1.json",
+        "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/lfl-r2.json",
+        "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/lfl-r3.json"
       ],
       "line_text": "48.0",
       "upstream_tp3_set1_text": "43.8",
@@ -67,10 +70,15 @@
       "display": {
         "median": "47.2",
         "worst": "47.0",
+        "values": [
+          "47.0",
+          "47.2",
+          "47.2"
+        ],
+        "margin": "-1.6%",
         "line": "48.0",
         "upstream_tp3_set1": "43.8",
-        "upstream_tp3_set2": "44.0",
-        "margin": "-1.6%"
+        "upstream_tp3_set2": "44.0"
       }
     },
     {
@@ -87,10 +95,10 @@
       "vs_line": "above",
       "margin_text": "0.3925159235668829",
       "evidence": [
-        "https://github.com/jakejharris/jspark3/blob/6fffe3a34a44fc87ea1acc84841b58ecd35718cc/release/receipts/speed-result.json",
-        "https://github.com/jakejharris/jspark3/blob/6fffe3a34a44fc87ea1acc84841b58ecd35718cc/release/receipts/lfl-r1.json",
-        "https://github.com/jakejharris/jspark3/blob/6fffe3a34a44fc87ea1acc84841b58ecd35718cc/release/receipts/lfl-r2.json",
-        "https://github.com/jakejharris/jspark3/blob/6fffe3a34a44fc87ea1acc84841b58ecd35718cc/release/receipts/lfl-r3.json"
+        "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/speed-result.json",
+        "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/lfl-r1.json",
+        "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/lfl-r2.json",
+        "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/lfl-r3.json"
       ],
       "line_text": "125.6",
       "upstream_tp3_set1_text": "113.8",
@@ -98,86 +106,2013 @@
       "display": {
         "median": "126.1",
         "worst": "126.1",
+        "values": [
+          "126.1",
+          "126.1",
+          "126.4"
+        ],
+        "margin": "+0.4%",
+        "margin_tps": "+0.5",
         "line": "125.6",
         "upstream_tp3_set1": "113.8",
-        "upstream_tp3_set2": "114.0",
-        "margin": "+0.4%"
+        "upstream_tp3_set2": "114.0"
       }
     }
   ],
   "comparison": {
     "source": "https://github.com/mmastrac/glm-5.3-flash-4x-gx10/blob/5d3cca861e715860bd1f841a1f25f74320636b18/experimental/tp3/README.md",
     "line_source": "https://github.com/mmastrac/glm-5.3-flash-4x-gx10/blob/5d3cca861e715860bd1f841a1f25f74320636b18/README.md",
-    "conditions": "The reference uses mmastrac's published figures, measured on a switched 200G fabric. This is not a matched-conditions comparison. This recipe uses Sparks cabled as a triangle.",
+    "conditions": {
+      "line": "The line is derived from mmastrac's published TP=2 and TP=4 figures, measured on a switched 200G fabric; this is not a matched-conditions comparison.",
+      "upstream_tp3_set1": "These are mmastrac's published TP=3 figures, measured on a switched 200G fabric; this is not a matched-conditions comparison.",
+      "upstream_tp3_set2": "These are mmastrac's published TP=3 figures, measured on a switched 200G fabric; this is not a matched-conditions comparison."
+    },
+    "topology": "This recipe uses Sparks cabled as a triangle.",
     "engine_weights": "TensorFold uses Vontra's MLX affine weights; the published reference uses NVIDIA's NVFP4 checkpoint. The engines and weight formats differ.",
     "same_conditions": false
   },
+  "latency": [
+    {
+      "id": "ttft_short_cold",
+      "unit": "s",
+      "better": "lower",
+      "status": "measured",
+      "evidence": [
+        "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-unset.json"
+      ],
+      "prompt": "short",
+      "case": "cold",
+      "effort": "Max (default)",
+      "instrument": "TTFT probe",
+      "first_token": {
+        "display": {
+          "median": "0.15",
+          "worst": "0.16",
+          "values": [
+            "0.16",
+            "0.15",
+            "0.15"
+          ]
+        },
+        "trace": [
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-unset.json",
+            "pointer": "/requests/0/ttft_any"
+          },
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-unset.json",
+            "pointer": "/requests/3/ttft_any"
+          },
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-unset.json",
+            "pointer": "/requests/6/ttft_any"
+          }
+        ]
+      },
+      "first_content": {
+        "display": {
+          "median": "0.58",
+          "worst": "1.02",
+          "values": [
+            "1.02",
+            "0.58",
+            "0.57"
+          ]
+        },
+        "trace": [
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-unset.json",
+            "pointer": "/requests/0/ttft_content"
+          },
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-unset.json",
+            "pointer": "/requests/3/ttft_content"
+          },
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-unset.json",
+            "pointer": "/requests/6/ttft_content"
+          }
+        ],
+        "conditional": false,
+        "censored_trace": []
+      },
+      "reasoning_tokens": {
+        "display": {
+          "median": "35",
+          "worst": "67",
+          "values": [
+            "67",
+            "35",
+            "35"
+          ]
+        },
+        "trace": [
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-unset.json",
+            "pointer": "/requests/0/reasoning_tokens"
+          },
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-unset.json",
+            "pointer": "/requests/3/reasoning_tokens"
+          },
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-unset.json",
+            "pointer": "/requests/6/reasoning_tokens"
+          }
+        ]
+      }
+    },
+    {
+      "id": "ttft_short_warm",
+      "unit": "s",
+      "better": "lower",
+      "status": "measured",
+      "evidence": [
+        "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-unset.json"
+      ],
+      "prompt": "short",
+      "case": "warm",
+      "effort": "Max (default)",
+      "instrument": "TTFT probe",
+      "first_token": {
+        "display": {
+          "median": "0.14",
+          "worst": "0.14",
+          "values": [
+            "0.14",
+            "0.14",
+            "0.14"
+          ]
+        },
+        "trace": [
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-unset.json",
+            "pointer": "/requests/1/ttft_any"
+          },
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-unset.json",
+            "pointer": "/requests/4/ttft_any"
+          },
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-unset.json",
+            "pointer": "/requests/7/ttft_any"
+          }
+        ]
+      },
+      "first_content": {
+        "display": {
+          "median": "0.57",
+          "worst": "1.00",
+          "values": [
+            "1.00",
+            "0.57",
+            "0.55"
+          ]
+        },
+        "trace": [
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-unset.json",
+            "pointer": "/requests/1/ttft_content"
+          },
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-unset.json",
+            "pointer": "/requests/4/ttft_content"
+          },
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-unset.json",
+            "pointer": "/requests/7/ttft_content"
+          }
+        ],
+        "conditional": false,
+        "censored_trace": []
+      },
+      "reasoning_tokens": {
+        "display": {
+          "median": "35",
+          "worst": "67",
+          "values": [
+            "67",
+            "35",
+            "35"
+          ]
+        },
+        "trace": [
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-unset.json",
+            "pointer": "/requests/1/reasoning_tokens"
+          },
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-unset.json",
+            "pointer": "/requests/4/reasoning_tokens"
+          },
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-unset.json",
+            "pointer": "/requests/7/reasoning_tokens"
+          }
+        ]
+      }
+    },
+    {
+      "id": "ttft_short_turn",
+      "unit": "s",
+      "better": "lower",
+      "status": "measured",
+      "evidence": [
+        "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-unset.json"
+      ],
+      "prompt": "short",
+      "case": "turn",
+      "effort": "Max (default)",
+      "instrument": "TTFT probe",
+      "first_token": {
+        "display": {
+          "median": "0.18",
+          "worst": "0.22",
+          "values": [
+            "0.22",
+            "0.16",
+            "0.18"
+          ]
+        },
+        "trace": [
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-unset.json",
+            "pointer": "/requests/2/ttft_any"
+          },
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-unset.json",
+            "pointer": "/requests/5/ttft_any"
+          },
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-unset.json",
+            "pointer": "/requests/8/ttft_any"
+          }
+        ]
+      },
+      "first_content": {
+        "display": {
+          "median": "0.57",
+          "worst": "0.73",
+          "values": [
+            "0.73",
+            "0.57",
+            "0.49"
+          ]
+        },
+        "trace": [
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-unset.json",
+            "pointer": "/requests/2/ttft_content"
+          },
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-unset.json",
+            "pointer": "/requests/5/ttft_content"
+          },
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-unset.json",
+            "pointer": "/requests/8/ttft_content"
+          }
+        ],
+        "conditional": false,
+        "censored_trace": []
+      },
+      "reasoning_tokens": {
+        "display": {
+          "median": "26",
+          "worst": "33",
+          "values": [
+            "33",
+            "26",
+            "19"
+          ]
+        },
+        "trace": [
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-unset.json",
+            "pointer": "/requests/2/reasoning_tokens"
+          },
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-unset.json",
+            "pointer": "/requests/5/reasoning_tokens"
+          },
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-unset.json",
+            "pointer": "/requests/8/reasoning_tokens"
+          }
+        ]
+      }
+    },
+    {
+      "id": "ttft_5k_cold",
+      "unit": "s",
+      "better": "lower",
+      "status": "measured",
+      "evidence": [
+        "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-unset.json"
+      ],
+      "prompt": "5k",
+      "case": "cold",
+      "effort": "Max (default)",
+      "instrument": "TTFT probe",
+      "first_token": {
+        "display": {
+          "median": "3.81",
+          "worst": "3.81",
+          "values": [
+            "3.81",
+            "3.81",
+            "3.81"
+          ]
+        },
+        "trace": [
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-unset.json",
+            "pointer": "/requests/9/ttft_any"
+          },
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-unset.json",
+            "pointer": "/requests/12/ttft_any"
+          },
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-unset.json",
+            "pointer": "/requests/15/ttft_any"
+          }
+        ]
+      },
+      "first_content": {
+        "display": {
+          "median": "4.81",
+          "worst": "4.86",
+          "values": [
+            "4.77",
+            "4.86",
+            "4.81"
+          ]
+        },
+        "trace": [
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-unset.json",
+            "pointer": "/requests/9/ttft_content"
+          },
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-unset.json",
+            "pointer": "/requests/12/ttft_content"
+          },
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-unset.json",
+            "pointer": "/requests/15/ttft_content"
+          }
+        ],
+        "conditional": false,
+        "censored_trace": []
+      },
+      "reasoning_tokens": {
+        "display": {
+          "median": "82",
+          "worst": "86",
+          "values": [
+            "86",
+            "78",
+            "82"
+          ]
+        },
+        "trace": [
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-unset.json",
+            "pointer": "/requests/9/reasoning_tokens"
+          },
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-unset.json",
+            "pointer": "/requests/12/reasoning_tokens"
+          },
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-unset.json",
+            "pointer": "/requests/15/reasoning_tokens"
+          }
+        ]
+      }
+    },
+    {
+      "id": "ttft_5k_warm",
+      "unit": "s",
+      "better": "lower",
+      "status": "measured",
+      "evidence": [
+        "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-unset.json"
+      ],
+      "prompt": "5k",
+      "case": "warm",
+      "effort": "Max (default)",
+      "instrument": "TTFT probe",
+      "first_token": {
+        "display": {
+          "median": "3.81",
+          "worst": "3.82",
+          "values": [
+            "3.78",
+            "3.82",
+            "3.81"
+          ]
+        },
+        "trace": [
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-unset.json",
+            "pointer": "/requests/10/ttft_any"
+          },
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-unset.json",
+            "pointer": "/requests/13/ttft_any"
+          },
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-unset.json",
+            "pointer": "/requests/16/ttft_any"
+          }
+        ]
+      },
+      "first_content": {
+        "display": {
+          "median": "4.80",
+          "worst": "4.87",
+          "values": [
+            "4.75",
+            "4.87",
+            "4.80"
+          ]
+        },
+        "trace": [
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-unset.json",
+            "pointer": "/requests/10/ttft_content"
+          },
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-unset.json",
+            "pointer": "/requests/13/ttft_content"
+          },
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-unset.json",
+            "pointer": "/requests/16/ttft_content"
+          }
+        ],
+        "conditional": false,
+        "censored_trace": []
+      },
+      "reasoning_tokens": {
+        "display": {
+          "median": "82",
+          "worst": "86",
+          "values": [
+            "86",
+            "78",
+            "82"
+          ]
+        },
+        "trace": [
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-unset.json",
+            "pointer": "/requests/10/reasoning_tokens"
+          },
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-unset.json",
+            "pointer": "/requests/13/reasoning_tokens"
+          },
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-unset.json",
+            "pointer": "/requests/16/reasoning_tokens"
+          }
+        ]
+      }
+    },
+    {
+      "id": "ttft_5k_turn",
+      "unit": "s",
+      "better": "lower",
+      "status": "measured",
+      "evidence": [
+        "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-unset.json"
+      ],
+      "prompt": "5k",
+      "case": "turn",
+      "effort": "Max (default)",
+      "instrument": "TTFT probe",
+      "first_token": {
+        "display": {
+          "median": "0.24",
+          "worst": "0.25",
+          "values": [
+            "0.25",
+            "0.24",
+            "0.24"
+          ]
+        },
+        "trace": [
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-unset.json",
+            "pointer": "/requests/11/ttft_any"
+          },
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-unset.json",
+            "pointer": "/requests/14/ttft_any"
+          },
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-unset.json",
+            "pointer": "/requests/17/ttft_any"
+          }
+        ]
+      },
+      "first_content": {
+        "display": {
+          "median": "4.82",
+          "worst": "17.02",
+          "values": [
+            "17.02",
+            "4.82",
+            "0.94"
+          ]
+        },
+        "trace": [
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-unset.json",
+            "pointer": "/requests/11/ttft_content"
+          },
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-unset.json",
+            "pointer": "/requests/14/ttft_content"
+          },
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-unset.json",
+            "pointer": "/requests/17/ttft_content"
+          }
+        ],
+        "conditional": false,
+        "censored_trace": []
+      },
+      "reasoning_tokens": {
+        "display": {
+          "median": "285",
+          "worst": "920",
+          "values": [
+            "920",
+            "285",
+            "50"
+          ]
+        },
+        "trace": [
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-unset.json",
+            "pointer": "/requests/11/reasoning_tokens"
+          },
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-unset.json",
+            "pointer": "/requests/14/reasoning_tokens"
+          },
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-unset.json",
+            "pointer": "/requests/17/reasoning_tokens"
+          }
+        ]
+      }
+    },
+    {
+      "id": "ttft_32k_cold",
+      "unit": "s",
+      "better": "lower",
+      "status": "measured",
+      "evidence": [
+        "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-unset.json"
+      ],
+      "prompt": "32k",
+      "case": "cold",
+      "effort": "Max (default)",
+      "instrument": "TTFT probe",
+      "first_token": {
+        "display": {
+          "median": "22.62",
+          "worst": "22.74",
+          "values": [
+            "22.62",
+            "22.60",
+            "22.74"
+          ]
+        },
+        "trace": [
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-unset.json",
+            "pointer": "/requests/18/ttft_any"
+          },
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-unset.json",
+            "pointer": "/requests/21/ttft_any"
+          },
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-unset.json",
+            "pointer": "/requests/24/ttft_any"
+          }
+        ]
+      },
+      "first_content": {
+        "display": {
+          "median": "23.50",
+          "worst": "23.74",
+          "values": [
+            "23.74",
+            "23.50",
+            "23.35"
+          ]
+        },
+        "trace": [
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-unset.json",
+            "pointer": "/requests/18/ttft_content"
+          },
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-unset.json",
+            "pointer": "/requests/21/ttft_content"
+          },
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-unset.json",
+            "pointer": "/requests/24/ttft_content"
+          }
+        ],
+        "conditional": false,
+        "censored_trace": []
+      },
+      "reasoning_tokens": {
+        "display": {
+          "median": "77",
+          "worst": "81",
+          "values": [
+            "77",
+            "81",
+            "47"
+          ]
+        },
+        "trace": [
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-unset.json",
+            "pointer": "/requests/18/reasoning_tokens"
+          },
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-unset.json",
+            "pointer": "/requests/21/reasoning_tokens"
+          },
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-unset.json",
+            "pointer": "/requests/24/reasoning_tokens"
+          }
+        ]
+      }
+    },
+    {
+      "id": "ttft_32k_warm",
+      "unit": "s",
+      "better": "lower",
+      "status": "measured",
+      "evidence": [
+        "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-unset.json"
+      ],
+      "prompt": "32k",
+      "case": "warm",
+      "effort": "Max (default)",
+      "instrument": "TTFT probe",
+      "first_token": {
+        "display": {
+          "median": "22.70",
+          "worst": "22.70",
+          "values": [
+            "22.63",
+            "22.70",
+            "22.70"
+          ]
+        },
+        "trace": [
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-unset.json",
+            "pointer": "/requests/19/ttft_any"
+          },
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-unset.json",
+            "pointer": "/requests/22/ttft_any"
+          },
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-unset.json",
+            "pointer": "/requests/25/ttft_any"
+          }
+        ]
+      },
+      "first_content": {
+        "display": {
+          "median": "23.60",
+          "worst": "23.75",
+          "values": [
+            "23.75",
+            "23.60",
+            "23.30"
+          ]
+        },
+        "trace": [
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-unset.json",
+            "pointer": "/requests/19/ttft_content"
+          },
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-unset.json",
+            "pointer": "/requests/22/ttft_content"
+          },
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-unset.json",
+            "pointer": "/requests/25/ttft_content"
+          }
+        ],
+        "conditional": false,
+        "censored_trace": []
+      },
+      "reasoning_tokens": {
+        "display": {
+          "median": "77",
+          "worst": "81",
+          "values": [
+            "77",
+            "81",
+            "47"
+          ]
+        },
+        "trace": [
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-unset.json",
+            "pointer": "/requests/19/reasoning_tokens"
+          },
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-unset.json",
+            "pointer": "/requests/22/reasoning_tokens"
+          },
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-unset.json",
+            "pointer": "/requests/25/reasoning_tokens"
+          }
+        ]
+      }
+    },
+    {
+      "id": "ttft_32k_turn",
+      "unit": "s",
+      "better": "lower",
+      "status": "measured",
+      "evidence": [
+        "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-unset.json"
+      ],
+      "prompt": "32k",
+      "case": "turn",
+      "effort": "Max (default)",
+      "instrument": "TTFT probe",
+      "first_token": {
+        "display": {
+          "median": "0.29",
+          "worst": "0.30",
+          "values": [
+            "0.29",
+            "0.30",
+            "0.25"
+          ]
+        },
+        "trace": [
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-unset.json",
+            "pointer": "/requests/20/ttft_any"
+          },
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-unset.json",
+            "pointer": "/requests/23/ttft_any"
+          },
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-unset.json",
+            "pointer": "/requests/26/ttft_any"
+          }
+        ]
+      },
+      "first_content": {
+        "display": {
+          "median": "1.69",
+          "worst": "2.81",
+          "values": [
+            "2.81",
+            "1.69",
+            "1.41"
+          ]
+        },
+        "trace": [
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-unset.json",
+            "pointer": "/requests/20/ttft_content"
+          },
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-unset.json",
+            "pointer": "/requests/23/ttft_content"
+          },
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-unset.json",
+            "pointer": "/requests/26/ttft_content"
+          }
+        ],
+        "conditional": false,
+        "censored_trace": []
+      },
+      "reasoning_tokens": {
+        "display": {
+          "median": "76",
+          "worst": "151",
+          "values": [
+            "151",
+            "76",
+            "69"
+          ]
+        },
+        "trace": [
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-unset.json",
+            "pointer": "/requests/20/reasoning_tokens"
+          },
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-unset.json",
+            "pointer": "/requests/23/reasoning_tokens"
+          },
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-unset.json",
+            "pointer": "/requests/26/reasoning_tokens"
+          }
+        ]
+      }
+    },
+    {
+      "id": "ttft_short_cold_think_off",
+      "unit": "s",
+      "better": "lower",
+      "status": "measured",
+      "evidence": [
+        "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-low.json"
+      ],
+      "prompt": "short",
+      "case": "cold",
+      "effort": "Low",
+      "instrument": "TTFT probe",
+      "first_token": {
+        "display": {
+          "median": "0.14",
+          "worst": "0.15",
+          "values": [
+            "0.15",
+            "0.14",
+            "0.14"
+          ]
+        },
+        "trace": [
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-low.json",
+            "pointer": "/requests/0/ttft_any"
+          },
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-low.json",
+            "pointer": "/requests/3/ttft_any"
+          },
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-low.json",
+            "pointer": "/requests/6/ttft_any"
+          }
+        ]
+      },
+      "first_content": {
+        "display": {
+          "median": "0.19",
+          "worst": "0.19",
+          "values": [
+            "0.19",
+            "0.19",
+            "0.18"
+          ]
+        },
+        "trace": [
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-low.json",
+            "pointer": "/requests/0/ttft_content"
+          },
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-low.json",
+            "pointer": "/requests/3/ttft_content"
+          },
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-low.json",
+            "pointer": "/requests/6/ttft_content"
+          }
+        ],
+        "conditional": false,
+        "censored_trace": []
+      },
+      "reasoning_tokens": {
+        "display": {
+          "median": "2",
+          "worst": "2",
+          "values": [
+            "2",
+            "2",
+            "2"
+          ]
+        },
+        "trace": [
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-low.json",
+            "pointer": "/requests/0/reasoning_tokens"
+          },
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-low.json",
+            "pointer": "/requests/3/reasoning_tokens"
+          },
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-low.json",
+            "pointer": "/requests/6/reasoning_tokens"
+          }
+        ]
+      }
+    },
+    {
+      "id": "ttft_short_warm_think_off",
+      "unit": "s",
+      "better": "lower",
+      "status": "measured",
+      "evidence": [
+        "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-low.json"
+      ],
+      "prompt": "short",
+      "case": "warm",
+      "effort": "Low",
+      "instrument": "TTFT probe",
+      "first_token": {
+        "display": {
+          "median": "0.14",
+          "worst": "0.15",
+          "values": [
+            "0.15",
+            "0.14",
+            "0.14"
+          ]
+        },
+        "trace": [
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-low.json",
+            "pointer": "/requests/1/ttft_any"
+          },
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-low.json",
+            "pointer": "/requests/4/ttft_any"
+          },
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-low.json",
+            "pointer": "/requests/7/ttft_any"
+          }
+        ]
+      },
+      "first_content": {
+        "display": {
+          "median": "0.19",
+          "worst": "0.19",
+          "values": [
+            "0.19",
+            "0.18",
+            "0.19"
+          ]
+        },
+        "trace": [
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-low.json",
+            "pointer": "/requests/1/ttft_content"
+          },
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-low.json",
+            "pointer": "/requests/4/ttft_content"
+          },
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-low.json",
+            "pointer": "/requests/7/ttft_content"
+          }
+        ],
+        "conditional": false,
+        "censored_trace": []
+      },
+      "reasoning_tokens": {
+        "display": {
+          "median": "2",
+          "worst": "2",
+          "values": [
+            "2",
+            "2",
+            "2"
+          ]
+        },
+        "trace": [
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-low.json",
+            "pointer": "/requests/1/reasoning_tokens"
+          },
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-low.json",
+            "pointer": "/requests/4/reasoning_tokens"
+          },
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-low.json",
+            "pointer": "/requests/7/reasoning_tokens"
+          }
+        ]
+      }
+    },
+    {
+      "id": "ttft_short_turn_think_off",
+      "unit": "s",
+      "better": "lower",
+      "status": "measured",
+      "evidence": [
+        "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-low.json"
+      ],
+      "prompt": "short",
+      "case": "turn",
+      "effort": "Low",
+      "instrument": "TTFT probe",
+      "first_token": {
+        "display": {
+          "median": "0.10",
+          "worst": "0.10",
+          "values": [
+            "0.09",
+            "0.10",
+            "0.10"
+          ]
+        },
+        "trace": [
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-low.json",
+            "pointer": "/requests/2/ttft_any"
+          },
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-low.json",
+            "pointer": "/requests/5/ttft_any"
+          },
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-low.json",
+            "pointer": "/requests/8/ttft_any"
+          }
+        ]
+      },
+      "first_content": {
+        "display": {
+          "median": "0.22",
+          "worst": "0.23",
+          "values": [
+            "0.22",
+            "0.22",
+            "0.23"
+          ]
+        },
+        "trace": [
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-low.json",
+            "pointer": "/requests/2/ttft_content"
+          },
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-low.json",
+            "pointer": "/requests/5/ttft_content"
+          },
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-low.json",
+            "pointer": "/requests/8/ttft_content"
+          }
+        ],
+        "conditional": false,
+        "censored_trace": []
+      },
+      "reasoning_tokens": {
+        "display": {
+          "median": "4",
+          "worst": "4",
+          "values": [
+            "4",
+            "4",
+            "4"
+          ]
+        },
+        "trace": [
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-low.json",
+            "pointer": "/requests/2/reasoning_tokens"
+          },
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-low.json",
+            "pointer": "/requests/5/reasoning_tokens"
+          },
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-low.json",
+            "pointer": "/requests/8/reasoning_tokens"
+          }
+        ]
+      }
+    },
+    {
+      "id": "ttft_5k_cold_think_off",
+      "unit": "s",
+      "better": "lower",
+      "status": "measured",
+      "evidence": [
+        "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-low.json"
+      ],
+      "prompt": "5k",
+      "case": "cold",
+      "effort": "Low",
+      "instrument": "TTFT probe",
+      "first_token": {
+        "display": {
+          "median": "3.77",
+          "worst": "3.81",
+          "values": [
+            "3.81",
+            "3.75",
+            "3.77"
+          ]
+        },
+        "trace": [
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-low.json",
+            "pointer": "/requests/9/ttft_any"
+          },
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-low.json",
+            "pointer": "/requests/12/ttft_any"
+          },
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-low.json",
+            "pointer": "/requests/15/ttft_any"
+          }
+        ]
+      },
+      "first_content": {
+        "display": {
+          "median": "4.11",
+          "worst": "4.11",
+          "values": [
+            "4.11",
+            "4.11",
+            "4.04"
+          ]
+        },
+        "trace": [
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-low.json",
+            "pointer": "/requests/9/ttft_content"
+          },
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-low.json",
+            "pointer": "/requests/12/ttft_content"
+          },
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-low.json",
+            "pointer": "/requests/15/ttft_content"
+          }
+        ],
+        "conditional": false,
+        "censored_trace": []
+      },
+      "reasoning_tokens": {
+        "display": {
+          "median": "16",
+          "worst": "16",
+          "values": [
+            "16",
+            "16",
+            "16"
+          ]
+        },
+        "trace": [
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-low.json",
+            "pointer": "/requests/9/reasoning_tokens"
+          },
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-low.json",
+            "pointer": "/requests/12/reasoning_tokens"
+          },
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-low.json",
+            "pointer": "/requests/15/reasoning_tokens"
+          }
+        ]
+      }
+    },
+    {
+      "id": "ttft_5k_warm_think_off",
+      "unit": "s",
+      "better": "lower",
+      "status": "measured",
+      "evidence": [
+        "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-low.json"
+      ],
+      "prompt": "5k",
+      "case": "warm",
+      "effort": "Low",
+      "instrument": "TTFT probe",
+      "first_token": {
+        "display": {
+          "median": "3.76",
+          "worst": "3.78",
+          "values": [
+            "3.76",
+            "3.76",
+            "3.78"
+          ]
+        },
+        "trace": [
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-low.json",
+            "pointer": "/requests/10/ttft_any"
+          },
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-low.json",
+            "pointer": "/requests/13/ttft_any"
+          },
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-low.json",
+            "pointer": "/requests/16/ttft_any"
+          }
+        ]
+      },
+      "first_content": {
+        "display": {
+          "median": "4.07",
+          "worst": "4.13",
+          "values": [
+            "4.07",
+            "4.13",
+            "4.05"
+          ]
+        },
+        "trace": [
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-low.json",
+            "pointer": "/requests/10/ttft_content"
+          },
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-low.json",
+            "pointer": "/requests/13/ttft_content"
+          },
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-low.json",
+            "pointer": "/requests/16/ttft_content"
+          }
+        ],
+        "conditional": false,
+        "censored_trace": []
+      },
+      "reasoning_tokens": {
+        "display": {
+          "median": "16",
+          "worst": "16",
+          "values": [
+            "16",
+            "16",
+            "16"
+          ]
+        },
+        "trace": [
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-low.json",
+            "pointer": "/requests/10/reasoning_tokens"
+          },
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-low.json",
+            "pointer": "/requests/13/reasoning_tokens"
+          },
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-low.json",
+            "pointer": "/requests/16/reasoning_tokens"
+          }
+        ]
+      }
+    },
+    {
+      "id": "ttft_5k_turn_think_off",
+      "unit": "s",
+      "better": "lower",
+      "status": "measured",
+      "evidence": [
+        "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-low.json"
+      ],
+      "prompt": "5k",
+      "case": "turn",
+      "effort": "Low",
+      "instrument": "TTFT probe",
+      "first_token": {
+        "display": {
+          "median": "0.23",
+          "worst": "0.46",
+          "values": [
+            "0.22",
+            "0.46",
+            "0.23"
+          ]
+        },
+        "trace": [
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-low.json",
+            "pointer": "/requests/11/ttft_any"
+          },
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-low.json",
+            "pointer": "/requests/14/ttft_any"
+          },
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-low.json",
+            "pointer": "/requests/17/ttft_any"
+          }
+        ]
+      },
+      "first_content": {
+        "display": {
+          "median": "0.23",
+          "worst": "0.46",
+          "values": [
+            "0.22",
+            "0.46",
+            "0.23"
+          ]
+        },
+        "trace": [
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-low.json",
+            "pointer": "/requests/11/ttft_content"
+          },
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-low.json",
+            "pointer": "/requests/14/ttft_content"
+          },
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-low.json",
+            "pointer": "/requests/17/ttft_content"
+          }
+        ],
+        "conditional": false,
+        "censored_trace": []
+      },
+      "reasoning_tokens": {
+        "display": {
+          "median": "0",
+          "worst": "0",
+          "values": [
+            "0",
+            "0",
+            "0"
+          ]
+        },
+        "trace": [
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-low.json",
+            "pointer": "/requests/11/reasoning_tokens"
+          },
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-low.json",
+            "pointer": "/requests/14/reasoning_tokens"
+          },
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-low.json",
+            "pointer": "/requests/17/reasoning_tokens"
+          }
+        ]
+      }
+    },
+    {
+      "id": "ttft_32k_cold_think_off",
+      "unit": "s",
+      "better": "lower",
+      "status": "measured",
+      "evidence": [
+        "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-low.json"
+      ],
+      "prompt": "32k",
+      "case": "cold",
+      "effort": "Low",
+      "instrument": "TTFT probe",
+      "first_token": {
+        "display": {
+          "median": "22.60",
+          "worst": "22.68",
+          "values": [
+            "22.68",
+            "22.60",
+            "22.58"
+          ]
+        },
+        "trace": [
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-low.json",
+            "pointer": "/requests/18/ttft_any"
+          },
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-low.json",
+            "pointer": "/requests/21/ttft_any"
+          },
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-low.json",
+            "pointer": "/requests/24/ttft_any"
+          }
+        ]
+      },
+      "first_content": {
+        "display": {
+          "median": "23.03",
+          "worst": "23.03",
+          "values": [
+            "23.03",
+            "22.97",
+            "23.03"
+          ]
+        },
+        "trace": [
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-low.json",
+            "pointer": "/requests/18/ttft_content"
+          },
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-low.json",
+            "pointer": "/requests/21/ttft_content"
+          },
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-low.json",
+            "pointer": "/requests/24/ttft_content"
+          }
+        ],
+        "conditional": false,
+        "censored_trace": []
+      },
+      "reasoning_tokens": {
+        "display": {
+          "median": "19",
+          "worst": "19",
+          "values": [
+            "19",
+            "19",
+            "19"
+          ]
+        },
+        "trace": [
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-low.json",
+            "pointer": "/requests/18/reasoning_tokens"
+          },
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-low.json",
+            "pointer": "/requests/21/reasoning_tokens"
+          },
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-low.json",
+            "pointer": "/requests/24/reasoning_tokens"
+          }
+        ]
+      }
+    },
+    {
+      "id": "ttft_32k_warm_think_off",
+      "unit": "s",
+      "better": "lower",
+      "status": "measured",
+      "evidence": [
+        "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-low.json"
+      ],
+      "prompt": "32k",
+      "case": "warm",
+      "effort": "Low",
+      "instrument": "TTFT probe",
+      "first_token": {
+        "display": {
+          "median": "22.62",
+          "worst": "22.71",
+          "values": [
+            "22.71",
+            "22.62",
+            "22.62"
+          ]
+        },
+        "trace": [
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-low.json",
+            "pointer": "/requests/19/ttft_any"
+          },
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-low.json",
+            "pointer": "/requests/22/ttft_any"
+          },
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-low.json",
+            "pointer": "/requests/25/ttft_any"
+          }
+        ]
+      },
+      "first_content": {
+        "display": {
+          "median": "23.06",
+          "worst": "23.06",
+          "values": [
+            "23.06",
+            "23.00",
+            "23.06"
+          ]
+        },
+        "trace": [
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-low.json",
+            "pointer": "/requests/19/ttft_content"
+          },
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-low.json",
+            "pointer": "/requests/22/ttft_content"
+          },
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-low.json",
+            "pointer": "/requests/25/ttft_content"
+          }
+        ],
+        "conditional": false,
+        "censored_trace": []
+      },
+      "reasoning_tokens": {
+        "display": {
+          "median": "19",
+          "worst": "19",
+          "values": [
+            "19",
+            "19",
+            "19"
+          ]
+        },
+        "trace": [
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-low.json",
+            "pointer": "/requests/19/reasoning_tokens"
+          },
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-low.json",
+            "pointer": "/requests/22/reasoning_tokens"
+          },
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-low.json",
+            "pointer": "/requests/25/reasoning_tokens"
+          }
+        ]
+      }
+    },
+    {
+      "id": "ttft_32k_turn_think_off",
+      "unit": "s",
+      "better": "lower",
+      "status": "measured",
+      "evidence": [
+        "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-low.json"
+      ],
+      "prompt": "32k",
+      "case": "turn",
+      "effort": "Low",
+      "instrument": "TTFT probe",
+      "first_token": {
+        "display": {
+          "median": "0.26",
+          "worst": "0.26",
+          "values": [
+            "0.26",
+            "0.26",
+            "0.25"
+          ]
+        },
+        "trace": [
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-low.json",
+            "pointer": "/requests/20/ttft_any"
+          },
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-low.json",
+            "pointer": "/requests/23/ttft_any"
+          },
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-low.json",
+            "pointer": "/requests/26/ttft_any"
+          }
+        ]
+      },
+      "first_content": {
+        "display": {
+          "median": "0.26",
+          "worst": "0.26",
+          "values": [
+            "0.26",
+            "0.26",
+            "0.25"
+          ]
+        },
+        "trace": [
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-low.json",
+            "pointer": "/requests/20/ttft_content"
+          },
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-low.json",
+            "pointer": "/requests/23/ttft_content"
+          },
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-low.json",
+            "pointer": "/requests/26/ttft_content"
+          }
+        ],
+        "conditional": false,
+        "censored_trace": []
+      },
+      "reasoning_tokens": {
+        "display": {
+          "median": "0",
+          "worst": "0",
+          "values": [
+            "0",
+            "0",
+            "0"
+          ]
+        },
+        "trace": [
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-low.json",
+            "pointer": "/requests/20/reasoning_tokens"
+          },
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-low.json",
+            "pointer": "/requests/23/reasoning_tokens"
+          },
+          {
+            "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-low.json",
+            "pointer": "/requests/26/reasoning_tokens"
+          }
+        ]
+      }
+    }
+  ],
+  "prefill": [
+    {
+      "id": "prefill_5k",
+      "unit": "tok/s",
+      "better": "higher",
+      "status": "measured",
+      "evidence": [
+        "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-unset.json"
+      ],
+      "prompt": "5k",
+      "case": "cold",
+      "effort": "Max (default)",
+      "instrument": "TTFT probe",
+      "display": {
+        "median": "1322.6",
+        "worst": "1321.2",
+        "values": [
+          "1323.2",
+          "1322.6",
+          "1321.2"
+        ]
+      },
+      "trace": [
+        {
+          "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-unset.json",
+          "numerator": "/requests/9/usage/prompt_tokens",
+          "denominator": "/requests/9/ttft_any"
+        },
+        {
+          "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-unset.json",
+          "numerator": "/requests/12/usage/prompt_tokens",
+          "denominator": "/requests/12/ttft_any"
+        },
+        {
+          "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-unset.json",
+          "numerator": "/requests/15/usage/prompt_tokens",
+          "denominator": "/requests/15/ttft_any"
+        }
+      ]
+    },
+    {
+      "id": "prefill_5k_think_off",
+      "unit": "tok/s",
+      "better": "higher",
+      "status": "measured",
+      "evidence": [
+        "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-low.json"
+      ],
+      "prompt": "5k",
+      "case": "cold",
+      "effort": "Low",
+      "instrument": "TTFT probe",
+      "display": {
+        "median": "1336.2",
+        "worst": "1323.0",
+        "values": [
+          "1323.0",
+          "1343.6",
+          "1336.2"
+        ]
+      },
+      "trace": [
+        {
+          "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-low.json",
+          "numerator": "/requests/9/usage/prompt_tokens",
+          "denominator": "/requests/9/ttft_any"
+        },
+        {
+          "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-low.json",
+          "numerator": "/requests/12/usage/prompt_tokens",
+          "denominator": "/requests/12/ttft_any"
+        },
+        {
+          "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-low.json",
+          "numerator": "/requests/15/usage/prompt_tokens",
+          "denominator": "/requests/15/ttft_any"
+        }
+      ]
+    },
+    {
+      "id": "prefill_32k",
+      "unit": "tok/s",
+      "better": "higher",
+      "status": "measured",
+      "evidence": [
+        "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-unset.json"
+      ],
+      "prompt": "32k",
+      "case": "cold",
+      "effort": "Max (default)",
+      "instrument": "TTFT probe",
+      "display": {
+        "median": "1415.6",
+        "worst": "1407.7",
+        "values": [
+          "1415.6",
+          "1416.6",
+          "1407.7"
+        ]
+      },
+      "trace": [
+        {
+          "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-unset.json",
+          "numerator": "/requests/18/usage/prompt_tokens",
+          "denominator": "/requests/18/ttft_any"
+        },
+        {
+          "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-unset.json",
+          "numerator": "/requests/21/usage/prompt_tokens",
+          "denominator": "/requests/21/ttft_any"
+        },
+        {
+          "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-unset.json",
+          "numerator": "/requests/24/usage/prompt_tokens",
+          "denominator": "/requests/24/ttft_any"
+        }
+      ]
+    },
+    {
+      "id": "prefill_32k_think_off",
+      "unit": "tok/s",
+      "better": "higher",
+      "status": "measured",
+      "evidence": [
+        "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-low.json"
+      ],
+      "prompt": "32k",
+      "case": "cold",
+      "effort": "Low",
+      "instrument": "TTFT probe",
+      "display": {
+        "median": "1416.7",
+        "worst": "1411.8",
+        "values": [
+          "1411.8",
+          "1416.7",
+          "1417.5"
+        ]
+      },
+      "trace": [
+        {
+          "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-low.json",
+          "numerator": "/requests/18/usage/prompt_tokens",
+          "denominator": "/requests/18/ttft_any"
+        },
+        {
+          "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-low.json",
+          "numerator": "/requests/21/usage/prompt_tokens",
+          "denominator": "/requests/21/ttft_any"
+        },
+        {
+          "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/ttft-1a-r-low.json",
+          "numerator": "/requests/24/usage/prompt_tokens",
+          "denominator": "/requests/24/ttft_any"
+        }
+      ]
+    },
+    {
+      "id": "prefill_128k",
+      "unit": "tok/s",
+      "better": "higher",
+      "status": "not-measured",
+      "evidence": [],
+      "reason": "128k is outside the MVP set; no countable receipt.",
+      "label": "128k"
+    }
+  ],
+  "decode": [
+    {
+      "id": "code_c2",
+      "unit": "tok/s",
+      "better": "higher",
+      "status": "not-supported",
+      "evidence": [
+        "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/conc-mvp.json"
+      ],
+      "reason": "This recipe serves one request at a time; a second waits, with no timeout and no refusal.",
+      "label": "2 streams",
+      "instrument": "Two-client queue check and verified source read",
+      "source_read": {
+        "status": "VERIFIED",
+        "engine_commit": "8141957",
+        "citations": [
+          "cuda/server.py:310",
+          "server/http.py:41-44"
+        ],
+        "finding": "App.lock is held for prefill and decode, with no timeout; ThreadingHTTPServer accepts waiting requests."
+      }
+    },
+    {
+      "id": "code_c4",
+      "unit": "tok/s",
+      "better": "higher",
+      "status": "not-supported",
+      "evidence": [
+        "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/conc-mvp.json"
+      ],
+      "reason": "This recipe serves one request at a time; a second waits, with no timeout and no refusal.",
+      "label": "4 streams",
+      "instrument": "Two-client queue check and verified source read",
+      "source_read": {
+        "status": "VERIFIED",
+        "engine_commit": "8141957",
+        "citations": [
+          "cuda/server.py:310",
+          "server/http.py:41-44"
+        ],
+        "finding": "App.lock is held for prefill and decode, with no timeout; ThreadingHTTPServer accepts waiting requests."
+      }
+    },
+    {
+      "id": "code_c8",
+      "unit": "tok/s",
+      "better": "higher",
+      "status": "not-supported",
+      "evidence": [
+        "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/conc-mvp.json"
+      ],
+      "reason": "This recipe serves one request at a time; a second waits, with no timeout and no refusal.",
+      "label": "8 streams",
+      "instrument": "Two-client queue check and verified source read",
+      "source_read": {
+        "status": "VERIFIED",
+        "engine_commit": "8141957",
+        "citations": [
+          "cuda/server.py:310",
+          "server/http.py:41-44"
+        ],
+        "finding": "App.lock is held for prefill and decode, with no timeout; ThreadingHTTPServer accepts waiting requests."
+      }
+    },
+    {
+      "id": "decode_after_5k",
+      "unit": "tok/s",
+      "better": "higher",
+      "status": "not-measured",
+      "evidence": [],
+      "reason": "Command-3 long-context decode is outside the MVP set.",
+      "label": "After 5k"
+    },
+    {
+      "id": "decode_after_32k",
+      "unit": "tok/s",
+      "better": "higher",
+      "status": "not-measured",
+      "evidence": [],
+      "reason": "Command-3 long-context decode is outside the MVP set.",
+      "label": "After 32k"
+    },
+    {
+      "id": "decode_after_128k",
+      "unit": "tok/s",
+      "better": "higher",
+      "status": "not-measured",
+      "evidence": [],
+      "reason": "Command-3 long-context decode is outside the MVP set.",
+      "label": "After 128k"
+    }
+  ],
   "comparison_claim": "Code and structured are above the reference line on every repeat; prose is below.",
   "quality": {
     "claim": "Output byte-identical to serial decoding at TP=3 on its own 8-prompt greedy check, with speculative decoding on",
     "scope": "greedy (temperature 0), non-streaming; measured on this serving start's 8-prompt corpus, not a guarantee",
-    "source": "https://github.com/jakejharris/jspark3/blob/6fffe3a34a44fc87ea1acc84841b58ecd35718cc/release/receipts/exact-result.json",
+    "display": {
+      "prompts": "8",
+      "tested": "8",
+      "long_prompt_tokens": "39,326",
+      "generated_tokens": "4,434"
+    },
+    "proof_display": {
+      "tokens_after_first_on": "4,426",
+      "verify_cycles_on": "1,412",
+      "tokens_per_cycle": "3.13",
+      "serial_rounds_off": "4,426"
+    },
+    "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/exact-result.json",
     "prompt_set_note": "The measured prompt set is not published. scripts/exactness.py uses a different public set."
   },
   "checks": [
     {
       "id": "smoketest",
       "status": "PASS",
-      "observed": "8/8",
+      "display": {
+        "passed": "8",
+        "total": "8"
+      },
+      "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/quality-result.json",
       "failed_cases": []
     },
     {
       "id": "nll",
       "status": "not run",
-      "observed": null,
+      "display": null,
+      "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/quality-result.json",
       "failed_cases": []
     },
     {
       "id": "gsm8k",
       "status": "PASS",
-      "observed": "241/250 = 96.4%",
+      "display": {
+        "passed": "241",
+        "total": "250",
+        "percentage": "96.4%"
+      },
+      "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/quality-result.json",
       "failed_cases": []
     },
     {
       "id": "humaneval",
       "status": "PASS",
-      "observed": "153/164",
+      "display": {
+        "passed": "153",
+        "total": "164"
+      },
+      "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/quality-result.json",
       "failed_cases": []
     },
     {
       "id": "count",
       "status": "PASS",
-      "observed": "0 corrupt of 5",
+      "display": {
+        "corrupt": "0",
+        "total": "5"
+      },
+      "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/quality-result.json",
       "failed_cases": []
     },
     {
       "id": "toolcall",
       "status": "not run",
-      "observed": null,
+      "display": null,
+      "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/quality-result.json",
       "failed_cases": []
     },
     {
       "id": "agent_tools",
       "status": "not run",
-      "observed": null,
+      "display": null,
+      "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/quality-result.json",
       "failed_cases": []
     },
     {
       "id": "needle",
       "status": "not run",
-      "observed": null,
+      "display": null,
+      "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/quality-result.json",
       "failed_cases": []
     },
     {
       "id": "rigmark_gates",
       "status": "PASS",
-      "observed": "6/6 in lfl-r1.json; 6/6 in lfl-r2.json; 6/6 in lfl-r3.json",
+      "display": null,
+      "source": null,
       "failed_cases": []
     },
     {
       "id": "audit_code",
       "status": "not run",
-      "observed": null,
+      "display": null,
+      "source": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/receipts/quality-result.json",
       "failed_cases": []
     }
   ],
@@ -190,16 +2125,17 @@
     "A complete clean-room install on fresh hardware is still pending.",
     "Use only documented draft-policy values; the parser accepts some invalid values.",
     "Weights outside the mounted data directory cannot be used by the split script.",
-    "The test of the unquantized drafter does not establish that it drafted."
+    "The test of the unquantized drafter does not establish that it drafted.",
+    "An identical resend misses the prompt cache and pays full prefill again; an appended turn reuses cached prompt tokens."
   ],
   "license": {
     "notice": "The default DFlash2 drafter is non-commercial (CC BY-NC-ND 4.0). No mode is cleared for commercial use.",
     "source": "https://huggingface.co/incoai/GLM-5.3-Flash-DFlash2/blob/bf582e4eacc1810f76656d1811693ff6c6737d2a/README.md"
   },
-  "social_image": "/jspark3/glm/share/?v=d07ff5f6ebcb",
+  "social_image": "/jspark3/glm/share/?v=917196d3b818",
   "links": {
     "release": "https://github.com/jakejharris/jspark3/releases/tag/v2.0.0",
-    "source": "https://github.com/jakejharris/jspark3/tree/6fffe3a34a44fc87ea1acc84841b58ecd35718cc",
-    "results": "https://github.com/jakejharris/jspark3/blob/6fffe3a34a44fc87ea1acc84841b58ecd35718cc/release/results-tf-glm-tp3.json"
+    "source": "https://github.com/jakejharris/jspark3/tree/d62319334312f33c4a5bf4b338885f012139b746",
+    "results": "https://github.com/jakejharris/jspark3/blob/d62319334312f33c4a5bf4b338885f012139b746/release/results-tf-glm-tp3.json"
   }
 }

@@ -32,3 +32,38 @@
 .glm-v2-margins p { display: flex; flex-wrap: wrap; column-gap: 16px; font-size: 13px; }
 .glm-v2-margins strong { font-weight: 500; }
 .glm-v2-margins span { font-family: var(--font-geist-mono), monospace; font-variant-numeric: tabular-nums; }
+
+.glm-v2-reference-conditions { display: block; font-size: 13px; font-weight: 400; margin-top: 10px; }
+.glm-v2-mode-tables { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 32px; align-items: start; }
+.glm-v2-measure-table .glm-v2-table { font-size: 14px; }
+.glm-v2-measure-table caption { font-size: 19px; }
+.glm-v2-measure-table caption span { display: block; font-size: 12px; color: var(--glm-muted); margin-top: 6px; }
+.glm-v2-measure-table .glm-v2-table th, .glm-v2-measure-table .glm-v2-table td { border-color: var(--glm-line); }
+.glm-v2-measure-table .glm-v2-table thead th { color: var(--glm-muted); }
+.glm-v2-measure-table .glm-v2-table small { display: block; margin-top: 7px; font: 12px/1.5 var(--font-geist-sans), sans-serif; color: var(--glm-muted); }
+.glm-v2-measure-table .glm-v2-table strong { font-weight: 500; }
+.glm-v2-measure-table .glm-v2-status-cell { font-family: var(--font-geist-sans), sans-serif; }
+.glm-v2-definitions { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-block: 24px; }
+.glm-v2-definitions > div { border-left: 1px solid var(--glm-gold); padding-left: 16px; }
+.glm-v2-definitions dt { font-weight: 500; margin-bottom: 8px; }
+.glm-v2-definitions dd { color: var(--glm-muted); font-size: 14px; line-height: 1.7; }
+.glm-v2-evidence { margin-top: 20px; font-size: 13px; line-height: 1.7; overflow-wrap: anywhere; }
+.glm-v2-evidence summary { cursor: pointer; color: var(--glm-gold); }
+.glm-v2-evidence h4 { font-weight: 500; }
+.glm-v2-evidence a { color: inherit; text-decoration: underline; text-underline-offset: 3px; }
+.glm-v2-traces { margin-top: 8px; padding-left: 18px; font-size: 11px; }
+.glm-v2-status-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; margin-top: 28px; }
+.glm-v2-status-card { padding: 22px; border: 1px solid var(--glm-line); }
+.glm-v2-status-card .glm-v2-status { color: var(--glm-gold); font-family: var(--font-geist-mono), monospace; font-size: 13px; }
+.glm-v2-status-card p { font-size: 14px; }
+@media (max-width: 800px) {
+  .glm-v2-mode-tables, .glm-v2-definitions { grid-template-columns: 1fr; gap: 16px; }
+  .glm-v2-status-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 600px) {
+  .glm-v2-status-grid { grid-template-columns: 1fr; }
+  .glm-v2-measure-table .glm-v2-table { font-size: 13px; }
+}
+
+.glm-v2-jumps { display: flex; flex-wrap: wrap; gap: 12px 20px; font-size: 13px; margin-top: 20px; }
+.glm-v2-jumps a { text-decoration: underline; text-underline-offset: 4px; }

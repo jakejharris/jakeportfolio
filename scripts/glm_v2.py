@@ -119,6 +119,165 @@ def pinned(value):
     return value
 
 
+def display_token(value, raw, precision, signed=False, percent=False, grouped=False):
+    """Validate a supplied display token; never synthesize or round one."""
+    digits = r'(?:\d{1,3}(?:,\d{3})+|\d+)' if grouped else r'\d+'
+    pattern = ('[+-]' if signed else '') + digits
+    pattern += (r'\.\d{' + str(precision) + '}') if precision else ''
+    pattern += '%' if percent else ''
+    require(isinstance(value, str) and not isinstance(value, Number) and re.fullmatch(pattern, value),
+            'literal display string required')
+    if raw is not None:
+        require(isinstance(raw, Number), 'display requires a raw numeric token')
+        # Check precision tolerance, leaving tie-breaking and spelling to the producer.
+        require(abs(Decimal(value.rstrip('%').replace(',', '')) - Decimal(raw)) <= Decimal(10) ** -precision / 2,
+                'display string disagrees with sealed value')
+    return value
+
+
+def stats_display(stats, precision):
+    display = stats.get('display')
+    require(isinstance(display, dict), 'statistics require source display strings')
+    require(isinstance(display.get('values'), list) and len(display['values']) == len(stats['values']),
+            'display repeat count mismatch')
+    return dict(median=display_token(display.get('median'), stats['median'], precision),
+                worst=display_token(display.get('worst'), stats['worst'], precision),
+                values=[display_token(d, v, precision) for d, v in zip(display['values'], stats['values'])])
+
+
+def quality_display(display):
+    if display is None:
+        return None
+    require(isinstance(display, dict) and not (set(display) - {'passed', 'total', 'corrupt', 'percentage'}),
+            'unsupported quality display fields')
+    return {key: display_token(value, None, 1 if key == 'percentage' else 0, percent=key == 'percentage')
+            for key, value in display.items()}
+
+
+def traces(items, ref):
+    require(isinstance(items, list), 'trace list required')
+    result = []
+    for item in items:
+        if item.get('sha256') is not None:
+            require(re.fullmatch(r'[a-f0-9]{64}', item['sha256']), 'trace hash required')
+        pointers = {key: text(value, 'trace pointer') for key, value in item.items()
+                    if key in ('pointer', 'numerator', 'denominator')}
+        require(pointers and all(value.startswith('/requests/') for value in pointers.values()), 'request trace required')
+        result.append(dict(source=receipt(item.get('receipt'), ref), **pointers))
+    return result
+
+
+def measured_stats(stats, precision, better, ref, empty=False):
+    n = number(stats.get('n'), 'stats.n')
+    require(n.isdigit() and isinstance(stats.get('values'), list) and int(n) == len(stats['values']), 'stats repeat count mismatch')
+    require(len(stats.get('trace', [])) == int(n), 'stats trace count mismatch')
+    trace = traces(stats.get('trace'), ref)
+    if n == '0':
+        require(empty and stats.get('median') is None and stats.get('worst') is None and stats.get('display') is None,
+                'empty statistics must be null, never zero')
+        return dict(display=None, trace=trace)
+    values = [Decimal(number(v, 'stats.values')) for v in stats['values']]
+    median = Decimal(number(stats.get('median'), 'stats.median'))
+    worst = Decimal(number(stats.get('worst'), 'stats.worst'))
+    ordered = sorted(values)
+    middle = len(values) // 2
+    expected_median = ordered[middle] if len(values) % 2 else (ordered[middle - 1] + ordered[middle]) / 2
+    require(abs(median - expected_median) <= Decimal('0.000000000001') and
+            worst == (min(values) if better == 'higher' else max(values)), 'stats median or worst inconsistent')
+    return dict(display=stats_display(stats, precision), trace=trace)
+
+
+def measurement_conditions(row, cid):
+    c = row.get('conditions') or {}
+    low = cid.endswith('_think_off')
+    require(c.get('effort_label') == ('Low' if low else 'Max (default)') and
+            c.get('rendered_effort') == ('low' if low else 'max') and
+            c.get('serving_default') is (not low) and c.get('thinking') is (False if low else None),
+            'effort label and rendered mode mismatch')
+    require(c.get('prompt') in ('short', '5k', '32k') and c.get('case') in ('cold', 'warm', 'turn') and
+            cid.removesuffix('_think_off') == ('ttft_' + c['prompt'] + '_' + c['case'] if cid.startswith('ttft_') else 'prefill_' + c['prompt']),
+            'prompt/case mapping mismatch')
+    planned = int(number(c.get('planned_n'), 'conditions.planned_n', count=True))
+    for key in ('prompt_tokens', 'cached_tokens'):
+        require(isinstance(c.get(key), list) and len(c[key]) == planned, 'condition repeat count mismatch')
+        for value in c[key]:
+            require(number(value, key).isdigit(), 'token count must be an integer')
+    require(all(Decimal(cached) <= Decimal(prompt) for cached, prompt in zip(c['cached_tokens'], c['prompt_tokens'])),
+            'cached tokens exceed prompt tokens')
+    require(c.get('stream') is True and c.get('streams') == '1' and c.get('temperature') == '0', 'streamed single-request greedy measurement required')
+    number(c.get('max_tokens'), 'conditions.max_tokens', count=True)
+    instrument = row.get('instrument') or {}
+    require(instrument.get('name') == 'TTFT probe' and re.fullmatch(r'[a-f0-9]{64}', instrument.get('sha256', '')), 'probe identity required')
+    number(instrument.get('version'), 'instrument.version', count=True)
+    return dict(prompt=c['prompt'], case=c['case'], effort=c['effort_label'], instrument=instrument['name'])
+
+
+def project_measurements(tf, ref):
+    latency_ids = [f'ttft_{prompt}_{case}{suffix}' for suffix in ('', '_think_off')
+                   for prompt in ('short', '5k', '32k') for case in ('cold', 'warm', 'turn')]
+    prefill_ids = [f'prefill_{prompt}{suffix}' for prompt in ('5k', '32k') for suffix in ('', '_think_off')] + ['prefill_128k']
+    decode_ids = ['code_c2', 'code_c4', 'code_c8', 'decode_after_5k', 'decode_after_32k', 'decode_after_128k']
+    result = {}
+    for family, ids in [('latency', latency_ids), ('prefill', prefill_ids), ('decode', decode_ids)]:
+        supplied = tf.get(family) or {}
+        require(set(supplied) == set(ids), family + ': complete checkpoint matrix required')
+        rows = []
+        for cid in ids:
+            row = supplied[cid]
+            unit, better = ('s', 'lower') if family == 'latency' else ('tok/s', 'higher')
+            require(row.get('unit') == unit and row.get('better') == better, 'measurement unit/direction mismatch')
+            require(isinstance(row.get('evidence'), list), 'measurement evidence required')
+            item = dict(id=cid, unit=unit, better=better, status=row.get('class'),
+                        evidence=[receipt(path, ref) for path in row['evidence']])
+            if row.get('class') in ('not-measured', 'not-supported'):
+                require(family != 'latency', 'latency measurements required')
+                require(row.get('median') is None and row.get('worst') is None and row.get('values') == [] and
+                        row.get('n') == '0' and row.get('display') is None, 'status rows must not contain figures')
+                item.update(reason=public_copy(row.get('reason'), 'measurement status reason'))
+                if row['class'] == 'not-supported':
+                    require(cid in ('code_c2', 'code_c4', 'code_c8'), 'unsupported status scope')
+                    source_read = row.get('source_read') or {}
+                    require(source_read.get('status') == 'VERIFIED' and row['evidence'], 'unsupported claim requires verified source and receipt')
+                    require(row.get('label') == cid[-1] + ' streams', 'plain stream label required')
+                    item.update(label=public_copy(row['label'], 'stream label'),
+                                instrument=public_copy(row.get('instrument'), 'queue instrument'),
+                                source_read={key: source_read[key] for key in ('status', 'engine_commit', 'citations', 'finding')})
+                    public_copy(string_values(item['source_read']), 'source read')
+                else:
+                    require(cid == 'prefill_128k' or cid.startswith('decode_after_'), 'missing status scope')
+                    require(row.get('instrument') is None and row['evidence'] == [], 'unmeasured row cannot imply a measurement')
+                    item['label'] = cid.removeprefix('prefill_') if family == 'prefill' else 'After ' + cid.removeprefix('decode_after_')
+            else:
+                require(row.get('class') == 'measured' and family != 'decode' and cid != 'prefill_128k', 'unexpected measured class')
+                require(row['evidence'], 'measurement receipt required')
+                item.update(measurement_conditions(row, cid))
+                if family == 'latency':
+                    for key in ('first_token', 'first_content'):
+                        stats = row.get(key) or {}
+                        require(stats.get('unit') == unit and stats.get('better') == better, 'nested unit/direction mismatch')
+                        item[key] = measured_stats(stats, 2, better, ref, empty=key == 'first_content')
+                    content = row['first_content']
+                    missing = number(content.get('missing'), 'first_content.missing')
+                    require(missing.isdigit() and int(content['n']) + int(missing) == int(row['first_token']['n']) and
+                            content.get('conditional') is (int(missing) > 0), 'conditional first-content accounting mismatch')
+                    require(row['first_token']['n'] == row['conditions']['planned_n'], 'first-token repeat count mismatch')
+                    censored = traces(content.get('censored_trace'), ref)
+                    require(len(censored) == int(missing), 'censored trace count mismatch')
+                    item['first_content'].update(conditional=content['conditional'], censored_trace=censored)
+                    item['reasoning_tokens'] = measured_stats(row.get('reasoning_tokens') or {}, 0, 'lower', ref)
+                    require(row['reasoning_tokens']['n'] == row['first_token']['n'], 'reasoning repeat count mismatch')
+                else:
+                    require(row['conditions'].get('case') == 'cold' and
+                            row['conditions'].get('rate') == 'usage.prompt_tokens / client ttft_any' and
+                            row['conditions'].get('measurement') == 'client-effective prefill; includes client overhead',
+                            'client-effective prefill definition required')
+                    item.update(measured_stats(row, 1, better, ref))
+                    require(row['n'] == row['conditions']['planned_n'], 'prefill repeat count mismatch')
+            rows.append(item)
+        result[family] = rows
+    return result
+
+
 def project(source, source_sha256, review=None):
     require(source.get('schema') == 'jspark3-results/1', 'unsupported results schema')
     require(source.get('tag') in (None, 'v2.0.0') and source.get('version') in (None, 'v2.0', 'v2.0.0'),
@@ -152,23 +311,27 @@ def project(source, source_sha256, review=None):
     site = review['site_v2'] if review is not None else source.get('site_v2') or {}
     release_ref = review['commit'] if review is not None else 'v2.0.0'
     comparison = site.get('comparison')
+    references = tf.get('reference') or {}
     if comparison is not None:
         require(comparison.get('same_conditions') is False, 'comparison must not claim matched conditions')
+        conditions = {}
+        for key in ('line', 'upstream_tp3_set1', 'upstream_tp3_set2'):
+            conditions[key] = public_copy((references.get(key) or {}).get('conditions'), 'reference conditions')
+            require('switched 200G fabric' in conditions[key] and
+                    'not a matched-conditions comparison' in conditions[key], 'comparison fabric caveat required')
         comparison = dict(source=pinned(comparison.get('source')), line_source=pinned(comparison.get('line_source')),
-                          conditions=public_copy(comparison.get('conditions'), 'comparison conditions'),
+                          conditions=conditions,
+                          topology=public_copy(comparison.get('topology'), 'recipe topology'),
                           engine_weights=public_copy(comparison.get('engine_weights'), 'comparison engine/weights'),
                           same_conditions=False)
-        require('switched 200G fabric' in comparison['conditions'] and
-                'not a matched-conditions comparison' in comparison['conditions'] and
-                'cabled as a triangle' in comparison['conditions'], 'comparison fabric caveat required')
+        require('cabled as a triangle' in comparison['topology'], 'recipe fabric caveat required')
         require('TensorFold' in comparison['engine_weights'] and 'MLX' in comparison['engine_weights'] and
                 'NVFP4' in comparison['engine_weights'], 'engine and weight differences required')
     rows = []
     references = tf.get('reference') or {}
     supplied = tf.get('rows') or {}
     require(not (set(supplied) - set(METRICS)), 'unsupported workload; only single-stream RigMark is in scope')
-    displays = site.get('display_rows') or {}
-    require(isinstance(displays, dict) and not (set(displays) - set(supplied)), 'display rows must match supplied workloads')
+    require('display_rows' not in site, 'display strings must come from the numbers file')
     for cid in METRICS:
         row = supplied.get(cid)
         if row is None:
@@ -185,10 +348,12 @@ def project(source, source_sha256, review=None):
         require(min(map(Decimal, values)) == Decimal(worst) and min(map(Decimal, values)) <= Decimal(median) <= max(map(Decimal, values)),
                 'median or slowest inconsistent with repeats')
         reference_values = {}
+        reference_displays = {}
         for key, expected_class in [('line', 'derived-midpoint'), ('upstream_tp3_set1', 'author-reported'), ('upstream_tp3_set2', 'author-reported')]:
             ref = references.get(key) or {}
             require(ref.get('class') == expected_class, 'reference provenance mismatch')
             reference_values[key + '_text'] = number(ref.get(cid), 'reference.' + key + '.' + cid)
+            reference_displays[key] = display_token((ref.get('display') or {}).get(cid), ref[cid], 1)
         verdict = row.get('vs_line')
         expected_verdict = 'below' if cid == 'rigmark_prose' else 'above'
         require(verdict == expected_verdict, 'line verdict differs from approved release scope')
@@ -197,8 +362,7 @@ def project(source, source_sha256, review=None):
                 'every-repeat line claim unsupported')
         require(all(Decimal(v) > Decimal(reference_values[key + '_text']) for v in values for key in ('upstream_tp3_set1', 'upstream_tp3_set2')),
                 'published TP3 comparison unsupported')
-        require(row.get('vs_upstream_tp3') == 'above' or
-                (review is not None and row.get('vs_upstream_tp3') == 'clearly beats'), 'neutral TP3 verdict required')
+        require(row.get('vs_upstream_tp3') == 'above', 'neutral TP3 verdict required')
         margin = row.get('vs_line_pct')
         require(isinstance(margin, Number) and re.fullmatch(r'-?\d+(?:\.\d+)?', margin), 'literal margin token required')
         require((Decimal(margin) < 0) == (verdict == 'below'), 'margin sign disagrees with verdict')
@@ -207,18 +371,13 @@ def project(source, source_sha256, review=None):
         rows.append(dict(id=cid, median_text=median, worst_text=worst, samples_text=samples,
                          values_text=values, instrument=instrument, vs_line=verdict, margin_text=str(margin),
                          evidence=[receipt(path, release_ref) for path in evidence], **reference_values))
-        display = displays.get(cid, {})
-        require(isinstance(display, dict), 'display fields must be an object')
-        for key, value in display.items():
-            require(key in ('median', 'worst', 'line', 'upstream_tp3_set1', 'upstream_tp3_set2', 'margin'),
-                    'unsupported display field')
-            pattern = r'[+-]\d+\.\d%' if key == 'margin' else r'\d+\.\d'
-            require(isinstance(value, str) and re.fullmatch(pattern, value), 'one-decimal display string required')
-            literal = rows[-1][key + '_text']
-            expected = format(Decimal(literal), '+.1f' if key == 'margin' else '.1f') + ('%' if key == 'margin' else '')
-            require(value == expected, 'display string disagrees with sealed value')
-        if display:
-            rows[-1]['display'] = display
+        display = stats_display(row, 1)
+        display['margin'] = display_token(row['display'].get('vs_line_pct'), margin, 1, signed=True, percent=True)
+        if 'vs_line_tps' in row['display']:
+            # The source supplies this as display-only, without a raw sibling.
+            display['margin_tps'] = display_token(row['display']['vs_line_tps'], None, 1, signed=True)
+        rows[-1]['display'] = dict(display, **reference_displays)
+    measurements = ({key: [] for key in ('latency', 'prefill', 'decode')} if fixture else project_measurements(tf, release_ref))
     exact = tf.get('exact') or {}
     quality = None
     claim = site.get('exactness_claim')
@@ -227,6 +386,16 @@ def project(source, source_sha256, review=None):
         prompts = number(exact.get('prompts'), 'exact.prompts', count=True)
         require(prompts == '8' and number(exact.get('tested'), 'exact.tested', count=True) == prompts and
                 number(exact.get('diverging'), 'exact.diverging') == '0', 'exactness corpus mismatch')
+        for key in ('long_prompt_tokens', 'generated_tokens'):
+            number(exact.get(key), 'exact.' + key, count=True)
+        for key in ('tokens_after_first_on', 'verify_cycles_on', 'tokens_per_cycle', 'serial_rounds_off'):
+            number((exact.get('drafting_proof') or {}).get(key), 'drafting_proof.' + key)
+        exact_display = {key: display_token((exact.get('display') or {}).get(key), exact.get(key), 0, grouped=True)
+                         for key in ('prompts', 'tested', 'long_prompt_tokens', 'generated_tokens')}
+        proof_display = {key: display_token((exact.get('drafting_proof', {}).get('display') or {}).get(key),
+                                           exact.get('drafting_proof', {}).get(key), precision, grouped=True)
+                         for key, precision in [('tokens_after_first_on', 0), ('verify_cycles_on', 0),
+                                                ('tokens_per_cycle', 2), ('serial_rounds_off', 0)]}
         require(exact.get('verdict') == 'PASS' and exact.get('exact_class') == 'EXACT-ON-CORPUS' and
                 exact.get('engine') == 'tensorfold' and exact.get('rule') == 'hard', 'passing TensorFold exactness required')
         require(claim in (f'Speculative output was byte-identical to serial decoding on its {prompts}-prompt greedy check at TP=3.',
@@ -239,7 +408,8 @@ def project(source, source_sha256, review=None):
         require(all(proof.get(k) is True for k in ('counters_rose_on', 'counters_flat_off', 'per_reply_agree')), 'drafting proof required')
         require(exact.get('off_source') == 'same-boot switch: "draft": false', 'serial reference mismatch')
         require(re.fullmatch(r'[a-f0-9]{64}', exact.get('sha256', '')), 'exactness receipt hash required')
-        quality = dict(claim=claim, scope=scope, source=receipt(exact.get('receipt'), release_ref),
+        quality = dict(claim=claim, scope=scope, display=exact_display, proof_display=proof_display,
+                       source=receipt(exact.get('receipt'), release_ref),
                        prompt_set_note=public_copy(exact.get('prompt_set_note'), 'prompt-set note'))
     summary = site.get('comparison_claim')
     if summary == 'Code and structured are above the reference line on every repeat; prose is below.':
@@ -259,7 +429,8 @@ def project(source, source_sha256, review=None):
     for key, result in panel.items():
         if isinstance(result, dict) and result.get('status'):
             checks.append(dict(id=public_copy(key, 'check name'), status=public_copy(result['status'], 'check status'),
-                               observed=public_copy(result['observed'], 'check result') if result.get('observed') else None,
+                               display=quality_display(result.get('display')),
+                               source=receipt(result['evidence'], release_ref) if result.get('evidence') else None,
                                failed_cases=[public_copy(case, 'failed case') for case in result.get('failed_cases', [])]))
     panel_note = public_copy(panel['overall'], 'quality scope') if panel.get('overall') else None
     license_info = site.get('license')
@@ -288,8 +459,9 @@ def project(source, source_sha256, review=None):
                  license_info is not None and result_file is not None)
     visible = not fixture and qualified and (final or review is not None)
     return dict(schema='jspark3-site/2', title=TITLE, engine='TensorFold', fixture=fixture, publication_hold=True,
-                pending=pending, source_sha256=source_sha256, review_commit=review['commit'] if review else None, published=source.get('release_date') if final else None,
+                pending=pending, source_sha256=source_sha256, review_commit=review['commit'] if review else None, published=None,
                 rows=rows if visible else [], comparison=comparison,
+                **{key: value if visible else [] for key, value in measurements.items()},
                 comparison_claim=summary if visible else None, quality=quality if visible else None,
                 checks=checks if visible else [], panel_note=panel_note if visible else None,
                 quality_notes=(["The source summary marks RigMark gates as not run, while its per-check record marks them PASS. Both source records are retained here."]
@@ -309,25 +481,33 @@ def snapshot(source):
     tf = source.get('tf') or {}
     out['tf'] = dict(identity=keep(tf.get('identity') or {}, ['engine_repo', 'weights', 'drafter']),
                      exact=keep(tf.get('exact') or {}, ['verdict', 'engine', 'rule', 'exact_class', 'scope', 'prompts',
-                                                      'tested', 'diverging', 'drafting_proof', 'off_source', 'receipt', 'sha256', 'prompt_set_note']),
+                                                      'tested', 'diverging', 'long_prompt_tokens', 'generated_tokens', 'display',
+                                                      'drafting_proof', 'off_source', 'receipt', 'sha256', 'prompt_set_note']),
                      rows={key: keep(value, ['median', 'worst', 'values', 'n', 'unit', 'class', 'instrument', 'vs_line', 'vs_line_pct',
-                                            'vs_upstream_tp3', 'evidence']) for key, value in (tf.get('rows') or {}).items()},
-                     reference={key: keep(value, ['class'] + METRICS) for key, value in (tf.get('reference') or {}).items()
+                                            'vs_upstream_tp3', 'evidence', 'display']) for key, value in (tf.get('rows') or {}).items()},
+                     reference={key: keep(value, ['class', 'conditions', 'display'] + METRICS) for key, value in (tf.get('reference') or {}).items()
                                 if key in ('line', 'upstream_tp3_set1', 'upstream_tp3_set2')},
-                     quality={key: keep(value, ['status', 'observed', 'failed_cases']) if isinstance(value, dict) else value
+                     quality={key: keep(value, ['status', 'observed', 'failed_cases', 'display', 'evidence']) if isinstance(value, dict) else value
                               for key, value in (tf.get('quality') or {}).items() if isinstance(value, dict) or key == 'overall'})
-    # Legacy enum wording is not page copy; preserve its neutral meaning after numeric validation.
-    for row in out['tf']['rows'].values():
-        if row.get('vs_upstream_tp3') == 'clearly beats':
-            row['vs_upstream_tp3'] = 'above'
     if out['tf']['exact'].get('drafting_proof'):
-        out['tf']['exact']['drafting_proof'] = keep(out['tf']['exact']['drafting_proof'], ['counters_rose_on', 'counters_flat_off', 'per_reply_agree'])
+        out['tf']['exact']['drafting_proof'] = keep(out['tf']['exact']['drafting_proof'],
+            ['counters_rose_on', 'counters_flat_off', 'per_reply_agree', 'display', 'tokens_after_first_on',
+             'verify_cycles_on', 'tokens_per_cycle', 'serial_rounds_off'])
+    for family in ('latency', 'prefill', 'decode'):
+        out['tf'][family] = {}
+        for key, row in (tf.get(family) or {}).items():
+            clean = keep(row, ['unit', 'better', 'class', 'conditions', 'instrument', 'evidence', 'first_token',
+                              'first_content', 'reasoning_tokens', 'median', 'worst', 'values', 'n', 'display',
+                              'reason', 'label', 'trace'])
+            if row.get('source_read'):
+                clean['source_read'] = keep(row['source_read'], ['status', 'engine_commit', 'citations', 'finding'])
+            out['tf'][family][key] = clean
     site = source.get('site_v2') or {}
     out['site_v2'] = dict(site)
     require(not (set(out['site_v2']) - {'comparison', 'comparison_claim', 'above_line_rows', 'total_rows', 'exactness_claim',
-                                       'limitations', 'license', 'results_path', 'display_rows'}), 'unknown site fields; confirm final mapping')
+                                       'limitations', 'license', 'results_path'}), 'unknown site fields; confirm final mapping')
     if site.get('comparison') is not None:
-        out['site_v2']['comparison'] = keep(site['comparison'], ['source', 'line_source', 'conditions', 'engine_weights', 'same_conditions'])
+        out['site_v2']['comparison'] = keep(site['comparison'], ['source', 'line_source', 'topology', 'engine_weights', 'same_conditions'])
     if site.get('license') is not None:
         out['site_v2']['license'] = keep(site['license'], ['notice', 'source'])
     text(string_values(out), 'public source')
