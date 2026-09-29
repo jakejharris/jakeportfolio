@@ -1,9 +1,13 @@
 /* Appearance dock: theme and accent controls in the bottom right corner,
    drawn in the pixel water's 18px cells. Within thumb reach on a phone, in
-   the empty margin on a desktop. */
+   the empty margin on a desktop. No shadow: it is a pane on the page. */
 
 .appearance-dock {
   --dock-lift: 0px;
+  /* A fast burst of presses warms the edge toward the color being played
+     (set from AppearanceDock). */
+  --dock-heat: 0;
+  --dock-ink: var(--accent-color);
   position: fixed;
   right: max(1rem, env(safe-area-inset-right));
   bottom: calc(max(1rem, env(safe-area-inset-bottom)) + var(--dock-lift));
@@ -14,15 +18,32 @@
   color: hsl(var(--foreground));
   background: hsl(var(--background) / 0.72);
   border: 1px solid hsl(var(--foreground) / 0.14);
+  border-color: color-mix(in srgb, var(--dock-ink) calc(var(--dock-heat) * 100%), hsl(var(--foreground) / 0.14));
   border-radius: 6px;
-  box-shadow: 0 8px 28px rgb(0 0 0 / 0.12);
   -webkit-backdrop-filter: blur(14px) saturate(120%);
   backdrop-filter: blur(14px) saturate(120%);
+  transition: transform 0.3s ease, border-color 0.5s steps(5, end);
+}
+
+/* While a burst is on, its heat shows at once; only the cooling is eased. */
+.appearance-dock[data-hot] {
   transition: transform 0.3s ease;
 }
 
-.dark .appearance-dock {
-  box-shadow: 0 8px 28px rgb(0 0 0 / 0.4);
+/* Drops of paint flicked out of the dock over the page. They sit under the
+   cells, so they leave from behind the swatch. */
+.appearance-dock-drops {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+}
+
+.appearance-dock-drop {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  forced-color-adjust: none;
 }
 
 .appearance-dock-cell {
@@ -72,12 +93,13 @@
 }
 
 /* One lattice cell of color. The color is the content, so high contrast
-   modes keep it. */
+   modes keep it. A hairline inside outlines a swatch that matches the dock. */
 .appearance-dock-swatch {
   display: block;
   width: 18px;
   height: 18px;
-  box-shadow: inset 0 0 0 1px hsl(var(--foreground) / 0.18);
+  outline: 1px solid hsl(var(--foreground) / 0.18);
+  outline-offset: -1px;
   forced-color-adjust: none;
 }
 
@@ -113,6 +135,12 @@
 }
 
 /* The theme button shows where it goes: a sun at night, a moon by day. */
+.appearance-dock-icon {
+  display: grid;
+  width: 18px;
+  height: 18px;
+}
+
 .appearance-dock-theme svg {
   width: 18px;
   height: 18px;
@@ -160,6 +188,10 @@
   .appearance-dock,
   .appearance-dock-cell {
     transition: none;
+  }
+
+  .appearance-dock-drops {
+    display: none;
   }
 }
 
