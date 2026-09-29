@@ -152,7 +152,12 @@ export default function AppearanceDock() {
   const paletteId = useId();
 
   useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEY);
+    let stored: string | null = null;
+    try {
+      stored = localStorage.getItem(STORAGE_KEY);
+    } catch {
+      // A blocked preference store must not prevent the page from mounting.
+    }
     const active = stored ?? document.documentElement.getAttribute("data-accent");
     const index = active === null ? 0 : parseInt(active, 10);
     if (index >= 0 && index < ACCENTS.length) {

@@ -27,6 +27,37 @@ const CALM_MS = 400;
 const SETTLE_MS = 2800;
 
 try {
+  await test("blocked storage keeps the page and appearance controls usable", async () => {
+    const context = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+    await context.addInitScript(() => {
+      for (const name of ["localStorage", "sessionStorage"]) {
+        Object.defineProperty(window, name, {
+          get() { throw new DOMException("Storage is blocked", "SecurityError"); },
+        });
+      }
+    });
+    const page = await context.newPage();
+    const errors = [];
+    page.on("pageerror", (error) => errors.push(error.message));
+    try {
+      await page.goto(base, { waitUntil: "networkidle" });
+      await page.locator("[data-swatch='2']").click();
+      await page.waitForFunction(() => document.documentElement.dataset.accent === "2");
+      const theme = page.locator(".appearance-dock-theme");
+      const previous = await theme.getAttribute("aria-checked");
+      await theme.click();
+      await page.waitForFunction((previous) =>
+        document.querySelector(".appearance-dock-theme").getAttribute("aria-checked") !== previous, previous);
+      await page.waitForTimeout(1500);
+      await page.locator("nav a[href='/about/']:visible").click();
+      await page.waitForURL("**/about/");
+      await page.locator("main h1").waitFor();
+      assert.deepEqual(errors, []);
+    } finally {
+      await context.close();
+    }
+  });
+
   for (const phone of [false, true]) {
     const context = await browser.newContext(
       phone
@@ -270,6 +301,12 @@ try {
     });
 
     await test(`${label} a burst of picks paints the water, then settles`, async () => {
+      await rest();
+      await unfold();
+      // Compare calm water in the same accent on both sides. Whole-cell
+      // blue glints are colored even without any burst paint;
+      // a mono baseline would incorrectly count those as paint left behind.
+      await tap(swatch(2));
       await rest();
       await unfold();
       const before = await probe();
