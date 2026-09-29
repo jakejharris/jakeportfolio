@@ -290,6 +290,13 @@ export class PixelFluid {
     this.last = now;
   }
 
+  /** Finish any page-change front at once: the current shape, whole. */
+  settleFront() {
+    this.tide.clear();
+    this.oldBias = null;
+    this.oldWater = null;
+  }
+
   /** All the water has run out and none is coming back. */
   drained(now: number) {
     return this.tide.drained(now);

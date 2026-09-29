@@ -27,6 +27,9 @@ const GIVE_UP_MS = 10000;
 const PRESS_WINDOW_MS = 3000;
 // How long a restored position keeps being reapplied while the page grows.
 const RESTORE_MS = 700;
+// Each history entry Next writes carries this key, so two visits to the same
+// address keep separate places.
+const ENTRY_KEY = "__scroll";
 
 interface Departure extends NavDeparture {
   link: HTMLAnchorElement;
@@ -43,6 +46,25 @@ function sessionStore() {
 // The wrapper around the page's own content (see the site layout).
 function pageFrame() {
   return document.querySelector<HTMLElement>("[data-page-frame]");
+}
+
+// Where the reader is: the current history entry's own key, or its address
+// for entries the browser made by itself (a jump to an anchor).
+function entryKey() {
+  const stamped = (window.history.state as Record<string, unknown> | null)?.[ENTRY_KEY];
+  return typeof stamped === "string" ? stamped : scrollKey(window.location) + window.location.hash;
+}
+
+// Give the current entry a key of its own. Only entries Next already owns
+// (with its __NA marker): Next reloads the page on a popstate to any other
+// entry that has a state.
+function stampEntry() {
+  const state = window.history.state as Record<string, unknown> | null;
+  if (!state || !state.__NA || typeof state[ENTRY_KEY] === "string") return;
+  try {
+    const key = Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+    window.history.replaceState({ ...state, [ENTRY_KEY]: key }, "");
+  } catch {}
 }
 
 function focusHeading() {
@@ -63,6 +85,8 @@ export default function NavigationFlow() {
     restoring: false,
     departure: null as Departure | null,
     press: null as { x: number; y: number; at: number } | null,
+    // The history entry a back or forward is returning to.
+    restoreKey: "",
     // Per page, the link a reader left it through, to hand focus back on return.
     leftThrough: new Map<string, string>(),
     memory: null as ScrollMemory | null,
@@ -77,6 +101,7 @@ export default function NavigationFlow() {
     const memory = new ScrollMemory(sessionStore());
     state.memory = memory;
     history.scrollRestoration = "manual";
+    stampEntry();
 
     const clearPending = () => {
       window.clearTimeout(state.giveUp);
@@ -84,21 +109,24 @@ export default function NavigationFlow() {
       setPendingPath(null);
     };
 
-    const giveUp = () => {
+    // The page being left stays after all (it never came, or the reader
+    // chose the current page instead): undim it and let its water come back,
+    // from (x, y) or from where it left.
+    const stay = (x?: number, y?: number) => {
       const departure = state.departure;
       state.departure = null;
       clearPending();
       if (!departure) return;
-      // The same page again, so its water comes back from where it left.
       const detail: NavArrival = {
         kind: "push",
         pathname: window.location.pathname,
-        x: departure.x,
-        y: departure.y,
+        x: x ?? departure.x,
+        y: y ?? departure.y,
         covered: root.hasAttribute("data-menu-open"),
       };
       window.dispatchEvent(new CustomEvent(NAV_ARRIVE_EVENT, { detail }));
     };
+    const giveUp = () => stay();
 
     let scrollFrame = 0;
     const handleScroll = () => {
@@ -107,13 +135,18 @@ export default function NavigationFlow() {
       if (state.restoring) return;
       cancelAnimationFrame(scrollFrame);
       scrollFrame = requestAnimationFrame(() => {
-        if (!state.restoring) memory.save(scrollKey(window.location), window.scrollY);
+        if (!state.restoring) memory.save(entryKey(), window.scrollY);
       });
     };
 
     const handlePopState = () => {
-      // A change of hash alone is not a new page.
-      if (trimPath(window.location.pathname) === state.path) return;
+      state.restoreKey = entryKey();
+      // A change of hash alone keeps the page: put its place back now.
+      if (trimPath(window.location.pathname) === state.path) {
+        const y = memory.get(state.restoreKey);
+        if (y !== undefined) window.scrollTo(0, y);
+        return;
+      }
       state.restoring = true;
       state.departure = null;
       clearPending();
@@ -137,8 +170,15 @@ export default function NavigationFlow() {
       const url = new URL(link.href, window.location.href);
       if (url.origin !== window.location.origin) return;
       const to = trimPath(url.pathname);
-      const here = scrollKey(window.location);
-      if (to === trimPath(window.location.pathname)) return;
+      const here = entryKey();
+      if (to === trimPath(window.location.pathname)) {
+        // The current page again: Next drops any navigation still loading.
+        if (state.departure) {
+          const rect = link.getBoundingClientRect();
+          stay(event.detail === 0 ? rect.left + rect.width / 2 : event.clientX, event.detail === 0 ? rect.top + rect.height / 2 : event.clientY);
+        }
+        return;
+      }
       const rect = link.getBoundingClientRect();
       // Keyboard activation reports no pointer position.
       const x = event.detail === 0 ? rect.left + rect.width / 2 : event.clientX;
@@ -213,7 +253,9 @@ export default function NavigationFlow() {
     setPendingPath(null);
     root.setAttribute("data-arrival", kind);
     const covered = root.hasAttribute("data-menu-open");
-    const key = scrollKey(window.location);
+    // A pushed page is a new history entry; give it its own key.
+    if (kind === "push") stampEntry();
+    const key = kind === "restore" && state.restoreKey ? state.restoreKey : entryKey();
 
     if (kind === "restore") {
       const target = state.memory?.get(key) ?? 0;
@@ -248,13 +290,19 @@ export default function NavigationFlow() {
       const fromLink = departure && (active === departure.link || !departure.link.isConnected);
       if (adrift || fromLink) focusHeading();
     } else if (adrift) {
+      // The link may be in the page or in the navbar; a hidden copy (the
+      // closed mobile menu) does not count.
       const href = state.leftThrough.get(key);
       const link = href
-        ? Array.from(document.querySelectorAll<HTMLAnchorElement>("main a[href]")).find(
-            (candidate) => candidate.getAttribute("href") === href
+        ? Array.from(document.querySelectorAll<HTMLAnchorElement>("a[href]")).find(
+            (candidate) =>
+              candidate.getAttribute("href") === href &&
+              candidate.getClientRects().length > 0 &&
+              !candidate.closest("[inert]")
           )
         : null;
-      link?.focus({ preventScroll: true });
+      if (link) link.focus({ preventScroll: true });
+      else focusHeading();
     }
   }, [pathname]);
 

@@ -69,6 +69,11 @@ export class SiteWater {
   set still(value: boolean) {
     this.sea.still = value;
     this.shore.still = value;
+    // A front caught mid-way would otherwise hold as it is.
+    if (value) {
+      this.sea.settleFront();
+      this.shore.settleFront();
+    }
     this.sea.clearPointer();
     this.seaDirty = true;
     this.shoreFull = true;

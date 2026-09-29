@@ -172,6 +172,14 @@ export class Shore {
     this.dirty = true;
   }
 
+  /** Finish any front and rise at once: the current page's water, whole. */
+  settleFront() {
+    this.front.clear();
+    this.old = null;
+    this.rise = -Infinity;
+    this.dirty = true;
+  }
+
   /** Disturb the water at (x, y), in lattice px. Land ignores it. */
   splash(x: number, y: number, strength: number) {
     const layout = this.layout;

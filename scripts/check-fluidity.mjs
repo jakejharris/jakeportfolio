@@ -305,6 +305,67 @@ try {
     assert.equal(await page.evaluate(() => window.shoreWrites), 0);
   });
 
+  await check("two visits to the same page keep their own places in history", { path: "/posts/compression-as-intelligence/" }, async (page) => {
+    await page.evaluate(() => window.scrollTo(0, 600));
+    await page.waitForTimeout(300);
+    await press(page, page.locator("nav a[href='/']:visible"));
+    await page.waitForURL(base + "/");
+    await page.waitForTimeout(600);
+    await page.goto(base + "/posts/compression-as-intelligence/", { waitUntil: "networkidle" });
+    await page.evaluate(() => window.scrollTo(0, 1600));
+    await page.waitForTimeout(300);
+    await page.goBack();
+    await page.waitForURL(base + "/");
+    await page.waitForTimeout(300);
+    await page.goBack();
+    await page.waitForURL("**/compression-as-intelligence/");
+    await page.waitForTimeout(800);
+    assert.equal(await page.evaluate(() => Math.round(window.scrollY)), 600, "the first visit comes back where it was left");
+  });
+
+  await check("choosing the current page while another loads leaves nothing dimmed", { path: "/about/" }, async (page) => {
+    await waitShore(page);
+    const { release, request } = await hold(page, /\/\?_rsc=/);
+    await press(page, page.locator("nav a[href='/']:visible"));
+    await Promise.race([request, new Promise((_, reject) => setTimeout(() => reject(new Error("the tap fetched nothing")), 5000))]);
+    await press(page, page.locator("nav a[href='/about/']:visible"));
+    await page.waitForTimeout(700);
+    const after = await page.evaluate(() => ({
+      path: location.pathname,
+      leaving: document.querySelector("[data-page-frame]").hasAttribute("data-leaving"),
+      pointing: document.querySelector("nav a[href='/about/'] .animated-underline")?.classList.contains("nav-active"),
+      shore: document.querySelector(".pixel-shore").dataset.water,
+    }));
+    release();
+    assert.deepEqual(after, { path: "/about/", leaving: false, pointing: true, shore: "on" });
+  });
+
+  await check("back across a jump to an anchor returns to the place before it", { path: "/jspark3/deepseek/" }, async (page) => {
+    const anchor = page.locator("a[href='#results']", { hasText: "Benchmarks" });
+    await page.evaluate(() => window.scrollTo(0, 180));
+    await page.waitForTimeout(300);
+    const box = await anchor.boundingBox();
+    if (!box || box.y < 0 || box.y > 850) await anchor.evaluate((link) => link.click());
+    else await press(page, anchor);
+    await page.waitForFunction(() => location.hash.length > 1);
+    await page.waitForTimeout(300);
+    await page.goBack();
+    await page.waitForFunction(() => !location.hash);
+    await page.waitForTimeout(300);
+    assert.equal(await page.evaluate(() => Math.round(window.scrollY)), 180);
+  });
+
+  await check("back after a keyboard trip through the navbar hands focus back to it", { path: "/about/" }, async (page) => {
+    await page.locator("nav a[href='/contact/']:visible").focus();
+    await page.keyboard.press("Enter");
+    await page.waitForURL("**/contact/");
+    await page.waitForFunction(() => document.activeElement?.tagName === "H1");
+    await page.goBack();
+    await page.waitForURL("**/about/");
+    await page.waitForTimeout(300);
+    assert.equal(await page.evaluate(() => document.activeElement?.getAttribute("href")), "/contact/");
+  });
+
   await check("the mobile menu still leaves through its own water", { device: phone }, async (page) => {
     await press(page, page.locator(".site-menu-button"));
     await page.waitForFunction(() => {
