@@ -49,7 +49,9 @@ const check = (name, options, fn) => test(name, {
 
 const open = async (page, path) => {
   await page.settled?.();
-  await page.goto(base + path, { waitUntil: "networkidle" });
+  await page.goto(base + path, { waitUntil: "load" });
+  await page.waitForSelector('[role="switch"][aria-checked]');
+  await page.evaluate(() => document.fonts.ready);
   // Let entrances finish: what matters is the page as it rests.
   await page.waitForFunction(() => document.getAnimations()
     .every((a) => a.playState !== "running" || a.effect.getComputedTiming().endTime === Infinity));
@@ -105,22 +107,22 @@ try {
               rimRadius: rim.borderTopLeftRadius === style.borderTopLeftRadius,
               radius: style.borderTopLeftRadius,
             };
-            // A featured post's mark is a square in the margin, clear of the
-            // corners; nothing runs along or around an edge.
-            const mark = card.querySelector(".glass-mark");
+            // A pinned badge stays beside its title, clear of the card rim.
+            const badge = card.querySelector(".pinned-badge");
             const box = card.getBoundingClientRect();
-            const markBox = mark?.getBoundingClientRect();
-            const radius = parseFloat(style.borderTopLeftRadius);
-            const clearOfCorners = !markBox || (markBox.left - box.left >= 4 && markBox.top - box.top >= radius
-              && markBox.width === markBox.height && markBox.width <= 6);
-            return { blur: blur ? parseFloat(blur[1]) : null, stops, shape, clearOfCorners };
+            const badgeBox = badge?.getBoundingClientRect();
+            const badgeInside = !badgeBox || (badgeBox.left >= box.left + 4 && badgeBox.right <= box.right - 4
+              && badgeBox.top >= box.top + 4 && badgeBox.bottom <= box.bottom - 4);
+            const noLegacyMark = !card.querySelector(".glass-mark");
+            return { blur: blur ? parseFloat(blur[1]) : null, stops, shape, badgeInside, noLegacyMark };
           }));
           assert.ok(report.length > 0, `${path} has glass`);
-          for (const { blur, stops, shape, clearOfCorners } of report) {
+          for (const { blur, stops, shape, badgeInside, noLegacyMark } of report) {
             assert.ok(blur !== null && blur >= 1 && blur <= 4, `${path}: a light frost, not a smear (${blur})`);
             assert.deepEqual(stops, [], `${path}: nothing between the glass and the water`);
             assert.deepEqual(shape, { border: ["0px", "0px", "0px", "0px"], rimInset: ["0px", "0px", "0px", "0px"], rimRadius: true, radius: "4px" }, `${path}: one shape for every layer`);
-            assert.ok(clearOfCorners, `${path}: the featured mark stays clear of the corners`);
+            assert.ok(badgeInside, `${path}: badge stays clear of the card rim`);
+            assert.ok(noLegacyMark, `${path}: no legacy square`);
           }
         }
       });
@@ -131,6 +133,7 @@ try {
           if (path === "/posts/apres-surf-club/") await page.waitForSelector("pre code");
           if (path === "/" && device === "desktop") {
             // The post preview that opens over the list.
+            await cards(page).nth(2).scrollIntoViewIfNeeded();
             const box = await cards(page).nth(2).boundingBox();
             await page.mouse.move(box.x + 40, box.y + box.height / 2);
             await page.waitForSelector("[data-radix-popper-content-wrapper] [data-state=open]");
@@ -165,6 +168,92 @@ try {
       });
     }
   }
+
+
+  await check("pinned badges: no layout changes across sizes, themes and accents", {}, async (page) => {
+    for (const width of [320, 390, 1280]) {
+      await page.setViewportSize({ width, height: 900 });
+      for (const path of LISTS) {
+        await open(page, path);
+        for (const theme of ["dark", "light"]) {
+          await page.evaluate(theme => document.documentElement.classList.toggle("dark", theme === "dark"), theme);
+          for (const accent of [0, 1, 2, 3, 4]) {
+            await page.evaluate(accent => { document.documentElement.dataset.accent = String(accent); }, accent);
+            const report = await page.locator(".pinned-badge").evaluateAll(badges => badges.map(badge => {
+              const card = badge.closest(".pageLinkContainer");
+              const anchor = badge.parentElement;
+              const title = anchor.parentElement;
+              const box = card.getBoundingClientRect();
+              const badgeBox = badge.getBoundingClientRect();
+              const measure = node => {
+                const rect = el => {
+                  const r = el.getBoundingClientRect();
+                  return [r.x - box.x, r.y - box.y, r.width, r.height];
+                };
+                const range = document.createRange();
+                range.selectNode(node);
+                return { card: [card.getBoundingClientRect().width, card.getBoundingClientRect().height],
+                  title: rect(title), meta: rect(title.nextElementSibling),
+                  text: [...range.getClientRects()].map(r => [r.x - box.x, r.y - box.y, r.width, r.height]) };
+              };
+              const decorated = measure(anchor.firstChild);
+              const node = document.createTextNode(anchor.firstChild.textContent);
+              anchor.replaceWith(node);
+              const original = measure(node);
+              node.replaceWith(anchor);
+              return { decorated, original, label: card.getAttribute("aria-label"),
+                width: badgeBox.width, height: badgeBox.height,
+                inside: badgeBox.left >= box.left + 4 && badgeBox.right <= box.right - 4 && badgeBox.top >= box.top + 4 && badgeBox.bottom <= box.bottom - 4,
+                clearOfType: decorated.text.every(r => badgeBox.left >= box.left + r[0] + r[2] + 3),
+                hidden: badge.getAttribute("aria-hidden") };
+            }));
+            assert.ok(report.length > 0, `${path}: pinned badges are present`);
+            assert.equal(await page.locator(".glass-mark").count(), 0);
+            for (const entry of report) {
+              assert.deepEqual(entry.decorated, entry.original, `${width} ${theme} ${accent} ${path}: original card, title, text and metadata geometry`);
+              assert.ok(entry.width <= 28 && entry.height <= 16 && entry.width > 6);
+              assert.equal(entry.inside, true, "badge stays in existing air inside the card");
+              assert.equal(entry.clearOfType, true, "badge does not cover any title text");
+              assert.match(entry.label, /^View pinned post: /);
+              assert.equal(entry.hidden, "true", "post link announces the pinned status once");
+            }
+            assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
+          }
+        }
+      }
+    }
+    await page.setViewportSize({ width: 390, height: 844 });
+    await open(page, "/");
+    const pinned = page.locator(".pageLinkContainer").filter({ has: page.locator(".pinned-badge") }).first();
+    await pinned.focus();
+    const href = await pinned.getAttribute("href");
+    await page.keyboard.press("Enter");
+    await page.waitForURL(new URL(href, base).href);
+  });
+
+  if (chromium) await check("pinned badges: preference reductions and forced colors preserve the mark", {}, async (page, context) => {
+    const cdp = await context.newCDPSession(page);
+    for (const features of [
+      [{ name: "prefers-reduced-motion", value: "reduce" }],
+      [{ name: "prefers-reduced-transparency", value: "reduce" }],
+      [{ name: "prefers-reduced-motion", value: "reduce" }, { name: "prefers-reduced-transparency", value: "reduce" }],
+      [{ name: "forced-colors", value: "active" }],
+    ]) {
+      await cdp.send("Emulation.setEmulatedMedia", { features });
+      await open(page, "/");
+      const report = await page.locator(".pinned-badge").evaluateAll(badges => badges.map(badge => ({
+        visible: getComputedStyle(badge).display !== "none" && getComputedStyle(badge).visibility === "visible",
+        moving: badge.getAnimations({ subtree: true }).filter(a => a.playState === "running").length,
+        label: badge.closest("a").getAttribute("aria-label"),
+      })));
+      assert.ok(report.length > 0);
+      for (const entry of report) {
+        assert.equal(entry.visible, true);
+        assert.equal(entry.moving, 0);
+        assert.match(entry.label, /^View pinned post: /);
+      }
+    }
+  });
 
   await check("desktop: hover and press light the glass", {}, async (page) => {
     await open(page, "/");
