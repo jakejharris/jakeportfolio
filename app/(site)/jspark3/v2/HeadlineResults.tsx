@@ -58,7 +58,7 @@ function DecodeChart() {
   const unit = decode[0].unit;
   const percent = (value: number) => (value / end) * 100;
   return <figure className="glm-chart" aria-labelledby="glm-chart-title">
-    <p id="glm-chart-title" className="glm-label">Decode by concurrent streams · {unit}, all streams combined</p>
+    <p id="glm-chart-title" className="glm-label">Code decode by concurrent streams · {unit}, all streams combined</p>
     <ul className="glm-legend">
       {SERIES.map(series => <li key={series.key} className={series.className}><i aria-hidden="true" />{series.name}</li>)}
       <li className="glm-series-now glm-legend-band"><i aria-hidden="true" />{GLM_COPY.bandKey}</li>
@@ -66,7 +66,7 @@ function DecodeChart() {
     </ul>
     <div className="glm-groups">
       {decode.map(row => <div className="glm-group" key={row.id} data-metric-id={row.id} role="group" aria-label={`Decode, ${streams(row.concurrency)}`}>
-        <p className="glm-group-label"><strong>{streams(row.concurrency)}</strong></p>
+        <p className="glm-group-label"><strong>{streams(row.concurrency)}</strong>{row.median_text ? <> · median {valueText(row.median_text)} {unit}</> : null}{row.omitted_reason ? <> · {row.omitted_reason}</> : null}</p>
         {SERIES.filter(series => series.key !== 'mia' || row.mia !== null).map(series => {
           const [lo, hi] = band(row, series.key);
           const [loText, hiText] = bandText(row, series.key);

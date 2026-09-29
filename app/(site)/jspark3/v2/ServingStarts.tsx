@@ -1,16 +1,18 @@
 import React from 'react';
 import Band from './Band';
-import { GLM_COPY, GLM_RELEASE, HEADLINE_ROWS, IS_PLACEHOLDER, METRICS, SET_GROUPS, setCaption } from '../release-copy';
+import { GLM_COPY, IS_PLACEHOLDER, METRICS, SET_GROUPS, setCaption } from '../release-copy';
+import historical from '../glm-v180.json';
 import { Marked, Ph } from '../Placeholder';
 
 type Cell = { id: string; lo_text: string | null; hi_text: string | null };
 type Start = { key: string; caption: string; label: string; cells: Cell[]; current?: boolean };
 
-const { headline, sets } = GLM_RELEASE;
+const { headline, sets } = historical;
+const HEADLINE_ROWS = headline.rows;
 
 /** The release's own start leads the stock group, captioned with its build. When it is missing, no other start takes its place. */
 const current: Start[] = HEADLINE_ROWS.length
-  ? [{ key: 'current', caption: setCaption({ ...headline, mode: 0 }), label: GLM_COPY.sets.thisRelease, cells: HEADLINE_ROWS, current: true }]
+  ? [{ key: 'current', caption: setCaption({ ...headline, mode: 0 }), label: `${historical.tag}, frozen release`, cells: HEADLINE_ROWS, current: true }]
   : [];
 
 /** Our earlier release's figures, one per cell, where the release notes carry them. */
@@ -39,7 +41,7 @@ const heading = (metric: (typeof METRICS)[number]) => (metric.label === 'Decode'
  */
 export default function ServingStarts() {
   return <div className="glm-starts">
-    <h3 id="starts-title">{GLM_COPY.sets.title}</h3>
+    <h3 id="starts-title">Serving starts published with v1.8.0</h3>
     <p className="glm-starts-intro">{GLM_COPY.sets.intro}</p>
     <table role="table">
       <caption>{GLM_COPY.sets.caption}</caption>

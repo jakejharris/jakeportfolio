@@ -22,6 +22,7 @@ import test from 'node:test';
 const root = path.resolve(new URL('..', import.meta.url).pathname);
 const checker = path.join(root, 'scripts/check-glm-release.mjs');
 const fixture = JSON.parse(fs.readFileSync(path.join(root, 'scripts/fixtures/glm-release.synthetic.json'), 'utf8'));
+const current = JSON.parse(fs.readFileSync(path.join(root, 'app/(site)/jspark3/glm-release.json'), 'utf8'));
 const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'glm-release-'));
 test.after(() => fs.rmSync(dir, { recursive: true, force: true }));
 
@@ -39,6 +40,33 @@ const edited = edit => {
 };
 const set = (glm, id) => glm.sets.find(item => item.id === id);
 const row = (rows, id) => rows.find(item => item.id === id);
+
+test('accepts the current release with recorded medians and an explicitly unmeasured code c2', () => {
+  const result = check(current);
+  assert.equal(result.status, 0, result.stderr);
+  assert.deepEqual(JSON.parse(result.stdout).headline_omitted, ['decode_c2']);
+});
+
+for (const [what, edit, reason] of [
+  ['a missing omission reason', glm => { delete row(glm.headline.rows, 'decode_c2').omitted_reason; }, /lo and hi must both be numbers/],
+  ['a fabricated code c2', glm => { Object.assign(row(glm.headline.rows, 'decode_c2'), { lo: 1, hi: 2, lo_text: '1', hi_text: '2' }); }, /omitted row must have null values/],
+  ['a median outside its range', glm => { row(glm.headline.rows, 'decode_c1').median = 0; }, /median must be within its range/],
+  ['a rounded median token', glm => { row(glm.headline.rows, 'decode_c1').median_text = '73'; }, /median_text .* does not equal/],
+  ['a missing code median', glm => { delete row(glm.headline.rows, 'decode_c4').median; delete row(glm.headline.rows, 'decode_c4').median_text; }, /requires its code median/],
+  ['a zero sample count', glm => { row(glm.headline.rows, 'decode_c1').samples = 0; }, /samples must be a whole number above zero/],
+  ['a missing workload', glm => { delete glm.headline.structured_c8; }, /structured_c8 must be present/],
+  ['a partial prose ladder', glm => { glm.headline.prose_rows.pop(); }, /prose_rows must cover/],
+  ['hub prose drift', glm => { glm.headline.prose_c1.lo -= 1; glm.headline.prose_c1.lo_text = String(glm.headline.prose_c1.lo); }, /prose_c1 lo must match/],
+  ['a partial results link pair', glm => { glm.links.results = `https://github.com/jakejharris/jspark3/blob/${glm.tag}/release/results-${glm.tag}.json`; }, /links.numbers must be/],
+]) {
+  test(`refuses current release with ${what}`, () => {
+    const glm = structuredClone(current);
+    edit(glm);
+    const result = check(glm);
+    assert.notEqual(result.status, 0);
+    assert.match(result.stderr, reason);
+  });
+}
 /** The headline's final start missed the freeze: no headline rows, no speed headline, Story A. */
 const missing = glm => {
   glm.headline.missing = true;

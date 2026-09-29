@@ -7,7 +7,7 @@
  * placeholder remains. Until then, placeholders render visibly as "v1.X" and "XX.X".
  */
 import glm from './glm-release.json';
-import { installNote } from './install-note.mjs';
+import { installNote, releaseSummary } from './install-note.mjs';
 
 /**
  * One headline measurement: the within-start band across the sweeps, with lo equal to hi for a single measurement.
@@ -25,6 +25,10 @@ export interface HeadlineRow {
   v1_1: number | null;
   v1_1_text: string | null;
   mia: number | null;
+  median?: number;
+  median_text?: string;
+  samples?: number;
+  omitted_reason?: string;
 }
 
 /** One cell of a serving start. lo and hi (and their texts) are all null when the start did not measure it. */
@@ -49,8 +53,8 @@ export interface ServingSet {
 }
 
 /**
- * One figure of the speed headline: a within-start band as written, like a headline row. The line prints
- * its hi as "up to"; display is always null (no approximate token stands in for a figure).
+ * One figure of the speed headline: a within-start band as written, like a headline row.
+ * display is always null; no approximate token stands in for a figure.
  */
 export interface SpeedBand {
   lo: number | null;
@@ -83,10 +87,10 @@ export interface GlmRelease {
   /** The tag installers get: tag itself, or a later patch whose defaults may differ from the measured build. */
   install_tag: string;
   name: string | null;
-  published: string;
+  published: string | null;
   social_image: string | null;
   mode_switch: string;
-  links: { release: string; source: string; install: string; huggingface: string; results: string; numbers: string };
+  links: { release: string; source: string; install: string; huggingface: string; results: string | null; numbers: string | null };
   headline: {
     baseline: string;
     conditions: string;
@@ -99,6 +103,8 @@ export interface GlmRelease {
     /** The hub card's prose figure for one stream: the release's own decode_prose_c1, or null when it has none. */
     prose_c1: { lo: number | null; hi: number | null; lo_text: string | null; hi_text: string | null } | null;
     rows: HeadlineRow[];
+    prose_rows?: Array<{ concurrency: string; lo: number; hi: number; lo_text: string; hi_text: string; samples: number }>;
+    structured_c8?: { lo: number; hi: number; lo_text: string; hi_text: string; samples: number };
   };
   sets: ServingSet[];
   mia: { benchmark: string | null; source: string | null; ran_exactly_as_published: boolean };
@@ -124,6 +130,7 @@ export function displayBuild(build: string) {
 
 /** This release as the page names it, from its tag. */
 export const RELEASE = displayBuild(glm.tag);
+export const RELEASE_SUMMARY = releaseSummary(glm.tag);
 
 /** The tag installers get, as the page names it, independently of the measured build. */
 export const INSTALL_RELEASE = displayBuild(glm.install_tag);
@@ -223,22 +230,17 @@ export const HUB_COPY = {
     meta: LABELS.latest,
     version: RELEASE,
     title: glm.name ?? 'GLM-5.3 Flash',
-    /**
-     * How each figure prints, one token: 'upto' prints "up to" and the top of the measured range;
-     * 'asterisk' prints the top of the range with a mark, and the caption carries the mark.
-     */
-    figure: 'upto' as 'upto' | 'asterisk',
+    figure: 'measured' as const,
     /** The four figures, from the release's own start. 'prose_c1' is its decode_prose_c1; the rest are headline rows. */
     tiles: [
       { id: 'prefill', label: 'Prefill' },
-      { id: 'decode_c1', label: 'Code, 1 stream' },
+      { id: 'decode_c1', label: 'Code median, 1 stream' },
       { id: 'prose_c1', label: 'Prose, 1 stream' },
-      { id: 'decode_c4', label: 'Code, 4 streams' },
+      { id: 'decode_c4', label: 'Code median, 4 streams' },
     ],
-    /** The card's one line under the figures, true for every tile: prefill is the best of its turns, decode of its sweeps. */
+    /** Code medians and full prose/prefill ranges retain the source precision. */
     caption: {
-      upto: 'Best measured run for each. Full ranges on the release page.',
-      asterisk: '* Best measured run for each. Full ranges on the release page.',
+      measured: 'Code medians; prose and prefill ranges. One serving start.',
       none: 'Three DGX Sparks · stock weights by default',
     },
     /** Under the caption while the card shows figures and installers get a later patch than the measured build. */
@@ -259,6 +261,7 @@ export const HUB_COPY = {
 
 /** Published releases before the latest one, newest first. The latest GLM release and the internal builds come from glm-release.json. */
 export const RELEASE_HISTORY = [
+  { version: 'v1.8.0', what: 'GLM-5.3 Flash', when: 'Sep 27', href: '/jspark3/glm/#v180-results' },
   { version: 'Tempo', what: 'DeepSeek-V4.1 Flash', recipes: true, when: 'Sep 13', href: '/jspark3/deepseek/' },
   { version: 'v1.1 Cadence', what: 'GLM-5.3 Flash', when: 'Sep 7', href: '/jspark3/glm/#releases' },
   { version: 'v1.0', what: 'GLM-5.3 Flash', when: 'Sep 2', href: 'https://github.com/jakejharris/jspark3/releases/tag/v1.0.0' },
@@ -290,20 +293,20 @@ export const GLM_COPY = {
     'Tempo was my DeepSeek experiment, and I measured it seriously. Its tok/s held up, but it overthinks, and time to finish a task is what I actually feel. GLM-5.3 Flash is better at agent and coding work, and better in almost every other way I use it, so the numbered line runs GLM again.',
   whyGlmLink: 'Tempo, the DeepSeek experiment',
   speed: {
-    /** Under the "up to" line: each figure is the top of its measured range; the results keep the full ranges. */
-    best: `Best of ${counted(glm.headline.sweeps, 'run')}. Full ranges in the results below.`,
+    summary: RELEASE_SUMMARY,
+    scope: 'One serving start with cooperative MoE on. The on/off comparison has not run; no cooperative MoE speedup is claimed.',
     reference: referenceClause(SPEED),
   },
   numbersNote: 'Compared with our own v1.1.',
   resultsTitle: 'Measured on our three Sparks.',
   /** Under the results heading: what one headline figure is. */
-  bandLine: `${RELEASE} with stock weights: ${startsAndSweeps(glm.headline)}. Decode ranges span those sweeps. Prefill spans the individual turns described below.`,
+  bandLine: `${RELEASE} with stock weights, one serving start. Code: five repeats per measured stream count. Prose and structured: two sweeps. Prefill: eight turns. Ranges describe variation within this start, not confidence intervals.`,
   /** In place of the band line when the release's own start is not in the numbers. No base start is promoted. */
   headlineMissing: `No measured stock-weight start of ${RELEASE} is in this release’s numbers. The stock-weight figures below come from the base recipe, labelled by build.`,
   /** Under a headline figure the release's numbers leave out, such as a prefill with no clean measurement. */
   figureOmitted: 'Not in this release’s numbers.',
   /** The chart key for the lighter part of a bar. */
-  bandKey: 'Range across sweeps',
+  bandKey: 'Range across repeats',
   sets: {
     title: 'Every serving start we measured',
     intro: 'Each row is one start of the server, labelled by build. Decode ranges span its sweeps; prefill spans individual turns. Every start we measured is listed.',
@@ -324,9 +327,9 @@ export const GLM_COPY = {
     href: glm.links.release.replace(`/releases/tag/${glm.install_tag}`, `/releases/tag/${glm.tag}`),
   },
   resultsLinks: [
-    { label: 'Results file ↗', href: glm.links.results },
-    { label: 'Every number, with how it was measured ↗', href: glm.links.numbers },
-  ],
+    { label: 'Results file ↗', href: GLM_RELEASE.links.results },
+    { label: 'Every number, with how it was measured ↗', href: GLM_RELEASE.links.numbers },
+  ].filter((link): link is { label: string; href: string } => link.href !== null),
   credit: {
     text: 'Thanks to @unsaltedbutter-ai for the first community run of JSPARK3 on their own three GB10 machines, shared in PR #9.',
     handle: '@unsaltedbutter-ai',
@@ -343,6 +346,7 @@ export const GLM_COPY = {
     guide: glm.links.install,
     /** The install note beside the hero actions and the decode race. */
     note: INSTALL_NOTE,
+    knownIssue: 'The first requests after a fresh install can be about 1 s slower once, while GPU kernels compile.',
   },
   links: [
     { label: 'GitHub repository', href: glm.links.source, primary: true },

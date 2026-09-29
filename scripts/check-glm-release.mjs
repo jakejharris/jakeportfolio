@@ -150,9 +150,9 @@ function placeholderSpeed(speed) {
  * An approximate token for a speed band, printed in place of the band: "~" and a number within
  * [floor(lo), ceil(hi)]. The release's numbers supply it; the page never rounds a figure itself.
  */
-/** The speed line prints "up to" the top of each measured range, so no approximate token stands in for it. */
+/** Headlines use recorded ranges or medians, never approximate display tokens. */
 function display(cell, where) {
-  assert.equal(cell.display, null, `${where}.display must be null: the speed line prints "up to" the top of its measured range`);
+  assert.equal(cell.display, null, `${where}.display must be null: the speed line prints recorded measurements`);
 }
 
 /**
@@ -215,7 +215,7 @@ async function check() {
   assert.ok(glm.install_tag.startsWith(`${glm.version}.`), `install_tag ${glm.install_tag} is not on the ${glm.version} line`);
   const patch = tag => Number(tag.split('.')[2]);
   assert.ok(patch(glm.install_tag) >= patch(glm.tag), `install_tag ${glm.install_tag} is older than the measured tag ${glm.tag}`);
-  assert.match(glm.published, /^\d{4}-\d{2}-\d{2}$/, 'published must look like 2026-09-27');
+  if (glm.published !== null) assert.match(glm.published, /^\d{4}-\d{2}-\d{2}$/, 'published must look like 2026-09-27');
   // The release has no name; the page shows its build. A name set anyway is printed, so it is screened like the labels.
   if (glm.name !== null) publicText(glm.name, 'name');
   // The page names the release by its tag without a zero patch: v1.8.0 is v1.8, v1.7.5 stays v1.7.5.
@@ -238,7 +238,12 @@ async function check() {
     results: `${REPO}/blob/${glm.tag}/release/results-${glm.tag}.json`,
     numbers: `${REPO}/blob/${glm.tag}/release/RELEASE-NUMBERS.md`,
   };
-  for (const [key, url] of Object.entries(links)) assert.equal(glm.links?.[key], url, `links.${key} must be ${url}`);
+  // A release can publish results in its notes without separate data files.
+  const separateResults = glm.links?.results !== null || glm.links?.numbers !== null;
+  for (const [key, url] of Object.entries(links)) {
+    if (!separateResults && (key === 'results' || key === 'numbers')) continue;
+    assert.equal(glm.links?.[key], url, `links.${key} must be ${url}`);
+  }
 
   // The headline is the release's own stock-weight start. When it missed the freeze, it has no rows at all.
   const { headline } = glm;
@@ -261,8 +266,21 @@ async function check() {
       const { label, concurrency, unit } = METRICS[index];
       assert.ok(row.label === label && row.concurrency === concurrency && row.unit === unit, `headline ${row.id}: label, concurrency and unit must be ${label}, ${concurrency}, ${unit}`);
       assert.ok(!('value' in row) && !('per_stream' in row), `headline ${row.id}: value and per_stream are the old shape; use lo and hi`);
-      // Only the prefill may be left out of the numbers, and the page then shows n/a for it. Decode is required.
-      band(row, `headline ${row.id}`, row.id === 'prefill');
+      // An unrun decode cell requires a public reason; other releases keep the required-cell check.
+      const omitted = row.omitted_reason !== undefined;
+      if (omitted) {
+        publicText(row.omitted_reason, `headline ${row.id} omitted_reason`);
+        assert.equal(row.lo, null, `headline ${row.id}: omitted row must have null values`);
+        assert.equal(row.hi, null, `headline ${row.id}: omitted row must have null values`);
+        assert.ok(!('median' in row) && !('median_text' in row) && !('samples' in row), `headline ${row.id}: omitted row cannot have measurements`);
+      }
+      band(row, `headline ${row.id}`, row.id === 'prefill' || omitted);
+      if ('samples' in row) count(row.samples, `headline ${row.id} samples`);
+      if ('median' in row || 'median_text' in row) {
+        assert.ok(finite(row.median) && row.lo !== null && row.median >= row.lo && row.median <= row.hi, `headline ${row.id}: median must be within its range`);
+        token(row.median_text, row.median, `headline ${row.id}: median_text`);
+        count(row.samples, `headline ${row.id} samples`);
+      }
       assert.ok(row.v1_1 === null || finite(row.v1_1), `headline ${row.id}: v1_1 must be a number or null`);
       token(row.v1_1_text, row.v1_1, `headline ${row.id}: v1_1_text`);
       assert.ok(row.mia === null || finite(row.mia), `headline ${row.id}: mia must be a number or null`);
@@ -271,6 +289,29 @@ async function check() {
     filledSpeed(headline.speed, rows);
     assert.ok(headline.prose_c1 !== undefined, 'headline.prose_c1 must be a band or null');
     hubProse(headline.prose_c1, false);
+    if (headline.prose_rows !== undefined || headline.structured_c8 !== undefined) {
+      assert.deepEqual(headline.prose_rows?.map(row => row.concurrency), ['c1', 'c2', 'c4', 'c8'], 'prose_rows must cover c1, c2, c4, c8');
+      for (const row of [...headline.prose_rows, headline.structured_c8]) {
+        assert.ok(row, 'structured_c8 must be present with prose_rows');
+        band(row, 'workload', false);
+        count(row.samples, 'workload samples');
+      }
+      for (const key of ['lo', 'hi', 'lo_text', 'hi_text']) {
+        assert.equal(headline.prose_rows[0][key], headline.prose_c1?.[key], `prose_c1 ${key} must match prose_rows`);
+        assert.equal(headline.prose_rows[2][key], headline.speed.prose?.[key], `speed prose ${key} must match prose_rows`);
+      }
+    }
+    if (glm.tag === 'v1.8.4') {
+      assert.ok(headline.prose_rows && headline.structured_c8, 'v1.8.4 requires its workload measurements');
+      for (const id of ['decode_c1', 'decode_c4', 'decode_c8']) {
+        const row = rows.find(row => row.id === id);
+        assert.ok(finite(row.median), `v1.8.4 ${id} requires its code median`);
+        assert.equal(row.samples, headline.sweeps, `v1.8.4 ${id} repeats must match the code ladder`);
+      }
+      const c2 = rows.find(row => row.id === 'decode_c2');
+      assert.ok(c2.omitted_reason && c2.lo === null && c2.hi === null, 'v1.8.4 code c2 was not measured');
+      assert.equal(headline.speed.rule, 'off', 'v1.8.4 has no reference benchmark comparison');
+    }
   }
   // Mia's numbers appear only where we ran her benchmark exactly as she describes it.
   if (rows.some(row => row.mia !== null)) {
@@ -300,7 +341,7 @@ async function check() {
   if (live) {
     // The results section links the measured tag's release notes, which carry the full results (release-copy.ts resultsNotes).
     const measuredRelease = `${REPO}/releases/tag/${glm.tag}`;
-    for (const url of [links.release, links.source, glm.links.huggingface, links.install, links.results, links.numbers, measuredRelease]) {
+    for (const url of [links.release, links.source, glm.links.huggingface, links.install, glm.links.results, glm.links.numbers, measuredRelease].filter(Boolean)) {
       const response = await fetch(url, { method: 'HEAD', redirect: 'follow' });
       assert.equal(response.status, 200, `${url} returned ${response.status}`);
     }

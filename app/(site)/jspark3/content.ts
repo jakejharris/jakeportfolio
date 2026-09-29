@@ -664,15 +664,15 @@ export const CITE = {
   title: "Cite it",
   body: [
     "Cite the ",
-    { text: "current public release, v1.8.3", href: "https://github.com/jakejharris/jspark3/releases/tag/v1.8.3" },
+    { text: "current public release, v1.8.4", href: "https://github.com/jakejharris/jspark3/releases/tag/v1.8.4" },
     ", together with the upstream work in its ",
-    { text: "third-party notices", href: "https://github.com/jakejharris/jspark3/blob/v1.8.3/THIRD_PARTY_NOTICES.md" },
+    { text: "third-party notices", href: "https://github.com/jakejharris/jspark3/blob/v1.8.4/THIRD_PARTY_NOTICES.md" },
     " and ",
-    { text: "required ShapleyMcg attribution", href: "https://github.com/jakejharris/jspark3/blob/v1.8.3/REQUIRED_ATTRIBUTION.md" },
+    { text: "required ShapleyMcg attribution", href: "https://github.com/jakejharris/jspark3/blob/v1.8.4/REQUIRED_ATTRIBUTION.md" },
     ".",
   ] as ReadonlyArray<RichPart>,
-  citation: `JSpark3 v1.8.3 (2026)
-https://github.com/jakejharris/jspark3/releases/tag/v1.8.3`,
+  citation: `JSpark3 v1.8.4 (2026)
+https://github.com/jakejharris/jspark3/releases/tag/v1.8.4`,
   upstreamCitation: `@misc{music2026shapleymcg,
   author = {Music, Brandon M.},
   title  = {ShapleyMCG: An Auditable Calibration-to-Encoding Pipeline for

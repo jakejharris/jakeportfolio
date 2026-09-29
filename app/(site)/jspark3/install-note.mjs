@@ -1,4 +1,8 @@
 /** The same measured-build caveat on the pages and their generated share image. */
+export function releaseSummary(tag) {
+  return tag === 'v1.8.4' ? 'Cooperative MoE on by default, at parity with v1.8.0.' : null;
+}
+
 export function installNote(tag, installTag) {
   if (installTag === tag) return null;
   // This release restores coop by default; its measurements are still pending.
