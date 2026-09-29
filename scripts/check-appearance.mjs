@@ -274,7 +274,10 @@ try {
       await unfold();
       const before = await probe();
       const peak = { drops: 0, colored: 0 };
-      for (const index of [1, 2, 3, 4, 0, 1, 2, 3, 4, 0, 1, 2]) {
+      // A lone first press on the chosen color would fold a phone's palette.
+      const order = [1, 2, 3, 4, 0, 1, 2, 3, 4, 0, 1, 2];
+      if ((await accentNow()) === "1") order.unshift(3);
+      for (const index of order) {
         await tap(swatch(index));
         const now = await probe();
         peak.drops = Math.max(peak.drops, now.drops);
@@ -469,7 +472,9 @@ try {
       await unfold();
       const before = await probe();
       let most = { drops: 0, colored: before.colored };
-      for (const index of [1, 2, 3, 4, 0, 1, 2, 3]) {
+      const order = [1, 2, 3, 4, 0, 1, 2, 3];
+      if ((await accentNow()) === "1") order.unshift(4);
+      for (const index of order) {
         await tap(swatch(index));
         const now = await probe();
         most = { drops: Math.max(most.drops, now.drops), colored: Math.max(most.colored, now.colored) };
