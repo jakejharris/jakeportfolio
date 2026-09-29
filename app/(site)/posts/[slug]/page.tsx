@@ -5,6 +5,7 @@ import { sanityFetch, urlFor } from '@/app/lib/sanity.client';
 import { getLivePostViewCounts } from '@/app/lib/live-post-views';
 import { draftRenderPerspective, draftSanityFetch } from '@/app/lib/sanity.draft-client';
 import { SITE_URL, WEBSITE_ID, jsonLd, personRef } from '@/app/lib/entity';
+import { getPostModifiedAt } from '@/app/lib/post-dates';
 import Link from 'next/link';
 import { getDraftsConfigStatus, isDraftsAuthed } from '@/app/lib/drafts-auth';
 import { PortableText, PortableTextReactComponents } from '@portabletext/react';
@@ -461,8 +462,7 @@ export default async function PostPage({ params }: PageParams) {
     ? urlFor(post.mainImage).width(1200).height(630).url()
     : null;
 
-  // The last edit, as the sitemap reports it, never earlier than publication. Both are ISO UTC strings.
-  const dateModified = post._updatedAt > post.publishedAt ? post._updatedAt : post.publishedAt;
+  const dateModified = getPostModifiedAt(post.publishedAt, post._updatedAt);
   const postUrl = `${SITE_URL}/posts/${post.slug.current}/`;
   const blogPosting = {
     '@type': 'BlogPosting',

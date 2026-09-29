@@ -7,13 +7,11 @@ export const PERSON_ID = `${SITE_URL}/#person`;
 export const WEBSITE_ID = `${SITE_URL}/#website`;
 export const ABOUT_URL = `${SITE_URL}/about/`;
 
-/** The headshot, square, for the Person node. */
-export const PERSON_IMAGE = `${SITE_URL}/images/jake-harris.jpg`;
-/** The homepage share card: the headshot beside the name, 1200x630. */
-export const SHARE_IMAGE = { url: '/og/jake-harris.jpg', width: 1200, height: 630, alt: 'Jake Harris' };
+/** The text-only homepage share card, 1200x630. */
+export const SHARE_IMAGE = { url: '/og/jake-harris-ml-researcher.jpg', width: 1200, height: 630, alt: 'Jake Harris | ML Researcher' };
 
 export const PERSON_DESCRIPTION =
-  'Software engineer in Chicago who builds agent systems and JSPARK3, open serving recipes that run large open models on NVIDIA DGX Spark.';
+  'Jake Harris is an ML Researcher in Chicago focused on inference and agent systems.';
 
 /** Profiles that are also Jake, in the order the About page lists them. */
 export const PROFILES = [
@@ -39,8 +37,7 @@ export const personNode = {
   '@id': PERSON_ID,
   name: 'Jake Harris',
   url: ABOUT_URL,
-  image: PERSON_IMAGE,
-  jobTitle: 'Software Engineer',
+  jobTitle: 'ML Researcher',
   description: PERSON_DESCRIPTION,
   alumniOf: { '@type': 'CollegeOrUniversity', name: 'George Washington University', url: 'https://www.gwu.edu/' },
   knowsAbout: ['LLM inference', 'NVIDIA DGX Spark', 'Agent orchestration', 'Context engineering'],

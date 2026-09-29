@@ -3,13 +3,13 @@ import Link from 'next/link';
 import { FaDownload } from 'react-icons/fa';
 import type { Metadata } from 'next';
 import AboutLinks from './AboutLinks';
-import { ABOUT_URL, PERSON_ID, SHARE_IMAGE, WEBSITE_ID, jsonLd } from '../../lib/entity';
+import { ABOUT_URL, PERSON_DESCRIPTION, PERSON_ID, SHARE_IMAGE, WEBSITE_ID, jsonLd } from '../../lib/entity';
 import '../../css/page.css';
 import '../../css/animations.css';
 import '../../css/hero.css';
 
-const title = "About Jake Harris | Software Engineer and JSPARK3 Creator";
-const description = "Jake Harris is a software engineer in Chicago, founder of JJH Digital, and the creator of JSPARK3, open serving recipes for NVIDIA DGX Spark.";
+const title = "About Jake Harris | ML Researcher";
+const description = PERSON_DESCRIPTION;
 
 export const metadata: Metadata = {
     title: { absolute: title },

@@ -10,10 +10,9 @@ import AccentScript from "../components/AccentScript";
 import { TransitionProvider } from "../components/TransitionProvider";
 import TransitionOverlay from "../components/TransitionOverlay";
 import type { Metadata } from "next";
-import { ABOUT_URL, SHARE_IMAGE, SITE_URL, jsonLd, personNode, websiteNode } from "../lib/entity";
+import { ABOUT_URL, PERSON_DESCRIPTION, SHARE_IMAGE, SITE_URL, jsonLd, personNode, websiteNode } from "../lib/entity";
 
-const title = "Jake Harris | AI Inference and Agent Systems Engineer";
-const shareDescription = "Software engineer building agent systems and JSPARK3, open serving recipes for NVIDIA DGX Spark.";
+const title = "Jake Harris | ML Researcher";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -21,8 +20,8 @@ export const metadata: Metadata = {
     default: title,
     template: "%s | Jake Harris"
   },
-  description: "Jake Harris is a Chicago software engineer who builds agent systems and JSPARK3, an open recipe that runs GLM-5.3 Flash across three NVIDIA DGX Sparks.",
-  keywords: ["Jake Harris", "JSPARK3", "Software Engineer", "LLM inference", "NVIDIA DGX Spark", "Agent systems"],
+  description: PERSON_DESCRIPTION,
+  keywords: ["Jake Harris", "ML Researcher", "Machine learning", "LLM inference", "Agent systems"],
   authors: [{ name: "Jake Harris", url: ABOUT_URL }],
   creator: "Jake Harris",
   alternates: {
@@ -34,7 +33,7 @@ export const metadata: Metadata = {
     url: `${SITE_URL}/`,
     siteName: "Jake Harris",
     title,
-    description: shareDescription,
+    description: PERSON_DESCRIPTION,
     images: [SHARE_IMAGE],
   },
   twitter: {
@@ -42,7 +41,7 @@ export const metadata: Metadata = {
     site: '@jakeharrisdev',
     creator: '@jakeharrisdev',
     title,
-    description: shareDescription,
+    description: PERSON_DESCRIPTION,
     images: [SHARE_IMAGE],
   },
   robots: {
