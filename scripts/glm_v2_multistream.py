@@ -192,9 +192,10 @@ def project_v2(source, digest, review, rehearsal, gate):
     if quality_hash:
         r(gate.re.fullmatch(r'[a-f0-9]{64}', quality_hash), 'quality document hash required')
         for key in ('nll','toolcall'):
-            r((panel.get(key) or {}).get('status') == 'N/A', 'logprob checks must be N/A')
-        r((panel.get('agent_tools') or {}).get('status') in ('PASS','FAIL','INVESTIGATE'), 'agent_tools required')
+            r((panel.get(key) or {}).get('status') == 'N/A' and (panel.get(key) or {}).get('reason'), 'logprob checks must be N/A with reasons')
+        r((panel.get('agent_tools') or {}).get('status') in ('PASS','FAIL','INVESTIGATE') and (panel.get('agent_tools') or {}).get('observed'), 'agent_tools observed result required')
         r((panel.get('needle') or {}).get('status') in (None,'NOT-RUN','INVESTIGATE'), 'raw needle status required')
+        r((panel.get('needle') or {}).get('status') != 'INVESTIGATE' or (panel.get('needle') or {}).get('observed'), 'raw needle observed result required')
         for key, value in panel.items():
             checks.append(dict(id=copy(key, 'check'), status=copy(value.get('status'), 'status'), observed=copy(value['observed'], 'observed') if value.get('observed') else None,
                                reason=copy(value['reason'], 'reason') if value.get('reason') else None, display=None, source=evidence(value.get('evidence'))[0], failed_cases=[]))

@@ -103,7 +103,7 @@ def public_copy(value, where):
     require(not re.search(r'\bclearly\b|\bbeats\b|\bfastest\b|\bblazing\b|\bdramatic\w*\b|'
                           r'\bsignificantly\b|\bmassive\w*\b|\bunprecedented\b|always (?:exact|identical)|provably exact|speed[ -]win|'
                           r'\ball[ -](?:rows|three|3)\b|\bfloor\b|\bvLLM\b|'
-                          r'commercial(?:ly)?[ -](?:clean|cleared|safe|ready)', value, re.I),
+                          r'commercial(?:ly)?[ -](?:clean|cleared|safe|ready)|\barx collectives\b', value, re.I),
             f'{where}: unsupported release wording')
     return value
 
