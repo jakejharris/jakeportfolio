@@ -47,7 +47,7 @@ async function skippedResponse(
 ) {
   const counts = await getLivePostViewCounts([slug]);
   return NextResponse.json({
-    viewCount: counts[slug] ?? 0,
+    viewCount: counts === null ? null : counts[slug] ?? 0,
     [reason]: true,
   });
 }

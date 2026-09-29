@@ -49,7 +49,7 @@ This is a Next.js 15 portfolio and blog site using the App Router with Sanity CM
 
 1. **Sanity CMS** stores content (blog posts, tags) in a separate studio project (`jakeportfolio-studio`)
 2. **`app/lib/sanity.client.ts`** provides `client` (read, `useCdn: false`, `perspective: 'published'`) and `writeClient` (mutations with `SANITY_API_WRITE_TOKEN`)
-3. **`sanityFetch()`** helper handles GROQ queries with Next.js revalidation tags and `revalidate: 0` (no time-based caching; all revalidation is on-demand)
+3. **`sanityFetch()`** caches published GROQ queries for 300 seconds with a global `post` tag; the content webhook invalidates them on demand. Published home, post, and tag pages use 60-second ISR. Authenticated draft requests bypass the published route cache.
 4. **Webhook revalidation** via `/api/revalidate` triggers `revalidateTag('post')` and `revalidatePath('/')` when Sanity content changes
 5. **GROQ queries** are defined inline at callsites (not centralized), with projections to avoid over-fetching. Tags are dereferenced inline via `tags[]->{...}`
 
@@ -75,7 +75,7 @@ This is a Next.js 15 portfolio and blog site using the App Router with Sanity CM
 - **Feature flags** — Top-of-file constants toggle features: `ENABLE_PAGE_TRANSITIONS = false` (TransitionOverlay), `ENABLE_PIXEL_FLUID_BACKGROUND = true` (canvas background)
 - **Pixel background**: `PixelFluidBackground` wraps the engine in `app/components/pixel-fluid/`. Text marked `data-fluid-island` is dry land: the background traces its glyphs and never draws near them. Mark any heading or standfirst that sits over the background (homepage hero, tag headers, JSPARK3 hub masthead).
 - **Mobile menu**: `MobileNavbar` opens `SiteMenu` (`app/components/site-menu/`), a full-screen layer of the same pixel water. It floods in from the button in lattice cells (`app/lib/menu-tide.ts`), its links are islands (`data-menu-island`, a separate selector so the page background never traces them), and tapping one opens the water from the tap once the next page has arrived. Every request only retargets one running tide, so rapid taps cannot stack animations. While it is up, `main` and the footer are `inert`, `<html>` carries `data-menu-open` (scroll lock), and the page background rests.
-- **Navigation** — Internal links use `TransitionLink` (wraps Next.js `Link`) with `scroll={true}`. Navbar and mobile menu hrefs use clean paths (for example, `href="/about"`); post-card links retain the legacy trailing-`#` pattern
+- **Navigation** — Internal links use `TransitionLink` (wraps Next.js `Link`) with `scroll={true}`. Navbar and mobile menu hrefs use clean paths (for example, `href="/about"`); post and tag links use canonical trailing-slash paths and automatic viewport prefetch
 - **Scroll management** — `ScrollToTop` component handles scroll reset on navigation; `experimental.scrollRestoration` is disabled in next.config.js
 - **Portable Text headings** — Bold (`strong`-marked) text in normal paragraphs is treated as section headings (not Sanity's built-in h1–h4). Both `TableOfContents` and the custom block renderer generate heading IDs in format `section-{block._key}`
 - **Metadata** — Static pages export `metadata` directly. Dynamic posts use `generateMetadata()`. All include canonical URLs, OpenGraph, and Twitter cards. JSON-LD structured data in root layout (WebSite, Person) and post pages (BlogPosting)
@@ -122,7 +122,8 @@ GA_SERVICE_ACCOUNT_JSON          # Service-account JSON with Viewer access to th
 - Frontend queries in page files must match schema structure in `sanity-schemas/`
 - `useCdn: false` and `perspective: 'published'` on the read client — drafts are never exposed
 - `writeClient` is only used server-side in API routes, never in page components
-- All queries use `tags: ['post']` as a single global cache tag busted by the webhook
+- `sanityFetch()` adds the global `post` cache tag to every published query, including per-slug queries, so the content webhook expires all dependent pages
+- Public view-count reads use a 60-second cached snapshot tagged `views`; API increments and admin reads remain uncached. Counts in cached pages may lag while background revalidation finishes. Failed or unconfigured view reads return unknown without blocking pages, builds, publishes or drafts; lists hide unknown counts and posts use a remembered count or placeholder. Baselines apply only after successful reads confirm no counter exists. Known server counts render immediately; client navigation restores the reader's maximum before paint, until the 24-hour dedupe window expires. Hard reloads can briefly show the older server count before hydration. The content webhook ignores `postView` documents and ids starting with `views.`.
 - The Sanity Studio is maintained in a separate `jakeportfolio-studio` repository
 
 ## Next.js Config Notes

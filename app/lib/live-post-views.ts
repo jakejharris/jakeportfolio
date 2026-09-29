@@ -21,15 +21,16 @@ function createPostViewReadClient(token: string) {
 }
 
 export async function getLivePostViewCounts(
-  slugs: string[]
-): Promise<Record<string, number>> {
+  slugs: string[],
+  { revalidate = 0 }: { revalidate?: number } = {}
+): Promise<Record<string, number> | null> {
   if (slugs.length === 0) {
     return {};
   }
 
   const token = process.env.SANITY_API_READ_TOKEN;
   if (!token) {
-    return {};
+    return null;
   }
 
   try {
@@ -38,7 +39,11 @@ export async function getLivePostViewCounts(
     >(
       `*[_type == "postView" && _id in $ids]{ _id, count }`,
       { ids: slugs.map(getPostViewId) },
-      { cache: 'no-store' }
+      // Public pages can reuse a short snapshot. API/admin callers keep the
+      // default live read so increments and corrections return current counts.
+      revalidate > 0
+        ? { next: { revalidate, tags: ['views'] } }
+        : { cache: 'no-store' }
     );
 
     return Object.fromEntries(
@@ -53,6 +58,8 @@ export async function getLivePostViewCounts(
       reason: error instanceof Error ? error.message.slice(0, 200) : 'unknown',
       ts: new Date().toISOString(),
     }));
-    return {};
+    // Unknown counts must neither block content nor masquerade as a baseline.
+    // A successful empty result alone confirms a counter does not exist yet.
+    return null;
   }
 }

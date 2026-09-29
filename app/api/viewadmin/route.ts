@@ -68,7 +68,7 @@ export async function GET(request: NextRequest) {
         ...post,
         viewCountBase,
         liveViewCount:
-          liveViewCounts[post.slug.current] ?? post.viewCountBase ?? post.viewCount ?? 0,
+          liveViewCounts?.[post.slug.current] ?? post.viewCountBase ?? post.viewCount ?? 0,
         gaDelta,
         lastSuccessfulGaFetchAt: gaSnapshot.lastSuccessfulFetchAt,
         lastSuccessfulGaFetchAgeMs: gaSnapshot.lastSuccessfulFetchAgeMs,
@@ -117,7 +117,7 @@ export async function POST(request: NextRequest) {
     const id = getPostViewId(slug);
     const baseline = post.viewCountBase ?? post.viewCount ?? 0;
     const liveViewCounts = await getLivePostViewCounts([slug]);
-    const newViewCount = (liveViewCounts[slug] ?? baseline) + changeAmount;
+    const newViewCount = (liveViewCounts?.[slug] ?? baseline) + changeAmount;
 
     if (newViewCount < 0) {
       return NextResponse.json(
