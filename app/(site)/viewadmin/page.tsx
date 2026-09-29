@@ -182,7 +182,7 @@ export default function ViewAdminPage() {
       {!loading && !authError && (
         <ul className="space-y-4">
           {posts.map(post => (
-            <li key={post._id} className="border p-4 rounded shadow">
+            <li key={post._id} className="border p-4 rounded">
               <h2 className="text-xl font-semibold mb-2">{post.title}</h2>
               <dl className="mb-3 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
                 <dt>Baseline</dt>

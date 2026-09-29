@@ -6,6 +6,7 @@ import JHMark from './JHMark';
 import MenuIcon from './site-menu/MenuIcon';
 import SiteMenu, { useSiteMenu } from './site-menu/SiteMenu';
 import { getActiveNav } from '../lib/navbar';
+import { usePendingPath } from './navigation/navigation-events';
 
 interface MobileNavbarProps {
   scrolled: boolean;
@@ -13,7 +14,9 @@ interface MobileNavbarProps {
 }
 
 export default function MobileNavbar({ scrolled, visible }: MobileNavbarProps) {
-  const { isHome } = getActiveNav(usePathname());
+  const pathname = usePathname();
+  const { isHome } = getActiveNav(pathname);
+  const shown = getActiveNav(usePendingPath() ?? pathname);
   const menu = useSiteMenu();
 
   return (
@@ -32,7 +35,7 @@ export default function MobileNavbar({ scrolled, visible }: MobileNavbarProps) {
               scroll={true}
               aria-label="Jake Harris — home"
               aria-current={isHome ? 'page' : undefined}
-              className={`animated-underline inline-flex items-center py-1 ${isHome ? 'nav-active' : ''}`}
+              className={`animated-underline inline-flex items-center py-1 ${shown.isHome ? 'nav-active' : ''}`}
             >
               <JHMark className="h-5" />
             </TransitionLink>
