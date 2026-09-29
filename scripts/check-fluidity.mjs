@@ -209,13 +209,15 @@ try {
   });
 
   await check("a slow page dims the one being left and the navbar points ahead", { path: "/posts/joining-docusign/" }, async (page) => {
+    // Hold the homepage's data from before the page loads: the navbar link
+    // prefetches it, and a finished prefetch would make the tap instant.
+    const { release } = await hold(page, /\/\?_rsc=/);
+    await page.goto(base + "/posts/joining-docusign/", { waitUntil: "domcontentloaded" });
     await waitShore(page);
-    // The homepage renders on request, so the tap has to fetch it.
-    const { release, request } = await hold(page, /\/\?_rsc=/);
     const home = page.locator("nav a[href='/']:visible");
     await press(page, home);
-    await Promise.race([request, new Promise((_, reject) => setTimeout(() => reject(new Error("the tap fetched nothing")), 5000))]);
     await page.waitForTimeout(500);
+    assert.equal(await page.evaluate(() => location.pathname), "/posts/joining-docusign/", "the homepage is still on its way");
     const waiting = await page.evaluate(() => ({
       leaving: document.querySelector("[data-page-frame]").hasAttribute("data-leaving"),
       opacity: parseFloat(getComputedStyle(document.querySelector("[data-page-frame]")).opacity),
@@ -324,10 +326,13 @@ try {
   });
 
   await check("choosing the current page while another loads leaves nothing dimmed", { path: "/about/" }, async (page) => {
+    // As above: hold the homepage from before any prefetch can finish.
+    const { release } = await hold(page, /\/\?_rsc=/);
+    await page.goto(base + "/about/", { waitUntil: "domcontentloaded" });
     await waitShore(page);
-    const { release, request } = await hold(page, /\/\?_rsc=/);
     await press(page, page.locator("nav a[href='/']:visible"));
-    await Promise.race([request, new Promise((_, reject) => setTimeout(() => reject(new Error("the tap fetched nothing")), 5000))]);
+    await page.waitForTimeout(400);
+    assert.equal(await page.evaluate(() => document.querySelector("[data-page-frame]").hasAttribute("data-leaving")), true, "the homepage is pending");
     await press(page, page.locator("nav a[href='/about/']:visible"));
     await page.waitForTimeout(700);
     const after = await page.evaluate(() => ({
