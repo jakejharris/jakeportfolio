@@ -75,6 +75,8 @@ try {
       await check(`${device} ${theme}: the water shows through one clean shape of glass`, { device, theme }, async (page) => {
         for (const path of LISTS) {
           await open(page, path);
+          assert.equal(await page.locator(".appearance-dock").evaluate((el) => getComputedStyle(el).borderTopLeftRadius), "4px", "dock follows the surface radius");
+          assert.equal(await page.locator(".appearance-dock-cell").first().evaluate((el) => getComputedStyle(el).borderTopLeftRadius), "2px", "dock controls step down from the surface");
           const report = await page.evaluate(() => [...document.querySelectorAll(".pageLinkContainer")].map((card) => {
             const blur = /blur\(([\d.]+)px\)/.exec(getComputedStyle(card).backdropFilter);
             // Glass can only see the page through ancestors that do not start
@@ -101,6 +103,7 @@ try {
               border: [style.borderTopWidth, style.borderRightWidth, style.borderBottomWidth, style.borderLeftWidth],
               rimInset: [rim.top, rim.right, rim.bottom, rim.left],
               rimRadius: rim.borderTopLeftRadius === style.borderTopLeftRadius,
+              radius: style.borderTopLeftRadius,
             };
             // A featured post's mark is a square in the margin, clear of the
             // corners; nothing runs along or around an edge.
@@ -116,7 +119,7 @@ try {
           for (const { blur, stops, shape, clearOfCorners } of report) {
             assert.ok(blur !== null && blur >= 1 && blur <= 4, `${path}: a light frost, not a smear (${blur})`);
             assert.deepEqual(stops, [], `${path}: nothing between the glass and the water`);
-            assert.deepEqual(shape, { border: ["0px", "0px", "0px", "0px"], rimInset: ["0px", "0px", "0px", "0px"], rimRadius: true }, `${path}: one shape for every layer`);
+            assert.deepEqual(shape, { border: ["0px", "0px", "0px", "0px"], rimInset: ["0px", "0px", "0px", "0px"], rimRadius: true, radius: "4px" }, `${path}: one shape for every layer`);
             assert.ok(clearOfCorners, `${path}: the featured mark stays clear of the corners`);
           }
         }

@@ -21,7 +21,7 @@
   margin: 0;
   padding: 3px;
   border: 1px solid hsl(var(--foreground) / 0.14);
-  border-radius: 6px;
+  border-radius: var(--radius);
   background: hsl(var(--background) / 0.72);
 }
 
@@ -47,7 +47,7 @@
   min-width: 4.75rem;
   height: 38px;
   padding: 0 0.875rem;
-  border-radius: 4px;
+  border-radius: max(0px, calc(var(--radius) - 2px));
   color: hsl(var(--muted-foreground));
   font-family: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 0.6875rem;

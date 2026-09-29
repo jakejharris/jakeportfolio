@@ -366,7 +366,7 @@ export default function HeroCompression() {
       ctx.fillStyle = isDark ? 'rgba(15, 15, 20, 0.9)' : 'rgba(240, 242, 248, 0.95)';
       ctx.strokeStyle = `rgba(${theme.signal}, 0.5)`;
       ctx.beginPath();
-      ctx.roundRect(tx, ty, boxW, boxH, 6);
+      ctx.roundRect(tx, ty, boxW, boxH, 4);
       ctx.fill();
       ctx.stroke();
 
