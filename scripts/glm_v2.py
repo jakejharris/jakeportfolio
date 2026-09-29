@@ -13,7 +13,7 @@ ROOT = Path(__file__).resolve().parent.parent
 DATA = ROOT / 'app/(site)/jspark3/glm-v2-release.json'
 SOURCE = ROOT / 'docs/jspark-v2/glm-v2-source.json'
 TITLE = 'JSpark3 v2.0.0 (GLM-5.3-Flash, TP3)'
-CLAIM = "lossless up to vLLM's own run-to-run noise"
+CLAIM = "lossless up to this build's measured run-to-run noise"
 REPO = 'https://github.com/jakejharris/jspark3'
 METRICS = ['prefill', 'decode_c1', 'decode_c2', 'decode_c4', 'decode_c8',
            'decode_prose_c1', 'decode_prose_c2', 'decode_prose_c4', 'decode_prose_c8', 'structured_c8']

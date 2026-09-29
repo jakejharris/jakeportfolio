@@ -37,7 +37,7 @@ publication checker fails. The proposed optional `site_v2` object is:
   Each reference cell has `lo`, `hi`, `unit: "tok/s"`,
   `class: "author-reported"`, and the identical `instrument` string. The
   page shows both ranges; it makes no computed speedup claim.
-- `quality`: `claim: "lossless up to vLLM's own run-to-run noise"`, a literal
+- `quality`: `claim: "lossless up to this build's measured run-to-run noise"`, a literal
   numeric `floor`, its `unit`, its `metric`, and a public evidence `source`.
 - `drafter_source`: the upstream DFlash2 license/download page. This is a
   link only. The default is non-commercial (CC BY-NC-ND); MTP-only is labelled

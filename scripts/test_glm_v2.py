@@ -27,7 +27,7 @@ def sample():
         'comparison': {'publisher': 'mmastrac', 'tensor_parallel': gate.Number('3'),
                        'source': 'https://github.com/mmastrac/example/blob/' + 'a' * 40 + '/README.md',
                        'same_conditions': True, 'cells': {'decode_c1': reference}},
-        'quality': {'claim': gate.CLAIM, 'floor': gate.Number('0.0400'), 'unit': '%',
+        'quality': {'claim': "lossless up to this build's measured run-to-run noise", 'floor': gate.Number('0.0400'), 'unit': '%',
                     'metric': 'Repeat-run token disagreement', 'source': gate.REPO + '/blob/v2.0.0/release/QUALITY.md'},
         'drafter_source': 'https://huggingface.co/example/drafter',
     }
@@ -104,6 +104,7 @@ class PublicationTests(unittest.TestCase):
             ('wrong instrument', lambda s: s['site_v2']['comparison']['cells']['decode_c1'].update(instrument='A different instrument'), 'instrument mismatch'),
             ('wrong reference class', lambda s: s['site_v2']['comparison']['cells']['decode_c1'].update(**{'class': 'measured'}), 'author-reported'),
             ('unapproved exactness', lambda s: s['site_v2']['quality'].update(claim='Unqualified exactness'), 'claim wording'),
+            ('previous exactness floor', lambda s: s['site_v2']['quality'].update(claim="lossless up to vLLM's own run-to-run noise"), 'claim wording'),
             ('floor string', lambda s: s['site_v2']['quality'].update(floor='0.0400'), 'literal JSON number'),
             ('internal name', lambda s: s.update(conditions='lane 42 results'), 'forbidden public text'),
             ('em dash', lambda s: s.update(conditions='Code\u2014decode'), 'forbidden public text'),

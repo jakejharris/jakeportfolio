@@ -84,7 +84,7 @@ export default function GlmV2Page() {
         <p data-quality-claim>{release.quality.claim}</p>
         <p>Measured floor: {release.quality.floor_text} {release.quality.unit} · {release.quality.metric}.</p>
         <a href={release.quality.source}>Quality measurements and scope ↗</a>
-      </> : <p className="glm-v2-empty">Quality result pending. The measured vLLM run-to-run noise floor and its scope will appear here with the frozen evidence.</p>}
+      </> : <p className="glm-v2-empty">{"Quality result pending. This build's measured run-to-run noise floor and its scope will appear here with the frozen evidence."}</p>}
     </section>
 
     <section className="glm-shell glm-v2-section" id="license" aria-labelledby="license-title">
