@@ -7,8 +7,7 @@ import { ThemeProvider } from "../components/theme-provider";
 import { Toaster } from "../components/ui/sonner";
 import { GoogleAnalytics } from '@next/third-parties/google'
 import AccentScript from "../components/AccentScript";
-import { TransitionProvider } from "../components/TransitionProvider";
-import TransitionOverlay from "../components/TransitionOverlay";
+import NavigationFlow from "../components/navigation/NavigationFlow";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -83,20 +82,18 @@ export default function SiteLayout({ children }: { children: React.ReactNode }) 
         enableSystem={false}
         disableTransitionOnChange
       >
-        <TransitionProvider>
-          <TransitionOverlay />
-          <NavbarScrollProvider>
-            <PortfolioChrome><Navbar /></PortfolioChrome>
-            <PortfolioChrome><AppearanceDock /></PortfolioChrome>
-            <main className="flex-1">
-              {children}
-              {process.env.NODE_ENV === 'production' && (
-                <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID!} />
-              )}
-            </main>
-            <PortfolioChrome><Footer /></PortfolioChrome>
-          </NavbarScrollProvider>
-        </TransitionProvider>
+        <NavbarScrollProvider>
+          <PortfolioChrome><Navbar /></PortfolioChrome>
+          <PortfolioChrome><AppearanceDock /></PortfolioChrome>
+          <main className="flex-1">
+            <div data-page-frame="">{children}</div>
+            {process.env.NODE_ENV === 'production' && (
+              <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID!} />
+            )}
+          </main>
+          <NavigationFlow />
+          <PortfolioChrome><Footer /></PortfolioChrome>
+        </NavbarScrollProvider>
       </ThemeProvider>
     </>
   );
