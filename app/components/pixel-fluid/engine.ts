@@ -84,7 +84,7 @@ const FLASHLIGHT_RADIUS = 25;
 const SUB = 3;
 const CHART_FLOOR = 0.5;
 // Thin enough that a contour stays one dot wide where the swell is flat.
-const CHART_THICKNESS = 0.13;
+const CHART_THICKNESS = 0.2;
 const DOT_FADE_MS = 400;
 const CHART_PEN = { dark: 38, light: 64 };
 // The swell's crests keep a faint checkerboard body, whole cells, much
