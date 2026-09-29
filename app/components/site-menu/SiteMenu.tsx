@@ -233,7 +233,7 @@ export type SiteMenuState = ReturnType<typeof useSiteMenu>;
 
 export default function SiteMenu({ menu }: { menu: SiteMenuState }) {
   const active = getActiveNav(menu.pathname);
-  const current = [active.isHome, active.isJspark3, active.isAbout, active.isContact];
+  const current = [active.isHome, active.isAbout, active.isContact];
   const year = new Date().getFullYear();
 
   return (
