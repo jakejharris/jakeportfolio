@@ -3,7 +3,7 @@
    accent picks hold up without hero-specific overrides. */
 
 .hero {
-  padding: 4.25rem 0;
+  padding: 0 0 4.25rem;
 }
 
 .hero-wordmark {
@@ -79,6 +79,6 @@
 
 @media (max-width: 767px) {
   .hero {
-    padding: 2.9rem 0 2.7rem;
+    padding: 0 0 2.7rem;
   }
 }

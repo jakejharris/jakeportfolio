@@ -353,7 +353,7 @@ async function exitDraftPreview() {
 
 function DraftPreviewBanner({ title }: { title: string }) {
   return (
-    <div className="fixed left-0 right-0 top-16 z-50 border-b border-border bg-background/95 px-3 py-2 backdrop-blur">
+    <div className="draft-preview-banner border-b border-border bg-background/95 px-3 py-2 backdrop-blur">
       <div className="mx-auto flex max-w-2xl items-center justify-between gap-3 text-sm">
         <p className="min-w-0 truncate font-medium">
           Draft preview: {title}
@@ -490,8 +490,8 @@ export default async function PostPage({ params }: PageParams) {
         dangerouslySetInnerHTML={{ __html: jsonLd(blogPosting) }}
       />
       {canRenderDraft && <DraftPreviewBanner title={post.title} />}
-      <PageLayout>
-        <div className={`max-w-none ${canRenderDraft ? 'pt-14' : ''}`}>
+      <PageLayout className="post-page">
+        <div className="max-w-none">
           {/* <Link 
           href="/" 
           className="group animated-underline !flex w-fit items-center gap-0 mb-6"
@@ -534,7 +534,7 @@ export default async function PostPage({ params }: PageParams) {
             <ViewCounter slug={slug} initialCount={displayedViewCount} />
 
             {post.tags && post.tags.length > 0 && (
-              <div className="flex gap-2">
+              <div className="hidden md:flex gap-2" data-post-tags>
                 <TagPill linked={true} tag={post.tags[0]} key={post.tags[0].slug.current} />
                 {post.tags.slice(1).map(tag => (
                   <span key={tag.slug.current} className="hidden md:inline-flex">

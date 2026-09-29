@@ -50,7 +50,7 @@ export default async function HomePage() {
       <div className="max-w-none">
         <div className="section-kicker" data-fluid-island>Writing &amp; work</div>
         <GlassLight />
-        <ul className="space-y-2 pb-8">
+        <ul className="space-y-2">
           {posts.map((post) => {
             const displayedViewCount =
               liveViewCounts === null ? null : liveViewCounts[post.slug.current] ??

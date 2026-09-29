@@ -172,15 +172,11 @@
 
 /* Where the dock could sit over the reading column, it tucks away while the
    reader scrolls down and returns on the way back up, like the mobile
-   navbar. The end of the page keeps room for it above the footer, so the
-   last lines can always scroll clear of it. */
+   navbar. The shared page edge space keeps the last lines clear of it when
+   it rides above the footer. */
 @media (max-width: 1023px) {
   .appearance-dock[data-tucked] {
     transform: translateY(calc(100% + max(1rem, env(safe-area-inset-bottom)) + var(--dock-lift) + 8px));
-  }
-
-  [data-site-footer] {
-    margin-top: 3rem;
   }
 }
 

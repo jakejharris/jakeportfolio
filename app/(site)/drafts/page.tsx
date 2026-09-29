@@ -108,7 +108,7 @@ function PasscodeGate({
   isConfigured: boolean;
 }) {
   return (
-    <PageLayout center>
+    <PageLayout>
       <div className="w-full max-w-sm">
         <h1 className="text-2xl font-bold mb-2">Drafts</h1>
         <p className="text-sm text-muted-foreground mb-6">
