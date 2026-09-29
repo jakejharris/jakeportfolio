@@ -6,7 +6,7 @@ import './v2.css';
 
 export const metadata = {
   ...projectMetadata(GLM_V2.title, V2_DESCRIPTION, '/jspark3/glm/', GLM_V2.social_image),
-  ...(GLM_V2.pending.length ? { robots: { index: false, follow: false } } : {}),
+  robots: { index: false, follow: false },
 };
 
 export default GlmV2Page;

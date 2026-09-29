@@ -4,7 +4,7 @@ import PixelFluidBackground from '../../../components/PixelFluidBackground';
 import TransitionLink from '../../../components/TransitionLink';
 import { release } from './release-data';
 import { HUB_COPY, INTERNAL_BUILDS, RELEASE_HISTORY } from '../release-copy';
-import { GLM_V2, V2_HIGHLIGHTS, V2_NO_DRAFTER_NOTICE, V2_MTP_NOTICE } from '../glm-v2';
+import { GLM_V2, V2_HIGHLIGHTS, V2_DRAFTER_NOTICE } from '../glm-v2';
 
 function LedgerRow({ href, children }: { href: string; children: React.ReactNode }) {
   return href.startsWith('/')
@@ -26,16 +26,16 @@ export default function HubPage() {
         <ol className="spark-hub-list">
           <li>
             <TransitionLink href="/jspark3/glm/" className="pageLinkContainer pinnedLinkBorder spark-hub-release">
-              <span className="spark-hub-release-meta">{GLM_V2.pending.length ? 'Release preview · publication pending' : 'Latest release'}</span>
+              <span className="spark-hub-release-meta">Release preview · publication pending</span>
               <span className="spark-hub-release-title">{GLM_V2.title} <span aria-hidden="true">↗</span></span>
               <span className="spark-hub-figures">
                 {V2_HIGHLIGHTS.map(cell => <span key={cell.id} className="spark-hub-figure">
                   <span className="spark-hub-figure-label">{cell.label}</span>
-                  <span className="spark-hub-figure-value">{cell.value}{!GLM_V2.fixture ? <small>tok/s</small> : null}</span>
+                  <span className="spark-hub-figure-value">{cell.value}{GLM_V2.rows.length > 0 ? <small>tok/s</small> : null}</span>
                 </span>)}
               </span>
-              <span className="spark-hub-release-detail">{GLM_V2.fixture ? 'Measurements pending. Fixture values are not release results.' : 'Measured ranges. Conditions and every serving start on the release page.'}</span>
-              <span className="spark-hub-release-detail">DFlash2: non-commercial. {V2_NO_DRAFTER_NOTICE}. {V2_MTP_NOTICE}.</span>
+              <span className="spark-hub-release-detail">{GLM_V2.rows.length ? 'Single-stream RigMark medians. Conditions and receipts on the release page.' : 'TensorFold engine. Measurements and exactness check pending.'}</span>
+              <span className="spark-hub-release-detail">{V2_DRAFTER_NOTICE}</span>
               <span className="spark-hub-release-action">Recipe, results, and license scope <span aria-hidden="true">→</span></span>
             </TransitionLink>
           </li>
@@ -55,7 +55,7 @@ export default function HubPage() {
           <li>
             <LedgerRow href="/jspark3/glm/">
               <span className="spark-hub-ledger-version">JSpark3 v2.0.0</span>
-              <span className="spark-hub-ledger-what">(GLM-5.3-Flash, TP3)<span className="spark-hub-ledger-pill">{GLM_V2.pending.length ? 'Preview' : 'Latest'}</span></span>
+              <span className="spark-hub-ledger-what">(GLM-5.3-Flash, TP3)<span className="spark-hub-ledger-pill">Preview</span></span>
               <span className="spark-hub-ledger-when">{GLM_V2.published ?? 'Pending'}</span>
             </LedgerRow>
           </li>

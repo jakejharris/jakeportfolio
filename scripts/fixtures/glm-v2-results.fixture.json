@@ -2,225 +2,116 @@
   "schema": "jspark3-results/1",
   "state": "fixture",
   "fixture": true,
-  "frozen_at": null,
   "tag": "v2.0.0",
   "version": "v2.0",
+  "frozen_at": null,
   "release_date": null,
-  "decode_kind": "code",
-  "conditions": "FIXTURE ONLY. Invented values for layout. No benchmark was run.",
-  "mode_switch": null,
-  "sets": {
-    "release_m0": {
-      "label": "FIXTURE ONLY, invented layout data",
-      "build": "v2.0.0",
-      "mode": 0,
-      "toggles": "none",
-      "serving_starts": 1,
-      "sweeps": 2,
-      "cells": {
-        "prefill": {
-          "lo": 11.1,
-          "hi": 22.2,
-          "unit": "tok/s",
-          "class": "measured",
-          "instrument": "FIXTURE instrument, no benchmark was run",
-          "evidence": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
-          "mode": 0,
-          "build": "v2.0.0",
-          "toggles": "none"
-        },
-        "decode_c1": {
-          "lo": 12.1,
-          "hi": 23.2,
-          "unit": "tok/s",
-          "class": "measured",
-          "instrument": "FIXTURE instrument, no benchmark was run",
-          "evidence": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
-          "mode": 0,
-          "build": "v2.0.0",
-          "toggles": "none"
-        },
-        "decode_c2": {
-          "lo": 13.1,
-          "hi": 24.2,
-          "unit": "tok/s",
-          "class": "measured",
-          "instrument": "FIXTURE instrument, no benchmark was run",
-          "evidence": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
-          "mode": 0,
-          "build": "v2.0.0",
-          "toggles": "none"
-        },
-        "decode_c4": {
-          "lo": 14.1,
-          "hi": 25.2,
-          "unit": "tok/s",
-          "class": "measured",
-          "instrument": "FIXTURE instrument, no benchmark was run",
-          "evidence": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
-          "mode": 0,
-          "build": "v2.0.0",
-          "toggles": "none"
-        },
-        "decode_c8": {
-          "lo": 15.1,
-          "hi": 26.2,
-          "unit": "tok/s",
-          "class": "measured",
-          "instrument": "FIXTURE instrument, no benchmark was run",
-          "evidence": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
-          "mode": 0,
-          "build": "v2.0.0",
-          "toggles": "none"
-        },
-        "prefill_128k": {
-          "lo": 11.1,
-          "hi": 22.2,
-          "unit": "tok/s",
-          "class": "measured",
-          "instrument": "FIXTURE instrument, no benchmark was run",
-          "evidence": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
-          "mode": 0,
-          "build": "v2.0.0",
-          "toggles": "none"
-        },
-        "rigmark_code": {
-          "lo": 11.1,
-          "hi": 22.2,
-          "unit": "tok/s",
-          "class": "measured",
-          "instrument": "FIXTURE instrument, no benchmark was run",
-          "evidence": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
-          "mode": 0,
-          "build": "v2.0.0",
-          "toggles": "none"
-        },
-        "rigmark_prose": {
-          "lo": 11.1,
-          "hi": 22.2,
-          "unit": "tok/s",
-          "class": "measured",
-          "instrument": "FIXTURE instrument, no benchmark was run",
-          "evidence": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
-          "mode": 0,
-          "build": "v2.0.0",
-          "toggles": "none"
-        },
-        "rigmark_structured": {
-          "lo": 11.1,
-          "hi": 22.2,
-          "unit": "tok/s",
-          "class": "measured",
-          "instrument": "FIXTURE instrument, no benchmark was run",
-          "evidence": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
-          "mode": 0,
-          "build": "v2.0.0",
-          "toggles": "none"
-        }
+  "_note": "FIXTURE ONLY. Every measurement below is invented. No benchmark was run.",
+  "tf": {
+    "identity": {
+      "engine_repo": "taussoe/TensorFold",
+      "weights": "Vontra/GLM-5.3-Flash-MLX-4bit-MTP@76add2a341a1cd90ad0e86bb69839ea9c35827c6",
+      "drafter": "incoai/GLM-5.3-Flash-DFlash2@bf582e4eacc1810f76656d1811693ff6c6737d2a"
+    },
+    "exact": {},
+    "rows": {
+      "rigmark_code": {
+        "median": 11.200,
+        "worst": 11.100,
+        "values": [
+          11.100,
+          11.200,
+          11.300
+        ],
+        "n": 3,
+        "unit": "tok/s",
+        "class": "measured",
+        "instrument": "FIXTURE ONLY: RigMark, single stream. Invented layout data.",
+        "vs_line": "above",
+        "vs_line_pct": 5.500,
+        "vs_upstream_tp3": "above",
+        "evidence": [
+          "release/receipts/fixture.json"
+        ]
+      },
+      "rigmark_prose": {
+        "median": 8.200,
+        "worst": 8.100,
+        "values": [
+          8.100,
+          8.200,
+          8.300
+        ],
+        "n": 3,
+        "unit": "tok/s",
+        "class": "measured",
+        "instrument": "FIXTURE ONLY: RigMark, single stream. Invented layout data.",
+        "vs_line": "below",
+        "vs_line_pct": -2.500,
+        "vs_upstream_tp3": "above",
+        "evidence": [
+          "release/receipts/fixture.json"
+        ]
+      },
+      "rigmark_structured": {
+        "median": 12.200,
+        "worst": 12.100,
+        "values": [
+          12.100,
+          12.200,
+          12.300
+        ],
+        "n": 3,
+        "unit": "tok/s",
+        "class": "measured",
+        "instrument": "FIXTURE ONLY: RigMark, single stream. Invented layout data.",
+        "vs_line": "above",
+        "vs_line_pct": 3.300,
+        "vs_upstream_tp3": "above",
+        "evidence": [
+          "release/receipts/fixture.json"
+        ]
       }
-    }
+    },
+    "reference": {
+      "line": {
+        "class": "derived-midpoint",
+        "rigmark_code": 10.000,
+        "rigmark_prose": 10.000,
+        "rigmark_structured": 11.000
+      },
+      "upstream_tp3_set1": {
+        "class": "author-reported",
+        "rigmark_code": 7.100,
+        "rigmark_prose": 7.100,
+        "rigmark_structured": 7.100
+      },
+      "upstream_tp3_set2": {
+        "class": "author-reported",
+        "rigmark_code": 7.200,
+        "rigmark_prose": 7.200,
+        "rigmark_structured": 7.200
+      }
+    },
+    "quality": {}
   },
   "site_v2": {
+    "exactness_claim": null,
+    "comparison_claim": null,
+    "above_line_rows": null,
+    "total_rows": null,
     "comparison": {
-      "publisher": "mmastrac",
-      "tensor_parallel": 3,
-      "source": "https://github.com/mmastrac/glm-5.3-flash-4x-gx10/blob/5d3cca861e715860bd1f841a1f25f74320636b18/experimental/tp3/README.md",
-      "same_instruments": true,
       "same_conditions": false,
-      "condition_differences": [
-        "upstream: two sets of three boxes through one 200G switch; v2.0.0: three DGX Sparks cabled as a triangle",
-        "upstream figures are author-reported from its README; it keeps no raw receipts"
-      ],
-      "cells": {
-        "prefill": {
-          "lo": 11.1,
-          "hi": 22.2,
-          "unit": "tok/s",
-          "instrument": "FIXTURE instrument, no benchmark was run",
-          "class": "author-reported"
-        },
-        "decode_c1": {
-          "lo": 12.1,
-          "hi": 23.2,
-          "unit": "tok/s",
-          "instrument": "FIXTURE instrument, no benchmark was run",
-          "class": "author-reported"
-        },
-        "decode_c2": {
-          "lo": 13.1,
-          "hi": 24.2,
-          "unit": "tok/s",
-          "instrument": "FIXTURE instrument, no benchmark was run",
-          "class": "author-reported"
-        },
-        "decode_c4": {
-          "lo": 14.1,
-          "hi": 25.2,
-          "unit": "tok/s",
-          "instrument": "FIXTURE instrument, no benchmark was run",
-          "class": "author-reported"
-        },
-        "decode_c8": {
-          "lo": 15.1,
-          "hi": 26.2,
-          "unit": "tok/s",
-          "instrument": "FIXTURE instrument, no benchmark was run",
-          "class": "author-reported"
-        },
-        "prefill_128k": {
-          "lo": 11.1,
-          "hi": 22.2,
-          "unit": "tok/s",
-          "instrument": "FIXTURE instrument, no benchmark was run",
-          "class": "author-reported"
-        },
-        "rigmark_code": {
-          "lo": 11.1,
-          "hi": 22.2,
-          "unit": "tok/s",
-          "instrument": "FIXTURE instrument, no benchmark was run",
-          "class": "author-reported"
-        },
-        "rigmark_prose": {
-          "lo": 11.1,
-          "hi": 22.2,
-          "unit": "tok/s",
-          "instrument": "FIXTURE instrument, no benchmark was run",
-          "class": "author-reported"
-        },
-        "rigmark_structured": {
-          "lo": 11.1,
-          "hi": 22.2,
-          "unit": "tok/s",
-          "instrument": "FIXTURE instrument, no benchmark was run",
-          "class": "author-reported"
-        }
-      }
+      "source": "https://github.com/mmastrac/glm-5.3-flash-4x-gx10/blob/5d3cca861e715860bd1f841a1f25f74320636b18/experimental/tp3/README.md",
+      "line_source": "https://github.com/mmastrac/glm-5.3-flash-4x-gx10/blob/5d3cca861e715860bd1f841a1f25f74320636b18/README.md",
+      "conditions": "mmastrac's published figures were measured on a switched 200G fabric; this recipe uses Sparks cabled as a triangle. This is not a matched-conditions comparison.",
+      "engine_weights": "TensorFold uses Vontra's MLX affine weights; the published reference uses NVIDIA's NVFP4 checkpoint. The engines and weight formats differ."
     },
-    "quality": {
-      "claim": null,
-      "exact_class": null,
-      "verdict_bearing_prompts": null,
-      "known_issue": "The 39,326-token test prompt is reported, not judged. Two no-drafter cold runs of it first differed at output token 45. There the rerun's token was 0.375 nat below the first run's choice, and the first run's token fell outside the rerun's top 5. A separate cold/cold diagnostic of the same prompt diverged at the first generated token. This was measured on this build's own serving path, which includes our arx collectives at TP=3. We haven't yet isolated which part of the stack causes it.",
-      "known_issue_fields": [
-        {
-          "prompt_tokens": 39326,
-          "first_divergence_output_token": 45,
-          "output_tokens": 512,
-          "rerun_token_gap_nats": 0.375,
-          "first_run_token_in_rerun_top5": false,
-          "cold_cold_first_divergence_token": 1
-        }
-      ],
-      "source": null
+    "limitations": [],
+    "license": {
+      "notice": "The default DFlash2 drafter is non-commercial (CC BY-NC-ND 4.0). No mode is cleared for commercial use.",
+      "source": "https://huggingface.co/incoai/GLM-5.3-Flash-DFlash2/blob/bf582e4eacc1810f76656d1811693ff6c6737d2a/README.md"
     },
-    "drafter_source": {
-      "url": "https://huggingface.co/incoai/GLM-5.3-Flash-DFlash2/tree/bf582e4eacc1810f76656d1811693ff6c6737d2a",
-      "card": "https://huggingface.co/incoai/GLM-5.3-Flash-DFlash2/blob/bf582e4eacc1810f76656d1811693ff6c6737d2a/README.md",
-      "license": "CC BY-NC-ND 4.0",
-      "license_url": "https://creativecommons.org/licenses/by-nc-nd/4.0/",
-      "without_drafter": "SPEC_METHOD=none: booted for this release, speed not measured",
-      "mtp": "SPEC_METHOD=mtp: wired but not booted at TP=3"
-    }
+    "results_path": null
   }
 }

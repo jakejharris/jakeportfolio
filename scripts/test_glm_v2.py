@@ -1,5 +1,4 @@
-"""Positive and negative controls for literal provenance and the publication gate."""
-import copy
+"""Independent controls for the TensorFold preview, literal provenance and copy."""
 import hashlib
 import json
 from pathlib import Path
@@ -11,229 +10,182 @@ import glm_v2 as gate
 
 
 def sample():
-    """Synthetic values in a complete contract, used only inside these tests."""
+    """Invented complete input, never a benchmark or a release receipt."""
     source = gate.read((gate.ROOT / 'scripts/fixtures/glm-v2-results.fixture.json').read_text())
-    source.update(state='final', fixture=False, release_date='2026-09-29', frozen_at='2026-09-29T12:00:00Z',
-                  conditions='Code decode, simultaneous requests, fixed output length, cold cache.')
-    serving = source['sets']['release_m0']
-    serving['label'] = 'Stock weights, default recipe'
-    for cell in serving['cells'].values():
-        cell['instrument'] = 'Stream-span decode'
-        cell['evidence'] = 'sha256:' + 'b' * 64
-    serving['cells']['decode_c1']['lo'] = gate.Number('11.100')
-    reference = {k: v for k, v in serving['cells']['decode_c1'].items() if k in ('lo', 'hi', 'unit', 'instrument')}
-    reference['class'] = 'author-reported'
-    drafter = source['site_v2']['drafter_source']
-    differences = source['site_v2']['comparison']['condition_differences']
-    issue = source['site_v2']['quality']
-    source['v2'] = {'exact': {'verdict': 'PASS'}}
-    source['site_v2'] = {
-        'comparison': {'publisher': 'mmastrac', 'tensor_parallel': gate.Number('3'),
-                       'source': 'https://github.com/mmastrac/example/blob/' + 'a' * 40 + '/README.md',
-                       'same_instruments': True, 'same_conditions': False, 'condition_differences': differences,
-                       'cells': {'decode_c1': reference}},
-        'quality': {**issue, 'claim': "With the DFlash2 drafter, output was byte-identical to the no-drafter reference on the 2 test prompts whose no-drafter cold reruns were themselves identical (greedy, temperature 0, this build).",
-                    'exact_class': 'EXACT-ON-CORPUS', 'verdict_bearing_prompts': gate.Number('2'),
-                    'source': gate.REPO + '/blob/v2.0.0/release/QUALITY.md'},
-        'drafter_source': drafter,
+    source.pop('_note', None)
+    source.update(state='final', fixture=False, frozen_at='2026-09-29T14:00:00Z', release_date='2026-09-29')
+    for row in source['tf']['rows'].values():
+        row['instrument'] = 'RigMark, single stream, fixed output length'
+        row['evidence'] = ['release/receipts/speed.json']
+    source['tf']['exact'] = {
+        'verdict':'PASS', 'engine':'tensorfold', 'rule':'hard', 'exact_class':'EXACT-ON-CORPUS',
+        'prompts':gate.Number('8'), 'tested':gate.Number('8'), 'diverging':gate.Number('0'),
+        'scope':"greedy (temperature 0), non-streaming; measured on this serving start's 8-prompt corpus, not a guarantee",
+        'off_source':'same-boot switch: "draft": false', 'receipt':'release/receipts/exact.json', 'sha256':'a'*64,
+        'prompt_set_note':'The measured prompt set is not published.',
+        'drafting_proof':{'counters_rose_on':True,'counters_flat_off':True,'per_reply_agree':True},
     }
+    source['tf']['quality'] = {'overall':'INCOMPLETE: further checks were not run.',
+                              'smoketest':{'status':'PASS','observed':'Passed its measured cases.'},
+                              'nll':{'status':'NOT-RUN','observed':None}}
+    source['site_v2'].update(
+        exactness_claim='Speculative output was byte-identical to serial decoding on its 8-prompt greedy check at TP=3.',
+        comparison_claim='2 of 3 single-stream RigMark rows are above the TP=2 to TP=4 line on every repeat; prose is below.',
+        above_line_rows=gate.Number('2'), total_rows=gate.Number('3'),
+        limitations=['Installation qualification has a separate receipt and limitations.'],
+        results_path='release/results-v2.0.0.json')
     return source
 
 
 class PublicationTests(unittest.TestCase):
-    def write_case(self, directory, source):
-        source_path, data_path = Path(directory) / 'source.json', Path(directory) / 'data.json'
-        public = gate.snapshot(source)
-        raw = gate.dump(public)
-        digest = hashlib.sha256(raw.encode()).hexdigest()
-        data = gate.project(public, digest)
+    def paths(self, directory, source):
+        source_path, data_path = Path(directory)/'source.json', Path(directory)/'data.json'
+        raw = gate.dump(gate.snapshot(source))
         source_path.write_text(raw)
-        data_path.write_text(json.dumps(data))
+        data_path.write_text(json.dumps(gate.project(gate.read(raw), hashlib.sha256(raw.encode()).hexdigest())))
         return data_path, source_path
 
-    def test_complete_contract_and_literal_tokens(self):
-        with tempfile.TemporaryDirectory() as directory:
-            data_path, source_path = self.write_case(directory, sample())
-            data = gate.check(data_path, source_path, original=source_path)
-            self.assertEqual(data['sets'][0]['cells']['decode_c1']['lo_text'], '11.100')
-            self.assertEqual(data['quality']['verdict_bearing_prompts_text'], '2')
-            self.assertNotIn('floor_text', data['quality'])
-            self.assertEqual(data['quality']['claim'], sample()['site_v2']['quality']['claim'])
-            self.assertEqual(data['quality']['known_issue'], sample()['site_v2']['quality']['known_issue'])
-            self.assertFalse(data['comparison']['same_conditions'])
-            self.assertTrue(data['comparison']['same_instruments'])
-            self.assertEqual(data['comparison']['condition_differences'], sample()['site_v2']['comparison']['condition_differences'])
-            self.assertEqual(data['pending'], [])
-
-    def test_tolerance_claim_is_copied_without_promoting_to_lossless(self):
+    def test_complete_preview_preserves_literal_tokens_and_supplied_claims(self):
         source = sample()
-        claim = "Output stayed within the gate's predeclared tolerance: at the first divergence, the token is in the reference's top 5 and at most 0.5 nat below it."
-        source['site_v2']['quality']['exact_class'] = 'NONEXACT-NEARTIE'
-        source['site_v2']['quality']['claim'] = claim
-        result = gate.project(source, 'a' * 64)
-        self.assertEqual(result['quality']['claim'], claim)
-        self.assertEqual(result['quality']['known_issue'], source['site_v2']['quality']['known_issue'])
-        self.assertNotIn('lossless', result['quality']['claim'])
+        with tempfile.TemporaryDirectory() as directory:
+            paths = self.paths(directory, source)
+            data = gate.check(*paths, preview=True, original=paths[1])
+        self.assertEqual(data['pending'], [])
+        self.assertEqual([row['id'] for row in data['rows']], ['rigmark_code','rigmark_prose','rigmark_structured'])
+        self.assertEqual(data['rows'][0]['median_text'], '11.200')
+        self.assertEqual(data['rows'][0]['margin_text'], '5.500')
+        self.assertEqual(data['rows'][1]['margin_text'], '-2.500')
+        self.assertEqual(data['rows'][0]['values_text'], ['11.100','11.200','11.300'])
+        self.assertEqual(data['quality']['claim'], source['site_v2']['exactness_claim'])
+        self.assertEqual(data['comparison_claim'], source['site_v2']['comparison_claim'])
+        self.assertEqual(data['checks'][1]['status'], 'NOT-RUN')
 
-    def test_quality_stays_pending_until_final_freeze(self):
-        for changes in ({'state': 'pending'}, {'state': 'interim'}, {'state': 'fixture'},
-                        {'fixture': True}, {'frozen_at': None}, {'release_date': None}):
-            with self.subTest(changes=changes), tempfile.TemporaryDirectory() as directory:
+    def test_final_numbers_do_not_lift_publication_hold(self):
+        with tempfile.TemporaryDirectory() as directory:
+            paths = self.paths(directory, sample())
+            with self.assertRaisesRegex(ValueError, 'preview-only hold'):
+                gate.check(*paths)
+
+    def test_interim_and_fixture_results_never_reach_consumers(self):
+        for changes in ({'state':'pending'}, {'state':'interim'}, {'state':'fixture'},
+                        {'fixture':True}, {'frozen_at':None}, {'release_date':None}, {'tag':None}):
+            with self.subTest(changes=changes):
                 source = sample()
                 source.update(changes)
-                paths = self.write_case(directory, source)
-                data = gate.check(*paths, preview=True)
+                data = gate.project(source, 'b'*64)
+                self.assertEqual(data['rows'], [])
                 self.assertIsNone(data['quality'])
-                with self.assertRaisesRegex(ValueError, 'publication blocked'):
-                    gate.check(*paths)
+                self.assertIsNone(data['comparison_claim'])
+                self.assertEqual(data['checks'], [])
+                self.assertTrue(data['pending'])
 
-    def test_known_issue_is_copied_from_source_without_a_fallback(self):
-        source = sample()
-        known = source['site_v2']['quality']['known_issue'] + ' This prompt is excluded from the verdict.'
-        source['site_v2']['quality']['known_issue'] = known
-        self.assertEqual(gate.project(source, 'a' * 64)['quality']['known_issue'], known)
-        source['site_v2']['quality'].pop('known_issue')
-        with self.assertRaisesRegex(ValueError, 'quality.known_issue: text required'):
-            gate.project(source, 'a' * 64)
+    def test_incomplete_qualification_keeps_all_results_pending(self):
+        for field in ['exactness_claim','comparison_claim','limitations','license','results_path','comparison']:
+            with self.subTest(field=field):
+                source = sample()
+                source['site_v2'].pop(field)
+                data = gate.project(source, 'b'*64)
+                self.assertEqual(data['rows'], [])
+                self.assertIsNone(data['quality'])
+                self.assertTrue(data['pending'])
 
-    def test_known_optional_metadata_is_not_copied_into_public_projection(self):
-        source = sample()
-        source['site_v2']['publication'] = {'receipt': 'private-receipt-location'}
-        source['site_v2']['instruments'] = {'jsbench_build_id': None}
-        public = gate.snapshot(source)
-        self.assertNotIn('private-receipt-location', gate.dump(public))
-        self.assertEqual(gate.project(source, 'a' * 64), gate.project(public, 'a' * 64))
-
-    def test_fixture_refused_even_when_marker_is_cleared(self):
-        source = gate.read((gate.ROOT / 'scripts/fixtures/glm-v2-results.fixture.json').read_text())
-        with tempfile.TemporaryDirectory() as directory:
-            paths = self.write_case(directory, source)
-            gate.check(*paths, preview=True)
-            with self.assertRaisesRegex(ValueError, 'publication blocked'):
-                gate.check(*paths)
+    def test_fixture_cannot_be_relabelled_real(self):
+        source = gate.read((gate.ROOT/'scripts/fixtures/glm-v2-results.fixture.json').read_text())
         source.update(state='final', fixture=False)
         with self.assertRaisesRegex(ValueError, 'fixture markers'):
-            gate.project(source, '0' * 64)
+            gate.project(source, 'a'*64)
 
-    def test_generation_drift_and_wrong_original_refused(self):
-        for mutation in ('rounded', 'wrong cell', 'deleted start', 'hidden pending', 'wrong original'):
+    def test_generation_drift_refused(self):
+        for mutation in ['rounding','wrong cell','omitted row','claim rewrite','cleared hold']:
             with self.subTest(mutation=mutation), tempfile.TemporaryDirectory() as directory:
-                source = sample()
-                source['sets']['base_m0_sample'] = copy.deepcopy(source['sets']['release_m0'])
-                data_path, source_path = self.write_case(directory, source)
-                data = json.loads(data_path.read_text())
-                if mutation == 'rounded':
-                    data['sets'][0]['cells']['decode_c1']['lo_text'] = '11.1'
-                elif mutation == 'wrong cell':
-                    data['sets'][0]['cells']['decode_c2'] = data['sets'][0]['cells']['decode_c4']
-                elif mutation == 'deleted start':
-                    data['sets'].pop()
-                elif mutation == 'hidden pending':
-                    data['fixture'] = True
-                else:
-                    source_path.write_text(source_path.read_text() + '\n')
-                data_path.write_text(json.dumps(data))
-                with self.assertRaisesRegex(ValueError, 'differs from source|hash mismatch'):
-                    gate.check(data_path, source_path, original=source_path)
+                paths = self.paths(directory, sample())
+                data = json.loads(paths[0].read_text())
+                if mutation == 'rounding': data['rows'][0]['median_text']='11.2'
+                elif mutation == 'wrong cell': data['rows'][0]['median_text']=data['rows'][1]['median_text']
+                elif mutation == 'omitted row': data['rows'].pop(1)
+                elif mutation == 'claim rewrite': data['quality']['claim']='Always exact'
+                else: data['publication_hold']=False
+                paths[0].write_text(json.dumps(data))
+                with self.assertRaisesRegex(ValueError, 'differs from source'):
+                    gate.check(*paths, preview=True)
+
+    def test_wrong_original_hash_refused(self):
+        with tempfile.TemporaryDirectory() as directory:
+            paths = self.paths(directory, sample())
+            paths[1].write_text(paths[1].read_text()+'\n')
+            with self.assertRaisesRegex(ValueError, 'hash mismatch'):
+                gate.check(*paths, preview=True, original=paths[1])
 
     def test_contract_refusals(self):
         cases = [
-            ('wrong release', lambda s: s.update(tag='v2.0.3'), 'expected GLM'),
-            ('wrong build', lambda s: s['sets']['release_m0'].update(build='v1.8.4'), 'headline must'),
-            ('multiple starts', lambda s: s['sets']['release_m0'].update(serving_starts=gate.Number('2')), 'headline must'),
-            ('wrong mode', lambda s: s['sets']['release_m0']['cells']['decode_c1'].update(mode=gate.Number('1')), 'mode mismatch'),
-            ('wrong toggles', lambda s: s['sets']['release_m0']['cells']['decode_c1'].update(toggles='other'), 'toggles mismatch'),
-            ('derived cell', lambda s: s['sets']['release_m0']['cells']['decode_c1'].update(**{'class': 'derived'}), 'derived cell'),
-            ('missing decode', lambda s: s['sets']['release_m0']['cells'].pop('decode_c2'), 'required decode'),
-            ('missing evidence', lambda s: s['sets']['release_m0']['cells']['decode_c1'].pop('evidence'), 'evidence hash'),
-            ('number string', lambda s: s['sets']['release_m0']['cells']['decode_c1'].update(lo='11.100'), 'literal JSON number'),
-            ('inverted band', lambda s: s['sets']['release_m0']['cells']['decode_c1'].update(lo=gate.Number('999')), 'inverted band'),
-            ('wrong baseline', lambda s: s['site_v2']['comparison'].update(publisher='another publication'), 'published TP3'),
-            ('wrong TP', lambda s: s['site_v2']['comparison'].update(tensor_parallel=gate.Number('2')), 'published TP3'),
-            ('moving reference', lambda s: s['site_v2']['comparison'].update(source='https://github.com/mmastrac/example/blob/main/README.md'), 'pinned publication'),
-            ('unmatched instruments', lambda s: s['site_v2']['comparison'].update(same_instruments=False), 'matched instruments'),
-            ('false matched conditions', lambda s: s['site_v2']['comparison'].update(same_conditions=True), 'different conditions'),
-            ('missing differences', lambda s: s['site_v2']['comparison'].update(condition_differences=[]), 'condition differences'),
-            ('missing topology', lambda s: s['site_v2']['comparison'].update(condition_differences=['Different machines']), 'topology differences'),
-            ('wrong instrument', lambda s: s['site_v2']['comparison']['cells']['decode_c1'].update(instrument='A different instrument'), 'instrument mismatch'),
-            ('wrong reference class', lambda s: s['site_v2']['comparison']['cells']['decode_c1'].update(**{'class': 'measured'}), 'author-reported'),
-            ('unapproved exactness', lambda s: s['site_v2']['quality'].update(claim='Unqualified exactness'), 'claim wording'),
-            ('previous exactness floor', lambda s: s['site_v2']['quality'].update(claim="lossless up to vLLM's own run-to-run noise"), 'claim wording'),
-            ('unscoped exactness', lambda s: s['site_v2']['quality'].update(claim="lossless up to this build's measured run-to-run noise"), 'claim wording'),
-            ('failed exactness', lambda s: s['v2']['exact'].update(verdict='FAIL'), 'passing exactness'),
-            ('invalid exactness', lambda s: s['v2']['exact'].update(verdict='INVALID'), 'passing exactness'),
-            ('withdrawn floor', lambda s: s['site_v2']['quality'].update(floor=gate.Number('0.0400')), 'withdrawn or unsupported'),
-            ('withdrawn known-issue wording', lambda s: s['site_v2']['quality'].update(known_issue=s['site_v2']['quality']['known_issue'] + ' This is a noise floor.'), 'withdrawn wording'),
-            ('claim count drift', lambda s: s['site_v2']['quality'].update(verdict_bearing_prompts=gate.Number('3')), 'claim wording or prompt-count'),
-            ('class mismatch', lambda s: s['site_v2']['quality'].update(exact_class='NONEXACT-NEARTIE'), 'claim wording'),
-            ('overstated MTP path', lambda s: s['site_v2']['drafter_source'].update(mtp='MTP-only: not measured at TP=3'), 'MTP qualification'),
-            ('overstated no-drafter speed', lambda s: s['site_v2']['drafter_source'].update(without_drafter='SPEC_METHOD=none: speed measured'), 'no-drafter qualification'),
-            ('prompt-count string', lambda s: s['site_v2']['quality'].update(verdict_bearing_prompts='2'), 'literal JSON number'),
-            ('internal name', lambda s: s.update(conditions='lane 42 results'), 'forbidden public text'),
-            ('em dash', lambda s: s.update(conditions='Code\u2014decode'), 'forbidden public text'),
-            ('unsupported claim', lambda s: s.update(conditions='Same quality, scaled throughput'), 'unsupported claim'),
+            ('wrong release', lambda s:s.update(tag='v0.2.0'), 'identity'),
+            ('wrong engine', lambda s:s['tf']['identity'].update(engine_repo='another/engine'), 'engine identity'),
+            ('number string', lambda s:s['tf']['rows']['rigmark_code'].update(median='11.200'), 'literal JSON'),
+            ('missing repeat', lambda s:s['tf']['rows']['rigmark_code']['values'].pop(), 'repeat count'),
+            ('one repeat under line', lambda s:s['tf']['rows']['rigmark_code'].update(worst=gate.Number('9.500'),values=[gate.Number('9.500'),gate.Number('11.200'),gate.Number('11.300')]), 'every-repeat'),
+            ('prose promoted', lambda s:s['tf']['rows']['rigmark_prose'].update(vs_line='above'), 'line verdict'),
+            ('intensifier enum', lambda s:s['tf']['rows']['rigmark_code'].update(vs_upstream_tp3='clearly beats'), 'neutral TP3'),
+            ('wrong sign', lambda s:s['tf']['rows']['rigmark_prose'].update(vs_line_pct=gate.Number('2.500')), 'margin sign'),
+            ('derived own row', lambda s:s['tf']['rows']['rigmark_code'].update(**{'class':'derived'}), 'measured tok/s'),
+            ('missing evidence', lambda s:s['tf']['rows']['rigmark_code'].update(evidence=[]), 'row evidence'),
+            ('private evidence', lambda s:s['tf']['rows']['rigmark_code'].update(evidence=['/home/operator/result.json']), 'forbidden public text'),
+            ('wrong workload', lambda s:s['tf']['rows'].update(decode_c4=s['tf']['rows']['rigmark_code']), 'only single-stream'),
+            ('matched conditions', lambda s:s['site_v2']['comparison'].update(same_conditions=True), 'matched conditions'),
+            ('lost caveat', lambda s:s['site_v2']['comparison'].update(conditions='Different machines.'), 'fabric caveat'),
+            ('lost weights caveat', lambda s:s['site_v2']['comparison'].update(engine_weights='Different machines.'), 'weight differences'),
+            ('moving reference', lambda s:s['site_v2']['comparison'].update(source='https://github.com/mmastrac/example/blob/main/README.md'), 'pinned'),
+            ('failed exactness', lambda s:s['tf']['exact'].update(verdict='FAIL'), 'passing TensorFold'),
+            ('invalid exactness', lambda s:s['tf']['exact'].update(verdict='INVALID'), 'passing TensorFold'),
+            ('wrong count', lambda s:s['tf']['exact'].update(prompts=gate.Number('7')), 'corpus mismatch'),
+            ('count encoded as string', lambda s:s['tf']['exact'].update(tested='8'), 'literal JSON'),
+            ('missing drafting proof', lambda s:s['tf']['exact']['drafting_proof'].update(counters_rose_on=False), 'drafting proof'),
+            ('different reference', lambda s:s['tf']['exact'].update(off_source='another serving start'), 'serial reference'),
+            ('unscoped exactness', lambda s:s['site_v2'].update(exactness_claim='Speculative output is byte-identical to serial.'), 'unapproved exactness'),
+            ('lost corpus scope', lambda s:s['tf']['exact'].update(scope='Measured result.'), 'scope missing'),
+            ('missing receipt hash', lambda s:s['tf']['exact'].pop('sha256'), 'receipt hash'),
+            ('wrong row count', lambda s:s['site_v2'].update(above_line_rows=gate.Number('3')), 'count mismatch'),
+            ('wrong drafter clearance', lambda s:s['site_v2']['license'].update(notice='Commercial use cleared.'), 'drafter qualification'),
         ]
-        for name, edit, reason in cases:
+        for name,edit,reason in cases:
             with self.subTest(name=name):
-                source = sample()
-                edit(source)
-                with self.assertRaisesRegex(ValueError, reason):
-                    gate.project(source, '0' * 64)
+                source=sample();edit(source)
+                with self.assertRaisesRegex(ValueError, reason): gate.project(source,'a'*64)
 
-    def test_missing_evidence_blocks_publication_but_allows_preview(self):
-        for field in ('comparison', 'quality', 'drafter_source'):
-            with self.subTest(field=field), tempfile.TemporaryDirectory() as directory:
-                source = sample()
-                source['site_v2'].pop(field)
-                paths = self.write_case(directory, source)
-                gate.check(*paths, preview=True)
-                with self.assertRaisesRegex(ValueError, 'publication blocked'):
-                    gate.check(*paths)
+    def test_unsupported_copy_rejected(self):
+        for phrase in ['Clearly faster.', 'A speed-win.', 'All rows win.', 'All three rows win.', 'The fastest.',
+                       'A massive improvement.', 'A noise floor.', 'vLLM comparison.', 'Commercially cleared.',
+                       'Result\u2014scope', '/home/operator/result']:
+            with self.subTest(phrase=phrase):
+                source=sample();source['site_v2']['limitations']=[phrase]
+                with self.assertRaises(ValueError): gate.project(source,'a'*64)
 
-    def test_evidence_must_not_cross_modes(self):
-        source = sample()
-        opt = copy.deepcopy(source['sets']['release_m0'])
-        source['sets']['opt_in_m1'] = opt
-        opt['mode'] = gate.Number('1')
-        for cell in opt['cells'].values():
-            cell['mode'] = gate.Number('1')
-        with self.assertRaisesRegex(ValueError, 'evidence reused'):
-            gate.project(source, '0' * 64)
+    def test_snapshot_removes_private_identity_and_unused_comparison(self):
+        source=sample()
+        source['tf']['identity']['boot_identity']='/home/operator/private.json'
+        source['tf']['reference']['v2_c1']={'private':'unused'}
+        source['site_v2']['comparison']['internal_note']='/home/operator/private.json'
+        public=gate.snapshot(source)
+        self.assertNotIn('/home/',gate.dump(public))
+        self.assertNotIn('v2_c1',gate.dump(public))
+        self.assertEqual(gate.project(source,'a'*64),gate.project(public,'a'*64))
 
-    def test_sanitized_projection_preserves_tokens_and_removes_evidence_paths(self):
-        source = sample()
-        source['sets']['release_m0']['cells']['decode_c1']['evidence'] = 'private-evidence-file, sha256:' + 'b' * 64
-        output = gate.dump(gate.snapshot(source))
-        self.assertNotIn('private-evidence-file', output)
-        self.assertIn('11.100', output)
-        self.assertEqual(gate.project(source, '0' * 64), gate.project(gate.read(output), '0' * 64))
-
-    def test_missing_release_never_promotes_base(self):
-        source = sample()
-        source['sets']['base_m0_sample'] = source['sets'].pop('release_m0')
-        source['sets']['release_m0'] = None
-        data = gate.project(source, '0' * 64)
-        self.assertTrue(any('no measured' in p for p in data['pending']))
-        self.assertFalse(any(s['id'] == 'release_m0' for s in data['sets']))
-        self.assertEqual(data['comparison']['cells'], {})
+    def test_pending_source_cannot_leak_private_receipts(self):
+        source=sample()
+        source['site_v2']['exactness_claim']=None
+        source['tf']['exact']['receipt']='/home/operator/exact.json'
+        with self.assertRaisesRegex(ValueError, 'forbidden public text'):
+            gate.snapshot(source)
 
     def test_historical_measurements_unchanged(self):
-        raw = (gate.ROOT / 'app/(site)/jspark3/glm-release.json').read_bytes()
-        self.assertEqual(hashlib.sha256(raw).hexdigest(), '4b4a90e11362a299965f7359b05cd31c8ed2165d67739ecfa6616c7c81c549ad')
-        c2 = next(row for row in json.loads(raw)['headline']['rows'] if row['id'] == 'decode_c2')
-        self.assertIsNotNone(c2['median_text'])
+        raw=(gate.ROOT/'app/(site)/jspark3/glm-release.json').read_bytes()
+        self.assertEqual(hashlib.sha256(raw).hexdigest(),'4b4a90e11362a299965f7359b05cd31c8ed2165d67739ecfa6616c7c81c549ad')
 
-    def test_real_checker_and_production_build_refuse_committed_fixture(self):
+    def test_real_publication_commands_refuse_preview(self):
         import os
-        pending = bool(json.loads(gate.DATA.read_text())['pending'])
-        for command in (['node', 'scripts/check-glm-release.mjs'], ['node', 'scripts/check-glm-build.mjs']):
-            result = subprocess.run(command, cwd=gate.ROOT, env={**os.environ, 'VERCEL_ENV': 'production'}, capture_output=True, text=True)
-            if pending:
-                self.assertNotEqual(result.returncode, 0)
-                self.assertIn('publication blocked', result.stderr)
-            else:
-                self.assertEqual(result.returncode, 0, result.stderr)
+        for command in (['node','scripts/check-glm-release.mjs'],['node','scripts/check-glm-build.mjs']):
+            result=subprocess.run(command,cwd=gate.ROOT,env={**os.environ,'VERCEL_ENV':'production'},capture_output=True,text=True)
+            self.assertNotEqual(result.returncode,0)
+            self.assertIn('publication blocked',result.stderr)
 
 
-if __name__ == '__main__':
-    unittest.main()
+if __name__=='__main__': unittest.main()

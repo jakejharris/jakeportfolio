@@ -2,7 +2,7 @@ import React from 'react';
 import ClusterIllustration from './ClusterIllustration';
 import ProjectHeader from './ProjectHeader';
 import LegacyFragments from '../LegacyFragments';
-import { GLM_V2 as release, V2_NO_DRAFTER_NOTICE, V2_MTP_NOTICE, V2_DRAFTER_NOTICE, V2_METRICS, V2_RELEASE_SET, v2Band } from '../glm-v2';
+import { GLM_V2 as release, V2_DRAFTER_NOTICE, V2_METRICS } from '../glm-v2';
 
 const NAV = [{ href: '#results', label: 'Results' }, { href: '#license', label: 'License' }, { href: '#releases', label: 'History' }];
 
@@ -12,31 +12,30 @@ export default function GlmV2Page() {
     <a className="glm-skip" href="#results">Skip to results</a>
     <div className="glm-shell">
       <ProjectHeader prefix="glm" nav={NAV} />
-      {release.pending.length > 0 ? <aside className="glm-v2-preview" aria-label="Release preview">
+      <aside className="glm-v2-preview" aria-label="Release preview">
         <strong>Release preview · publication pending</strong>
-        <p>{release.fixture ? 'Benchmark figures remain pending. The layout fixture is not a measurement.' : 'Qualification and publication checks are still pending.'}</p>
-      </aside> : null}
+        <p>{release.pending.length ? 'The frozen results and release qualifications are pending.' : 'Prepared for review. Publication is a separate decision.'}</p>
+      </aside>
       <header className="glm-hero">
         <div>
           <p className="glm-kicker">Three DGX Sparks · one endpoint</p>
           <h1>JSpark3 v2.0.0 <span>(GLM-5.3-Flash, TP3)</span></h1>
-          <p className="glm-lede">A new base for three Sparks.</p>
-          <p className="glm-intro">Based on mmastrac’s NVFP4 GLM-5.3-Flash TP3 recipe, adapted to three DGX Sparks with the full serving path and tuning controls.</p>
+          <p className="glm-lede">TensorFold, on three Sparks.</p>
+          <p className="glm-intro">The TensorFold engine, ported to TP=3, serving GLM-5.3-Flash with speculative decoding.</p>
           <div className="glm-speed">
-            <p className="glm-speed-line">{release.comparison && V2_RELEASE_SET && !release.fixture ? 'Compared with mmastrac’s published TP3, on the same instruments.' : 'Published TP3 comparison pending.'}</p>
-            <p className="glm-speed-sub">{release.comparison && V2_RELEASE_SET && !release.fixture ? 'Measured ranges and author-reported results are shown together below.' : 'Headline figures will follow the frozen results.'}</p>
+            <p className="glm-speed-line" data-quality-headline>{release.quality?.claim ?? 'Exactness check pending.'}</p>
+            <p className="glm-speed-sub">{release.quality?.scope ?? 'The scoped result will follow the frozen numbers and its receipt.'}</p>
           </div>
           <nav className="glm-actions" aria-label="Release resources">
             <a className="glm-button" href="#results">Explore the results ↓</a>
             <a href="/jspark3/glm/v1.8.4/">v1.8.4 history ↗</a>
-            {!release.pending.length ? <a href={release.links.release}>Release notes ↗</a> : null}
           </nav>
         </div>
         <ClusterIllustration />
       </header>
       <dl className="glm-specs">
-        <div><dt>Base</dt><dd>mmastrac · NVFP4 · GLM-5.3-Flash</dd></div>
-        <div><dt>Execution</dt><dd>TP3 · three DGX Sparks · RoCE</dd></div>
+        <div><dt>Engine</dt><dd>TensorFold · GLM-5.3-Flash</dd></div>
+        <div><dt>Execution</dt><dd>TP3 · three DGX Sparks</dd></div>
         <div><dt>Default drafter</dt><dd>DFlash2 · non-commercial</dd></div>
       </dl>
     </div>
@@ -44,66 +43,70 @@ export default function GlmV2Page() {
     <section className="glm-results" id="results" aria-labelledby="results-title">
       <div className="glm-shell">
         <div className="glm-section-heading">
-          <p className="glm-v2-eyebrow">The measured release</p>
-          <h2 id="results-title">Every range, with its conditions.</h2>
-          <p>{release.fixture ? 'Measurements pending. The preview uses invented fixture data; those values are not displayed as results.' : release.conditions}</p>
-          <p>All figures are tok/s. Decode above one stream is aggregate throughput across streams. Ranges describe variation within a serving start.</p>
+          <p className="glm-v2-eyebrow">Single-stream RigMark</p>
+          <h2 id="results-title">Each row, with its reference.</h2>
+          <p data-comparison-claim>{release.comparison_claim ?? 'Measurements and comparison verdicts pending.'}</p>
+          <p>Decode throughput in tok/s, one request at a time. These rows make no claim about prefill or concurrent requests.</p>
           {release.comparison ? <div data-condition-differences>
-            <p>Same instruments, different conditions.</p>
-            <ul>{release.comparison.condition_differences.map(item => <li key={item}>{item}</li>)}</ul>
+            <p>{release.comparison.conditions}</p>
+            <p>{release.comparison.engine_weights}</p>
           </div> : null}
         </div>
-        {V2_RELEASE_SET ? <div className="glm-v2-table-wrap">
+        <div className="glm-v2-table-wrap">
           <table className="glm-v2-table">
-            <caption>{release.fixture ? 'Pending measurements for JSpark3 v2.0.0 (GLM-5.3-Flash, TP3)' : release.title}</caption>
-            <thead><tr><th scope="col">Workload</th><th scope="col">Measured range</th><th scope="col">mmastrac, published TP3</th></tr></thead>
-            <tbody>{Object.entries(V2_RELEASE_SET.cells).map(([id, cell]) => <tr key={id}>
-              <th scope="row">{V2_METRICS[id]}</th>
-              <td>{release.fixture ? <span className="glm-v2-pending">Pending</span> : v2Band(cell)}</td>
-              <td>{release.fixture || !release.comparison ? <span className="glm-v2-pending">Pending</span> : release.comparison.cells[id] ? v2Band(release.comparison.cells[id]) : 'Not compared'}</td>
-            </tr>)}</tbody>
+            <caption>The line is the midpoint of the published TP=2 and TP=4 rows.</caption>
+            <thead><tr><th scope="col">Workload</th><th scope="col">Median</th><th scope="col">Slowest</th><th scope="col">Line</th><th scope="col">vs line</th></tr></thead>
+            <tbody>{Object.entries(V2_METRICS).map(([id, label]) => {
+              const row = release.rows.find(item => item.id === id);
+              return <tr key={id}><th scope="row">{label}</th>
+                <td>{row?.median_text ?? 'Pending'}</td><td>{row?.worst_text ?? 'Pending'}</td><td>{row?.line_text ?? 'Pending'}</td>
+                <td>{row ? <>{row.margin_text}%<br />{row.vs_line}</> : 'Pending'}</td>
+              </tr>;
+            })}</tbody>
           </table>
-          {!release.fixture ? <p className="glm-small">{V2_RELEASE_SET.serving_starts} serving start; {V2_RELEASE_SET.sweeps} sweeps. {V2_RELEASE_SET.label}. {V2_RELEASE_SET.prefill_omitted_reason}</p> : null}
-        </div> : <p className="glm-v2-empty">No measured serving start of this release is in the numbers. No other build supplies its headline.</p>}
-        {release.comparison ? <p className="glm-evidence-link"><a href={release.comparison.source}>mmastrac’s pinned publication and benchmark ↗</a></p> : null}
-        {!release.fixture ? <details className="glm-history-results">
-          <summary>Instruments and recorded sample counts</summary>
-          {release.sets.map(set => <div key={set.id} className="glm-v2-start">
-            <h3>{set.build} · {set.mode === '0' ? 'stock weights' : 'edited weights, opt-in'}</h3>
-            <p>{set.label} · {set.serving_starts} serving start(s), {set.sweeps} sweeps · {set.toggles}</p>
-            <dl>{Object.entries(set.cells).map(([id, cell]) => <div key={id}>
-              <dt>{V2_METRICS[id]}</dt>
-              <dd>{v2Band(cell)} tok/s. {cell.instrument}{cell.samples_text ? ` · ${cell.samples_text} samples` : ''}{cell.median_text ? ` · median ${cell.median_text} tok/s` : ''}</dd>
-            </div>)}</dl>
+        </div>
+        <div className="glm-v2-table-wrap">
+          <table className="glm-v2-table">
+            <caption>mmastrac’s published TP3 results, author-reported.</caption>
+            <thead><tr><th scope="col">Workload</th><th scope="col">JSpark3 median</th><th scope="col">Published first set</th><th scope="col">Published second set</th></tr></thead>
+            <tbody>{Object.entries(V2_METRICS).map(([id, label]) => {
+              const row = release.rows.find(item => item.id === id);
+              return <tr key={id}><th scope="row">{label}</th><td>{row?.median_text ?? 'Pending'}</td>
+                <td>{row?.upstream_tp3_set1_text ?? 'Pending'}</td><td>{row?.upstream_tp3_set2_text ?? 'Pending'}</td></tr>;
+            })}</tbody>
+          </table>
+        </div>
+        {release.comparison ? <p className="glm-evidence-link"><a href={release.comparison.source}>Pinned TP3 publication ↗</a><a href={release.comparison.line_source}>Reference line source ↗</a></p> : null}
+        {release.rows.length ? <details className="glm-history-results">
+          <summary>Instruments, repeats and evidence</summary>
+          {release.rows.map(row => <div key={row.id} className="glm-v2-start"><h3>{V2_METRICS[row.id]}</h3>
+            <p>{row.instrument}</p><p>{row.samples_text} repeats: {row.values_text.join(', ')} tok/s.</p>
+            <p>{row.evidence.map((href, index) => <React.Fragment key={href}><a href={href}>Receipt {index ? '↗' : 'and results ↗'}</a>{' '}</React.Fragment>)}</p>
           </div>)}
         </details> : null}
-        {!release.pending.length ? <p className="glm-evidence-link"><a href={release.links.results}>Frozen results file ↗</a><a href={release.links.numbers}>Measurement definitions ↗</a></p> : null}
       </div>
     </section>
 
     <section className="glm-shell glm-v2-section" id="quality" aria-labelledby="quality-title">
       <p className="glm-v2-eyebrow">Qualification</p>
-      <h2 id="quality-title">Quality, on the verdict-bearing prompts.</h2>
-      {release.quality && !release.fixture ? <>
-        <p data-quality-claim>{release.quality.claim}</p>
-        <a href={release.quality.source}>Quality measurements and scope ↗</a>
-        <h3 style={{ marginTop: 24 }}>Known issue · long context</h3>
-        <p data-known-issue>{release.quality.known_issue}</p>
-      </> : <p className="glm-v2-empty">Quality result and known issue pending. The frozen verdict, prompt count, scoped claim and known-issue details will appear here with their evidence.</p>}
+      <h2 id="quality-title">What the check establishes.</h2>
+      {release.quality ? <>
+        <p data-quality-claim>{release.quality.claim}</p><p>{release.quality.scope}</p><p>{release.quality.prompt_set_note}</p>
+        <p><a href={release.quality.source}>Exactness receipt ↗</a></p>
+      </> : <p className="glm-v2-empty">Quality result pending. The frozen result will supply the exactness claim, its scope and its evidence.</p>}
+      {release.panel_note ? <><p>{release.panel_note}</p><ul>{release.checks.map(check => <li key={check.id}>{check.id}: {check.status}{check.observed ? ` · ${check.observed}` : ''}{check.failed_cases.length ? ` · Reported failures: ${check.failed_cases.join(', ')}` : ''}</li>)}</ul></> : null}
+      <h3 style={{ marginTop: 24 }}>Release limitations</h3>
+      {release.limitations.length ? <ul>{release.limitations.map(item => <li key={item}>{item}</li>)}</ul> : <p className="glm-v2-empty">Release-specific limitations and installation qualification are pending.</p>}
     </section>
 
     <section className="glm-shell glm-v2-section" id="license" aria-labelledby="license-title">
-      <p className="glm-v2-eyebrow">Before you run it</p>
-      <h2 id="license-title">Choose a path with the right terms.</h2>
-      <div className="glm-v2-paths">
-        <div><h3>DFlash2 · default</h3><p>{V2_DRAFTER_NOTICE}</p>{release.drafter_source ? <>
-          <p><a href={release.drafter_source.url}>Pinned upstream drafter ↗</a></p>
-          <p><a href={release.drafter_source.card}>Model card and license notice ↗</a> · <a href={release.drafter_source.license_url}>License text ↗</a></p>
-        </> : <p className="glm-fine">Upstream license link pending.</p>}</div>
-        <div><h3>No drafter</h3><p>{V2_NO_DRAFTER_NOTICE}</p><p className="glm-fine">This path avoids the non-commercial drafter.</p></div>
-        <div><h3>MTP-only</h3><p>{V2_MTP_NOTICE}</p><p className="glm-fine">Its weights reach the TP=3 shards unpadded and may not load. We do not recommend this path.</p></div>
-      </div>
-      <p className="glm-fine">Recipe, base weights, and dependencies retain their own license terms. Release-specific installation guidance will follow qualification.</p>
+      <p className="glm-v2-eyebrow">License scope</p>
+      <h2 id="license-title">The default drafter is non-commercial.</h2>
+      <p>{release.license?.notice ?? V2_DRAFTER_NOTICE}</p>
+      {release.license ? <p><a href={release.license.source}>Pinned drafter model card and terms ↗</a></p> : null}
+      <p className="glm-fine">Recipe code, engine, weights and dependencies retain their own license terms.</p>
+      <h3 style={{ marginTop: 24 }}>Built on open work</h3>
+      <p>Tas’s TensorFold GLM branch, ashhart’s engine, Vontra’s MLX weights, the DFlash2 authors’ drafter, and mmastrac’s fabric work, template and published reference.</p>
     </section>
 
     <section className="glm-shell glm-v2-section" id="releases" aria-labelledby="history-title">

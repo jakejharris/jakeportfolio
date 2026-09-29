@@ -14,18 +14,14 @@ DATA = ROOT / 'app/(site)/jspark3/glm-v2-release.json'
 SOURCE = ROOT / 'docs/jspark-v2/glm-v2-source.json'
 TITLE = 'JSpark3 v2.0.0 (GLM-5.3-Flash, TP3)'
 REPO = 'https://github.com/jakejharris/jspark3'
-METRICS = ['prefill', 'decode_c1', 'decode_c2', 'decode_c4', 'decode_c8',
-           'prefill_128k', 'rigmark_code', 'rigmark_prose', 'rigmark_structured']
-ISSUE_FIELDS = {'prompt_tokens', 'first_divergence_output_token', 'output_tokens',
-                'rerun_token_gap_nats', 'first_run_token_in_rerun_top5', 'cold_cold_first_divergence_token'}
+METRICS = ['rigmark_code', 'rigmark_prose', 'rigmark_structured']
 # Reuse the existing public-text name screen without printing its private vocabulary.
 NAME_DIGESTS = set(re.findall(r"'([a-f0-9]{64})'", (ROOT / 'scripts/check-glm-release.mjs').read_text()))
 FORBIDDEN = re.compile(
     r'\u2014|/home/|/tmp/|/mnt/|~/|\\Users\\|\b[\w-]+\.local\b|'
     r'\b\d{1,3}(?:\.\d{1,3}){3}\b|boot[\s_-]*\d+|\bA\d+[\s_-]*[A-Z]\d*\b|'
     r'FINAL-|KGATE|\bfa\d+\b|\blane[\s_-]*\d+|%\d+|\bmia\b|flycockpit|byte[ -]exact', re.I)
-CLAIMS = re.compile(r'switch|restart|hot[\s_-]*swap|\binstant|seamless|downtime|latency|equivalen|'
-                    r'\bidentical|same quality|\bparity|scal(?:ed|ing)|\bfactor|\btax|\d\s*x\b|\bx\s*\d|\u00d7', re.I)
+
 
 
 class Number(str):
@@ -66,13 +62,12 @@ def dump(value, level=0):
     return braces[0] + '\n' + ',\n'.join('  ' * (level + 1) + p for p in parts) + '\n' + '  ' * level + braces[1]
 
 
-def text(value, where, claims=False):
+def text(value, where):
     require(isinstance(value, str) and not isinstance(value, Number) and value.strip(), f'{where}: text required')
     require(not FORBIDDEN.search(value), f'{where}: forbidden public text')
     require(not re.search(r'\b[A-Z]\d+\b', value), f'{where}: internal identifier')
     require(not any(hashlib.sha256(w.lower().encode()).hexdigest() in NAME_DIGESTS
                     for w in re.findall(r'[A-Za-z0-9]+', value)), f'{where}: forbidden name')
-    require(claims or not CLAIMS.search(value), f'{where}: unsupported claim')
     return value
 
 
@@ -92,7 +87,7 @@ def string_values(value):
 
 
 def url(value, where):
-    text(value, where, claims=True)
+    text(value, where)
     parsed = urlparse(value)
     require(parsed.scheme == 'https' and parsed.hostname in ('github.com', 'huggingface.co') and
             not parsed.username and not parsed.password and not parsed.query and not parsed.fragment,
@@ -100,230 +95,206 @@ def url(value, where):
     return value
 
 
-def band(cell, where):
-    result = {key + '_text': number(cell.get(key), where + '.' + key) for key in ('lo', 'hi')}
-    require(Decimal(result['lo_text']) <= Decimal(result['hi_text']), f'{where}: inverted band')
-    require(cell.get('unit') == 'tok/s', f'{where}: unit must be tok/s')
-    result['unit'] = 'tok/s'
-    result['instrument'] = text(cell.get('instrument'), where + '.instrument')
-    if 'median' in cell:
-        result['median_text'] = number(cell['median'], where + '.median')
-        require(Decimal(result['lo_text']) <= Decimal(result['median_text']) <= Decimal(result['hi_text']), f'{where}: median outside band')
-    if 'samples' in cell:
-        result['samples_text'] = number(cell['samples'], where + '.samples', count=True)
-    return result
+def public_copy(value, where):
+    value = text(value, where)
+    require(not re.search(r'\bclearly\b|\bbeats\b|\bfastest\b|\bblazing\b|\bdramatic\w*\b|'
+                          r'\bsignificantly\b|\bmassive\w*\b|\bunprecedented\b|always (?:exact|identical)|provably exact|speed[ -]win|'
+                          r'\ball[ -](?:rows|three|3)\b|\bfloor\b|\bvLLM\b|'
+                          r'commercial(?:ly)?[ -](?:clean|cleared|safe|ready)', value, re.I),
+            f'{where}: unsupported release wording')
+    return value
 
 
-def quality_claim(value, exact_class, prompts):
-    """Validate the approved forms, then copy the supplied sentence unchanged."""
-    claim = text(value, 'quality.claim', claims=True)
-    forms = {
-        'EXACT-ON-CORPUS': ("With the DFlash2 drafter, output was byte-identical to the no-drafter reference on the "
-                            f"{prompts} test prompts whose no-drafter cold reruns were themselves identical "
-                            "(greedy, temperature 0, this build)."),
-        'NONEXACT-NEARTIE': ("Output stayed within the gate's predeclared tolerance: at the first divergence, the token "
-                             "is in the reference's top 5 and at most 0.5 nat below it."),
-    }
-    require(exact_class in forms and claim == forms[exact_class], 'quality claim wording or prompt-count mismatch')
-    return claim
+def receipt(value):
+    require(isinstance(value, str) and re.fullmatch(r'release/receipts/[A-Za-z0-9_.-]+\.json', value),
+            'public release receipt path required')
+    return REPO + '/blob/v2.0.0/' + value
+
+
+def pinned(value):
+    value = url(value, 'reference source')
+    require(value.startswith('https://github.com/mmastrac/') and re.search(r'/blob/[0-9a-f]{40}/', value),
+            'pinned mmastrac source required')
+    return value
 
 
 def project(source, source_sha256):
     require(source.get('schema') == 'jspark3-results/1', 'unsupported results schema')
-    require(source.get('tag') == 'v2.0.0' and source.get('version') == 'v2.0', 'expected GLM v2.0.0 tag and version')
+    require(source.get('tag') in (None, 'v2.0.0') and source.get('version') in (None, 'v2.0', 'v2.0.0'),
+            'expected JSpark3 v2.0.0 identity')
     require(source.get('state') in ('fixture', 'pending', 'interim', 'final'), 'invalid freeze state')
-    require(source.get('fixture') in (None, False, True), 'fixture must be a boolean')
+    require(source.get('fixture') is None or type(source['fixture']) is bool, 'fixture must be boolean')
     fixture = source.get('fixture') is True or source['state'] == 'fixture'
-    conditions = text(source.get('conditions'), 'conditions')
-    require(fixture or not re.search(r'fixture|synthetic|invented|placeholder', string_values(source), re.I), 'fixture markers in real source')
-    require(source.get('decode_kind') == 'code', 'decode_kind must be code; other workloads need explicit mapping')
     if source.get('release_date'):
         date.fromisoformat(source['release_date'])
     if source.get('frozen_at'):
-        require(datetime.fromisoformat(source['frozen_at'].replace('Z', '+00:00')).tzinfo is not None, 'freeze requires timezone')
-    sets = source.get('sets')
-    require(isinstance(sets, dict), 'sets must be keyed objects')
-    rows, evidence_modes = [], {}
-    for sid, serving in sets.items():
-        require(re.fullmatch(r'release_m0|base_m0_[a-z0-9]+|opt_in_m1(?:_[a-z0-9]+)?|v1_1', sid), 'unknown serving set')
-        if serving is None:
-            require(sid == 'release_m0', 'only the headline set may be null')
-            continue
-        require(isinstance(serving, dict), 'invalid serving set')
-        mode = number(serving.get('mode'), 'mode')
-        require(mode == ('1' if sid.startswith('opt_in_m1') else '0'), 'set mode mismatch')
-        build = serving.get('build')
-        require(isinstance(build, str) and re.fullmatch(r'v\d+\.\d+(?:\.\d+)?', build), 'invalid set build')
-        label = text(serving.get('label'), 'set label')
-        require(len(label) <= 60, 'set label exceeds 60 characters')
-        toggles = text(serving.get('toggles'), 'set toggles')
-        starts = number(serving.get('serving_starts'), 'serving_starts', count=True)
-        sweeps = number(serving.get('sweeps'), 'sweeps', count=True)
-        if serving.get('prefill_omitted_reason') is not None:
-            text(serving['prefill_omitted_reason'], 'prefill_omitted_reason')
-        if sid == 'release_m0':
-            require(build == source['tag'] and starts == '1', 'headline must be one start of the release build')
-        cells = serving.get('cells')
-        require(isinstance(cells, dict), 'cells must be keyed objects')
-        shown = {}
-        for cid, cell in cells.items():
-            if not isinstance(cell, dict):
-                continue
-            for key in ('mode', 'build', 'toggles'):
-                require(cell.get(key) == serving.get(key), f'{sid}.{cid}: {key} mismatch')
-            require(cell.get('class') == ('historical' if sid == 'v1_1' else 'measured'), f'{sid}.{cid}: unmeasured or derived cell')
-            hashes = re.findall(r'sha256:([0-9a-f]{64})', str(cell.get('evidence', '')))
-            require(hashes, f'{sid}.{cid}: evidence hash required')
-            require(fixture or '0' * 64 not in hashes, 'fixture evidence cannot qualify a release')
-            for digest in hashes:
-                require(digest not in evidence_modes or evidence_modes[digest] == mode, 'evidence reused across weight modes')
-                evidence_modes[digest] = mode
-            if cid in METRICS:
-                shown[cid] = band(cell, f'{sid}.{cid}')
-                if sid == 'v1_1':
-                    require(cell['lo'] == cell['hi'], 'historical cell must be a single figure')
-        if sid == 'release_m0':
-            require(all(cid in shown for cid in METRICS[1:5]), 'headline is missing a required decode cell')
-            if 'prefill' not in shown:
-                text(serving.get('prefill_omitted_reason'), 'prefill_omitted_reason')
-        require(shown, 'serving set has no displayable cells')
-        rows.append(dict(id=sid, label=label, build=build, mode=mode, toggles=toggles,
-                         serving_starts=starts, sweeps=sweeps, cells=shown,
-                         prefill_omitted_reason=serving.get('prefill_omitted_reason')))
-    release = next((row for row in rows if row['id'] == 'release_m0'), None)
-    ext = source.get('site_v2') or {}
-    require(isinstance(ext, dict), 'site_v2 must be an object')
-    comparison = ext.get('comparison')
+        require(source['frozen_at'].endswith('Z'), 'UTC freeze timestamp required')
+        datetime.fromisoformat(source['frozen_at'].replace('Z', '+00:00'))
+    final = (not fixture and source['state'] == 'final' and source.get('tag') == 'v2.0.0'
+             and bool(source.get('frozen_at')) and bool(source.get('release_date')))
+    tf = source.get('tf')
+    require(isinstance(tf, dict), 'TensorFold results required')
+    identity = tf.get('identity') or {}
+    require(identity.get('engine_repo') == 'taussoe/TensorFold', 'TensorFold engine identity required')
+    require(str(identity.get('weights', '')).startswith('Vontra/GLM-5.3-Flash-MLX-4bit-MTP@'), 'weights identity mismatch')
+    require(str(identity.get('drafter', '')).startswith('incoai/GLM-5.3-Flash-DFlash2@'), 'drafter identity mismatch')
+    for field in ('weights', 'drafter'):
+        require(re.fullmatch(r'[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+@[a-f0-9]{40}', identity[field]), 'pinned weights/drafter revision required')
+    require(fixture or not re.search(r'fixture|invented|synthetic|placeholder', string_values(snapshot(source)), re.I), 'fixture markers in real source')
+    site = source.get('site_v2') or {}
+    comparison = site.get('comparison')
     if comparison is not None:
-        require(comparison.get('publisher') == 'mmastrac' and comparison.get('tensor_parallel') == Number('3'), 'comparison must be mmastrac published TP3')
-        ref = url(comparison.get('source'), 'comparison source')
-        require(ref.startswith('https://github.com/mmastrac/') and re.search(r'/blob/[0-9a-f]{40}/', ref), 'comparison needs a pinned publication revision')
-        require(comparison.get('same_instruments') is True, 'comparison requires matched instruments')
-        require(comparison.get('same_conditions') is False, 'comparison must disclose different conditions')
-        differences = comparison.get('condition_differences')
-        require(isinstance(differences, list) and differences, 'comparison condition differences required')
-        differences = [text(item, 'condition difference', claims=True) for item in differences]
-        topology = ' '.join(differences)
-        require('200G switch' in topology and 'cabled as a triangle' in topology, 'comparison topology differences required')
-        ref_cells = comparison.get('cells')
-        require(isinstance(ref_cells, dict) and ref_cells, 'comparison cells required')
-        converted = {}
-        for cid, cell in ref_cells.items():
-            require(cell.get('class') == 'author-reported', 'reference must be author-reported')
-            if release is None:
-                continue  # Reference metadata alone never supplies measured headline figures.
-            require(cid in release['cells'], 'comparison row absent from release')
-            converted[cid] = band(cell, 'reference cell')
-            require(converted[cid]['instrument'] == release['cells'][cid]['instrument'], 'comparison instrument mismatch')
-        comparison = dict(publisher='mmastrac', source=ref, same_instruments=True,
-                          same_conditions=False, condition_differences=differences, cells=converted)
-    quality = ext.get('quality')
-    if quality is not None:
-        require(not (set(quality) - {'claim', 'exact_class', 'verdict_bearing_prompts', 'known_issue', 'known_issue_fields', 'source'}),
-                'quality contains withdrawn or unsupported fields')
-    if quality is not None and quality.get('claim') is None:
-        quality = None
-    if quality is not None:
-        verdict = ((source.get('v2') or {}).get('exact') or {}).get('verdict')
-        require(isinstance(verdict, str) and verdict.startswith('PASS'), 'quality requires a passing exactness verdict')
-        prompts = number(quality.get('verdict_bearing_prompts'), 'quality.verdict_bearing_prompts', count=True)
-        exact_class = quality.get('exact_class')
-        known = text(quality.get('known_issue'), 'quality.known_issue', claims=True)
-        require(not re.search(r'\bfloor\b', known, re.I), 'quality.known_issue: withdrawn wording')
-        fields = quality.get('known_issue_fields')
-        require(isinstance(fields, list) and fields, 'known-issue structured fields required')
-        for item in fields:
-            require(not (set(item) - ISSUE_FIELDS - {'prompt'}), 'unknown known-issue field')
-            for key in ('prompt_tokens', 'first_divergence_output_token', 'output_tokens', 'rerun_token_gap_nats'):
-                number(item.get(key), 'known_issue.' + key, count=key != 'rerun_token_gap_nats')
-            require(type(item.get('first_run_token_in_rerun_top5')) is bool, 'known-issue token rank must be a boolean')
-            if item.get('cold_cold_first_divergence_token') is not None:
-                number(item['cold_cold_first_divergence_token'], 'known_issue.cold_cold_first_divergence_token', count=True)
-            require(item['rerun_token_gap_nats'] + ' nat' in known, 'known-issue gap token mismatch')
-        quality = dict(claim=quality_claim(quality.get('claim'), exact_class, prompts), exact_class=exact_class,
-                       verdict_bearing_prompts_text=prompts, known_issue=known,
-                       source=url(quality.get('source'), 'quality source'))
-    if fixture or source['state'] != 'final' or not source.get('frozen_at') or not source.get('release_date'):
-        quality = None
-    drafter = ext.get('drafter_source')
-    if drafter is not None:
-        require(isinstance(drafter, dict), 'drafter_source must hold the pinned links and path qualifications')
-        require(set(drafter) == {'url', 'card', 'license', 'license_url', 'without_drafter', 'mtp'}, 'unexpected drafter_source fields')
-        require(drafter['license'] == 'CC BY-NC-ND 4.0' and
-                drafter['license_url'] == 'https://creativecommons.org/licenses/by-nc-nd/4.0/', 'drafter license mismatch')
-        require(drafter['without_drafter'] == 'SPEC_METHOD=none: booted for this release, speed not measured', 'no-drafter qualification mismatch')
-        require(drafter['mtp'] == 'SPEC_METHOD=mtp: wired but not booted at TP=3', 'MTP qualification mismatch')
-        for key, kind, suffix in [('url', 'tree', ''), ('card', 'blob', '/README.md')]:
-            value = url(drafter[key], 'drafter ' + key)
-            require(value == 'https://huggingface.co/incoai/GLM-5.3-Flash-DFlash2/' + kind +
-                    '/bf582e4eacc1810f76656d1811693ff6c6737d2a' + suffix, 'drafter pinned revision mismatch')
+        require(comparison.get('same_conditions') is False, 'comparison must not claim matched conditions')
+        comparison = dict(source=pinned(comparison.get('source')), line_source=pinned(comparison.get('line_source')),
+                          conditions=public_copy(comparison.get('conditions'), 'comparison conditions'),
+                          engine_weights=public_copy(comparison.get('engine_weights'), 'comparison engine/weights'),
+                          same_conditions=False)
+        require('switched 200G fabric' in comparison['conditions'] and
+                'not a matched-conditions comparison' in comparison['conditions'] and
+                'cabled as a triangle' in comparison['conditions'], 'comparison fabric caveat required')
+        require('TensorFold' in comparison['engine_weights'] and 'MLX' in comparison['engine_weights'] and
+                'NVFP4' in comparison['engine_weights'], 'engine and weight differences required')
+    rows = []
+    references = tf.get('reference') or {}
+    supplied = tf.get('rows') or {}
+    require(not (set(supplied) - set(METRICS)), 'unsupported workload; only single-stream RigMark is in scope')
+    for cid in METRICS:
+        row = supplied.get(cid)
+        if row is None:
+            continue
+        require(row.get('class') == 'measured' and row.get('unit') == 'tok/s', 'measured tok/s row required')
+        instrument = public_copy(row.get('instrument'), 'instrument')
+        require('RigMark' in instrument and 'single stream' in instrument, 'single-stream RigMark instrument required')
+        median = number(row.get('median'), cid + '.median')
+        worst = number(row.get('worst'), cid + '.worst')
+        samples = number(row.get('n'), cid + '.n', count=True)
+        values = row.get('values')
+        require(isinstance(values, list) and len(values) == int(samples), 'repeat count mismatch')
+        values = [number(value, cid + '.values') for value in values]
+        require(min(map(Decimal, values)) == Decimal(worst) and min(map(Decimal, values)) <= Decimal(median) <= max(map(Decimal, values)),
+                'median or slowest inconsistent with repeats')
+        reference_values = {}
+        for key, expected_class in [('line', 'derived-midpoint'), ('upstream_tp3_set1', 'author-reported'), ('upstream_tp3_set2', 'author-reported')]:
+            ref = references.get(key) or {}
+            require(ref.get('class') == expected_class, 'reference provenance mismatch')
+            reference_values[key + '_text'] = number(ref.get(cid), 'reference.' + key + '.' + cid)
+        verdict = row.get('vs_line')
+        expected_verdict = 'below' if cid == 'rigmark_prose' else 'above'
+        require(verdict == expected_verdict, 'line verdict differs from approved release scope')
+        line = Decimal(reference_values['line_text'])
+        require(all(Decimal(v) > line for v in values) if verdict == 'above' else all(Decimal(v) < line for v in values),
+                'every-repeat line claim unsupported')
+        require(all(Decimal(v) > Decimal(reference_values[key + '_text']) for v in values for key in ('upstream_tp3_set1', 'upstream_tp3_set2')),
+                'published TP3 comparison unsupported')
+        require(row.get('vs_upstream_tp3') == 'above', 'neutral TP3 verdict required')
+        margin = row.get('vs_line_pct')
+        require(isinstance(margin, Number) and re.fullmatch(r'-?\d+(?:\.\d+)?', margin), 'literal margin token required')
+        require((Decimal(margin) < 0) == (verdict == 'below'), 'margin sign disagrees with verdict')
+        evidence = row.get('evidence')
+        require(isinstance(evidence, list) and evidence, 'row evidence required')
+        rows.append(dict(id=cid, median_text=median, worst_text=worst, samples_text=samples,
+                         values_text=values, instrument=instrument, vs_line=verdict, margin_text=str(margin),
+                         evidence=[receipt(path) for path in evidence], **reference_values))
+    exact = tf.get('exact') or {}
+    quality = None
+    claim = site.get('exactness_claim')
+    if claim is not None:
+        claim = public_copy(claim, 'exactness claim')
+        prompts = number(exact.get('prompts'), 'exact.prompts', count=True)
+        require(prompts == '8' and number(exact.get('tested'), 'exact.tested', count=True) == prompts and
+                number(exact.get('diverging'), 'exact.diverging') == '0', 'exactness corpus mismatch')
+        require(exact.get('verdict') == 'PASS' and exact.get('exact_class') == 'EXACT-ON-CORPUS' and
+                exact.get('engine') == 'tensorfold' and exact.get('rule') == 'hard', 'passing TensorFold exactness required')
+        require(claim == f'Speculative output was byte-identical to serial decoding on its {prompts}-prompt greedy check at TP=3.',
+                'unapproved exactness wording')
+        scope = public_copy(exact.get('scope'), 'exactness scope')
+        require('temperature 0' in scope and 'non-streaming' in scope and 'serving start' in scope and
+                prompts + '-prompt' in scope and 'not a guarantee' in scope, 'exactness scope missing')
+        proof = exact.get('drafting_proof') or {}
+        require(all(proof.get(k) is True for k in ('counters_rose_on', 'counters_flat_off', 'per_reply_agree')), 'drafting proof required')
+        require(exact.get('off_source') == 'same-boot switch: "draft": false', 'serial reference mismatch')
+        require(re.fullmatch(r'[a-f0-9]{64}', exact.get('sha256', '')), 'exactness receipt hash required')
+        quality = dict(claim=claim, scope=scope, source=receipt(exact.get('receipt')),
+                       prompt_set_note=public_copy(exact.get('prompt_set_note'), 'prompt-set note'))
+    summary = site.get('comparison_claim')
+    if summary is not None:
+        above = number(site.get('above_line_rows'), 'above_line_rows', count=True)
+        total = number(site.get('total_rows'), 'total_rows', count=True)
+        require(above == '2' and total == '3' and len(rows) == int(total), 'comparison count mismatch')
+        require(summary == f'{above} of {total} single-stream RigMark rows are above the TP=2 to TP=4 line on every repeat; prose is below.',
+                'unapproved comparison wording')
+        public_copy(summary, 'comparison claim')
+    limitations = site.get('limitations')
+    require(limitations is None or isinstance(limitations, list), 'limitations must be a list')
+    limitations = [public_copy(v, 'limitation') for v in limitations or []]
+    checks = []
+    panel = tf.get('quality') or {}
+    for key, result in panel.items():
+        if isinstance(result, dict) and result.get('status'):
+            checks.append(dict(id=public_copy(key, 'check name'), status=public_copy(result['status'], 'check status'),
+                               observed=public_copy(result['observed'], 'check result') if result.get('observed') else None,
+                               failed_cases=[public_copy(case, 'failed case') for case in result.get('failed_cases', [])]))
+    panel_note = public_copy(panel['overall'], 'quality scope') if panel.get('overall') else None
+    license_info = site.get('license')
+    if license_info is not None:
+        require(license_info.get('notice') == 'The default DFlash2 drafter is non-commercial (CC BY-NC-ND 4.0). No mode is cleared for commercial use.',
+                'non-commercial drafter qualification required')
+        license_info = dict(notice=license_info['notice'], source=url(license_info.get('source'), 'drafter license'))
+    result_file = site.get('results_path')
+    require(result_file is None or re.fullmatch(r'release/results-[A-Za-z0-9_.-]+\.json', result_file), 'results path required')
     pending = []
     if fixture:
         pending.append('Fixture data: no benchmark was run.')
-    if source['state'] != 'final' or not source.get('frozen_at') or not source.get('release_date'):
-        pending.append('Final freeze and release date pending.')
-    if release is None:
-        pending.append('The release build has no measured serving start.')
-    if comparison is None:
-        pending.append('Published TP3 comparison and matched instruments pending.')
+    if not final:
+        pending.append('Final freeze, release identity and date pending.')
+    if len(rows) != len(METRICS) or comparison is None or summary is None:
+        pending.append('RigMark results and comparison qualification pending.')
     if quality is None:
-        pending.append('Quality verdict and verdict-bearing prompt scope pending.')
-    if drafter is None:
-        pending.append('DFlash2 upstream license and download link pending.')
-    return dict(schema='jspark3-site/2', title=TITLE, fixture=fixture, pending=pending,
-                source_sha256=source_sha256, frozen_at=source.get('frozen_at'),
-                published=source.get('release_date'), conditions=conditions, sets=rows,
-                comparison=comparison, quality=quality, drafter_source=drafter,
+        pending.append('Scoped exactness claim and evidence pending.')
+    if not limitations or not panel_note:
+        pending.append('Quality and release limitations pending.')
+    if license_info is None or result_file is None:
+        pending.append('Release links and license qualification pending.')
+    # No measurement or result claim from a fixture/interim file reaches a consumer.
+    visible = final and not pending
+    return dict(schema='jspark3-site/2', title=TITLE, engine='TensorFold', fixture=fixture, publication_hold=True,
+                pending=pending, source_sha256=source_sha256, published=source.get('release_date') if final else None,
+                rows=rows if visible else [], comparison=comparison,
+                comparison_claim=summary if visible else None, quality=quality if visible else None,
+                checks=checks if visible else [], panel_note=panel_note if visible else None,
+                limitations=limitations if visible else [], license=license_info,
                 social_image='/jspark3/glm/share/?v=' + source_sha256[:12],
                 links=dict(release=REPO + '/releases/tag/v2.0.0', source=REPO + '/tree/v2.0.0',
-                           results=REPO + '/blob/v2.0.0/release/results-v2.0.0.json',
-                           numbers=REPO + '/blob/v2.0.0/release/RELEASE-NUMBERS.md'))
+                           results=REPO + '/blob/v2.0.0/' + result_file if result_file else None))
 
 
 def snapshot(source):
-    """Only the supported contract, with evidence hashes instead of local evidence paths."""
-    kept = {key: source.get(key) for key in ('schema', 'state', 'fixture', 'frozen_at', 'tag', 'version',
-            'release_date', 'decode_kind', 'conditions')}
-    ext = source.get('site_v2')
-    if ext:
-        require(not (set(ext) - {'comparison', 'quality', 'drafter_source', 'publication', 'instruments'}),
-                'unknown site_v2 fields; resolve the contract before filling')
-    # Publication receipts and instrument-build metadata remain in the original file.
-    kept['site_v2'] = {key: ext[key] for key in ('comparison', 'quality', 'drafter_source') if key in ext} if ext else None
-    if (ext or {}).get('quality') is not None:
-        quality = ext['quality']
-        kept['site_v2']['quality'] = {**quality, 'known_issue_fields': [
-            {key: value for key, value in item.items() if key in ISSUE_FIELDS}
-            for item in quality.get('known_issue_fields', [])]}
-    if source.get('v2'):
-        kept['v2'] = {'exact': {'verdict': (source['v2'].get('exact') or {}).get('verdict')}}
-    kept['sets'] = {}
-    for sid, serving in source['sets'].items():
-        if serving is None:
-            kept['sets'][sid] = None
-            continue
-        row = {key: serving[key] for key in ('label', 'build', 'mode', 'toggles', 'serving_starts', 'sweeps')}
-        if 'prefill_omitted_reason' in serving:
-            row['prefill_omitted_reason'] = serving['prefill_omitted_reason']
-        row['cells'] = {}
-        for cid, cell in serving['cells'].items():
-            if cid not in METRICS:
-                continue
-            row['cells'][cid] = {key: cell[key] for key in ('lo', 'hi', 'median', 'samples', 'unit', 'class', 'instrument', 'mode', 'build', 'toggles') if key in cell}
-            row['cells'][cid]['evidence'] = ', '.join(re.findall(r'sha256:[0-9a-f]{64}', cell['evidence']))
-        kept['sets'][sid] = row
-    if kept['site_v2']:
-        allowed = {'comparison', 'quality', 'drafter_source'}
-        require(not (set(kept['site_v2']) - allowed), 'unknown site_v2 fields; resolve the contract before filling')
-        for key, keys in [('comparison', {'publisher', 'tensor_parallel', 'source', 'same_conditions', 'same_instruments', 'condition_differences', 'cells'}),
-                          ('quality', {'claim', 'exact_class', 'verdict_bearing_prompts', 'known_issue', 'known_issue_fields', 'source'})]:
-            value = kept['site_v2'].get(key)
-            if value:
-                require(not (set(value) - keys), 'unknown public evidence field')
-                if key == 'comparison':
-                    for cell in value['cells'].values():
-                        require(not (set(cell) - {'lo', 'hi', 'median', 'samples', 'unit', 'class', 'instrument'}), 'unknown reference cell field')
-    return kept
+    """Keep only consumed fields; private boot metadata never enters the public repo."""
+    def keep(value, keys):
+        return {k: value[k] for k in keys if k in value}
+    out = keep(source, ['schema', 'state', 'fixture', 'frozen_at', 'tag', 'version', 'release_date'])
+    tf = source.get('tf') or {}
+    out['tf'] = dict(identity=keep(tf.get('identity') or {}, ['engine_repo', 'weights', 'drafter']),
+                     exact=keep(tf.get('exact') or {}, ['verdict', 'engine', 'rule', 'exact_class', 'scope', 'prompts',
+                                                      'tested', 'diverging', 'drafting_proof', 'off_source', 'receipt', 'sha256', 'prompt_set_note']),
+                     rows={key: keep(value, ['median', 'worst', 'values', 'n', 'unit', 'class', 'instrument', 'vs_line', 'vs_line_pct',
+                                            'vs_upstream_tp3', 'evidence']) for key, value in (tf.get('rows') or {}).items()},
+                     reference={key: keep(value, ['class'] + METRICS) for key, value in (tf.get('reference') or {}).items()
+                                if key in ('line', 'upstream_tp3_set1', 'upstream_tp3_set2')},
+                     quality={key: keep(value, ['status', 'observed', 'failed_cases']) if isinstance(value, dict) else value
+                              for key, value in (tf.get('quality') or {}).items() if isinstance(value, dict) or key == 'overall'})
+    if out['tf']['exact'].get('drafting_proof'):
+        out['tf']['exact']['drafting_proof'] = keep(out['tf']['exact']['drafting_proof'], ['counters_rose_on', 'counters_flat_off', 'per_reply_agree'])
+    site = source.get('site_v2') or {}
+    out['site_v2'] = dict(site)
+    require(not (set(out['site_v2']) - {'comparison', 'comparison_claim', 'above_line_rows', 'total_rows', 'exactness_claim',
+                                       'limitations', 'license', 'results_path'}), 'unknown site fields; confirm final mapping')
+    if site.get('comparison') is not None:
+        out['site_v2']['comparison'] = keep(site['comparison'], ['source', 'line_source', 'conditions', 'engine_weights', 'same_conditions'])
+    if site.get('license') is not None:
+        out['site_v2']['license'] = keep(site['license'], ['notice', 'source'])
+    text(string_values(out), 'public source')
+    return out
 
 
 def check(data_path=DATA, source_path=SOURCE, preview=False, original=None):
@@ -337,34 +308,32 @@ def check(data_path=DATA, source_path=SOURCE, preview=False, original=None):
         require(dump(snapshot(read(raw))) == dump(source), 'frozen source projection mismatch')
     if not preview:
         require(not data['pending'], 'publication blocked: ' + '; '.join(data['pending']))
+        require(not data['publication_hold'], 'publication blocked: preview-only hold; a separate publication decision is required')
     return data
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--fill', type=Path, help='frozen numbers file; fill both the page and share card')
+    parser.add_argument('--fill', type=Path)
     parser.add_argument('--check', action='store_true')
-    parser.add_argument('--preview', action='store_true', help='validate structure while permitting visible pending evidence')
-    parser.add_argument('--fixture', action='store_true', help='explicitly allow fake preview input')
-    parser.add_argument('--original', type=Path, help='verify the exact original frozen source bytes')
+    parser.add_argument('--preview', action='store_true')
+    parser.add_argument('--fixture', action='store_true')
+    parser.add_argument('--original', type=Path)
     args = parser.parse_args()
     if args.fill:
         raw = args.fill.read_bytes()
         source = read(raw)
         digest = hashlib.sha256(raw).hexdigest()
         data = project(source, digest)
-        require(args.fixture or not data['fixture'], 'fixture requires --fixture and cannot pass publication')
+        require(args.fixture or not data['fixture'], 'fixture requires --fixture')
         public_source = snapshot(source)
-        require(data == project(public_source, digest), 'public snapshot would drop visible data')
+        require(data == project(public_source, digest), 'snapshot would drop visible data')
         if SOURCE.exists():
             previous = read(SOURCE.read_text())
-            if not previous.get('fixture'):
-                require(not data['fixture'], 'refusing to replace measured data with a fixture')
-                prior = {sid for sid in previous['sets'] if sid.startswith('base_m0_')}
-                require(prior <= set(source['sets']), 'cannot drop a previously recorded base start')
+            require(previous.get('fixture') or not data['fixture'], 'refusing to replace real source with fixture')
         SOURCE.write_text(dump(public_source) + '\n')
         DATA.write_text(json.dumps(data, indent=2, ensure_ascii=False) + '\n')
-        print('Filled page and share card data. ' + ('Publication remains blocked: ' + '; '.join(data['pending']) if data['pending'] else 'Publication data checks pass.'))
+        print('Filled preview data. ' + ('Publication remains blocked: ' + '; '.join(data['pending']) if data['pending'] else 'Publication data checks pass.'))
     else:
         data = check(preview=args.preview, original=args.original)
         print('PASS: ' + ('preview structure; publication pending' if data['pending'] else 'publication data'))
@@ -373,6 +342,6 @@ def main():
 if __name__ == '__main__':
     try:
         main()
-    except (ValueError, KeyError, TypeError, OSError) as error:
+    except (ValueError, KeyError, TypeError) as error:
         print('REFUSED: ' + str(error), file=sys.stderr)
         sys.exit(1)

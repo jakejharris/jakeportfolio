@@ -1,36 +1,23 @@
 import data from './glm-v2-release.json';
 
-export type V2Cell = { lo_text: string; hi_text: string; median_text?: string; samples_text?: string; unit: string; instrument: string };
-type V2Set = { id: string; label: string; build: string; mode: string; toggles: string; serving_starts: string; sweeps: string; cells: Record<string, V2Cell>; prefill_omitted_reason: string | null };
+type V2Row = { id: string; median_text: string; worst_text: string; samples_text: string; values_text: string[]; instrument: string; vs_line: string; margin_text: string; line_text: string; upstream_tp3_set1_text: string; upstream_tp3_set2_text: string; evidence: string[] };
 type V2Release = {
-  title: string; fixture: boolean; pending: string[]; published: string | null; conditions: string;
-  sets: V2Set[]; social_image: string;
-  comparison: { publisher: string; source: string; same_instruments: boolean; same_conditions: boolean; condition_differences: string[]; cells: Record<string, V2Cell> } | null;
-  quality: { claim: string; exact_class: string; verdict_bearing_prompts_text: string; known_issue: string; source: string } | null;
-  drafter_source: { url: string; card: string; license: string; license_url: string; without_drafter: string; mtp: string } | null;
-  links: { release: string; source: string; results: string; numbers: string };
+  title: string; engine: string; fixture: boolean; pending: string[]; published: string | null;
+  rows: V2Row[]; social_image: string;
+  comparison: { source: string; line_source: string; conditions: string; engine_weights: string; same_conditions: boolean } | null;
+  comparison_claim: string | null;
+  quality: { claim: string; scope: string; source: string; prompt_set_note: string } | null;
+  checks: { id: string; status: string; observed: string | null; failed_cases: string[] }[]; panel_note: string | null; limitations: string[];
+  license: { notice: string; source: string } | null;
+  links: { release: string; source: string; results: string | null };
 };
 
 export const GLM_V2 = data as V2Release;
-export const V2_RELEASE_SET = GLM_V2.sets.find(set => set.id === 'release_m0');
-export const V2_DESCRIPTION = 'GLM-5.3-Flash on three DGX Sparks, based on mmastrac’s NVFP4 TP3 recipe. Measurements, qualification, and license scope.';
-export const V2_DRAFTER_NOTICE = "The default DFlash2 drafter is non-commercial (CC BY-NC-ND 4.0). JSpark3 does not distribute it; the licence's terms go with any copy.";
-export const V2_NO_DRAFTER_NOTICE = 'SPEC_METHOD=none: booted for this release, speed not measured';
-export const V2_MTP_NOTICE = 'SPEC_METHOD=mtp: wired but not booted at TP=3';
+export const V2_DESCRIPTION = 'JSpark3 v2.0.0: TensorFold serving GLM-5.3-Flash on three DGX Sparks. Scoped exactness, single-stream RigMark results and release qualifications.';
+export const V2_DRAFTER_NOTICE = 'The default DFlash2 drafter is non-commercial (CC BY-NC-ND 4.0). No mode is cleared for commercial use.';
 export const V2_METRICS: Record<string, string> = {
-  prefill: 'Prefill · 32k cold', decode_c1: 'Code · 1 stream', decode_c2: 'Code · 2 streams',
-  decode_c4: 'Code · 4 streams', decode_c8: 'Code · 8 streams',
-  prefill_128k: 'Prefill · 128k cold', rigmark_code: 'RigMark · code',
-  rigmark_prose: 'RigMark · prose', rigmark_structured: 'RigMark · structured',
+  rigmark_code: 'RigMark · code', rigmark_prose: 'RigMark · prose', rigmark_structured: 'RigMark · structured',
 };
-
-/** Preserve each original token, including its trailing zeroes. */
-export function v2Band(cell?: V2Cell) {
-  if (!cell) return 'Not measured';
-  return cell.lo_text === cell.hi_text ? cell.lo_text : `${cell.lo_text}–${cell.hi_text}`;
-}
-
-export const V2_HIGHLIGHTS = ['prefill', 'decode_c1', 'decode_c4'].flatMap(id => {
-  const cell = V2_RELEASE_SET?.cells[id];
-  return cell ? [{ id, label: V2_METRICS[id], value: GLM_V2.fixture ? 'Pending' : v2Band(cell) }] : [];
-});
+export const V2_HIGHLIGHTS = Object.entries(V2_METRICS).map(([id, label]) => ({
+  id, label, value: GLM_V2.rows.find(row => row.id === id)?.median_text ?? 'Pending',
+}));
