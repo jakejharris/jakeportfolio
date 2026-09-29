@@ -91,15 +91,15 @@ export const STORY: Paragraph[] = [
       {
         min: 1,
         pieces: [
-          'Outside work, I run my own AI assistant on ',
-          { text: 'three small computers', href: '/jspark3/' },
-          ' and write here about what I learn.',
+          'Outside work, I build ',
+          { text: 'JSPARK3', href: '/jspark3/' },
+          ', which turns three small NVIDIA computers into one model server, and I publish the recipes and measured results so anyone with the same hardware can run it too.',
         ],
       },
       {
         min: 2,
         pieces: [
-          'Most of it comes back to one idea: ',
+          'Most of what I write here comes back to one idea: ',
           { text: 'context is the bottleneck, not intelligence', href: '/posts/compression-as-intelligence/' },
           '.',
         ],
