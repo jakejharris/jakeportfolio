@@ -1,16 +1,52 @@
 import PageLayout from '../../components/PageLayout';
 import Link from 'next/link';
-import { FaDownload, FaGithub } from 'react-icons/fa';
+import { FaDownload } from 'react-icons/fa';
+import type { Metadata } from 'next';
+import AboutLinks from './AboutLinks';
+import { ABOUT_URL, PERSON_ID, SHARE_IMAGE, WEBSITE_ID, jsonLd } from '../../lib/entity';
 import '../../css/page.css';
 import '../../css/animations.css';
-import { MdArrowForward } from 'react-icons/md';
+import '../../css/hero.css';
 
-export const metadata = {
-    title: "About",
-    description: "Jake Harris is a Full Stack Developer with experience in AI-powered applications, startup development, and consulting. Learn about his background, skills, and projects.",
+const title = "About Jake Harris | Software Engineer and JSPARK3 Creator";
+const description = "Jake Harris is a software engineer in Chicago, founder of JJH Digital, and the creator of JSPARK3, open serving recipes for NVIDIA DGX Spark.";
+
+export const metadata: Metadata = {
+    title: { absolute: title },
+    description,
     alternates: {
-        canonical: 'https://jakejh.com/about/',
+        canonical: ABOUT_URL,
     },
+    openGraph: {
+        type: 'profile',
+        firstName: 'Jake',
+        lastName: 'Harris',
+        locale: 'en_US',
+        siteName: 'Jake Harris',
+        url: ABOUT_URL,
+        title,
+        description,
+        images: [SHARE_IMAGE],
+    },
+    twitter: {
+        card: 'summary_large_image',
+        site: '@jakeharrisdev',
+        creator: '@jakeharrisdev',
+        title,
+        description,
+        images: [SHARE_IMAGE],
+    },
+};
+
+// This page is the Person's home: the site layout carries the Person node,
+// and the ProfilePage names it as the page's subject.
+const profilePage = {
+    '@type': 'ProfilePage',
+    '@id': `${ABOUT_URL}#profilepage`,
+    url: ABOUT_URL,
+    name: title,
+    isPartOf: { '@id': WEBSITE_ID },
+    mainEntity: { '@id': PERSON_ID },
 };
 
 const aboutContent = {
@@ -27,6 +63,7 @@ const aboutContent = {
 export default function AboutPage() {
     return (
         <PageLayout className="py-20 md:py-24">
+            <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(profilePage) }} />
             <div className="max-w-none">
                 <h1
                     className="page-enter mb-6 text-5xl font-bold leading-[0.95] tracking-[-0.01em] md:text-6xl"
@@ -43,8 +80,7 @@ export default function AboutPage() {
                     ))}
                 </div>
 
-                <ul className="page-enter-3 space-y-2">
-                    {/* Resume download temporarily disabled because the resume is out of date
+                {/* Resume download temporarily disabled because the resume is out of date. Restore it as the first card in a list.
                     <li className="relative">
                         <Link
                             href="/JH Resume 2-13-25 Fullstack.pdf"
@@ -65,28 +101,9 @@ export default function AboutPage() {
                             </div>
                         </Link>
                     </li>
-                    */}
-                    <li className="relative">
-                        <a
-                            href="https://github.com/jakejharris"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="pageLinkContainer flex justify-between items-center border p-3 cursor-pointer group"
-                            aria-label="Visit GitHub profile"
-                        >
-                            <div className="flex items-center gap-3">
-                                <FaGithub className="text-primary text-xl" />
-                                <div>
-                                    <div className="text-primary font-medium">GitHub</div>
-                                    <div className="text-sm text-muted-foreground">Check out my code</div>
-                                </div>
-                            </div>
-                            <div className="text-sm text-muted-foreground">
-                                <MdArrowForward />
-                            </div>
-                        </a>
-                    </li>
-                </ul>
+                */}
+
+                <AboutLinks />
             </div>
         </PageLayout>
     );

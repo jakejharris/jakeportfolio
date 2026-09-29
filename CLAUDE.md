@@ -136,7 +136,7 @@ GA_SERVICE_ACCOUNT_JSON          # Service-account JSON with Viewer access to th
 
 - **Sitemap** (`app/sitemap.ts`) — Dynamic, includes static pages and all Sanity posts
 - **Robots** (`app/robots.ts`) — Allows `/`, disallows `/api/` and `/viewadmin/`
-- **JSON-LD** — WebSite + Person schemas in root layout; BlogPosting schema on post pages
+- **JSON-LD**: one entity graph keyed by `@id` in `app/lib/entity.ts`. The site layout carries WebSite and Person; ProfilePage on /about/, BlogPosting on posts and SoftwareSourceCode on /jspark3/glm/ point back at the Person
 - **OpenGraph/Twitter** — Configured on all pages with canonical URLs
 - **Base URL** — `https://jakejh.com`
 
