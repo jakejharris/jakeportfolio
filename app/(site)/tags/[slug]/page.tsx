@@ -14,7 +14,15 @@ import TagPill from '@/app/components/TagPill';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 
-export const dynamic = 'force-dynamic';
+// Published pages refresh in the background; the webhook also expires content.
+export const revalidate = 60;
+
+export async function generateStaticParams() {
+  return sanityFetch<Array<{ slug: string }>>({
+    query: '*[_type == "tag" && defined(slug.current)]{ "slug": slug.current }',
+    tags: ['post'],
+  });
+}
 
 type TagData = {
   _id: string;
@@ -111,7 +119,8 @@ export default async function TagPage({
     tags: ['post'],
   });
   const liveViewCounts = await getLivePostViewCounts(
-    posts.map((post) => post.slug.current)
+    posts.map((post) => post.slug.current),
+    { revalidate: 60 }
   );
 
   return (
@@ -131,7 +140,7 @@ export default async function TagPage({
           <ul className="page-enter-2 space-y-2 mb-8">
             {posts.map((post) => {
               const displayedViewCount =
-                liveViewCounts[post.slug.current] ??
+                liveViewCounts === null ? null : liveViewCounts[post.slug.current] ??
                 post.viewCountBase ??
                 post.viewCount ??
                 0;
@@ -141,11 +150,10 @@ export default async function TagPage({
                 <HoverCard>
                   <HoverCardTrigger asChild>
                     <TransitionLink
-                      href={`/posts/${post.slug.current}#`}
+                      href={`/posts/${post.slug.current}/`}
                       className={`pageLinkContainer flex justify-between items-center border p-3 cursor-pointer group ${post.featured ? 'pinnedLinkBorder' : ''}`}
                       aria-label={`View ${post.title}`}
                       scroll={true}
-                      prefetch={false}
                     >
                       <div className="flex items-center gap-3">
                         <div>
@@ -169,9 +177,9 @@ export default async function TagPage({
                           </div>
                         </div>
                       </div>
-                      <div className="ms-4 text-sm text-muted-foreground whitespace-nowrap flex items-center gap-1">
+                      {displayedViewCount !== null && <div className="ms-4 text-sm text-muted-foreground whitespace-nowrap flex items-center gap-1">
                         {displayedViewCount} <Eye className="h-4 w-4" />
-                      </div>
+                      </div>}
                     </TransitionLink>
                   </HoverCardTrigger>
                   <HoverCardContent className="w-80 hidden md:block">
@@ -185,7 +193,7 @@ export default async function TagPage({
                           {post.excerpt}
                         </p>
                       )}
-                      <TransitionLink href={`/posts/${post.slug.current}#`} scroll={true} prefetch={false} className="animated-underline-small-muted pt-2 text-xs text-muted-foreground">
+                      <TransitionLink href={`/posts/${post.slug.current}/`} scroll={true} className="animated-underline-small-muted pt-2 text-xs text-muted-foreground">
                         Click to read full post
                       </TransitionLink>
                     </div>

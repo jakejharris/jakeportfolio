@@ -1,7 +1,6 @@
 "use client"
 
 import * as React from "react"
-import { useCallback, useEffect, useState } from "react"
 import {
   Accordion,
   AccordionContent,
@@ -10,70 +9,14 @@ import {
 } from "@/app/components/ui/accordion"
 import { Button } from "@/app/components/ui/button"
 import { ExternalLink, List } from "lucide-react"
-import { PortableTextBlock } from "@portabletext/types"
+import type { PostHeading } from "@/app/lib/post-headings"
 import { Separator } from "@/app/components/ui/separator"
 
 interface TableOfContentsProps {
-  content: PortableTextBlock[]
-  externalLinks?: Array<{ title: string; url: string; icon: string }>
+  headings: PostHeading[]
 }
 
-interface HeadingItem {
-  text: string
-  id: string
-  isExternalLink?: boolean
-  url?: string
-  isHeading?: boolean
-}
-
-export default function TableOfContents({ content, externalLinks }: TableOfContentsProps) {
-  const [headings, setHeadings] = useState<HeadingItem[]>([])
-
-  // Extract headings from content (h1–h4 heading blocks)
-  const extractHeadings = useCallback(() => {
-    const extractedHeadings: HeadingItem[] = []
-
-    if (!content || !Array.isArray(content)) return []
-
-    content.forEach((block) => {
-      if (block._type === 'block' && ['h1', 'h2', 'h3', 'h4'].includes(block.style || '')) {
-        const text = block.children?.map((child: any) => child.text).join('') || ''
-        if (text.trim().length > 0) {
-          extractedHeadings.push({
-            text: text.trim(),
-            id: `section-${block._key}`,
-          })
-        }
-      }
-    })
-
-    // Add external links if available
-    if (externalLinks && externalLinks.length > 0) {
-      extractedHeadings.push({
-        text: "External Links",
-        id: "external-links",
-        isHeading: true
-      })
-
-      // Add each external link as a sub-item
-      externalLinks.forEach((link) => {
-        extractedHeadings.push({
-          text: link.title,
-          id: "external-links", // Same ID to scroll to the external links section
-          isExternalLink: true,
-          url: link.url
-        })
-      })
-    }
-
-    return extractedHeadings
-  }, [content, externalLinks])
-
-  useEffect(() => {
-    const extracted = extractHeadings()
-    setHeadings(extracted)
-  }, [content, externalLinks, extractHeadings])
-
+export default function TableOfContents({ headings }: TableOfContentsProps) {
   const scrollToHeading = (id: string, url?: string) => {
     if (url) {
       window.open(url, '_blank', 'noopener,noreferrer')
@@ -187,4 +130,4 @@ export default function TableOfContents({ content, externalLinks }: TableOfConte
       </Accordion>
     </div>
   )
-} 
+}
