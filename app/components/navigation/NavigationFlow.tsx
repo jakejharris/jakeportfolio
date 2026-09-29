@@ -18,6 +18,7 @@ import {
   type NavArrival,
   type NavDeparture,
 } from "./navigation-events";
+import { focusQuietly } from "../../lib/focus-intent";
 import { ScrollMemory, scrollKey } from "./scroll-memory";
 import "../../css/navigation.css";
 
@@ -75,7 +76,7 @@ function focusHeading() {
     target.setAttribute("tabindex", "-1");
     target.setAttribute("data-nav-focus", "");
   }
-  target.focus({ preventScroll: true });
+  focusQuietly(target);
 }
 
 export default function NavigationFlow() {
@@ -312,7 +313,7 @@ export default function NavigationFlow() {
               !candidate.closest("[inert]")
           )
         : null;
-      if (link) link.focus({ preventScroll: true });
+      if (link) focusQuietly(link);
       else focusHeading();
     }
   }, [pathname]);

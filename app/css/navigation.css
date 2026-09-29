@@ -56,3 +56,10 @@ html[data-arrival="restore"] :is(.page-enter, .page-enter-2, .page-enter-3, .her
 [data-nav-focus]:focus {
   outline: none;
 }
+
+/* Focus a script moved after a tap (lib/focus-intent.ts): the reader is not
+   using a keyboard, so no ring, even where the browser would draw one. */
+[data-quiet-focus],
+[data-quiet-focus] * {
+  outline: none !important;
+}
