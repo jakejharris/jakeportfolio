@@ -129,6 +129,7 @@ export default function GlmArchive() {
             <Rich parts={CREDITS_ROLL} />
           </p>
           <p>{CREDITS_INTRO}</p>
+          <p>Thanks to <a href={GLM_COPY.credit.profile}>{GLM_COPY.credit.handle}</a> for the first community run on their own three GB10 machines, shared in <a href={GLM_COPY.credit.pr}>PR #9</a>.</p>
           <div className="flex items-start gap-3">
             <blockquote className="min-w-0 flex-1 break-words border-l-2 border-border pl-4 text-sm">
               <Rich parts={SHAPLEYMCG_ATTRIBUTION} />

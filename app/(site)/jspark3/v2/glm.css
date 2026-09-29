@@ -283,3 +283,8 @@
   .glm-header nav, .glm-actions { display: none; }
   .glm-chart, .glm-install, .glm-starts tr { break-inside: avoid; }
 }
+
+/* Frozen results stay separate from the current measured start. */
+.glm-history-results { margin-top: 44px; padding-block: 22px; border-block: 1px solid var(--glm-paper-line); }
+.glm-history-results > summary { cursor: pointer; font-size: 18px; font-weight: 500; }
+.glm-history-results[open] > summary { margin-bottom: 20px; }

@@ -6,7 +6,8 @@ import FoldAnchors from './FoldAnchors';
 import GlmArchive from './GlmArchive';
 import HeadlineResults from './HeadlineResults';
 import ProjectHeader from './ProjectHeader';
-import ServingStarts from './ServingStarts';
+import WorkloadResults from './WorkloadResults';
+import HistoricalResults from './HistoricalResults';
 import SpeedHeadline from './SpeedHeadline';
 import { GLM_COPY, GLM_RELEASE, INSTALL_RELEASE, IS_PLACEHOLDER, LABELS, RELEASE, SHOW_MIA, SHOW_V1_1, releaseDate } from '../release-copy';
 import { Marked, Ph } from '../Placeholder';
@@ -21,14 +22,6 @@ const NAV = [
 function MiaNote() {
   const { benchmark, source } = GLM_RELEASE.mia;
   return <p className="glm-small">{GLM_COPY.mia.series}: {source ? <a href={source}>{benchmark} ↗</a> : benchmark}</p>;
-}
-
-/** The credit line, with the handle and the pull request linked in place. */
-function Credit() {
-  const { text, handle, profile, pr } = GLM_COPY.credit;
-  const [before, rest = ''] = text.split(handle);
-  const [middle, after = ''] = rest.split('PR #9');
-  return <p className="glm-credit">{before}<a href={profile}>{handle}</a>{middle}<a href={pr}>PR #9</a>{after}</p>;
 }
 
 /**
@@ -60,7 +53,7 @@ export default function GlmPage() {
         <ClusterIllustration />
       </header>
       <dl className="glm-specs">
-        <div><dt>Release</dt><dd><Ph>{RELEASE}</Ph> · <Ph>{releaseDate(published)}</Ph></dd></div>
+        <div><dt>Release</dt><dd><Ph>{RELEASE}</Ph>{published ? <> · <Ph>{releaseDate(published)}</Ph></> : null}</dd></div>
         <div><dt>Weights</dt><dd>Stock GLM-5.3 Flash · abliteration is opt-in</dd></div>
         <div><dt>Hardware</dt><dd>Three DGX Sparks · RoCE · one endpoint</dd></div>
       </dl>
@@ -76,12 +69,13 @@ export default function GlmPage() {
           <p>{IS_PLACEHOLDER ? <Ph block>{headline.conditions}</Ph> : headline.conditions}</p>
         </div>
         <HeadlineResults />
+        <WorkloadResults />
         <DecodeRace />
-        <ServingStarts />
+        <HistoricalResults />
         {SHOW_MIA ? <MiaNote /> : null}
         {GLM_COPY.internalBuilds ? <p className="glm-small"><Marked text={GLM_COPY.internalBuilds} /></p> : null}
         <p className="glm-evidence-link">
-          <a href={links.release}>Release notes and full results ↗</a>
+          <a href={GLM_COPY.resultsNotes.href}>{GLM_COPY.resultsNotes.label}</a>
           {GLM_COPY.resultsLinks.map(link => <a key={link.href} href={link.href}>{link.label}</a>)}
           <a href="#benchmarks">v1.1 benchmarks and comparisons ↓</a>
         </p>
@@ -91,7 +85,7 @@ export default function GlmPage() {
     <section className="glm-shell glm-proof" id="community" aria-labelledby="proof-title">
       <div>
         <h2 id="proof-title">{GLM_COPY.proof.title}</h2>
-        <Credit />
+        <p className="glm-credit"><a href={GLM_COPY.credit.pr}>Read the first community run in PR #9 ↗</a></p>
         <p className="glm-fine"><Marked text={GLM_COPY.proof.scope} /></p>
       </div>
       <ClusterPair />
@@ -109,6 +103,7 @@ export default function GlmPage() {
       <div>
         <h2 id="install-title">Run <Ph>{INSTALL_RELEASE}</Ph></h2>
         <p>{GLM_COPY.install.body}</p>
+        <p className="glm-fine">{GLM_COPY.install.knownIssue}</p>
         <p>{GLM_COPY.weights}</p>
         {GLM_COPY.modeSwitch ? <p data-mode-switch={GLM_RELEASE.mode_switch}>{GLM_COPY.modeSwitch}</p> : null}
       </div>

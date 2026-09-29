@@ -13,12 +13,13 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { chromePath, loadPlaywright } from './social/browser.mjs';
 import { shell } from './social/theme.mjs';
+import { installNote, releaseSummary } from '../app/(site)/jspark3/install-note.mjs';
 
 const root = resolve(new URL('..', import.meta.url).pathname);
 const file = join(root, 'app/(site)/jspark3/glm-release.json');
 const text = readFileSync(file, 'utf8');
 const glm = JSON.parse(text);
-const decodeEmpty = (row) => row.label === 'Decode' && (row.lo_text === null || row.hi_text === null);
+const decodeEmpty = (row) => row.label === 'Decode' && !row.omitted_reason && (row.lo_text === null || row.hi_text === null);
 if (glm.placeholder || glm.headline.rows.some(decodeEmpty)) throw new Error('glm-release.json still holds placeholders; fill it first');
 if (glm.headline.missing || !glm.headline.rows.length) throw new Error('no measured start of this release is in the numbers; keep the neutral hub card');
 
@@ -31,23 +32,26 @@ const format = (text) => {
   return `${whole.replace(/\B(?=(\d{3})+$)/g, ',')}${fraction === undefined ? '' : `.${fraction}`}`;
 };
 // The card's four figures match the hub card: prefill, code and prose for one stream, code for four streams,
-// each "up to" the top of its measured range (the release page keeps the full ranges). prose_c1 is the
+// code medians and full ranges retain the recorded precision. prose_c1 is the
 // release's decode_prose_c1; a figure the numbers leave out gets no cell.
-const TILES = [['prefill', 'Prefill'], ['decode_c1', 'Code · one stream'], ['prose_c1', 'Prose · one stream'], ['decode_c4', 'Code · 4 streams']];
+const TILES = [['prefill', 'Prefill'], ['decode_c1', 'Code median · one stream'], ['prose_c1', 'Prose · one stream'], ['decode_c4', 'Code median · 4 streams']];
 const cells = TILES.flatMap(([id, label]) => {
   const cell = id === 'prose_c1' ? glm.headline.prose_c1 : glm.headline.rows.find((row) => row.id === id);
-  return cell && cell.hi_text !== null ? [{ id, label, hi: cell.hi_text, unit: cell.unit ?? 'tok/s' }] : [];
+  return cell && cell.hi_text !== null ? [{ id, label, value: cell.median_text ? format(cell.median_text) : cell.lo_text === cell.hi_text ? format(cell.hi_text) : `${format(cell.lo_text)}–${format(cell.hi_text)}`, unit: cell.unit ?? 'tok/s' }] : [];
 });
 if (!cells.length) throw new Error('no figures to show; keep the neutral hub card');
-const caption = 'Best measured run for each. Full ranges on the release page.';
+const caption = 'Code medians; prose and prefill ranges. One serving start.';
+// When installers get a later patch than the measured build, the card carries the page's install note (release-copy.ts INSTALL_NOTE).
+const note = releaseSummary(glm.tag) ?? installNote(glm.tag, glm.install_tag);
 // Six characters fill a half-width cell. Longer figures step down, all cells together, so none reaches the next column.
-const longest = Math.max(...cells.map((item) => format(item.hi).length));
+const longest = Math.max(...cells.map((item) => item.value.length));
 const scale = longest > 9 ? 0.5 : longest > 6 ? 0.68 : 1;
 const size = scale < 1 ? ` style="font-size:calc(var(--grid-num) * ${scale})"` : '';
-const cell = (item) => `<div class="cell"><div class="eyebrow">${escape(item.label)}</div><div class="num"${size}><span style="font-size:0.32em;font-weight:400;margin-right:0.25em">up to</span>${escape(format(item.hi))}<span class="unit">${escape(item.unit)}</span></div><div class="comparison"></div></div>`;
+const cell = (item) => `<div class="cell"><div class="eyebrow">${escape(item.label)}</div><div class="num"${size}>${escape(item.value)}<span class="unit">${escape(item.unit)}</span></div><div class="comparison"></div></div>`;
 // There is no release name; one set anyway is escaped like every other interpolated text.
 const title = escape(glm.name ? `JSPARK3 ${release} ${glm.name}` : `JSPARK3 ${release}`);
-const body = `<div class="tagline">${title}: GLM-5.3 Flash on three DGX Sparks.<div style="margin-top:10px;font-size:18px;font-weight:400;color:var(--muted)">${escape(caption)}</div></div><div class="grid">${cells.map(cell).join('')}</div>`;
+const line = (text) => `<div style="margin-top:10px;font-size:18px;font-weight:400;color:var(--muted)">${escape(text)}</div>`;
+const body = `<div class="tagline">${title}: GLM-5.3 Flash on three DGX Sparks.${line(caption)}${note ? line(note) : ''}</div><div class="grid">${cells.map(cell).join('')}</div>`;
 if (body.includes('—')) throw new Error('em dash in card copy');
 // The shared shell keeps the original series' wordmark; this card uses the current casing.
 const html = shell({ cardId: '07-hero-card', orient: 'og', body, receipt: '' }).replace('<span class="word">JSpark3</span>', '<span class="word">JSPARK3</span>');

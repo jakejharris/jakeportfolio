@@ -1,0 +1,72 @@
+{
+  "placeholder": false,
+  "version": "v1.8",
+  "tag": "v1.8.0",
+  "install_tag": "v1.8.4",
+  "name": null,
+  "published": "2026-09-27",
+  "social_image": "/og/jspark3-glm-v1.8.png",
+  "mode_switch": "B",
+  "links": { "release": "https://github.com/jakejharris/jspark3/releases/tag/v1.8.4", "source": "https://github.com/jakejharris/jspark3/tree/v1.8.4", "install": "https://github.com/jakejharris/jspark3/blob/v1.8.4/docs/INSTALL.md", "huggingface": "https://huggingface.co/jakejharris/jspark3", "results": "https://github.com/jakejharris/jspark3/blob/v1.8.0/release/results-v1.8.0.json", "numbers": "https://github.com/jakejharris/jspark3/blob/v1.8.0/release/RELEASE-NUMBERS.md" },
+  "headline": {
+    "baseline": "v1.1",
+    "conditions": "Decode is the aggregate rate of 1, 2, 4 or 8 code-writing requests started together (this build serves the Pi coding agent), each forced to 512 output tokens at temperature 0 with thinking off and no prefix-cache reuse, counted from the first to the last streamed token; prefill is the range over eight Pi-shaped coding-agent turns, each extending a cached prefix, measured right after a page-cache hygiene step.",
+    "build": "v1.8.0",
+    "missing": false,
+    "serving_starts": 1,
+    "sweeps": 2,
+    "speed": {
+      "streams": 4,
+      "code": { "lo": 136.9, "hi": 141.7, "lo_text": "136.9", "hi_text": "141.7", "display": null },
+      "prose": { "lo": 83.3, "hi": 90.7, "lo_text": "83.3", "hi_text": "90.7", "display": null },
+      "rule": "strict",
+      "reference_streams": [
+        1,
+        2
+      ]
+    },
+    "prose_c1": { "lo": 44.3, "hi": 49.1, "lo_text": "44.3", "hi_text": "49.1" },
+    "rows": [
+      { "id": "prefill", "label": "Prefill", "concurrency": "c1", "unit": "tok/s", "lo": 1195.0, "hi": 1262.6, "lo_text": "1195.0", "hi_text": "1262.6", "v1_1": null, "v1_1_text": null, "mia": null },
+      { "id": "decode_c1", "label": "Decode", "concurrency": "c1", "unit": "tok/s", "lo": 68.2, "hi": 73.3, "lo_text": "68.2", "hi_text": "73.3", "v1_1": null, "v1_1_text": null, "mia": null },
+      { "id": "decode_c2", "label": "Decode", "concurrency": "c2", "unit": "tok/s", "lo": 101.0, "hi": 103.9, "lo_text": "101.0", "hi_text": "103.9", "v1_1": null, "v1_1_text": null, "mia": null },
+      { "id": "decode_c4", "label": "Decode", "concurrency": "c4", "unit": "tok/s", "lo": 136.9, "hi": 141.7, "lo_text": "136.9", "hi_text": "141.7", "v1_1": null, "v1_1_text": null, "mia": null },
+      { "id": "decode_c8", "label": "Decode", "concurrency": "c8", "unit": "tok/s", "lo": 174.0, "hi": 179.7, "lo_text": "174.0", "hi_text": "179.7", "v1_1": null, "v1_1_text": null, "mia": null }
+    ]
+  },
+  "sets": [
+    {
+      "id": "base_m0_q",
+      "group": "base_m0",
+      "label": "v1.7.4 base recipe, stock weights, QA profile",
+      "build": "v1.7.4",
+      "mode": 0,
+      "serving_starts": 1,
+      "sweeps": 2,
+      "rows": [
+        { "id": "prefill", "lo": 1196.7, "hi": 1263.3, "lo_text": "1196.7", "hi_text": "1263.3" },
+        { "id": "decode_c1", "lo": 73.0, "hi": 75.7, "lo_text": "73.0", "hi_text": "75.7" },
+        { "id": "decode_c2", "lo": 104.1, "hi": 112.5, "lo_text": "104.1", "hi_text": "112.5" },
+        { "id": "decode_c4", "lo": 137.8, "hi": 141.5, "lo_text": "137.8", "hi_text": "141.5" },
+        { "id": "decode_c8", "lo": 180.1, "hi": 181.0, "lo_text": "180.1", "hi_text": "181.0" }
+      ]
+    },
+    {
+      "id": "opt_in_m1",
+      "group": "opt_in_m1",
+      "label": "v1.7.4 base recipe, no decode levers",
+      "build": "v1.7.4",
+      "mode": 1,
+      "serving_starts": 1,
+      "sweeps": 2,
+      "rows": [
+        { "id": "prefill", "lo": 1185.6, "hi": 1266.2, "lo_text": "1185.6", "hi_text": "1266.2" },
+        { "id": "decode_c1", "lo": 62.7, "hi": 64.4, "lo_text": "62.7", "hi_text": "64.4" },
+        { "id": "decode_c2", "lo": 106.5, "hi": 108.0, "lo_text": "106.5", "hi_text": "108.0" },
+        { "id": "decode_c4", "lo": 126.8, "hi": 136.5, "lo_text": "126.8", "hi_text": "136.5" },
+        { "id": "decode_c8", "lo": 168.3, "hi": 172.5, "lo_text": "168.3", "hi_text": "172.5" }
+      ]
+    }
+  ],
+  "mia": { "benchmark": null, "source": null, "ran_exactly_as_published": false }
+}

@@ -3,15 +3,16 @@ import PageLayout from '../../../components/PageLayout';
 import PixelFluidBackground from '../../../components/PixelFluidBackground';
 import TransitionLink from '../../../components/TransitionLink';
 import { release } from './release-data';
-import { GLM_RELEASE, HEADLINE_ROWS, HUB_COPY, INTERNAL_BUILDS, IS_PLACEHOLDER, RELEASE, RELEASE_HISTORY, releaseDate, valueText } from '../release-copy';
+import { GLM_RELEASE, HEADLINE_ROWS, HUB_COPY, INTERNAL_BUILDS, IS_PLACEHOLDER, RELEASE, RELEASE_HISTORY, RELEASE_SUMMARY, releaseDate, valueText } from '../release-copy';
 import { Ph } from '../Placeholder';
+import Band from './Band';
 
 /**
  * The card's four figures, from the release's own start: prefill, code and prose for one stream, and code
  * for four streams. prose_c1 is the release's decode_prose_c1; the others are headline rows. A figure the
  * release's numbers leave out is skipped, and with no measured start of the release the card shows none.
  */
-type HubCell = { lo_text: string | null; hi_text: string | null; unit: string };
+type HubCell = { lo_text: string | null; hi_text: string | null; median_text?: string; unit: string };
 const HUB_TILES = HUB_COPY.glmCard.tiles.flatMap(tile => {
   const cell: HubCell | undefined = tile.id === 'prose_c1'
     ? (GLM_RELEASE.headline.missing || !GLM_RELEASE.headline.prose_c1 ? undefined : { ...GLM_RELEASE.headline.prose_c1, unit: 'tok/s' })
@@ -20,12 +21,9 @@ const HUB_TILES = HUB_COPY.glmCard.tiles.flatMap(tile => {
 });
 const FIGURE = HUB_COPY.glmCard.figure;
 
-/** One figure: the top of its measured range as the release files write it, never rounded. */
+/** A recorded code median, otherwise the complete recorded range. */
 function HubFigure({ cell }: { cell: HubCell }) {
-  const top = <Ph>{valueText(cell.hi_text)}</Ph>;
-  return FIGURE === 'asterisk'
-    ? <>{top}<span className="spark-hub-figure-mark" aria-hidden="true">*</span></>
-    : <><span className="spark-hub-figure-upto">up to</span>{top}</>;
+  return cell.median_text ? <Ph>{valueText(cell.median_text)}</Ph> : <Band lo={cell.lo_text} hi={cell.hi_text} />;
 }
 
 function LedgerRow({ href, children }: { href: string; children: React.ReactNode }) {
@@ -48,8 +46,9 @@ export default function HubPage() {
         <ol className="spark-hub-list">
           <li>
             <TransitionLink href="/jspark3/glm/" className="pageLinkContainer pinnedLinkBorder spark-hub-release">
-              <span className="spark-hub-release-meta">{`${HUB_COPY.glmCard.meta} `}<span><Ph>{RELEASE}</Ph> · <Ph>{releaseDate(GLM_RELEASE.published)}</Ph></span></span>
+              <span className="spark-hub-release-meta">{`${HUB_COPY.glmCard.meta} `}<span><Ph>{RELEASE}</Ph>{GLM_RELEASE.published ? <> · <Ph>{releaseDate(GLM_RELEASE.published)}</Ph></> : null}</span></span>
               <span className="spark-hub-release-title">{HUB_COPY.glmCard.title} <span aria-hidden="true">↗</span></span>
+              {RELEASE_SUMMARY ? <span className="spark-hub-release-detail">{RELEASE_SUMMARY}</span> : null}
               {HUB_TILES.length ? <span className="spark-hub-figures" data-figure={FIGURE}>
                 {HUB_TILES.map(({ id, label, cell }) => <span key={id} className="spark-hub-figure" data-metric-id={id}>
                   <span className="spark-hub-figure-label">{label}</span>
@@ -57,6 +56,7 @@ export default function HubPage() {
                 </span>)}
               </span> : null}
               <span className="spark-hub-release-detail">{HUB_TILES.length ? HUB_COPY.glmCard.caption[FIGURE] : HUB_COPY.glmCard.caption.none}</span>
+              {HUB_TILES.length && HUB_COPY.glmCard.installNote ? <span className="spark-hub-release-detail" data-hub-install-note>{HUB_COPY.glmCard.installNote}</span> : null}
               <span className="spark-hub-release-action">{HUB_COPY.glmCard.action} <span aria-hidden="true">→</span></span>
             </TransitionLink>
           </li>
@@ -77,7 +77,7 @@ export default function HubPage() {
             <LedgerRow href="/jspark3/glm/">
               <span className="spark-hub-ledger-version"><Ph>{RELEASE}</Ph></span>
               <span className="spark-hub-ledger-what">{GLM_RELEASE.name ? `${GLM_RELEASE.name}, GLM-5.3 Flash` : 'GLM-5.3 Flash'}<span className="spark-hub-ledger-pill">Latest</span></span>
-              <span className="spark-hub-ledger-when"><Ph>{releaseDate(GLM_RELEASE.published, false)}</Ph></span>
+              <span className="spark-hub-ledger-when">{GLM_RELEASE.published ? <Ph>{releaseDate(GLM_RELEASE.published, false)}</Ph> : null}</span>
             </LedgerRow>
           </li>
           {INTERNAL_BUILDS ? <li className="spark-hub-ledger-internal">
