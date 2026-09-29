@@ -132,8 +132,9 @@ try {
     await toggle(page);
     await waitOpen(page);
     await page.addStyleTag({ content: ".site-menu-link { font-size: 224px !important; }" });
-    await page.waitForTimeout(100);
-    assert.equal(await page.locator(".site-menu-nav").getAttribute("data-scrolls"), "");
+    // ResizeObserver schedules the update on a frame; a loaded browser may
+    // take more than a fixed 100ms to deliver it.
+    await page.waitForFunction(() => document.querySelector(".site-menu-nav").hasAttribute("data-scrolls"), null, { timeout: 2000 });
   });
 
   await check("200 percent root text keeps the menu inside the phone viewport", async (page) => {
