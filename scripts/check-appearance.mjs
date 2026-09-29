@@ -507,6 +507,11 @@ try {
       await page.emulateMedia({ reducedMotion: "reduce" });
       await page.waitForTimeout(100);
       await unfold();
+      // Compare the same idle accent at both ends. Starting from mono
+      // otherwise counts ordinary colored crest glints as painted rings.
+      await tap(swatch(3));
+      await unfold(); // A first press on the selected swatch folds the phone palette.
+      await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))));
       const before = await probe();
       let most = { drops: 0, colored: before.colored };
       const order = [1, 2, 3, 4, 0, 1, 2, 3];
