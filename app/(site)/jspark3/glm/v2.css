@@ -27,3 +27,8 @@
   .glm-v2-table th, .glm-v2-table td { padding-inline: 6px; }
   .glm-v2-section { padding-block: 36px; }
 }
+
+.glm-v2-margins { display: grid; gap: 12px; margin-top: 20px; }
+.glm-v2-margins p { display: flex; flex-wrap: wrap; column-gap: 16px; font-size: 13px; }
+.glm-v2-margins strong { font-weight: 500; }
+.glm-v2-margins span { font-family: var(--font-geist-mono), monospace; font-variant-numeric: tabular-nums; }

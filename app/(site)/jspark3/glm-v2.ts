@@ -7,7 +7,7 @@ type V2Release = {
   comparison: { source: string; line_source: string; conditions: string; engine_weights: string; same_conditions: boolean } | null;
   comparison_claim: string | null;
   quality: { claim: string; scope: string; source: string; prompt_set_note: string } | null;
-  checks: { id: string; status: string; observed: string | null; failed_cases: string[] }[]; panel_note: string | null; limitations: string[];
+  checks: { id: string; status: string; observed: string | null; failed_cases: string[] }[]; panel_note: string | null; quality_notes: string[]; limitations: string[];
   license: { notice: string; source: string } | null;
   links: { release: string; source: string; results: string | null };
 };

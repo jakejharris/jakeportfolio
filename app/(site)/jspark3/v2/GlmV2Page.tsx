@@ -14,7 +14,7 @@ export default function GlmV2Page() {
       <ProjectHeader prefix="glm" nav={NAV} />
       <aside className="glm-v2-preview" aria-label="Release preview">
         <strong>Release preview · publication pending</strong>
-        <p>{release.pending.length ? 'The frozen results and release qualifications are pending.' : 'Prepared for review. Publication is a separate decision.'}</p>
+        <p>{release.rows.length ? 'Measured results from the sealed candidate. Release metadata and publication remain pending.' : 'The frozen results and release qualifications are pending.'}</p>
       </aside>
       <header className="glm-hero">
         <div>
@@ -55,15 +55,17 @@ export default function GlmV2Page() {
         <div className="glm-v2-table-wrap">
           <table className="glm-v2-table">
             <caption>The line is the midpoint of the published TP=2 and TP=4 rows.</caption>
-            <thead><tr><th scope="col">Workload</th><th scope="col">Median</th><th scope="col">Slowest</th><th scope="col">Line</th><th scope="col">vs line</th></tr></thead>
+            <thead><tr><th scope="col">Workload</th><th scope="col">Median</th><th scope="col">Slowest</th><th scope="col">Line</th></tr></thead>
             <tbody>{Object.entries(V2_METRICS).map(([id, label]) => {
               const row = release.rows.find(item => item.id === id);
               return <tr key={id}><th scope="row">{label}</th>
                 <td>{row?.median_text ?? 'Pending'}</td><td>{row?.worst_text ?? 'Pending'}</td><td>{row?.line_text ?? 'Pending'}</td>
-                <td>{row ? <>{row.margin_text}%<br />{row.vs_line}</> : 'Pending'}</td>
               </tr>;
             })}</tbody>
           </table>
+          <div className="glm-v2-margins" aria-label="Percentage differences from the line">
+            {release.rows.map(row => <p key={row.id}><strong>{V2_METRICS[row.id]}</strong><span>{row.margin_text}% · {row.vs_line} the line</span></p>)}
+          </div>
         </div>
         <div className="glm-v2-table-wrap">
           <table className="glm-v2-table">
@@ -84,6 +86,7 @@ export default function GlmV2Page() {
             <p>{row.evidence.map((href, index) => <React.Fragment key={href}><a href={href}>Receipt {index ? '↗' : 'and results ↗'}</a>{' '}</React.Fragment>)}</p>
           </div>)}
         </details> : null}
+        {release.links.results ? <p className="glm-evidence-link"><a href={release.links.results}>Sealed numbers and source tokens ↗</a></p> : null}
       </div>
     </section>
 
@@ -95,6 +98,7 @@ export default function GlmV2Page() {
         <p><a href={release.quality.source}>Exactness receipt ↗</a></p>
       </> : <p className="glm-v2-empty">Quality result pending. The frozen result will supply the exactness claim, its scope and its evidence.</p>}
       {release.panel_note ? <><p>{release.panel_note}</p><ul>{release.checks.map(check => <li key={check.id}>{check.id}: {check.status}{check.observed ? ` · ${check.observed}` : ''}{check.failed_cases.length ? ` · Reported failures: ${check.failed_cases.join(', ')}` : ''}</li>)}</ul></> : null}
+      {release.quality_notes.map(note => <p key={note} className="glm-v2-empty">{note}</p>)}
       <h3 style={{ marginTop: 24 }}>Release limitations</h3>
       {release.limitations.length ? <ul>{release.limitations.map(item => <li key={item}>{item}</li>)}</ul> : <p className="glm-v2-empty">Release-specific limitations and installation qualification are pending.</p>}
     </section>
@@ -106,7 +110,7 @@ export default function GlmV2Page() {
       {release.license ? <p><a href={release.license.source}>Pinned drafter model card and terms ↗</a></p> : null}
       <p className="glm-fine">Recipe code, engine, weights and dependencies retain their own license terms.</p>
       <h3 style={{ marginTop: 24 }}>Built on open work</h3>
-      <p>Tas’s TensorFold GLM branch, ashhart’s engine, Vontra’s MLX weights, the DFlash2 authors’ drafter, and mmastrac’s fabric work, template and published reference.</p>
+      <p>Tas’s TensorFold GLM branch; ashhart and the TensorFold contributors’ engine; Z.AI’s GLM-5.3-Flash; Vontra’s MLX weights; the DFlash2 authors at Inco AI; mmastrac’s fabric work, template and published reference; and alexellis’s RigMark benchmark.</p>
     </section>
 
     <section className="glm-shell glm-v2-section" id="releases" aria-labelledby="history-title">

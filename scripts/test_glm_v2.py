@@ -176,6 +176,47 @@ class PublicationTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'forbidden public text'):
             gate.snapshot(source)
 
+    def test_reviewed_pending_seal_is_visible_without_changing_source_state(self):
+        source = sample()
+        source.update(state='pending', frozen_at=None, release_date=None)
+        review = {'commit':'a'*40, 'source_sha256':'b'*64,
+                  'results_path':source['site_v2']['results_path'],
+                  'copy_source':{'path':'README.md','sha256':'c'*64},
+                  'site_v2':source.pop('site_v2')}
+        source['tf']['rows']['rigmark_code']['vs_upstream_tp3'] = 'clearly beats'
+        result = gate.project(source, 'b'*64, review)
+        self.assertEqual(result['rows'][0]['median_text'], str(source['tf']['rows']['rigmark_code']['median']))
+        self.assertTrue(result['publication_hold'])
+        self.assertIsNone(result['published'])
+        self.assertIn('Final freeze, release identity and date pending.', result['pending'])
+        self.assertEqual(source['state'], 'pending')
+        self.assertIsNone(source['frozen_at'])
+        self.assertIn('/blob/' + 'a'*40 + '/', result['links']['results'])
+        self.assertNotIn('clearly', gate.dump(gate.snapshot(source)))
+        self.assertEqual(result, gate.project(gate.snapshot(source), 'b'*64, review))
+        with self.assertRaisesRegex(ValueError, 'source hash mismatch'):
+            gate.project(source, 'd'*64, review)
+        source['fixture'] = True
+        with self.assertRaisesRegex(ValueError, 'cannot authorize fixture'):
+            gate.project(source, 'b'*64, review)
+
+    def test_quality_summary_disagreement_is_visible(self):
+        source = sample()
+        source['tf']['quality']['overall'] = 'INCOMPLETE: rigmark_gates (NOT-RUN)'
+        source['tf']['quality']['rigmark_gates'] = {'status':'PASS','observed':'Recorded gates passed.'}
+        result = gate.project(source, 'a'*64)
+        self.assertEqual(result['panel_note'], source['tf']['quality']['overall'])
+        self.assertTrue(result['quality_notes'])
+        self.assertEqual(next(c for c in result['checks'] if c['id']=='rigmark_gates')['status'], 'PASS')
+
+    def test_committed_review_mapping_matches_source_and_preserves_hold(self):
+        data = gate.check(preview=True)
+        self.assertTrue(data['rows'])
+        self.assertTrue(data['publication_hold'])
+        self.assertIsNone(data['published'])
+        with self.assertRaisesRegex(ValueError, 'publication blocked'):
+            gate.check()
+
     def test_historical_measurements_unchanged(self):
         raw=(gate.ROOT/'app/(site)/jspark3/glm-release.json').read_bytes()
         self.assertEqual(hashlib.sha256(raw).hexdigest(),'4b4a90e11362a299965f7359b05cd31c8ed2165d67739ecfa6616c7c81c549ad')

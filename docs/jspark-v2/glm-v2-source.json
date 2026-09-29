@@ -1,10 +1,9 @@
 {
   "schema": "jspark3-results/1",
-  "state": "fixture",
-  "fixture": true,
+  "state": "pending",
   "frozen_at": null,
   "tag": "v2.0.0",
-  "version": "v2.0",
+  "version": "v2.0.0",
   "release_date": null,
   "tf": {
     "identity": {
@@ -12,105 +11,157 @@
       "weights": "Vontra/GLM-5.3-Flash-MLX-4bit-MTP@76add2a341a1cd90ad0e86bb69839ea9c35827c6",
       "drafter": "incoai/GLM-5.3-Flash-DFlash2@bf582e4eacc1810f76656d1811693ff6c6737d2a"
     },
-    "exact": {},
+    "exact": {
+      "verdict": "PASS",
+      "engine": "tensorfold",
+      "rule": "hard",
+      "exact_class": "EXACT-ON-CORPUS",
+      "scope": "greedy (temperature 0), non-streaming; measured on this serving start's 8-prompt corpus, not a guarantee",
+      "prompts": 8,
+      "tested": 8,
+      "diverging": 0,
+      "drafting_proof": {
+        "counters_rose_on": true,
+        "counters_flat_off": true,
+        "per_reply_agree": true
+      },
+      "off_source": "same-boot switch: \"draft\": false",
+      "receipt": "release/receipts/exact-result.json",
+      "sha256": "645c4c7b195ee8f8af1a314e7856c92b1dccfa02f105eaa6b4728451dfefc1a8",
+      "prompt_set_note": "The measured prompt set is not published. scripts/exactness.py uses a different public set."
+    },
     "rows": {
       "rigmark_code": {
-        "median": 11.200,
-        "worst": 11.100,
+        "median": 87.609,
+        "worst": 87.493,
         "values": [
-          11.100,
-          11.200,
-          11.300
+          87.493,
+          87.609,
+          87.694
         ],
         "n": 3,
         "unit": "tok/s",
         "class": "measured",
-        "instrument": "FIXTURE ONLY: RigMark, single stream. Invented layout data.",
+        "instrument": "RigMark c5a0db0, gate/run.sh flags (decode 4096 tokens, reasoning effort low), single stream, median of 3 receipts",
         "vs_line": "above",
-        "vs_line_pct": 5.500,
+        "vs_line_pct": 4.795454545454536,
         "vs_upstream_tp3": "above",
         "evidence": [
-          "release/receipts/fixture.json"
+          "release/receipts/speed-result.json",
+          "release/receipts/lfl-r1.json",
+          "release/receipts/lfl-r2.json",
+          "release/receipts/lfl-r3.json"
         ]
       },
       "rigmark_prose": {
-        "median": 8.200,
-        "worst": 8.100,
+        "median": 47.214,
+        "worst": 47.038,
         "values": [
-          8.100,
-          8.200,
-          8.300
+          47.038,
+          47.236,
+          47.214
         ],
         "n": 3,
         "unit": "tok/s",
         "class": "measured",
-        "instrument": "FIXTURE ONLY: RigMark, single stream. Invented layout data.",
+        "instrument": "RigMark c5a0db0, gate/run.sh flags (decode 4096 tokens, reasoning effort low), single stream, median of 3 receipts",
         "vs_line": "below",
-        "vs_line_pct": -2.500,
+        "vs_line_pct": -1.6375000000000028,
         "vs_upstream_tp3": "above",
         "evidence": [
-          "release/receipts/fixture.json"
+          "release/receipts/speed-result.json",
+          "release/receipts/lfl-r1.json",
+          "release/receipts/lfl-r2.json",
+          "release/receipts/lfl-r3.json"
         ]
       },
       "rigmark_structured": {
-        "median": 12.200,
-        "worst": 12.100,
+        "median": 126.093,
+        "worst": 126.09,
         "values": [
-          12.100,
-          12.200,
-          12.300
+          126.09,
+          126.093,
+          126.442
         ],
         "n": 3,
         "unit": "tok/s",
         "class": "measured",
-        "instrument": "FIXTURE ONLY: RigMark, single stream. Invented layout data.",
+        "instrument": "RigMark c5a0db0, gate/run.sh flags (decode 4096 tokens, reasoning effort low), single stream, median of 3 receipts",
         "vs_line": "above",
-        "vs_line_pct": 3.300,
+        "vs_line_pct": 0.3925159235668829,
         "vs_upstream_tp3": "above",
         "evidence": [
-          "release/receipts/fixture.json"
+          "release/receipts/speed-result.json",
+          "release/receipts/lfl-r1.json",
+          "release/receipts/lfl-r2.json",
+          "release/receipts/lfl-r3.json"
         ]
       }
     },
     "reference": {
       "line": {
         "class": "derived-midpoint",
-        "rigmark_code": 10.000,
-        "rigmark_prose": 10.000,
-        "rigmark_structured": 11.000
+        "rigmark_code": 83.6,
+        "rigmark_prose": 48.0,
+        "rigmark_structured": 125.6
       },
       "upstream_tp3_set1": {
         "class": "author-reported",
-        "rigmark_code": 7.100,
-        "rigmark_prose": 7.100,
-        "rigmark_structured": 7.100
+        "rigmark_code": 75.7,
+        "rigmark_prose": 43.8,
+        "rigmark_structured": 113.8
       },
       "upstream_tp3_set2": {
         "class": "author-reported",
-        "rigmark_code": 7.200,
-        "rigmark_prose": 7.200,
-        "rigmark_structured": 7.200
+        "rigmark_code": 76.2,
+        "rigmark_prose": 44.0,
+        "rigmark_structured": 114.0
       }
     },
-    "quality": {}
+    "quality": {
+      "smoketest": {
+        "status": "PASS",
+        "observed": "8/8",
+        "failed_cases": []
+      },
+      "nll": {
+        "status": "not run",
+        "observed": null
+      },
+      "gsm8k": {
+        "status": "PASS",
+        "observed": "241/250 = 96.4%"
+      },
+      "humaneval": {
+        "status": "PASS",
+        "observed": "153/164"
+      },
+      "count": {
+        "status": "PASS",
+        "observed": "0 corrupt of 5"
+      },
+      "toolcall": {
+        "status": "not run",
+        "observed": null
+      },
+      "agent_tools": {
+        "status": "not run",
+        "observed": null
+      },
+      "needle": {
+        "status": "not run",
+        "observed": null
+      },
+      "rigmark_gates": {
+        "status": "PASS",
+        "observed": "6/6 in lfl-r1.json; 6/6 in lfl-r2.json; 6/6 in lfl-r3.json"
+      },
+      "audit_code": {
+        "status": "not run",
+        "observed": null
+      },
+      "overall": "INCOMPLETE: not passed: nll (NOT-RUN), toolcall (NOT-RUN), agent_tools (NOT-RUN), needle (NOT-RUN), rigmark_gates (NOT-RUN)"
+    }
   },
-  "site_v2": {
-    "exactness_claim": null,
-    "comparison_claim": null,
-    "above_line_rows": null,
-    "total_rows": null,
-    "comparison": {
-      "source": "https://github.com/mmastrac/glm-5.3-flash-4x-gx10/blob/5d3cca861e715860bd1f841a1f25f74320636b18/experimental/tp3/README.md",
-      "line_source": "https://github.com/mmastrac/glm-5.3-flash-4x-gx10/blob/5d3cca861e715860bd1f841a1f25f74320636b18/README.md",
-      "conditions": "mmastrac's published figures were measured on a switched 200G fabric; this recipe uses Sparks cabled as a triangle. This is not a matched-conditions comparison.",
-      "engine_weights": "TensorFold uses Vontra's MLX affine weights; the published reference uses NVIDIA's NVFP4 checkpoint. The engines and weight formats differ.",
-      "same_conditions": false
-    },
-    "limitations": [],
-    "license": {
-      "notice": "The default DFlash2 drafter is non-commercial (CC BY-NC-ND 4.0). No mode is cleared for commercial use.",
-      "source": "https://huggingface.co/incoai/GLM-5.3-Flash-DFlash2/blob/bf582e4eacc1810f76656d1811693ff6c6737d2a/README.md"
-    },
-    "results_path": null
-  }
+  "site_v2": {}
 }

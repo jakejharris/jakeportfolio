@@ -12,6 +12,7 @@ from urllib.parse import urlparse
 ROOT = Path(__file__).resolve().parent.parent
 DATA = ROOT / 'app/(site)/jspark3/glm-v2-release.json'
 SOURCE = ROOT / 'docs/jspark-v2/glm-v2-source.json'
+REVIEW = ROOT / 'docs/jspark-v2/glm-v2-review.json'
 TITLE = 'JSpark3 v2.0.0 (GLM-5.3-Flash, TP3)'
 REPO = 'https://github.com/jakejharris/jspark3'
 METRICS = ['rigmark_code', 'rigmark_prose', 'rigmark_structured']
@@ -105,10 +106,10 @@ def public_copy(value, where):
     return value
 
 
-def receipt(value):
+def receipt(value, ref='v2.0.0'):
     require(isinstance(value, str) and re.fullmatch(r'release/receipts/[A-Za-z0-9_.-]+\.json', value),
             'public release receipt path required')
-    return REPO + '/blob/v2.0.0/' + value
+    return REPO + '/blob/' + ref + '/' + value
 
 
 def pinned(value):
@@ -118,7 +119,7 @@ def pinned(value):
     return value
 
 
-def project(source, source_sha256):
+def project(source, source_sha256, review=None):
     require(source.get('schema') == 'jspark3-results/1', 'unsupported results schema')
     require(source.get('tag') in (None, 'v2.0.0') and source.get('version') in (None, 'v2.0', 'v2.0.0'),
             'expected JSpark3 v2.0.0 identity')
@@ -141,7 +142,15 @@ def project(source, source_sha256):
     for field in ('weights', 'drafter'):
         require(re.fullmatch(r'[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+@[a-f0-9]{40}', identity[field]), 'pinned weights/drafter revision required')
     require(fixture or not re.search(r'fixture|invented|synthetic|placeholder', string_values(snapshot(source)), re.I), 'fixture markers in real source')
-    site = source.get('site_v2') or {}
+    if review is not None:
+        require(not fixture, 'sealed preview cannot authorize fixture data')
+        require(review.get('source_sha256') == source_sha256, 'sealed preview source hash mismatch')
+        require(re.fullmatch(r'[a-f0-9]{40}', review.get('commit', '')), 'sealed commit required')
+        require((review.get('copy_source') or {}).get('path') == 'README.md' and
+                re.fullmatch(r'[a-f0-9]{64}', review['copy_source'].get('sha256', '')), 'sealed copy source required')
+        require(review.get('results_path') == (review.get('site_v2') or {}).get('results_path'), 'sealed results path mismatch')
+    site = review['site_v2'] if review is not None else source.get('site_v2') or {}
+    release_ref = review['commit'] if review is not None else 'v2.0.0'
     comparison = site.get('comparison')
     if comparison is not None:
         require(comparison.get('same_conditions') is False, 'comparison must not claim matched conditions')
@@ -186,7 +195,8 @@ def project(source, source_sha256):
                 'every-repeat line claim unsupported')
         require(all(Decimal(v) > Decimal(reference_values[key + '_text']) for v in values for key in ('upstream_tp3_set1', 'upstream_tp3_set2')),
                 'published TP3 comparison unsupported')
-        require(row.get('vs_upstream_tp3') == 'above', 'neutral TP3 verdict required')
+        require(row.get('vs_upstream_tp3') == 'above' or
+                (review is not None and row.get('vs_upstream_tp3') == 'clearly beats'), 'neutral TP3 verdict required')
         margin = row.get('vs_line_pct')
         require(isinstance(margin, Number) and re.fullmatch(r'-?\d+(?:\.\d+)?', margin), 'literal margin token required')
         require((Decimal(margin) < 0) == (verdict == 'below'), 'margin sign disagrees with verdict')
@@ -194,7 +204,7 @@ def project(source, source_sha256):
         require(isinstance(evidence, list) and evidence, 'row evidence required')
         rows.append(dict(id=cid, median_text=median, worst_text=worst, samples_text=samples,
                          values_text=values, instrument=instrument, vs_line=verdict, margin_text=str(margin),
-                         evidence=[receipt(path) for path in evidence], **reference_values))
+                         evidence=[receipt(path, release_ref) for path in evidence], **reference_values))
     exact = tf.get('exact') or {}
     quality = None
     claim = site.get('exactness_claim')
@@ -205,7 +215,8 @@ def project(source, source_sha256):
                 number(exact.get('diverging'), 'exact.diverging') == '0', 'exactness corpus mismatch')
         require(exact.get('verdict') == 'PASS' and exact.get('exact_class') == 'EXACT-ON-CORPUS' and
                 exact.get('engine') == 'tensorfold' and exact.get('rule') == 'hard', 'passing TensorFold exactness required')
-        require(claim == f'Speculative output was byte-identical to serial decoding on its {prompts}-prompt greedy check at TP=3.',
+        require(claim in (f'Speculative output was byte-identical to serial decoding on its {prompts}-prompt greedy check at TP=3.',
+                          f'Output byte-identical to serial decoding at TP=3 on its own {prompts}-prompt greedy check, with speculative decoding on'),
                 'unapproved exactness wording')
         scope = public_copy(exact.get('scope'), 'exactness scope')
         require('temperature 0' in scope and 'non-streaming' in scope and 'serving start' in scope and
@@ -214,10 +225,12 @@ def project(source, source_sha256):
         require(all(proof.get(k) is True for k in ('counters_rose_on', 'counters_flat_off', 'per_reply_agree')), 'drafting proof required')
         require(exact.get('off_source') == 'same-boot switch: "draft": false', 'serial reference mismatch')
         require(re.fullmatch(r'[a-f0-9]{64}', exact.get('sha256', '')), 'exactness receipt hash required')
-        quality = dict(claim=claim, scope=scope, source=receipt(exact.get('receipt')),
+        quality = dict(claim=claim, scope=scope, source=receipt(exact.get('receipt'), release_ref),
                        prompt_set_note=public_copy(exact.get('prompt_set_note'), 'prompt-set note'))
     summary = site.get('comparison_claim')
-    if summary is not None:
+    if summary == 'Code and structured are above the reference line on every repeat; prose is below.':
+        require(len(rows) == len(METRICS), 'comparison rows missing')
+    elif summary is not None:
         above = number(site.get('above_line_rows'), 'above_line_rows', count=True)
         total = number(site.get('total_rows'), 'total_rows', count=True)
         require(above == '2' and total == '3' and len(rows) == int(total), 'comparison count mismatch')
@@ -255,17 +268,23 @@ def project(source, source_sha256):
         pending.append('Quality and release limitations pending.')
     if license_info is None or result_file is None:
         pending.append('Release links and license qualification pending.')
-    # No measurement or result claim from a fixture/interim file reaches a consumer.
-    visible = final and not pending
+    # Only an explicit review mapping bound to the original bytes can expose a pending seal.
+    qualified = (len(rows) == len(METRICS) and comparison is not None and summary is not None and
+                 quality is not None and bool(limitations) and bool(panel_note) and
+                 license_info is not None and result_file is not None)
+    visible = not fixture and qualified and (final or review is not None)
     return dict(schema='jspark3-site/2', title=TITLE, engine='TensorFold', fixture=fixture, publication_hold=True,
-                pending=pending, source_sha256=source_sha256, published=source.get('release_date') if final else None,
+                pending=pending, source_sha256=source_sha256, review_commit=review['commit'] if review else None, published=source.get('release_date') if final else None,
                 rows=rows if visible else [], comparison=comparison,
                 comparison_claim=summary if visible else None, quality=quality if visible else None,
                 checks=checks if visible else [], panel_note=panel_note if visible else None,
+                quality_notes=(["The source summary marks RigMark gates as not run, while its per-check record marks them PASS. Both source records are retained here."]
+                               if visible and 'rigmark_gates (NOT-RUN)' in (panel_note or '') and
+                               (panel.get('rigmark_gates') or {}).get('status') == 'PASS' else []),
                 limitations=limitations if visible else [], license=license_info,
                 social_image='/jspark3/glm/share/?v=' + source_sha256[:12],
-                links=dict(release=REPO + '/releases/tag/v2.0.0', source=REPO + '/tree/v2.0.0',
-                           results=REPO + '/blob/v2.0.0/' + result_file if result_file else None))
+                links=dict(release=REPO + '/releases/tag/v2.0.0', source=REPO + '/tree/' + release_ref,
+                           results=REPO + '/blob/' + release_ref + '/' + result_file if result_file else None))
 
 
 def snapshot(source):
@@ -283,6 +302,10 @@ def snapshot(source):
                                 if key in ('line', 'upstream_tp3_set1', 'upstream_tp3_set2')},
                      quality={key: keep(value, ['status', 'observed', 'failed_cases']) if isinstance(value, dict) else value
                               for key, value in (tf.get('quality') or {}).items() if isinstance(value, dict) or key == 'overall'})
+    # Legacy enum wording is not page copy; preserve its neutral meaning after numeric validation.
+    for row in out['tf']['rows'].values():
+        if row.get('vs_upstream_tp3') == 'clearly beats':
+            row['vs_upstream_tp3'] = 'above'
     if out['tf']['exact'].get('drafting_proof'):
         out['tf']['exact']['drafting_proof'] = keep(out['tf']['exact']['drafting_proof'], ['counters_rose_on', 'counters_flat_off', 'per_reply_agree'])
     site = source.get('site_v2') or {}
@@ -297,11 +320,14 @@ def snapshot(source):
     return out
 
 
-def check(data_path=DATA, source_path=SOURCE, preview=False, original=None):
+def check(data_path=DATA, source_path=SOURCE, preview=False, original=None, review_path=None):
     data = json.loads(data_path.read_text())
     source = read(source_path.read_text())
     require(re.fullmatch(r'[0-9a-f]{64}', data.get('source_sha256', '')), 'original source hash required')
-    require(data == project(source, data['source_sha256']), 'generated data differs from source tokens; run the fill')
+    if review_path is None and data_path == DATA and REVIEW.exists():
+        review_path = REVIEW
+    review = read(review_path.read_text()) if review_path else None
+    require(data == project(source, data['source_sha256'], review), 'generated data differs from source tokens; run the fill')
     if original:
         raw = original.read_bytes()
         require(hashlib.sha256(raw).hexdigest() == data['source_sha256'], 'frozen source hash mismatch')
@@ -319,24 +345,30 @@ def main():
     parser.add_argument('--preview', action='store_true')
     parser.add_argument('--fixture', action='store_true')
     parser.add_argument('--original', type=Path)
+    parser.add_argument('--review', type=Path, help='explicit sealed-preview mapping bound to the exact source hash')
     args = parser.parse_args()
     if args.fill:
         raw = args.fill.read_bytes()
         source = read(raw)
         digest = hashlib.sha256(raw).hexdigest()
-        data = project(source, digest)
+        review = read(args.review.read_text()) if args.review else None
+        data = project(source, digest, review)
         require(args.fixture or not data['fixture'], 'fixture requires --fixture')
         public_source = snapshot(source)
-        require(data == project(public_source, digest), 'snapshot would drop visible data')
+        require(data == project(public_source, digest, review), 'snapshot would drop visible data')
         if SOURCE.exists():
             previous = read(SOURCE.read_text())
             require(previous.get('fixture') or not data['fixture'], 'refusing to replace real source with fixture')
+        if review is not None:
+            REVIEW.write_text(dump(review) + '\n')
+        else:
+            require(not REVIEW.exists(), 'explicit review mapping required while a sealed preview is configured')
         SOURCE.write_text(dump(public_source) + '\n')
         DATA.write_text(json.dumps(data, indent=2, ensure_ascii=False) + '\n')
-        print('Filled preview data. ' + ('Publication remains blocked: ' + '; '.join(data['pending']) if data['pending'] else 'Publication data checks pass.'))
+        print('Filled preview data. ' + ('Publication remains blocked: ' + '; '.join(data['pending']) if data['pending'] else 'Data qualified; publication hold remains.'))
     else:
-        data = check(preview=args.preview, original=args.original)
-        print('PASS: ' + ('preview structure; publication pending' if data['pending'] else 'publication data'))
+        data = check(preview=args.preview, original=args.original, review_path=args.review)
+        print('PASS: ' + ('preview structure; publication pending' if data['pending'] else 'qualified data; publication hold remains'))
 
 
 if __name__ == '__main__':

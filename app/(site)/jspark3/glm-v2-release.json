@@ -2,39 +2,180 @@
   "schema": "jspark3-site/2",
   "title": "JSpark3 v2.0.0 (GLM-5.3-Flash, TP3)",
   "engine": "TensorFold",
-  "fixture": true,
+  "fixture": false,
   "publication_hold": true,
   "pending": [
-    "Fixture data: no benchmark was run.",
-    "Final freeze, release identity and date pending.",
-    "RigMark results and comparison qualification pending.",
-    "Scoped exactness claim and evidence pending.",
-    "Quality and release limitations pending.",
-    "Release links and license qualification pending."
+    "Final freeze, release identity and date pending."
   ],
-  "source_sha256": "f8b926c054efc9fdd1e7be488594e8c271feb81fd6994dde83e038871376ede2",
+  "source_sha256": "d07ff5f6ebcb0910e73398ab4b78b3fed434ccaca3cc4361d9eaa08ec7fbcc26",
+  "review_commit": "6fffe3a34a44fc87ea1acc84841b58ecd35718cc",
   "published": null,
-  "rows": [],
+  "rows": [
+    {
+      "id": "rigmark_code",
+      "median_text": "87.609",
+      "worst_text": "87.493",
+      "samples_text": "3",
+      "values_text": [
+        "87.493",
+        "87.609",
+        "87.694"
+      ],
+      "instrument": "RigMark c5a0db0, gate/run.sh flags (decode 4096 tokens, reasoning effort low), single stream, median of 3 receipts",
+      "vs_line": "above",
+      "margin_text": "4.795454545454536",
+      "evidence": [
+        "https://github.com/jakejharris/jspark3/blob/6fffe3a34a44fc87ea1acc84841b58ecd35718cc/release/receipts/speed-result.json",
+        "https://github.com/jakejharris/jspark3/blob/6fffe3a34a44fc87ea1acc84841b58ecd35718cc/release/receipts/lfl-r1.json",
+        "https://github.com/jakejharris/jspark3/blob/6fffe3a34a44fc87ea1acc84841b58ecd35718cc/release/receipts/lfl-r2.json",
+        "https://github.com/jakejharris/jspark3/blob/6fffe3a34a44fc87ea1acc84841b58ecd35718cc/release/receipts/lfl-r3.json"
+      ],
+      "line_text": "83.6",
+      "upstream_tp3_set1_text": "75.7",
+      "upstream_tp3_set2_text": "76.2"
+    },
+    {
+      "id": "rigmark_prose",
+      "median_text": "47.214",
+      "worst_text": "47.038",
+      "samples_text": "3",
+      "values_text": [
+        "47.038",
+        "47.236",
+        "47.214"
+      ],
+      "instrument": "RigMark c5a0db0, gate/run.sh flags (decode 4096 tokens, reasoning effort low), single stream, median of 3 receipts",
+      "vs_line": "below",
+      "margin_text": "-1.6375000000000028",
+      "evidence": [
+        "https://github.com/jakejharris/jspark3/blob/6fffe3a34a44fc87ea1acc84841b58ecd35718cc/release/receipts/speed-result.json",
+        "https://github.com/jakejharris/jspark3/blob/6fffe3a34a44fc87ea1acc84841b58ecd35718cc/release/receipts/lfl-r1.json",
+        "https://github.com/jakejharris/jspark3/blob/6fffe3a34a44fc87ea1acc84841b58ecd35718cc/release/receipts/lfl-r2.json",
+        "https://github.com/jakejharris/jspark3/blob/6fffe3a34a44fc87ea1acc84841b58ecd35718cc/release/receipts/lfl-r3.json"
+      ],
+      "line_text": "48.0",
+      "upstream_tp3_set1_text": "43.8",
+      "upstream_tp3_set2_text": "44.0"
+    },
+    {
+      "id": "rigmark_structured",
+      "median_text": "126.093",
+      "worst_text": "126.09",
+      "samples_text": "3",
+      "values_text": [
+        "126.09",
+        "126.093",
+        "126.442"
+      ],
+      "instrument": "RigMark c5a0db0, gate/run.sh flags (decode 4096 tokens, reasoning effort low), single stream, median of 3 receipts",
+      "vs_line": "above",
+      "margin_text": "0.3925159235668829",
+      "evidence": [
+        "https://github.com/jakejharris/jspark3/blob/6fffe3a34a44fc87ea1acc84841b58ecd35718cc/release/receipts/speed-result.json",
+        "https://github.com/jakejharris/jspark3/blob/6fffe3a34a44fc87ea1acc84841b58ecd35718cc/release/receipts/lfl-r1.json",
+        "https://github.com/jakejharris/jspark3/blob/6fffe3a34a44fc87ea1acc84841b58ecd35718cc/release/receipts/lfl-r2.json",
+        "https://github.com/jakejharris/jspark3/blob/6fffe3a34a44fc87ea1acc84841b58ecd35718cc/release/receipts/lfl-r3.json"
+      ],
+      "line_text": "125.6",
+      "upstream_tp3_set1_text": "113.8",
+      "upstream_tp3_set2_text": "114.0"
+    }
+  ],
   "comparison": {
     "source": "https://github.com/mmastrac/glm-5.3-flash-4x-gx10/blob/5d3cca861e715860bd1f841a1f25f74320636b18/experimental/tp3/README.md",
     "line_source": "https://github.com/mmastrac/glm-5.3-flash-4x-gx10/blob/5d3cca861e715860bd1f841a1f25f74320636b18/README.md",
-    "conditions": "mmastrac's published figures were measured on a switched 200G fabric; this recipe uses Sparks cabled as a triangle. This is not a matched-conditions comparison.",
+    "conditions": "his published figures, measured on a switched 200G fabric; not a matched-conditions comparison. This recipe uses Sparks cabled as a triangle.",
     "engine_weights": "TensorFold uses Vontra's MLX affine weights; the published reference uses NVIDIA's NVFP4 checkpoint. The engines and weight formats differ.",
     "same_conditions": false
   },
-  "comparison_claim": null,
-  "quality": null,
-  "checks": [],
-  "panel_note": null,
-  "limitations": [],
+  "comparison_claim": "Code and structured are above the reference line on every repeat; prose is below.",
+  "quality": {
+    "claim": "Output byte-identical to serial decoding at TP=3 on its own 8-prompt greedy check, with speculative decoding on",
+    "scope": "greedy (temperature 0), non-streaming; measured on this serving start's 8-prompt corpus, not a guarantee",
+    "source": "https://github.com/jakejharris/jspark3/blob/6fffe3a34a44fc87ea1acc84841b58ecd35718cc/release/receipts/exact-result.json",
+    "prompt_set_note": "The measured prompt set is not published. scripts/exactness.py uses a different public set."
+  },
+  "checks": [
+    {
+      "id": "smoketest",
+      "status": "PASS",
+      "observed": "8/8",
+      "failed_cases": []
+    },
+    {
+      "id": "nll",
+      "status": "not run",
+      "observed": null,
+      "failed_cases": []
+    },
+    {
+      "id": "gsm8k",
+      "status": "PASS",
+      "observed": "241/250 = 96.4%",
+      "failed_cases": []
+    },
+    {
+      "id": "humaneval",
+      "status": "PASS",
+      "observed": "153/164",
+      "failed_cases": []
+    },
+    {
+      "id": "count",
+      "status": "PASS",
+      "observed": "0 corrupt of 5",
+      "failed_cases": []
+    },
+    {
+      "id": "toolcall",
+      "status": "not run",
+      "observed": null,
+      "failed_cases": []
+    },
+    {
+      "id": "agent_tools",
+      "status": "not run",
+      "observed": null,
+      "failed_cases": []
+    },
+    {
+      "id": "needle",
+      "status": "not run",
+      "observed": null,
+      "failed_cases": []
+    },
+    {
+      "id": "rigmark_gates",
+      "status": "PASS",
+      "observed": "6/6 in lfl-r1.json; 6/6 in lfl-r2.json; 6/6 in lfl-r3.json",
+      "failed_cases": []
+    },
+    {
+      "id": "audit_code",
+      "status": "not run",
+      "observed": null,
+      "failed_cases": []
+    }
+  ],
+  "panel_note": "INCOMPLETE: not passed: nll (NOT-RUN), toolcall (NOT-RUN), agent_tools (NOT-RUN), needle (NOT-RUN), rigmark_gates (NOT-RUN)",
+  "quality_notes": [
+    "The source summary marks RigMark gates as not run, while its per-check record marks them PASS. Both source records are retained here."
+  ],
+  "limitations": [
+    "No swapcheck receipt for this configuration.",
+    "A complete clean-room install on fresh hardware is still pending.",
+    "Use only documented draft-policy values; the parser accepts some invalid values.",
+    "Weights outside the mounted data directory cannot be used by the split script.",
+    "The test of the unquantized drafter does not establish that it drafted."
+  ],
   "license": {
     "notice": "The default DFlash2 drafter is non-commercial (CC BY-NC-ND 4.0). No mode is cleared for commercial use.",
     "source": "https://huggingface.co/incoai/GLM-5.3-Flash-DFlash2/blob/bf582e4eacc1810f76656d1811693ff6c6737d2a/README.md"
   },
-  "social_image": "/jspark3/glm/share/?v=f8b926c054ef",
+  "social_image": "/jspark3/glm/share/?v=d07ff5f6ebcb",
   "links": {
     "release": "https://github.com/jakejharris/jspark3/releases/tag/v2.0.0",
-    "source": "https://github.com/jakejharris/jspark3/tree/v2.0.0",
-    "results": null
+    "source": "https://github.com/jakejharris/jspark3/tree/6fffe3a34a44fc87ea1acc84841b58ecd35718cc",
+    "results": "https://github.com/jakejharris/jspark3/blob/6fffe3a34a44fc87ea1acc84841b58ecd35718cc/release/results-tf-glm-tp3.json"
   }
 }
