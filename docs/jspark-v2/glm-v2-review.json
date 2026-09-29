@@ -27,6 +27,32 @@
       "notice": "The default DFlash2 drafter is non-commercial (CC BY-NC-ND 4.0). No mode is cleared for commercial use.",
       "source": "https://huggingface.co/incoai/GLM-5.3-Flash-DFlash2/blob/bf582e4eacc1810f76656d1811693ff6c6737d2a/README.md"
     },
-    "results_path": "release/results-tf-glm-tp3.json"
+    "results_path": "release/results-tf-glm-tp3.json",
+    "display_rows": {
+      "rigmark_code": {
+        "median": "87.6",
+        "worst": "87.5",
+        "line": "83.6",
+        "upstream_tp3_set1": "75.7",
+        "upstream_tp3_set2": "76.2",
+        "margin": "+4.8%"
+      },
+      "rigmark_prose": {
+        "median": "47.2",
+        "worst": "47.0",
+        "line": "48.0",
+        "upstream_tp3_set1": "43.8",
+        "upstream_tp3_set2": "44.0",
+        "margin": "-1.6%"
+      },
+      "rigmark_structured": {
+        "median": "126.1",
+        "worst": "126.1",
+        "line": "125.6",
+        "upstream_tp3_set1": "113.8",
+        "upstream_tp3_set2": "114.0",
+        "margin": "+0.4%"
+      }
+    }
   }
 }

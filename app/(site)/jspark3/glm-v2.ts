@@ -1,6 +1,6 @@
 import data from './glm-v2-release.json';
 
-type V2Row = { id: string; median_text: string; worst_text: string; samples_text: string; values_text: string[]; instrument: string; vs_line: string; margin_text: string; line_text: string; upstream_tp3_set1_text: string; upstream_tp3_set2_text: string; evidence: string[] };
+type V2Row = { id: string; median_text: string; worst_text: string; samples_text: string; values_text: string[]; instrument: string; vs_line: string; margin_text: string; line_text: string; upstream_tp3_set1_text: string; upstream_tp3_set2_text: string; evidence: string[]; display?: Partial<Record<'median' | 'worst' | 'line' | 'upstream_tp3_set1' | 'upstream_tp3_set2' | 'margin', string>> };
 type V2Release = {
   title: string; engine: string; fixture: boolean; pending: string[]; published: string | null;
   rows: V2Row[]; social_image: string;
@@ -18,6 +18,19 @@ export const V2_DRAFTER_NOTICE = 'The default DFlash2 drafter is non-commercial 
 export const V2_METRICS: Record<string, string> = {
   rigmark_code: 'RigMark · code', rigmark_prose: 'RigMark · prose', rigmark_structured: 'RigMark · structured',
 };
-export const V2_HIGHLIGHTS = Object.entries(V2_METRICS).map(([id, label]) => ({
-  id, label, value: GLM_V2.rows.find(row => row.id === id)?.median_text ?? 'Pending',
-}));
+
+// Display only: keep the sealed tokens intact for provenance and comparison checks.
+export function v2Throughput(value?: string, display?: string) {
+  return display ?? (value === undefined ? 'Pending' : Number(value).toFixed(1));
+}
+
+export function v2Percent(value: string, display?: string) {
+  if (display !== undefined) return display;
+  const rounded = Number(value).toFixed(1);
+  return `${rounded.startsWith('-') ? '' : '+'}${rounded}%`;
+}
+
+export const V2_HIGHLIGHTS = Object.entries(V2_METRICS).map(([id, label]) => {
+  const row = GLM_V2.rows.find(item => item.id === id);
+  return { id, label, value: v2Throughput(row?.median_text, row?.display?.median) };
+});

@@ -2,7 +2,7 @@ import React from 'react';
 import ClusterIllustration from './ClusterIllustration';
 import ProjectHeader from './ProjectHeader';
 import LegacyFragments from '../LegacyFragments';
-import { GLM_V2 as release, V2_DRAFTER_NOTICE, V2_METRICS } from '../glm-v2';
+import { GLM_V2 as release, V2_DRAFTER_NOTICE, V2_METRICS, v2Throughput, v2Percent } from '../glm-v2';
 
 const NAV = [{ href: '#results', label: 'Results' }, { href: '#license', label: 'License' }, { href: '#releases', label: 'History' }];
 
@@ -59,12 +59,12 @@ export default function GlmV2Page() {
             <tbody>{Object.entries(V2_METRICS).map(([id, label]) => {
               const row = release.rows.find(item => item.id === id);
               return <tr key={id}><th scope="row">{label}</th>
-                <td>{row?.median_text ?? 'Pending'}</td><td>{row?.worst_text ?? 'Pending'}</td><td>{row?.line_text ?? 'Pending'}</td>
+                <td>{v2Throughput(row?.median_text, row?.display?.median)}</td><td>{v2Throughput(row?.worst_text, row?.display?.worst)}</td><td>{v2Throughput(row?.line_text, row?.display?.line)}</td>
               </tr>;
             })}</tbody>
           </table>
           <div className="glm-v2-margins" aria-label="Percentage differences from the line">
-            {release.rows.map(row => <p key={row.id}><strong>{V2_METRICS[row.id]}</strong><span>{row.margin_text}% · {row.vs_line} the line</span></p>)}
+            {release.rows.map(row => <p key={row.id}><strong>{V2_METRICS[row.id]}</strong><span>{v2Percent(row.margin_text, row.display?.margin)} · {row.vs_line} the line</span></p>)}
           </div>
         </div>
         <div className="glm-v2-table-wrap">
@@ -73,8 +73,8 @@ export default function GlmV2Page() {
             <thead><tr><th scope="col">Workload</th><th scope="col">JSpark3 median</th><th scope="col">Published first set</th><th scope="col">Published second set</th></tr></thead>
             <tbody>{Object.entries(V2_METRICS).map(([id, label]) => {
               const row = release.rows.find(item => item.id === id);
-              return <tr key={id}><th scope="row">{label}</th><td>{row?.median_text ?? 'Pending'}</td>
-                <td>{row?.upstream_tp3_set1_text ?? 'Pending'}</td><td>{row?.upstream_tp3_set2_text ?? 'Pending'}</td></tr>;
+              return <tr key={id}><th scope="row">{label}</th><td>{v2Throughput(row?.median_text, row?.display?.median)}</td>
+                <td>{v2Throughput(row?.upstream_tp3_set1_text, row?.display?.upstream_tp3_set1)}</td><td>{v2Throughput(row?.upstream_tp3_set2_text, row?.display?.upstream_tp3_set2)}</td></tr>;
             })}</tbody>
           </table>
         </div>
@@ -82,7 +82,7 @@ export default function GlmV2Page() {
         {release.rows.length ? <details className="glm-history-results">
           <summary>Instruments, repeats and evidence</summary>
           {release.rows.map(row => <div key={row.id} className="glm-v2-start"><h3>{V2_METRICS[row.id]}</h3>
-            <p>{row.instrument}</p><p>{row.samples_text} repeats: {row.values_text.join(', ')} tok/s.</p>
+            <p>{row.instrument}</p><p>{row.samples_text} repeats: {row.values_text.map(value => v2Throughput(value)).join(', ')} tok/s.</p>
             <p>{row.evidence.map((href, index) => <React.Fragment key={href}><a href={href}>Receipt {index ? '↗' : 'and results ↗'}</a>{' '}</React.Fragment>)}</p>
           </div>)}
         </details> : null}

@@ -32,7 +32,15 @@
       ],
       "line_text": "83.6",
       "upstream_tp3_set1_text": "75.7",
-      "upstream_tp3_set2_text": "76.2"
+      "upstream_tp3_set2_text": "76.2",
+      "display": {
+        "median": "87.6",
+        "worst": "87.5",
+        "line": "83.6",
+        "upstream_tp3_set1": "75.7",
+        "upstream_tp3_set2": "76.2",
+        "margin": "+4.8%"
+      }
     },
     {
       "id": "rigmark_prose",
@@ -55,7 +63,15 @@
       ],
       "line_text": "48.0",
       "upstream_tp3_set1_text": "43.8",
-      "upstream_tp3_set2_text": "44.0"
+      "upstream_tp3_set2_text": "44.0",
+      "display": {
+        "median": "47.2",
+        "worst": "47.0",
+        "line": "48.0",
+        "upstream_tp3_set1": "43.8",
+        "upstream_tp3_set2": "44.0",
+        "margin": "-1.6%"
+      }
     },
     {
       "id": "rigmark_structured",
@@ -78,7 +94,15 @@
       ],
       "line_text": "125.6",
       "upstream_tp3_set1_text": "113.8",
-      "upstream_tp3_set2_text": "114.0"
+      "upstream_tp3_set2_text": "114.0",
+      "display": {
+        "median": "126.1",
+        "worst": "126.1",
+        "line": "125.6",
+        "upstream_tp3_set1": "113.8",
+        "upstream_tp3_set2": "114.0",
+        "margin": "+0.4%"
+      }
     }
   ],
   "comparison": {

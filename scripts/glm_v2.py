@@ -167,6 +167,8 @@ def project(source, source_sha256, review=None):
     references = tf.get('reference') or {}
     supplied = tf.get('rows') or {}
     require(not (set(supplied) - set(METRICS)), 'unsupported workload; only single-stream RigMark is in scope')
+    displays = site.get('display_rows') or {}
+    require(isinstance(displays, dict) and not (set(displays) - set(supplied)), 'display rows must match supplied workloads')
     for cid in METRICS:
         row = supplied.get(cid)
         if row is None:
@@ -205,6 +207,18 @@ def project(source, source_sha256, review=None):
         rows.append(dict(id=cid, median_text=median, worst_text=worst, samples_text=samples,
                          values_text=values, instrument=instrument, vs_line=verdict, margin_text=str(margin),
                          evidence=[receipt(path, release_ref) for path in evidence], **reference_values))
+        display = displays.get(cid, {})
+        require(isinstance(display, dict), 'display fields must be an object')
+        for key, value in display.items():
+            require(key in ('median', 'worst', 'line', 'upstream_tp3_set1', 'upstream_tp3_set2', 'margin'),
+                    'unsupported display field')
+            pattern = r'[+-]\d+\.\d%' if key == 'margin' else r'\d+\.\d'
+            require(isinstance(value, str) and re.fullmatch(pattern, value), 'one-decimal display string required')
+            literal = rows[-1][key + '_text']
+            expected = format(Decimal(literal), '+.1f' if key == 'margin' else '.1f') + ('%' if key == 'margin' else '')
+            require(value == expected, 'display string disagrees with sealed value')
+        if display:
+            rows[-1]['display'] = display
     exact = tf.get('exact') or {}
     quality = None
     claim = site.get('exactness_claim')
@@ -311,7 +325,7 @@ def snapshot(source):
     site = source.get('site_v2') or {}
     out['site_v2'] = dict(site)
     require(not (set(out['site_v2']) - {'comparison', 'comparison_claim', 'above_line_rows', 'total_rows', 'exactness_claim',
-                                       'limitations', 'license', 'results_path'}), 'unknown site fields; confirm final mapping')
+                                       'limitations', 'license', 'results_path', 'display_rows'}), 'unknown site fields; confirm final mapping')
     if site.get('comparison') is not None:
         out['site_v2']['comparison'] = keep(site['comparison'], ['source', 'line_source', 'conditions', 'engine_weights', 'same_conditions'])
     if site.get('license') is not None:

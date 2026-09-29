@@ -44,7 +44,7 @@ it does not invent a numeric headline count absent from the source.
   repeats, every repeat token, sample counts, instruments, source percentages,
   verdicts and receipt paths.
 - `tf.reference.line` and both published TP3 sets supply literal reference tokens.
-  The site never computes the midpoint, rounds percentages, derives a speedup,
+  The site never computes the midpoint, derives a speedup,
   chooses favorable rows or substitutes another workload.
 - The legacy internal TP3 verdict enum is accepted only for the hash-bound review
   after the numeric comparisons pass. Its public projection uses neutral `above`;
@@ -58,9 +58,15 @@ it does not invent a numeric headline count absent from the source.
   drafter notice, and release limitations grounded in the sealed docs.
 
 Raw number tokens, including trailing zeroes and long signed percentages, pass
-through the literal parser without float conversion. Full percentage tokens are
-shown below the reference table so they remain readable on phones. The original
-SHA-256 and exact public projection are verified by `--check --original`.
+through the literal parser without float conversion and remain unchanged in the
+generated data. `site_v2.display_rows` carries the table and signed percentage
+strings copied from the sealed README; the checker validates their one-decimal
+precision against the source. The page, hub and share card prefer those supplied
+strings. Without a display string, the view formats tok/s and comparison
+percentages to one decimal, with a sign on each comparison percentage. Repeats
+use that display-only fallback. No formatted value replaces a sealed token or
+enters a comparison check. The original SHA-256 and exact public projection are
+verified by `--check --original`.
 Private serving metadata is omitted; evidence links point to the sealed commit.
 
 ## Gates and verification
@@ -82,5 +88,5 @@ results. Fixtures cannot use the sealed-preview exception, and cannot overwrite
 this measured source. Tests exercise fixtures in isolation.
 
 Share card: `/jspark3/glm/share/`, a 1200 by 630 PNG. Its metadata URL includes the
-original source hash. It uses the same literal median tokens and scoped exactness
+original source hash. It uses the same median display strings and scoped exactness
 copy as the page, with the non-commercial drafter notice and preview label.

@@ -221,6 +221,20 @@ class PublicationTests(unittest.TestCase):
         raw=(gate.ROOT/'app/(site)/jspark3/glm-release.json').read_bytes()
         self.assertEqual(hashlib.sha256(raw).hexdigest(),'4b4a90e11362a299965f7359b05cd31c8ed2165d67739ecfa6616c7c81c549ad')
 
+    def test_site_display_regression(self):
+        result = subprocess.run(['node', '--import', 'tsx', '--test', 'app/(site)/jspark3/glm-v2.test.ts'],
+                                cwd=gate.ROOT, capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+    def test_display_strings_cannot_rewrite_sealed_measurements(self):
+        source = gate.read(gate.SOURCE.read_text())
+        review = gate.read(gate.REVIEW.read_text())
+        for value in ['+4.9%', '4.8%', '+4.80%']:
+            with self.subTest(value=value):
+                review['site_v2']['display_rows']['rigmark_code']['margin'] = value
+                with self.assertRaisesRegex(ValueError, 'display string'):
+                    gate.project(source, review['source_sha256'], review)
+
     def test_real_publication_commands_refuse_preview(self):
         import os
         for command in (['node','scripts/check-glm-release.mjs'],['node','scripts/check-glm-build.mjs']):
