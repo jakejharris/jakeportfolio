@@ -67,3 +67,7 @@
 
 .glm-v2-jumps { display: flex; flex-wrap: wrap; gap: 12px 20px; font-size: 13px; margin-top: 20px; }
 .glm-v2-jumps a { text-decoration: underline; text-underline-offset: 4px; }
+
+.glm-v2-table td { color: color-mix(in srgb, var(--accent-color) 65%, var(--glm-text)); }
+.glm-v2 .glm-results .glm-v2-table td { color: color-mix(in srgb, var(--accent-color) 65%, var(--glm-paper-ink)); }
+.glm-v2-section p, .glm-v2-section code { overflow-wrap: anywhere; }

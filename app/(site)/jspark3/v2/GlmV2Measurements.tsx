@@ -2,7 +2,7 @@ import React from 'react';
 import { GLM_V2, V2Release, V2Latency, V2Stats, V2Trace, V2Unmeasured } from '../glm-v2';
 
 const CASES: Record<string, string> = { cold: 'Cold', warm: 'Warm resend', turn: 'Appended turn' };
-const MODES = ['Max (default)', 'Low'] as const;
+const MODES = ['High (default)', 'Max', 'Max (default)', 'Low'] as const;
 
 function TraceLinks({ traces }: { traces: V2Trace[] }) {
   return <ul className="glm-v2-traces">{traces.map((trace, index) => <li key={index}>
@@ -57,7 +57,8 @@ function StatusCard({ row }: { row: V2Unmeasured }) {
 }
 
 export default function GlmV2Measurements({ release = GLM_V2 }: { release?: V2Release } = {}) {
-  const checkpointPending = release.multistream.some(row => row.status === 'pending');
+  const checkpointPending = !release.serving && release.multistream.some(row => row.status === 'pending');
+  const modes = release.serving ? MODES.filter(mode => mode !== 'Max (default)') : MODES.filter(mode => mode !== 'Max');
   return <>
     <section className="glm-shell glm-v2-section" id="latency" aria-labelledby="latency-title">
       <p className="glm-v2-eyebrow">Latency · streamed requests</p>
@@ -67,10 +68,10 @@ export default function GlmV2Measurements({ release = GLM_V2 }: { release?: V2Re
         <div><dt>First token</dt><dd>Client time from before opening the request to the first streamed reasoning or content text. Seconds, lower is better.</dd></div>
         <div><dt>First answer text</dt><dd>Client time to the first content text, after any reasoning. This is the start of the answer, not the completed answer. Seconds, lower is better.</dd></div>
       </dl>
-      <p><strong>Max (default)</strong> uses the serving default. <strong>Low</strong> still reasons briefly. The response budgets differ by mode, so read each mode separately.</p>
+      <p>{release.serving ? 'High is the default. Explicit Max and Low measurements remain separate.' : 'High is the intended release default; its measurements are pending. Max (default) below labels the earlier checkpoint’s setting. Low still reasons briefly.'} Response budgets differ by mode; read each mode separately.</p>
       <p className="glm-v2-empty"><strong>Cache conditions:</strong> cold uses a new prompt; warm resends the identical prompt; an appended turn extends the conversation. Each receipt records the cached tokens for its requests.</p>
       {release.latency.length ? null : <p className="glm-v2-empty">Latency measurements pending.</p>}
-      <div className="glm-v2-mode-tables">{MODES.map(mode => <LatencyTable key={mode} mode={mode} rows={release.latency.filter(row => row.effort === mode)} />)}</div>
+      <div className="glm-v2-mode-tables">{modes.map(mode => release.latency.some(row => row.effort === mode) ? <LatencyTable key={mode} mode={mode} rows={release.latency.filter(row => row.effort === mode)} /> : <p key={mode} className="glm-v2-empty">{mode}: measurements pending.</p>)}</div>
     </section>
 
     <section className="glm-shell glm-v2-section" id="prefill" aria-labelledby="prefill-title">

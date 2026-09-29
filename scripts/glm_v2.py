@@ -192,12 +192,14 @@ def measured_stats(stats, precision, better, ref, empty=False):
 def measurement_conditions(row, cid):
     c = row.get('conditions') or {}
     low = cid.endswith('_think_off')
-    require(c.get('effort_label') == ('Low' if low else 'Max (default)') and
-            c.get('rendered_effort') == ('low' if low else 'max') and
-            c.get('serving_default') is (not low) and c.get('thinking') is (False if low else None),
+    high = cid.endswith('_high')
+    explicit_max = cid.endswith('_max')
+    require(c.get('effort_label') == ('Low' if low else 'High (default)' if high else 'Max' if explicit_max else 'Max (default)') and
+            c.get('rendered_effort') == ('low' if low else 'high' if high else 'max') and
+            c.get('serving_default') is (high or (not low and not explicit_max)) and c.get('thinking') is (False if low else None),
             'effort label and rendered mode mismatch')
     require(c.get('prompt') in ('short', '5k', '32k') and c.get('case') in ('cold', 'warm', 'turn') and
-            cid.removesuffix('_think_off') == ('ttft_' + c['prompt'] + '_' + c['case'] if cid.startswith('ttft_') else 'prefill_' + c['prompt']),
+            cid.removesuffix('_think_off').removesuffix('_high').removesuffix('_max') == ('ttft_' + c['prompt'] + '_' + c['case'] if cid.startswith('ttft_') else 'prefill_' + c['prompt']),
             'prompt/case mapping mismatch')
     planned = int(number(c.get('planned_n'), 'conditions.planned_n', count=True))
     for key in ('prompt_tokens', 'cached_tokens'):
@@ -214,10 +216,11 @@ def measurement_conditions(row, cid):
     return dict(prompt=c['prompt'], case=c['case'], effort=c['effort_label'], instrument=instrument['name'])
 
 
-def project_measurements(tf, ref):
-    latency_ids = [f'ttft_{prompt}_{case}{suffix}' for suffix in ('', '_think_off')
+def project_measurements(tf, ref, final=False):
+    suffixes = ('_high', '_max', '_think_off') if final else ('', '_think_off')
+    latency_ids = [f'ttft_{prompt}_{case}{suffix}' for suffix in suffixes
                    for prompt in ('short', '5k', '32k') for case in ('cold', 'warm', 'turn')]
-    prefill_ids = [f'prefill_{prompt}{suffix}' for prompt in ('5k', '32k') for suffix in ('', '_think_off')] + ['prefill_128k']
+    prefill_ids = [f'prefill_{prompt}{suffix}' for prompt in ('5k', '32k') for suffix in suffixes] + ['prefill_128k']
     decode_ids = ['decode_after_5k', 'decode_after_32k', 'decode_after_128k']
     result = {}
     for family, ids in [('latency', latency_ids), ('prefill', prefill_ids), ('decode', decode_ids)]:
@@ -281,6 +284,8 @@ def project_measurements(tf, ref):
 
 
 def project(source, source_sha256, review=None, rehearsal=False):
+    if source.get('schema') == 'jspark3-results/2':
+        return multistream.project_v2(source, source_sha256, review, rehearsal, sys.modules[__name__])
     source = multistream.adapt_source(source)
     require(source.get('schema') == 'jspark3-results/1', 'unsupported results schema')
     require(source.get('tag') in (None, 'v2.0.0') and source.get('version') in (None, 'v2.0', 'v2.0.0'),
@@ -446,6 +451,12 @@ def project(source, source_sha256, review=None, rehearsal=False):
 
 def snapshot(source):
     """Keep only consumed fields; private boot metadata never enters the public repo."""
+    if source.get('schema') == 'jspark3-results/2':
+        out = multistream.snapshot_v2(source)
+        # Internal variant and gate keys stay in the source projection only.
+        public = dict(out); public.pop('variant', None); public.pop('concurrency', None)
+        text(string_values(public), 'public source')
+        return out
     source = multistream.adapt_source(source)
     def keep(value, keys):
         return {k: value[k] for k in keys if k in value}

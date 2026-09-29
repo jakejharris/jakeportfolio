@@ -30,7 +30,7 @@ jobs:
         run: |
           node --test scripts/check-glm-release.test.mjs
           npx tsx --test 'app/(site)/jspark3/release-copy.test.ts'
-          python3 -m unittest discover -s scripts -p 'test_glm_v2.py'
+          python3 -m unittest discover -s scripts -p 'test_glm_v2*.py'
       - run: npm run lint
       - run: npm run typecheck
       - run: npm run build

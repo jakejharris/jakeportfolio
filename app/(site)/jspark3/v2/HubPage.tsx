@@ -4,7 +4,7 @@ import TransitionLink from '../../../components/TransitionLink';
 import GlassLight from '../../../components/GlassLight';
 import { release } from './release-data';
 import { HUB_COPY, INTERNAL_BUILDS, RELEASE_HISTORY } from '../release-copy';
-import { GLM_V2, V2_HIGHLIGHTS, V2_DRAFTER_NOTICE } from '../glm-v2';
+import { GLM_V2, v2Highlights, V2Release, V2_DRAFTER_NOTICE } from '../glm-v2';
 
 function LedgerRow({ href, children }: { href: string; children: React.ReactNode }) {
   return href.startsWith('/')
@@ -12,7 +12,7 @@ function LedgerRow({ href, children }: { href: string; children: React.ReactNode
     : <a href={href} className="spark-hub-ledger-row" target="_blank" rel="noopener">{children}</a>;
 }
 
-export default function HubPage() {
+export default function HubPage({ candidate = GLM_V2 }: { candidate?: V2Release } = {}) {
   return <>
     <PageLayout className="spark-hub">
       <a className="spark-hub-skip" href="#current">Skip to releases</a>
@@ -26,16 +26,16 @@ export default function HubPage() {
         <ol className="spark-hub-list">
           <li>
             <TransitionLink href="/jspark3/glm/" className="pageLinkContainer spark-hub-release">
-              <span className="spark-hub-release-meta">Release preview · publication pending</span>
-              <span className="spark-hub-release-title">{GLM_V2.title} <span aria-hidden="true">↗</span></span>
+              <span className="spark-hub-release-meta">{candidate.fixture ? 'Synthetic rehearsal · invented values' : 'Release preview · publication pending'}</span>
+              <span className="spark-hub-release-title">{candidate.title} <span aria-hidden="true">↗</span></span>
               <span className="spark-hub-figures">
-                {V2_HIGHLIGHTS.map(cell => <span key={cell.id} className="spark-hub-figure">
+                {v2Highlights(candidate).map(cell => <span key={cell.id} className="spark-hub-figure">
                   <span className="spark-hub-figure-label">{cell.label}</span>
-                  <span className="spark-hub-figure-value">{cell.value}{GLM_V2.rows.length > 0 ? <small>tok/s</small> : null}</span>
+                  <span className="spark-hub-figure-value">{cell.value}{candidate.rows.length > 0 ? <small>tok/s</small> : null}</span>
 
                 </span>)}
               </span>
-              <span className="spark-hub-release-detail">{GLM_V2.rows.length ? GLM_V2.multistream.every(row => row.status === 'measured') ? 'Single-stream RigMark medians. Multi-stream results and receipts on the release page.' : 'Earlier sealed single-stream medians. Final multi-stream results pending.' : 'TensorFold engine. Measurements and qualification pending.'}</span>
+              <span className="spark-hub-release-detail">{candidate.rows.length ? candidate.sparkdash || candidate.multistream.every(row => row.status === 'measured') ? 'Single-stream RigMark medians. Multi-stream results and receipts on the release page.' : 'Earlier sealed single-stream medians. Final multi-stream results pending.' : 'TensorFold engine. Measurements and qualification pending.'}</span>
               <span className="spark-hub-release-detail">{V2_DRAFTER_NOTICE}</span>
               <span className="spark-hub-release-action">Recipe, results, and license scope <span aria-hidden="true">→</span></span>
             </TransitionLink>
@@ -57,7 +57,7 @@ export default function HubPage() {
             <LedgerRow href="/jspark3/glm/">
               <span className="spark-hub-ledger-version">JSpark3 v2.0.0</span>
               <span className="spark-hub-ledger-what">(GLM-5.3-Flash, TP3)<span className="spark-hub-ledger-pill">Preview</span></span>
-              <span className="spark-hub-ledger-when">{GLM_V2.published ?? 'Pending'}</span>
+              <span className="spark-hub-ledger-when">{candidate.published ?? 'Pending'}</span>
             </LedgerRow>
           </li>
           {INTERNAL_BUILDS ? <li className="spark-hub-ledger-internal">

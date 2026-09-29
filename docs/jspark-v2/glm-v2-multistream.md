@@ -58,3 +58,64 @@ python3 scripts/glm_v2.py --fill PRIVATE_FIXTURE --fixture --rehearsal PRIVATE_O
 The ordinary fill and validation paths refuse a visible rehearsal projection.
 Browser rehearsal captures must show the synthetic banner. Fixture numbers and
 screenshots are kept outside the public repository.
+
+## Producer /2 boundary
+
+`glm_v2_multistream.py` now projects `jspark3-results/2` independently of the
+older `tf` checkpoint. Both winning variants use the same fill command. The
+winning variant stays in the source projection; rendered data carries a serial
+boolean, default stream count and optional opt-out setting instead.
+
+The accepted producer pointers are `v2.rows.rigmark_code`, `rigmark_prose` and
+`rigmark_structured`; `sparkdash.code.c1..c4`, `sparkdash.prose.c1..c4` and
+`sparkdash.prefill.8k/16k/32k/64k/128k`; and `concurrency.default_streams`,
+`concurrency.opt_out.setting` and the reviewed concurrency gates. Optional
+`sparkdash.code.c8` or `prose.c8` is explicitly an extended ruler. Optional
+`sparkdash.per_stream.<workload>.<cell>` is never divided out of an aggregate.
+The sparkDash tables use one run per row, thinking off, with separate aggregate
+and per-stream columns. RigMark keeps repeat statistics in its own table.
+
+Every RigMark row must contain producer `display.median`, `display.worst` and
+`display.values`. sparkDash must supply `display.<workload>.<cell>` and, when
+per-stream rates exist, `display.per_stream.<workload>.<cell>`. Decode display
+strings have one decimal; prefill display strings have zero decimals and allow
+thousands separators. These are **required producer additions**, not fields
+observed in the sample. The site refuses raw-only packets rather than applying
+the card formatter. The lead must confirm display pointers/rule at the boundary
+before calling the final integration ready.
+
+Receipt objects must name public `release/receipts/*.json` exports with SHA-256
+hashes. Instrument revision and output budget stay attached to sparkDash. No
+comparison/reference block, private wrapper, or known-issue diagnosis is copied.
+Exactness uses `site_v2.quality.claim` verbatim, bound to the winning
+`v2.exact_scope.exact_result_sha256`, verdict-bearing prompt list and count.
+`site_v2.publication.commit/tag` must match the hash-bound review revision/tag.
+The quality document is independently read and hashed by `--quality-run` before
+per-check results render; NLL/toolcall stay N/A and there is no overall PASS.
+
+The hash-bound review's `site_v2.sections` may carry `admission`, `revisit`,
+`effort`, `api` and `limitations`, each with `paragraphs` and public receipt
+objects. This is a **site-owned review contract awaiting lead input**, not an
+assertion about unknown producer fields. Missing sections render pending.
+The API section must carry the exact winning build's installation qualification;
+no earlier checkpoint receipt establishes final runnability. Admission must be
+reviewed for that variant, including refusal before queueing for the serial
+variant. Revisit capacity remains ESTIMATE without measurements, and a
+bit-neutral claim needs the served-weights revisit equality receipt.
+
+Optional `v2.latency`, `v2.prefill`, `v2.decode` use the existing trace-backed
+measurement contract with separate `_high`, `_max`, `_think_off` rows. These
+pointers are a proposed adapter input awaiting confirmation, not sample fields.
+High has `effort_label: "High (default)"`, Max `"Max"`, Low `"Low"`; only High
+has `serving_default: true`. Missing final matrices render pending and never
+reuse checkpoint values. First-answer timing/censoring and client-effective
+prefill retain their existing definitions.
+
+A real fill requires `state: final`, final identity/date, source revision,
+original hash and README hash-bound review. Sample and pending states refuse.
+Synthetic fills run only with `fixture: true`, `state: fixture`, and
+`--rehearsal` to a destination outside the repository; they never replace the
+committed checkpoint. Publication hold is unconditional for either variant.
+Producer finalization with N/A checks, final display pointers and final section
+review remain external dependencies; accepting the sample's key shape does not
+resolve them.

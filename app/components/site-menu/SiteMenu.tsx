@@ -20,7 +20,6 @@ import { useMenuSea } from "./useMenuSea";
 
 const LINKS = [
   { href: "/", label: "Home" },
-  { href: "/jspark3/", label: "JSPARK3" },
   { href: "/about/", label: "About" },
   { href: "/contact/", label: "Contact" },
 ];

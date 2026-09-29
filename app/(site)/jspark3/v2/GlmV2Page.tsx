@@ -3,6 +3,7 @@ import ClusterIllustration from './ClusterIllustration';
 import ProjectHeader from './ProjectHeader';
 import GlmV2Measurements from './GlmV2Measurements';
 import GlmV2Multistream from './GlmV2Multistream';
+import GlmV2Candidate from './GlmV2Candidate';
 import LegacyFragments from '../LegacyFragments';
 import { GLM_V2, V2_DRAFTER_NOTICE, V2_METRICS, V2Release } from '../glm-v2';
 
@@ -16,16 +17,16 @@ export default function GlmV2Page({ release = GLM_V2 }: { release?: V2Release } 
       <ProjectHeader prefix="glm" nav={NAV} />
       <aside className="glm-v2-preview" aria-label="Release preview">
         <strong>{release.fixture ? 'Synthetic rehearsal · invented values' : 'Release preview · publication pending'}</strong>
-        <p>{release.fixture ? 'Invented values for layout verification. Publication remains blocked.' : release.multistream.every(row => row.status === 'measured') ? 'Sealed candidate measurements. Publication remains on hold; evidence links await publication of the checkpoint.' : release.rows.length ? 'Earlier sealed single-stream checkpoint. Final candidate measurements are pending; publication remains on hold.' : 'The frozen results and release qualifications are pending.'}</p>
+        <p>{release.fixture ? 'Invented values for layout verification. Publication remains blocked.' : release.sparkdash || release.multistream.every(row => row.status === 'measured') ? 'Sealed candidate measurements. Publication remains on hold; evidence links await publication of the checkpoint.' : release.rows.length ? 'Earlier sealed single-stream checkpoint. Final candidate measurements are pending; publication remains on hold.' : 'The frozen results and release qualifications are pending.'}</p>
       </aside>
       <header className="glm-hero">
         <div>
           <p className="glm-kicker">Three DGX Sparks · one endpoint</p>
           <h1>JSpark3 v2.0.0 <span>(GLM-5.3-Flash, TP3)</span></h1>
           <p className="glm-lede">TensorFold, on three Sparks.</p>
-          <p className="glm-intro">The TensorFold engine, ported to TP=3, serving GLM-5.3-Flash with speculative decoding.</p>
+          <p className="glm-intro">JSpark3 builds on Ash Hart’s TensorFold engine with a three-Spark TP3 recipe, a chat-switch revisit store, concurrent serving, hardening and a High effort default. Final measurements and configuration follow the winning build’s receipts.</p>
           <div className="glm-speed">
-            <p className="glm-speed-line" data-quality-headline>{release.quality?.claim ?? 'Candidate qualification pending.'}</p>
+            <p className="glm-speed-line" data-quality-headline>{release.builder_quality?.claim ?? release.quality?.claim ?? 'Candidate qualification pending.'}</p>
             <p className="glm-speed-sub">{release.quality?.scope ?? 'The final results will follow the sealed numbers and their receipts.'}</p>
           </div>
           <nav className="glm-actions" aria-label="Release resources">
@@ -46,7 +47,7 @@ export default function GlmV2Page({ release = GLM_V2 }: { release?: V2Release } 
       <div className="glm-shell">
         <div className="glm-section-heading">
           <p className="glm-v2-eyebrow">Single-stream RigMark</p>
-          <h2 id="results-title">One request at a time.</h2>
+          <h2 id="results-title">{release.serving?.serial ? 'One request at a time.' : 'Single-stream decode.'}</h2>
           <nav className="glm-v2-jumps" aria-label="Measurement sections"><a href="#latency">Latency ↓</a><a href="#prefill">Prefill ↓</a><a href="#multistream">Multi-stream ↓</a><a href="#decode">Decode coverage ↓</a></nav>
           <p>Decode throughput in tok/s, higher is better, one request at a time. These rows make no claim about prefill or concurrent requests.</p>
         </div>
@@ -73,13 +74,14 @@ export default function GlmV2Page({ release = GLM_V2 }: { release?: V2Release } 
       </div>
     </section>
 
-    <GlmV2Multistream rows={release.multistream} />
+    <GlmV2Candidate release={release} />
+    {!release.sparkdash ? <GlmV2Multistream rows={release.multistream} /> : null}
     <GlmV2Measurements release={release} />
 
     <section className="glm-shell glm-v2-section" id="quality" aria-labelledby="quality-title">
       <p className="glm-v2-eyebrow">Qualification</p>
       <h2 id="quality-title">What the check establishes.</h2>
-      {release.quality ? <>
+      {release.builder_quality ? <><p data-quality-claim>{release.builder_quality.claim}</p><p><a href={release.builder_quality.source}>Winning exactness receipt ↗</a></p></> : release.quality ? <>
         <p data-quality-claim>{release.quality.claim}</p><p>{release.quality.scope}</p><p>{release.quality.prompt_set_note}</p>
         <details className="glm-v2-evidence"><summary>Corpus and drafting counters</summary>
           <p>{release.quality.display.tested} of {release.quality.display.prompts} prompts tested; long prompt: {release.quality.display.long_prompt_tokens} tokens; generated: {release.quality.display.generated_tokens} tokens.</p>
@@ -91,18 +93,18 @@ export default function GlmV2Page({ release = GLM_V2 }: { release?: V2Release } 
       {release.panel_note ? <><p>{release.panel_note}</p><ul>{release.checks.map(check => <li key={check.id}>{check.id}: {check.status}{check.observed ? ` · ${check.observed}` : ''}{check.reason ? ` · ${check.reason}` : ''}{!check.observed && check.display?.passed !== undefined ? ` · ${check.display.passed}/${check.display.total}` : ''}{!check.observed && check.display?.corrupt !== undefined ? ` · ${check.display.corrupt} corrupt of ${check.display.total}` : ''}{!check.observed && check.display?.percentage ? ` (${check.display.percentage})` : ''}{check.source ? <> · <a href={check.source}>Receipt ↗</a></> : null}{check.failed_cases.length ? ` · Reported failures: ${check.failed_cases.join(', ')}` : ''}</li>)}</ul></> : null}
       {release.quality_notes.map(note => <p key={note} className="glm-v2-empty">{note}</p>)}
       <h3 style={{ marginTop: 24 }}>Release limitations</h3>
-      <p data-memory-limitation>Text preparation runs outside the 5.5 GiB memory envelope. That envelope remains an ESTIMATE; the fix is planned for v2.0.1.</p>
+      <p data-memory-limitation>{release.serving ? 'Memory capacity remains an ESTIMATE until measured on this build. Winning limitations and receipts appear in the configuration sections.' : 'Text preparation runs outside the 5.5 GiB memory envelope. That envelope remains an ESTIMATE; the fix is planned for v2.0.1.'}</p>
       {release.limitations.length ? <ul>{release.limitations.map(item => <li key={item}>{item}</li>)}</ul> : <p className="glm-v2-empty">Release-specific limitations and installation qualification are pending.</p>}
     </section>
 
     <section className="glm-shell glm-v2-section" id="license" aria-labelledby="license-title">
       <p className="glm-v2-eyebrow">License scope</p>
       <h2 id="license-title">The default drafter is non-commercial.</h2>
-      <p>{release.license?.notice ?? V2_DRAFTER_NOTICE}</p>
+      <p>{V2_DRAFTER_NOTICE}</p>
       {release.license ? <p><a href={release.license.source}>Pinned drafter model card and terms ↗</a></p> : null}
-      <p className="glm-fine">Recipe code, engine, weights and dependencies retain their own license terms.</p>
+      <p className="glm-fine">Recipe code, engine, base weights, quantized weights and dependencies retain their own license terms. This is not legal advice.</p><p><code>DRAFTER=none</code> disables the drafter. Performance: not measured at TP=3.</p>
       <h3 style={{ marginTop: 24 }}>Built on open work</h3>
-      <p>Tas’s TensorFold GLM branch; ashhart and the TensorFold contributors’ engine; Z.AI’s GLM-5.3-Flash; Vontra’s MLX weights; the DFlash2 authors at Inco AI; mmastrac’s fabric work, template and published reference; and alexellis’s RigMark benchmark.</p>
+      <p>Tas’s TensorFold GLM branch; Ash Hart and the TensorFold contributors’ engine; Z.AI’s GLM-5.3-Flash; Vontra’s MLX weights; the DFlash2 authors at Inco AI; mmastrac’s fabric work and template; and alexellis’s RigMark benchmark.</p>
     </section>
 
     <section className="glm-shell glm-v2-section" id="releases" aria-labelledby="history-title">

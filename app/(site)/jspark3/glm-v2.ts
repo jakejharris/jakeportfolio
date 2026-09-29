@@ -11,7 +11,7 @@ export type V2Multistream = {
 };
 export type V2Latency = {
   id: string; unit: 's'; better: 'lower'; status: 'measured'; prompt: string; case: string;
-  effort: 'Max (default)' | 'Low'; instrument: string; evidence: string[];
+  effort: 'High (default)' | 'Max' | 'Max (default)' | 'Low'; instrument: string; evidence: string[];
   first_token: V2Stats; first_content: V2Stats & { conditional: boolean; censored_trace: V2Trace[] };
   reasoning_tokens: V2Stats;
 };
@@ -22,11 +22,15 @@ export type V2Unmeasured = {
 };
 export type V2Prefill = V2Unmeasured | (V2Stats & {
   id: string; unit: 'tok/s'; better: 'higher'; status: 'measured'; prompt: string; case: string;
-  effort: 'Max (default)' | 'Low'; instrument: string; evidence: string[];
+  effort: 'High (default)' | 'Max' | 'Max (default)' | 'Low'; instrument: string; evidence: string[];
 });
 export type V2Release = {
   title: string; engine: string; fixture: boolean; publication_hold: boolean; pending: string[]; published: string | null;
   rows: V2Row[]; multistream: V2Multistream[]; latency: V2Latency[]; prefill: V2Prefill[]; decode: V2Unmeasured[]; social_image: string;
+  sparkdash?: { cells: { id: string; workload: string; label: string; display: string; per_stream: string | null; extension: boolean }[]; evidence: string[]; instrument: string; revision: string; max_tokens: string };
+  serving?: { default_streams: string; opt_out: string | null; serial: boolean };
+  sections?: Record<string, { paragraphs: string[]; evidence: string[] }>;
+  builder_quality?: { claim: string; source: string } | null;
   comparison: null;
   comparison_claim: null;
   quality: { claim: string; scope: string; source: string; prompt_set_note: string;
@@ -40,13 +44,15 @@ export type V2Release = {
 
 export const GLM_V2 = data as V2Release;
 export const V2_DESCRIPTION = 'JSpark3 v2.0.0: TensorFold serving GLM-5.3-Flash on three DGX Sparks. Single-stream RigMark results, multi-stream serving results and release qualifications.';
-export const V2_DRAFTER_NOTICE = 'The default DFlash2 drafter is non-commercial (CC BY-NC-ND 4.0). No mode is cleared for commercial use.';
+export const V2_DRAFTER_NOTICE = 'The default DFlash2 drafter is non-commercial (CC BY-NC-ND 4.0). Recipe code, engine, base weights, quantized weights and dependencies retain their own terms. This is not legal advice.';
 export const V2_METRICS: Record<string, string> = {
   rigmark_code: 'RigMark · code', rigmark_prose: 'RigMark · prose', rigmark_structured: 'RigMark · structured',
 };
 
 // Display strings are required by the importer. No numeric formatting belongs here.
-export const V2_HIGHLIGHTS = Object.entries(V2_METRICS).map(([id, label]) => {
-  const row = GLM_V2.rows.find(item => item.id === id);
+export const v2Highlights = (release: V2Release) => Object.entries(V2_METRICS).map(([id, label]) => {
+  const row = release.rows.find(item => item.id === id);
   return { id, label, value: row?.display.median ?? 'Pending' };
 });
+
+export const V2_HIGHLIGHTS = v2Highlights(GLM_V2);
