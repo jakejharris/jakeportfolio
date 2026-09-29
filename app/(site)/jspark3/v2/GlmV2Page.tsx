@@ -24,7 +24,7 @@ export default function GlmV2Page({ release = GLM_V2 }: { release?: V2Release } 
           <p className="glm-kicker">Three DGX Sparks · one endpoint</p>
           <h1>JSpark3 v2.0.0 <span>(GLM-5.3-Flash, TP3)</span></h1>
           <p className="glm-lede">TensorFold, on three Sparks.</p>
-          <p className="glm-intro">JSpark3 builds on Ash Hart’s TensorFold engine with a three-Spark TP3 recipe, a chat-switch revisit store, concurrent serving, hardening and a High effort default. Final measurements and configuration follow the winning build’s receipts.</p>
+          <p className="glm-intro">JSpark3 builds on Ash Hart’s TensorFold engine with a three-Spark TP3 recipe, a chat-switch revisit store, hardening and a High effort default. {release.serving ? release.serving.serial ? 'This build serves one request at a time.' : 'This build adds concurrent serving.' : 'Concurrent serving qualification awaits the winning build.'} Final measurements and configuration follow the winning build’s receipts.</p>
           <div className="glm-speed">
             <p className="glm-speed-line" data-quality-headline>{release.builder_quality?.claim ?? release.quality?.claim ?? 'Candidate qualification pending.'}</p>
             <p className="glm-speed-sub">{release.quality?.scope ?? 'The final results will follow the sealed numbers and their receipts.'}</p>
@@ -48,7 +48,7 @@ export default function GlmV2Page({ release = GLM_V2 }: { release?: V2Release } 
         <div className="glm-section-heading">
           <p className="glm-v2-eyebrow">Single-stream RigMark</p>
           <h2 id="results-title">{release.serving?.serial ? 'One request at a time.' : 'Single-stream decode.'}</h2>
-          <nav className="glm-v2-jumps" aria-label="Measurement sections"><a href="#latency">Latency ↓</a><a href="#prefill">Prefill ↓</a><a href="#multistream">Multi-stream ↓</a><a href="#decode">Decode coverage ↓</a></nav>
+          <nav className="glm-v2-jumps" aria-label="Measurement sections"><a href="#latency">Latency ↓</a><a href="#prefill">Prefill ↓</a><a href={release.sparkdash ? "#sparkdash" : "#multistream"}>Multi-stream ↓</a><a href="#decode">Decode coverage ↓</a></nav>
           <p>Decode throughput in tok/s, higher is better, one request at a time. These rows make no claim about prefill or concurrent requests.</p>
         </div>
         <div className="glm-v2-table-wrap">
@@ -93,7 +93,7 @@ export default function GlmV2Page({ release = GLM_V2 }: { release?: V2Release } 
       {release.panel_note ? <><p>{release.panel_note}</p><ul>{release.checks.map(check => <li key={check.id}>{check.id}: {check.status}{check.observed ? ` · ${check.observed}` : ''}{check.reason ? ` · ${check.reason}` : ''}{!check.observed && check.display?.passed !== undefined ? ` · ${check.display.passed}/${check.display.total}` : ''}{!check.observed && check.display?.corrupt !== undefined ? ` · ${check.display.corrupt} corrupt of ${check.display.total}` : ''}{!check.observed && check.display?.percentage ? ` (${check.display.percentage})` : ''}{check.source ? <> · <a href={check.source}>Receipt ↗</a></> : null}{check.failed_cases.length ? ` · Reported failures: ${check.failed_cases.join(', ')}` : ''}</li>)}</ul></> : null}
       {release.quality_notes.map(note => <p key={note} className="glm-v2-empty">{note}</p>)}
       <h3 style={{ marginTop: 24 }}>Release limitations</h3>
-      <p data-memory-limitation>{release.serving ? 'Memory capacity remains an ESTIMATE until measured on this build. Winning limitations and receipts appear in the configuration sections.' : 'Text preparation runs outside the 5.5 GiB memory envelope. That envelope remains an ESTIMATE; the fix is planned for v2.0.1.'}</p>
+      <p data-memory-limitation>Text preparation runs outside the 5.5 GiB memory envelope. That envelope remains an ESTIMATE; the fix is planned for v2.0.1.</p>
       {release.limitations.length ? <ul>{release.limitations.map(item => <li key={item}>{item}</li>)}</ul> : <p className="glm-v2-empty">Release-specific limitations and installation qualification are pending.</p>}
     </section>
 

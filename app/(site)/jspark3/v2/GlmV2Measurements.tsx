@@ -63,7 +63,7 @@ export default function GlmV2Measurements({ release = GLM_V2 }: { release?: V2Re
     <section className="glm-shell glm-v2-section" id="latency" aria-labelledby="latency-title">
       <p className="glm-v2-eyebrow">Latency · streamed requests</p>
       <h2 id="latency-title">First token. First answer text.</h2>
-      <p>{checkpointPending ? 'These are single-request, greedy timings from the earlier sealed checkpoint. Final candidate timings are pending.' : 'These are single-request, greedy timings from the sealed candidate.'}</p>
+      <p>{release.serving && !release.latency.length ? 'Winning single-request, greedy timings are pending.' : checkpointPending ? 'These are single-request, greedy timings from the earlier sealed checkpoint. Final candidate timings are pending.' : 'These are single-request, greedy timings from the sealed candidate.'}</p>
       <dl className="glm-v2-definitions">
         <div><dt>First token</dt><dd>Client time from before opening the request to the first streamed reasoning or content text. Seconds, lower is better.</dd></div>
         <div><dt>First answer text</dt><dd>Client time to the first content text, after any reasoning. This is the start of the answer, not the completed answer. Seconds, lower is better.</dd></div>
