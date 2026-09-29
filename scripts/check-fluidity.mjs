@@ -355,6 +355,17 @@ try {
     assert.equal(await page.evaluate(() => Math.round(window.scrollY)), 180);
   });
 
+  await check("back across an anchor jump taken from the top returns to the top", { path: "/jspark3/deepseek/" }, async (page) => {
+    // Never scrolled: the page has no scroll event to remember it by.
+    assert.equal(await page.evaluate(() => window.scrollY), 0);
+    await page.locator("a[href='#results']", { hasText: "Benchmarks" }).evaluate((link) => link.click());
+    await page.waitForFunction(() => location.hash === "#results" && window.scrollY > 100);
+    await page.goBack();
+    await page.waitForFunction(() => !location.hash);
+    await page.waitForTimeout(300);
+    assert.equal(await page.evaluate(() => Math.round(window.scrollY)), 0);
+  });
+
   await check("back after a keyboard trip through the navbar hands focus back to it", { path: "/about/" }, async (page) => {
     await page.locator("nav a[href='/contact/']:visible").focus();
     await page.keyboard.press("Enter");

@@ -102,6 +102,9 @@ export default function NavigationFlow() {
     state.memory = memory;
     history.scrollRestoration = "manual";
     stampEntry();
+    // The page opened here has a place too, even if the reader never
+    // scrolls it: back from an anchor jump returns to it.
+    memory.save(entryKey(), window.scrollY);
 
     const clearPending = () => {
       window.clearTimeout(state.giveUp);
@@ -277,6 +280,10 @@ export default function NavigationFlow() {
       cancelAnimationFrame(state.restoreFrame);
       apply();
     }
+
+    // Where this entry starts (the top, or the restored place), before any
+    // scroll event has had the chance to say so.
+    if (kind === "push") state.memory?.save(key, window.scrollY);
 
     const detail: NavArrival = { kind, pathname, x: origin?.x, y: origin?.y, covered };
     window.dispatchEvent(new CustomEvent(NAV_ARRIVE_EVENT, { detail }));
