@@ -14,6 +14,7 @@ import TagPill from '@/app/components/TagPill';
 import GlassLight from '@/app/components/GlassLight';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
+import PinnedBadge from '@/app/components/PinnedBadge';
 
 // Published pages refresh in the background; the webhook also expires content.
 export const revalidate = 60;
@@ -154,14 +155,18 @@ export default async function TagPage({
                     <TransitionLink
                       href={`/posts/${post.slug.current}/`}
                       className="pageLinkContainer flex justify-between items-center cursor-pointer group"
-                      aria-label={`View ${post.title}`}
+                      aria-label={`View ${post.featured ? "pinned post: " : ""}${post.title}`}
                       scroll={true}
                     >
                       <div className="flex items-center gap-3">
                         <div>
                           <div className="text-primary text-sm md:text-base font-medium mb-1 leading-tight flex items-center gap-1">
-                            {post.featured && <span className="glass-mark" aria-hidden="true" />}
-                            {post.title}
+                            {post.featured ? (
+                              <span className="pinned-title-anchor">
+                                {post.title}
+                                <PinnedBadge />
+                              </span>
+                            ) : post.title}
                           </div>
                           <div className="flex items-center gap-2">
                             <div className="text-sm text-muted-foreground">
