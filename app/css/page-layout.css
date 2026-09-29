@@ -18,12 +18,12 @@
   display: flex;
   flex: 1;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-start;
   padding-block: var(--page-edge-space);
 }
 
-/* Keep content margins inside the content box. Short pages divide spare
-   viewport height evenly; long pages keep just the shared edge space. */
+/* Keep content margins inside the content box. Short pages leave spare
+   viewport height below content; long pages keep the shared edge space. */
 .page-content {
   display: flow-root;
 }
