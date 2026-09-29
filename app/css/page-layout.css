@@ -1,0 +1,43 @@
+/* One edge space for reading pages, lists and project releases. 80px keeps
+   the mobile appearance dock clear and follows the mastheads' existing air. */
+:root {
+  --page-edge-space: 5rem;
+}
+
+.site-main,
+.site-main > [data-page-frame] {
+  display: flex;
+  flex-direction: column;
+}
+
+.site-main > [data-page-frame] {
+  flex: 1;
+}
+
+.page-layout {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  justify-content: flex-start;
+  padding-block: var(--page-edge-space);
+}
+
+/* Keep content margins inside the content box. Short pages leave spare
+   viewport height below content; long pages keep the shared edge space. */
+.page-content {
+  display: flow-root;
+}
+
+/* The final CMS block's margin is internal prose spacing, not page spacing. */
+.post-page .portable-text > :last-child,
+.post-page .portable-text > :last-child > :last-child {
+  margin-bottom: 0;
+}
+
+/* Authenticated previews have a second, fixed bar below the navbar. Give it
+   a place in the flow, so its clearance does not become a second top gap. */
+.draft-preview-banner {
+  position: sticky;
+  top: 4rem;
+  z-index: 30;
+}

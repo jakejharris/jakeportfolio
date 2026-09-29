@@ -9,6 +9,7 @@ import { GoogleAnalytics } from '@next/third-parties/google'
 import AccentScript from "../components/AccentScript";
 import PixelFluidBackground from "../components/PixelFluidBackground";
 import NavigationFlow from "../components/navigation/NavigationFlow";
+import "../css/page-layout.css";
 import type { Metadata } from "next";
 import { ABOUT_URL, PERSON_DESCRIPTION, SHARE_IMAGE, SITE_URL, jsonLd, personNode, websiteNode } from "../lib/entity";
 
@@ -70,7 +71,7 @@ export default function SiteLayout({ children }: { children: React.ReactNode }) 
           <PortfolioChrome><AppearanceDock /></PortfolioChrome>
           {/* The water lives here, under every page, so it moves with page
               changes instead of being replaced by them. */}
-          <main className="relative flex-1">
+          <main className="site-main relative flex-1">
             <PixelFluidBackground />
             <div data-page-frame="">{children}</div>
             {process.env.NODE_ENV === 'production' && (

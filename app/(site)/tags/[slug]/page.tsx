@@ -140,7 +140,7 @@ export default async function TagPage({
         {posts.length === 0 ? (
           <p className="page-enter-2 text-muted-foreground">No posts found with this tag.</p>
         ) : (
-          <ul className="glass-list page-enter-2 space-y-2 mb-8">
+          <ul className="glass-list page-enter-2 space-y-2">
             {posts.map((post) => {
               const displayedViewCount =
                 liveViewCounts === null ? null : liveViewCounts[post.slug.current] ??
