@@ -278,6 +278,10 @@
 @media (prefers-reduced-motion: reduce) {
   .glm *, .glm *::before, .glm *::after { scroll-behavior: auto !important; animation: none !important; transition: none !important; }
 }
+@media (max-width: 360px) {
+  .glm-header { flex-wrap: wrap; gap: 0; padding-block: 12px; }
+  .glm-header nav { width: 100%; gap: 24px; }
+}
 @media print {
   .glm { --glm-bg: #fff; --glm-text: #15171a; --glm-muted: #4d535a; --glm-gold: #80611d; }
   .glm-header nav, .glm-actions { display: none; }

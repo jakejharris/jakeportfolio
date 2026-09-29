@@ -1,0 +1,82 @@
+{
+  "schema": "jspark3-site/2",
+  "title": "JSpark3 v2.0.0 (GLM-5.3-Flash, TP3)",
+  "fixture": true,
+  "pending": [
+    "Fixture data: no benchmark was run.",
+    "Final freeze and release date pending.",
+    "Published TP3 comparison and matched instruments pending.",
+    "Quality result and measured run-to-run floor pending.",
+    "DFlash2 upstream license and download link pending."
+  ],
+  "source_sha256": "40aa5bb41c52a78e064dc3b4322fdac56245a738ba33201a5aaff64699236cd6",
+  "frozen_at": null,
+  "published": null,
+  "conditions": "FIXTURE ONLY. Invented values for layout. No benchmark was run.",
+  "sets": [
+    {
+      "id": "release_m0",
+      "label": "FIXTURE ONLY, invented layout data",
+      "build": "v2.0.0",
+      "mode": "0",
+      "toggles": "none",
+      "serving_starts": "1",
+      "sweeps": "2",
+      "cells": {
+        "prefill": {
+          "lo_text": "11.1",
+          "hi_text": "22.2",
+          "unit": "tok/s",
+          "instrument": "FIXTURE instrument, no benchmark was run"
+        },
+        "decode_c1": {
+          "lo_text": "12.1",
+          "hi_text": "23.2",
+          "unit": "tok/s",
+          "instrument": "FIXTURE instrument, no benchmark was run"
+        },
+        "decode_c2": {
+          "lo_text": "13.1",
+          "hi_text": "24.2",
+          "unit": "tok/s",
+          "instrument": "FIXTURE instrument, no benchmark was run"
+        },
+        "decode_c4": {
+          "lo_text": "14.1",
+          "hi_text": "25.2",
+          "unit": "tok/s",
+          "instrument": "FIXTURE instrument, no benchmark was run"
+        },
+        "decode_c8": {
+          "lo_text": "15.1",
+          "hi_text": "26.2",
+          "unit": "tok/s",
+          "instrument": "FIXTURE instrument, no benchmark was run"
+        },
+        "decode_prose_c1": {
+          "lo_text": "16.1",
+          "hi_text": "27.2",
+          "unit": "tok/s",
+          "instrument": "FIXTURE instrument, no benchmark was run"
+        },
+        "decode_prose_c4": {
+          "lo_text": "17.1",
+          "hi_text": "28.2",
+          "unit": "tok/s",
+          "instrument": "FIXTURE instrument, no benchmark was run"
+        }
+      },
+      "prefill_omitted_reason": null
+    }
+  ],
+  "comparison": null,
+  "quality": null,
+  "drafter_source": null,
+  "social_image": "/jspark3/glm/share/?v=40aa5bb41c52",
+  "links": {
+    "release": "https://github.com/jakejharris/jspark3/releases/tag/v2.0.0",
+    "source": "https://github.com/jakejharris/jspark3/tree/v2.0.0",
+    "results": "https://github.com/jakejharris/jspark3/blob/v2.0.0/release/results-v2.0.0.json",
+    "numbers": "https://github.com/jakejharris/jspark3/blob/v2.0.0/release/RELEASE-NUMBERS.md"
+  }
+}

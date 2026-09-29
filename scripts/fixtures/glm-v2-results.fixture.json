@@ -1,0 +1,102 @@
+{
+  "schema": "jspark3-results/1",
+  "state": "fixture",
+  "fixture": true,
+  "frozen_at": null,
+  "tag": "v2.0.0",
+  "version": "v2.0",
+  "release_date": null,
+  "decode_kind": "code",
+  "conditions": "FIXTURE ONLY. Invented values for layout. No benchmark was run.",
+  "mode_switch": null,
+  "sets": {
+    "release_m0": {
+      "label": "FIXTURE ONLY, invented layout data",
+      "build": "v2.0.0",
+      "mode": 0,
+      "toggles": "none",
+      "serving_starts": 1,
+      "sweeps": 2,
+      "cells": {
+        "prefill": {
+          "lo": 11.1,
+          "hi": 22.2,
+          "unit": "tok/s",
+          "class": "measured",
+          "instrument": "FIXTURE instrument, no benchmark was run",
+          "evidence": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+          "mode": 0,
+          "build": "v2.0.0",
+          "toggles": "none"
+        },
+        "decode_c1": {
+          "lo": 12.1,
+          "hi": 23.2,
+          "unit": "tok/s",
+          "class": "measured",
+          "instrument": "FIXTURE instrument, no benchmark was run",
+          "evidence": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+          "mode": 0,
+          "build": "v2.0.0",
+          "toggles": "none"
+        },
+        "decode_c2": {
+          "lo": 13.1,
+          "hi": 24.2,
+          "unit": "tok/s",
+          "class": "measured",
+          "instrument": "FIXTURE instrument, no benchmark was run",
+          "evidence": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+          "mode": 0,
+          "build": "v2.0.0",
+          "toggles": "none"
+        },
+        "decode_c4": {
+          "lo": 14.1,
+          "hi": 25.2,
+          "unit": "tok/s",
+          "class": "measured",
+          "instrument": "FIXTURE instrument, no benchmark was run",
+          "evidence": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+          "mode": 0,
+          "build": "v2.0.0",
+          "toggles": "none"
+        },
+        "decode_c8": {
+          "lo": 15.1,
+          "hi": 26.2,
+          "unit": "tok/s",
+          "class": "measured",
+          "instrument": "FIXTURE instrument, no benchmark was run",
+          "evidence": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+          "mode": 0,
+          "build": "v2.0.0",
+          "toggles": "none"
+        },
+        "decode_prose_c1": {
+          "lo": 16.1,
+          "hi": 27.2,
+          "unit": "tok/s",
+          "class": "measured",
+          "instrument": "FIXTURE instrument, no benchmark was run",
+          "evidence": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+          "mode": 0,
+          "build": "v2.0.0",
+          "toggles": "none"
+        },
+        "decode_prose_c4": {
+          "lo": 17.1,
+          "hi": 28.2,
+          "unit": "tok/s",
+          "class": "measured",
+          "instrument": "FIXTURE instrument, no benchmark was run",
+          "evidence": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+          "mode": 0,
+          "build": "v2.0.0",
+          "toggles": "none"
+        }
+      }
+    }
+  },
+  "site_v2": null
+}

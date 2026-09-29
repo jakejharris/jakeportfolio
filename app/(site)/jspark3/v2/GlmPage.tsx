@@ -38,7 +38,7 @@ export default function GlmPage() {
       <ProjectHeader prefix="glm" nav={NAV} />
       <header className="glm-hero">
         <div>
-          <p className="glm-kicker">JSPARK3{name ? <> <Ph>{RELEASE}</Ph></> : null} · {LABELS.latest}</p>
+          <p className="glm-kicker">JSPARK3{name ? <> <Ph>{RELEASE}</Ph></> : null} · Historical release</p>
           <h1><Ph>{name ?? RELEASE}</Ph></h1>
           <p className="glm-lede">GLM-5.3 Flash<br />on three DGX Sparks.</p>
           <SpeedHeadline />

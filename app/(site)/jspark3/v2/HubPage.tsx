@@ -3,28 +3,8 @@ import PageLayout from '../../../components/PageLayout';
 import PixelFluidBackground from '../../../components/PixelFluidBackground';
 import TransitionLink from '../../../components/TransitionLink';
 import { release } from './release-data';
-import { GLM_RELEASE, HEADLINE_ROWS, HUB_COPY, INTERNAL_BUILDS, IS_PLACEHOLDER, RELEASE, RELEASE_HISTORY, RELEASE_SUMMARY, releaseDate, valueText } from '../release-copy';
-import { Ph } from '../Placeholder';
-import Band from './Band';
-
-/**
- * The card's four figures, from the release's own start: prefill, code and prose for one stream, and code
- * for four streams. prose_c1 is the release's decode_prose_c1; the others are headline rows. A figure the
- * release's numbers leave out is skipped, and with no measured start of the release the card shows none.
- */
-type HubCell = { lo_text: string | null; hi_text: string | null; median_text?: string; unit: string };
-const HUB_TILES = HUB_COPY.glmCard.tiles.flatMap(tile => {
-  const cell: HubCell | undefined = tile.id === 'prose_c1'
-    ? (GLM_RELEASE.headline.missing || !GLM_RELEASE.headline.prose_c1 ? undefined : { ...GLM_RELEASE.headline.prose_c1, unit: 'tok/s' })
-    : HEADLINE_ROWS.find(item => item.id === tile.id);
-  return cell && (IS_PLACEHOLDER || cell.hi_text !== null) ? [{ ...tile, cell }] : [];
-});
-const FIGURE = HUB_COPY.glmCard.figure;
-
-/** A recorded code median, otherwise the complete recorded range. */
-function HubFigure({ cell }: { cell: HubCell }) {
-  return cell.median_text ? <Ph>{valueText(cell.median_text)}</Ph> : <Band lo={cell.lo_text} hi={cell.hi_text} />;
-}
+import { HUB_COPY, INTERNAL_BUILDS, RELEASE_HISTORY } from '../release-copy';
+import { GLM_V2, V2_HIGHLIGHTS } from '../glm-v2';
 
 function LedgerRow({ href, children }: { href: string; children: React.ReactNode }) {
   return href.startsWith('/')
@@ -46,18 +26,17 @@ export default function HubPage() {
         <ol className="spark-hub-list">
           <li>
             <TransitionLink href="/jspark3/glm/" className="pageLinkContainer pinnedLinkBorder spark-hub-release">
-              <span className="spark-hub-release-meta">{`${HUB_COPY.glmCard.meta} `}<span><Ph>{RELEASE}</Ph>{GLM_RELEASE.published ? <> · <Ph>{releaseDate(GLM_RELEASE.published)}</Ph></> : null}</span></span>
-              <span className="spark-hub-release-title">{HUB_COPY.glmCard.title} <span aria-hidden="true">↗</span></span>
-              {RELEASE_SUMMARY ? <span className="spark-hub-release-detail">{RELEASE_SUMMARY}</span> : null}
-              {HUB_TILES.length ? <span className="spark-hub-figures" data-figure={FIGURE}>
-                {HUB_TILES.map(({ id, label, cell }) => <span key={id} className="spark-hub-figure" data-metric-id={id}>
-                  <span className="spark-hub-figure-label">{label}</span>
-                  <span className="spark-hub-figure-value"><HubFigure cell={cell} /><small>{cell.unit}</small></span>
+              <span className="spark-hub-release-meta">{GLM_V2.pending.length ? 'Release preview · publication pending' : 'Latest release'}</span>
+              <span className="spark-hub-release-title">{GLM_V2.title} <span aria-hidden="true">↗</span></span>
+              <span className="spark-hub-figures">
+                {V2_HIGHLIGHTS.map(cell => <span key={cell.id} className="spark-hub-figure">
+                  <span className="spark-hub-figure-label">{cell.label}</span>
+                  <span className="spark-hub-figure-value">{cell.value}{!GLM_V2.fixture ? <small>tok/s</small> : null}</span>
                 </span>)}
-              </span> : null}
-              <span className="spark-hub-release-detail">{HUB_TILES.length ? HUB_COPY.glmCard.caption[FIGURE] : HUB_COPY.glmCard.caption.none}</span>
-              {HUB_TILES.length && HUB_COPY.glmCard.installNote ? <span className="spark-hub-release-detail" data-hub-install-note>{HUB_COPY.glmCard.installNote}</span> : null}
-              <span className="spark-hub-release-action">{HUB_COPY.glmCard.action} <span aria-hidden="true">→</span></span>
+              </span>
+              <span className="spark-hub-release-detail">{GLM_V2.fixture ? 'Measurements pending. Fixture values are not release results.' : 'Measured ranges. Conditions and every serving start on the release page.'}</span>
+              <span className="spark-hub-release-detail">DFlash2: non-commercial. MTP-only: not measured at TP=3.</span>
+              <span className="spark-hub-release-action">Recipe, results, and license scope <span aria-hidden="true">→</span></span>
             </TransitionLink>
           </li>
           <li>
@@ -75,20 +54,25 @@ export default function HubPage() {
         <ol className="spark-hub-ledger">
           <li>
             <LedgerRow href="/jspark3/glm/">
-              <span className="spark-hub-ledger-version"><Ph>{RELEASE}</Ph></span>
-              <span className="spark-hub-ledger-what">{GLM_RELEASE.name ? `${GLM_RELEASE.name}, GLM-5.3 Flash` : 'GLM-5.3 Flash'}<span className="spark-hub-ledger-pill">Latest</span></span>
-              <span className="spark-hub-ledger-when">{GLM_RELEASE.published ? <Ph>{releaseDate(GLM_RELEASE.published, false)}</Ph> : null}</span>
+              <span className="spark-hub-ledger-version">JSpark3 v2.0.0</span>
+              <span className="spark-hub-ledger-what">(GLM-5.3-Flash, TP3)<span className="spark-hub-ledger-pill">{GLM_V2.pending.length ? 'Preview' : 'Latest'}</span></span>
+              <span className="spark-hub-ledger-when">{GLM_V2.published ?? 'Pending'}</span>
             </LedgerRow>
           </li>
           {INTERNAL_BUILDS ? <li className="spark-hub-ledger-internal">
             <span className="spark-hub-ledger-row">
-              <span className="spark-hub-ledger-version">{INTERNAL_BUILDS.first}{INTERNAL_BUILDS.last ? <> to <Ph>{INTERNAL_BUILDS.last}</Ph></> : null}</span>
+              <span className="spark-hub-ledger-version">{INTERNAL_BUILDS.first}{INTERNAL_BUILDS.last ? <> to {INTERNAL_BUILDS.last}</> : null}</span>
               <span className="spark-hub-ledger-what">{HUB_COPY.internalRow}</span>
               <span className="spark-hub-ledger-when">Sep</span>
             </span>
           </li> : null}
+          <li><LedgerRow href="/jspark3/glm/v1.8.4/">
+            <span className="spark-hub-ledger-version">v1.8.4</span>
+            <span className="spark-hub-ledger-what">GLM-5.3 Flash · preserved results</span>
+            <span className="spark-hub-ledger-when">Sep</span>
+          </LedgerRow></li>
           {RELEASE_HISTORY.map(item => <li key={item.version}>
-            <LedgerRow href={item.href}>
+            <LedgerRow href={item.href.replace('/jspark3/glm/#', '/jspark3/glm/v1.8.4/#')}>
               <span className="spark-hub-ledger-version">{item.version}</span>
               <span className="spark-hub-ledger-what">{'recipes' in item ? `${item.what} · recipe v2.0.0 to ${release.identity.candidate}` : item.what}</span>
               <span className="spark-hub-ledger-when">{item.when}</span>
