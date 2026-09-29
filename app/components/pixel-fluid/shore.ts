@@ -26,6 +26,7 @@ const RISE_MS = 520;
 const CONTOUR_FLOOR = 0.5;
 const CONTOUR_DENSITY = 9;
 const CONTOUR_THICKNESS = 0.2;
+const DOT_FADE_MS = 400;
 // Each cell is drawn on a 3 x 3 grid of 6px dots; a contour is its middle dot.
 const SUB = 3;
 // Ink rises from the shallows by the page to open water.
@@ -82,6 +83,9 @@ export class Shore {
   private ctx: CanvasRenderingContext2D | null;
   private image: ImageData | null = null;
   private pixels: Uint32Array = new Uint32Array(0);
+  private dotFade = new Float32Array(0);
+  private dotColor = new Uint32Array(0);
+  private fading = false;
   private layout: Layout | null = null;
   private old: Layout | null = null;
   private front = new TideFront(CELL);
@@ -129,6 +133,8 @@ export class Shore {
       this.canvas.style.height = `${rows * CELL}px`;
       this.image = this.ctx && cols && rows ? this.ctx.createImageData(cols * SUB, rows * SUB) : null;
       this.pixels = this.image ? new Uint32Array(this.image.data.buffer) : new Uint32Array(0);
+      this.dotFade = new Float32Array(cols * rows);
+      this.dotColor = new Uint32Array(cols * rows);
       this.ripple = new Float32Array(cols * rows);
       this.rippleLast = new Float32Array(cols * rows);
       this.rippleActive = false;
@@ -143,6 +149,8 @@ export class Shore {
     this.layout = null;
     this.old = null;
     this.front.clear();
+    this.dotFade.fill(0);
+    this.fading = false;
     this.dirty = true;
   }
 
@@ -219,6 +227,7 @@ export class Shore {
       this.dirty ||
       this.rippleActive ||
       this.paint.active ||
+      this.fading ||
       (this.front.active && !this.front.settled(now) && !this.front.drained(now)) ||
       now - this.stirred < SETTLE_MS ||
       now - this.rise < RISE_MS
@@ -296,6 +305,7 @@ export class Shore {
     const dt = this.last < 0 ? 0 : Math.min(100, Math.max(0, now - this.last));
     this.last = now;
     this.dirty = false;
+    this.fading = false;
 
     if (!layout) {
       pixels.fill(0);
@@ -348,6 +358,7 @@ export class Shore {
     const paint = this.paint;
     const painting = !this.still && paint.active && paint.frame(now);
 
+    const fadeStep = this.still || now - this.stirred >= SETTLE_MS + DOT_FADE_MS ? 1 : dt / DOT_FADE_MS;
     const start = Math.max(0, Math.floor(from));
     const end = Math.min(rows, Math.ceil(to));
     if (this.colWave.length !== cols) this.colWave = new Float32Array(cols);
@@ -374,13 +385,13 @@ export class Shore {
         if (tiding) {
           const d = cellDistance(x, y, front.x, front.y, CELL);
           const side = front.side(d, radii);
-          if (side === 'gap') continue;
+          if (side === 'gap') { this.dotFade[i] = 0; continue; }
           if (side === 'old') {
-            if (!old) continue;
+            if (!old) { this.dotFade[i] = 0; continue; }
             land = old;
           } else foam = d > radii.in - FOAM;
         }
-        if (land.dry[i]) continue;
+        if (land.dry[i]) { this.dotFade[i] = 0; continue; }
         const shelf = smoothstep(0, shelfWidth, land.reach[i]);
         const ink = INK * (SHALLOW_INK + (1 - SHALLOW_INK) * shelf);
 
@@ -388,12 +399,14 @@ export class Shore {
           paint.sample(x * CELL + CELL / 2, y * CELL + CELL / 2);
           if (paint.ring && shelf > 0.3) {
             dot(x, y, tint(paint.ring, 0.9));
+            this.dotFade[i] = 0;
             continue;
           }
         }
 
         if (foam) {
           dot(x, y, over(pen, ink * 0.8));
+          this.dotFade[i] = 0;
           continue;
         }
 
@@ -401,15 +414,24 @@ export class Shore {
         if (rippling && ripple[i] > RIPPLE_CREST) {
           const k = clamp01((ripple[i] - RIPPLE_CREST) / 0.2);
           dot(x, y, over(pen + lightSign * k * 40 * 2.55, Math.min(1, ink * 1.3)));
+          this.dotFade[i] = 0;
           continue;
         }
 
         let height = (sinCol[x] + rowWave + Math.sin((x - docRow) * WAVE_SCALE * 0.5 + t * 0.3) + 3) / 6;
         height *= amplitude;
         if (rippling) height += ripple[i] * RIPPLE_GAIN;
-        if (height > CONTOUR_FLOOR && (height * CONTOUR_DENSITY) % 1 < CONTOUR_THICKNESS) {
+        const contour = height > CONTOUR_FLOOR && (height * CONTOUR_DENSITY) % 1 < CONTOUR_THICKNESS;
+        const previous = this.dotFade[i];
+        const opacity = contour ? Math.min(1, previous + fadeStep) : Math.max(0, previous - fadeStep);
+        this.dotFade[i] = opacity;
+        if (contour) {
           // Where a hot pour passed, the contour takes its color for a moment.
-          dot(x, y, painting && paint.wash > 0 ? washed(paint.color, paint.wash, ink) : over(pen, ink));
+          this.dotColor[i] = painting && paint.wash > 0 ? washed(paint.color, paint.wash, ink) : over(pen, ink);
+        }
+        if (opacity > 0) {
+          dot(x, y, (this.dotColor[i] & 0x00ffffff) | (Math.round(opacity * 255) << 24));
+          if (opacity < 1) this.fading = true;
         }
       }
     }

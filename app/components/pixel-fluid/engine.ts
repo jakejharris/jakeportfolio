@@ -85,6 +85,7 @@ const SUB = 3;
 const CHART_FLOOR = 0.5;
 // Thin enough that a contour stays one dot wide where the swell is flat.
 const CHART_THICKNESS = 0.13;
+const DOT_FADE_MS = 400;
 const CHART_PEN = { dark: 38, light: 64 };
 // The swell's crests keep a faint checkerboard body, whole cells, much
 // quieter than the old sea's; the troughs stay bare.
@@ -123,6 +124,15 @@ function gaussian(x: number, y: number, cx: number, cy: number, rx: number, ry: 
   return Math.exp(-(dx * dx + dy * dy) * 2);
 }
 
+function mixPixel(base: number, top: number, opacity: number) {
+  if (opacity >= 1) return top;
+  return pack(
+    (base & 255) + ((top & 255) - (base & 255)) * opacity,
+    ((base >>> 8) & 255) + (((top >>> 8) & 255) - ((base >>> 8) & 255)) * opacity,
+    ((base >>> 16) & 255) + (((top >>> 16) & 255) - ((base >>> 16) & 255)) * opacity,
+  );
+}
+
 function pack(r: number, g: number, b: number) {
   // ImageData is RGBA in memory; Uint32 views are little-endian everywhere
   // this runs.
@@ -150,6 +160,9 @@ export class PixelFluid {
   // cell whether it is drawn as a dot or a whole cell.
   private dots: Uint32Array | null = null;
   private marks = new Uint8Array(0);
+  private dotFade = new Float32Array(0);
+  private dotColor = new Uint32Array(0);
+  private dotKind = new Uint8Array(0);
   private bias = new Float32Array(0);
   private water = new Uint8Array(0);
   private shore = new Float32Array(0);
@@ -207,6 +220,9 @@ export class PixelFluid {
     if (this.options.chart) {
       this.pixels = new Uint32Array(cols * rows);
       this.marks = new Uint8Array(cols * rows);
+      this.dotFade = new Float32Array(cols * rows);
+      this.dotColor = new Uint32Array(cols * rows);
+      this.dotKind = new Uint8Array(cols * rows);
       this.dots = this.image ? new Uint32Array(this.image.data.buffer) : null;
     } else {
       this.pixels = this.image ? new Uint32Array(this.image.data.buffer) : new Uint32Array(0);
@@ -461,6 +477,10 @@ export class PixelFluid {
     const over = (r: number, g: number, b: number, a: number) =>
       pack(bgR + (r - bgR) * a, bgG + (g - bgG) * a, bgB + (b - bgB) * a);
     const chart = this.options.chart === true;
+    const fadeStep = this.still ? 1 : dt / DOT_FADE_MS;
+    const dotFade = this.dotFade;
+    const dotColor = this.dotColor;
+    const dotKind = this.dotKind;
     if (chart) marks.fill(MARK_DOT);
     const pen = (chart ? (isDark ? CHART_PEN.dark : CHART_PEN.light) : (isDark ? 22 : 88)) * 2.55;
     const toward = isDark ? 255 : 0;
@@ -486,6 +506,8 @@ export class PixelFluid {
       const rowW = this.rowW[y];
       for (let x = 0; x < cols; x++) {
         const i = y * cols + x;
+        const priorFade = chart ? dotFade[i] : 0;
+        if (chart) dotFade[i] = Math.max(0, priorFade - fadeStep);
         const coast = shore[i];
         let wet = water[i];
         let lift = bias[i];
@@ -497,6 +519,7 @@ export class PixelFluid {
           if (d >= radii.in) {
             if (d < radii.out || !oldWater || !oldBias) {
               pixels[i] = bgPixel;
+              if (chart) dotFade[i] = 0;
               continue;
             }
             wet = oldWater[i];
@@ -505,6 +528,7 @@ export class PixelFluid {
         }
         if (!wet || coast < BEACH) {
           pixels[i] = bgPixel;
+          if (chart) dotFade[i] = 0;
           continue;
         }
 
@@ -522,6 +546,7 @@ export class PixelFluid {
           const ring = paint.ring;
           if (ring && (x + y) % 3 !== 0 && shelf > 0.5) {
             pixels[i] = over(ring[0], ring[1], ring[2], presence * paint.strength);
+            if (chart) dotFade[i] = 0;
             continue;
           }
         }
@@ -530,6 +555,7 @@ export class PixelFluid {
         if (foam && shelf > 0.3) {
           const light = pen + lightSign * 26 * 2.55;
           pixels[i] = over(light, light, light, ink);
+          if (chart) dotFade[i] = 0;
           continue;
         }
 
@@ -538,6 +564,7 @@ export class PixelFluid {
           const k = clamp01((ripple[i] - RIPPLE_CREST) / (RIPPLE_CREST_FULL - RIPPLE_CREST));
           const light = pen + lightSign * k * 26 * 2.55;
           pixels[i] = over(light, light, light, ink);
+          if (chart) dotFade[i] = 0;
           continue;
         }
 
@@ -620,7 +647,23 @@ export class PixelFluid {
           b += (bgB + (tint[2] - bgB) * strength - b) * paint.wash;
         }
 
-        pixels[i] = over(r, g, b, ink);
+        if (chart && contour) {
+          // Keep contour ink separate from the checkerboard under it. A dot
+          // can fade across a crest without making that whole cell blink.
+          dotFade[i] = this.still ? 1 : Math.min(1, priorFade + fadeStep);
+          dotColor[i] = over(r, g, b, ink);
+          dotKind[i] = marks[i];
+          if (value >= CHART_BODY_FLOOR && cellNoise(y, x) <= shelf * shelf) {
+            const [low, high] = isDark ? CHART_BODY.dark : CHART_BODY.light;
+            const level = (x + y) % 2 === 0 ? high : low;
+            const body = (level + lightSign * illumination * 6) * 2.55;
+            pixels[i] = over(body, body, body, ink);
+            marks[i] = MARK_CELL;
+          } else {
+            pixels[i] = bgPixel;
+            marks[i] = MARK_DOT;
+          }
+        } else pixels[i] = over(r, g, b, ink);
       }
     }
 
@@ -633,12 +676,23 @@ export class PixelFluid {
         for (let x = 0; x < cols; x++) {
           const i = y * cols + x;
           const color = pixels[i];
-          if (color === bgPixel) continue;
+          const opacity = dotFade[i];
+          if (color === bgPixel && opacity === 0) continue;
           const top = y * SUB * stride + x * SUB;
-          if (marks[i] === MARK_CELL) {
-            for (let row = 0; row < SUB; row++) dots.fill(color, top + row * stride, top + row * stride + SUB);
-          } else {
-            dots[top + stride + 1] = color;
+          if (color !== bgPixel) {
+            if (marks[i] === MARK_CELL) {
+              for (let row = 0; row < SUB; row++) dots.fill(color, top + row * stride, top + row * stride + SUB);
+            } else dots[top + stride + 1] = color;
+          }
+          if (opacity > 0) {
+            if (dotKind[i] === MARK_CELL) {
+              const base = marks[i] === MARK_CELL ? color : bgPixel;
+              const mixed = mixPixel(base, dotColor[i], opacity);
+              for (let row = 0; row < SUB; row++) dots.fill(mixed, top + row * stride, top + row * stride + SUB);
+            } else {
+              const center = top + stride + 1;
+              dots[center] = mixPixel(dots[center], dotColor[i], opacity);
+            }
           }
         }
       }
