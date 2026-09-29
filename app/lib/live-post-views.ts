@@ -23,14 +23,14 @@ function createPostViewReadClient(token: string) {
 export async function getLivePostViewCounts(
   slugs: string[],
   { revalidate = 0 }: { revalidate?: number } = {}
-): Promise<Record<string, number>> {
+): Promise<Record<string, number> | null> {
   if (slugs.length === 0) {
     return {};
   }
 
   const token = process.env.SANITY_API_READ_TOKEN;
   if (!token) {
-    return {};
+    return null;
   }
 
   try {
@@ -58,9 +58,8 @@ export async function getLivePostViewCounts(
       reason: error instanceof Error ? error.message.slice(0, 200) : 'unknown',
       ts: new Date().toISOString(),
     }));
-    // An ISR failure retains the last successful page. With no prior render
-    // (new slug/build), fail instead of caching a misleading baseline for all.
-    if (revalidate > 0) throw error;
-    return {};
+    // Unknown counts must neither block content nor masquerade as a baseline.
+    // A successful empty result alone confirms a counter does not exist yet.
+    return null;
   }
 }

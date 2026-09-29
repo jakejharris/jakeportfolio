@@ -6,10 +6,10 @@ const snapshots = new Map<string, Snapshot>();
 
 export function rememberViewCount(
   slug: string,
-  count: number,
+  count: number | null,
   expiresAt: number,
   now = Date.now()
-): number {
+): number | null {
   const valid = (value: unknown): value is Snapshot => {
     if (!value || typeof value !== 'object') return false;
     const snapshot = value as Snapshot;
@@ -25,8 +25,9 @@ export function rememberViewCount(
   } catch {
     // Storage is best-effort; malformed records do not hide the server count.
   }
+  if (count === null && !valid(previous)) return null;
   const snapshot = {
-    count: Math.max(count, valid(previous) ? previous.count : 0),
+    count: Math.max(count ?? 0, valid(previous) ? previous.count : 0),
     // Revisits and API responses never extend an existing maximum's lifetime.
     expiresAt: valid(previous) ? Math.min(expiresAt, previous.expiresAt) : expiresAt,
   };

@@ -1,17 +1,19 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useLayoutEffect, useState } from 'react';
 import { rememberViewCount, VIEW_TTL_MS } from '@/app/lib/remembered-view-count';
 
 interface ViewCounterProps {
   slug: string;
-  initialCount: number;
+  initialCount: number | null;
 }
 
-export default function ViewCounter({ slug, initialCount }: ViewCounterProps) {
-  const [viewCount, setViewCount] = useState<{ slug: string; count: number } | null>(null);
+const useClientLayoutEffect = typeof window === 'undefined' ? useEffect : useLayoutEffect;
 
-  useEffect(() => {
+export default function ViewCounter({ slug, initialCount }: ViewCounterProps) {
+  const [viewCount, setViewCount] = useState<{ slug: string; count: number | null } | null>(null);
+
+  useClientLayoutEffect(() => {
     const now = Date.now();
     let viewedAt: number | null = null;
 
@@ -55,7 +57,7 @@ export default function ViewCounter({ slug, initialCount }: ViewCounterProps) {
           Number.isFinite(data.viewCount) && data.viewCount >= 0
         ) {
           // Persist even if the reader left while the request was in flight.
-          const count = rememberViewCount(slug, Math.max(initialCount, data.viewCount), expiresAt);
+          const count = rememberViewCount(slug, Math.max(initialCount ?? 0, data.viewCount), expiresAt);
           if (!cancelled) setViewCount({ slug, count });
         }
       } catch {
@@ -69,7 +71,10 @@ export default function ViewCounter({ slug, initialCount }: ViewCounterProps) {
     };
   }, [slug, initialCount]);
 
-  // A cached SSR count can be older than this reader's last visit. Wait for
-  // storage before displaying a number, including after a hard reload.
-  return <div>{viewCount?.slug === slug ? viewCount.count : '—'} views</div>;
+  // Show known counts without waiting for JS. On client navigation the layout
+  // effect restores this reader's maximum before paint; hydration may raise SSR.
+  const displayedCount = viewCount?.slug === slug && viewCount.count !== null
+    ? Math.max(viewCount.count, initialCount ?? 0)
+    : initialCount;
+  return <div className="min-w-[12ch] tabular-nums whitespace-nowrap">{displayedCount ?? '—'} views</div>;
 }

@@ -32,6 +32,23 @@ test('a persisted maximum survives a cold client and expires for admin correctio
   assert.equal(rememberViewCount('cold', 40, end + VIEW_TTL_MS, end), 40);
 });
 
+test('unknown counts stay unknown until a real snapshot is available', () => {
+  const end = 1000 + VIEW_TTL_MS;
+  assert.equal(rememberViewCount('unknown', null, end, 1000), null);
+  assert.equal(values.has('view-count:unknown'), false, 'Unknown must not persist as zero');
+  assert.equal(rememberViewCount('unknown', 601, end, 1100), 601);
+  assert.equal(rememberViewCount('unknown', null, end + 1000, 2000), 601);
+  assert.equal(JSON.parse(values.get('view-count:unknown')!).expiresAt, end);
+  assert.equal(rememberViewCount('unknown', null, end + VIEW_TTL_MS, end), null);
+  assert.equal(rememberViewCount('unknown', 0, end + VIEW_TTL_MS, end), 0);
+});
+
+test('unknown server counts can recover a valid maximum from storage', () => {
+  const end = 1000 + VIEW_TTL_MS;
+  values.set('view-count:unknown-cold', JSON.stringify({ count: 601, expiresAt: end }));
+  assert.equal(rememberViewCount('unknown-cold', null, end, 2000), 601);
+});
+
 test('invalid stored counts and impossible future expiries cannot poison the display', () => {
   for (const [i, record] of ['bad json', null, { count: -2, expiresAt: 2000 },
     { count: '9000', expiresAt: 2000 }, { count: 9000, expiresAt: 1001 + VIEW_TTL_MS }].entries()) {

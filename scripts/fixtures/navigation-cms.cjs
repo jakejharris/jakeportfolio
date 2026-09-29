@@ -33,7 +33,7 @@ globalThis.fetch = async function (input, init) {
   let result;
   if (query.includes('_type == "postView"')) {
     if (state.viewFail) return new Response('{"error":"Fixture outage"}', { status: 500 });
-    result = JSON.parse(url.searchParams.get('$ids')).map((_id) => ({ _id, count: state.count }));
+    result = state.viewMissing ? [] : JSON.parse(url.searchParams.get('$ids')).map((_id) => ({ _id, count: state.count }));
   }
   else if (query.includes('_type == "tag"')) result = tag;
   else if (query.endsWith('[0]._id')) result = post._id;

@@ -46,12 +46,13 @@ const get = async (route, headers) => {
   return { status: response.status, cache: response.headers.get('x-nextjs-cache'),
     policy: response.headers.get('cache-control'), body: await response.text() };
 };
-const invalidate = async (type = 'post') => {
+const invalidate = async (payload = { _type: 'post' }) => {
+  if (typeof payload === 'string') payload = { _type: payload };
   const response = await fetch(base + '/api/revalidate/', { method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'x-webhook-secret': 'local-fixture-webhook' }, body: JSON.stringify({ _type: type }),
+    headers: { 'Content-Type': 'application/json', 'x-webhook-secret': 'local-fixture-webhook' }, body: JSON.stringify(payload),
   });
   assert.equal(response.status, 200);
-  assert.equal((await response.json()).revalidated, type !== 'postView');
+  assert.equal((await response.json()).revalidated, payload._type !== 'postView' && !payload._id?.startsWith('views.'));
 };
 try {
   let ready = false;
@@ -73,10 +74,12 @@ try {
     assert.match(cached.body, /Published one/, route);
     assert.match(cached.policy, /s-maxage=60/, route);
   }
-  // The number is a client prop; the HTML waits for stored maxima before painting it.
+  // Known numbers are in both the server HTML and client props.
+  assert.match((await get(post)).body, />41<!-- --> views/);
   assert.match((await get(post, { RSC: '1' })).body, /"initialCount":41/);
   await state('two', 99);
   await invalidate('postView');
+  await invalidate({ _id: 'views.navigation-cache-fixture' });
   for (const route of routes) {
     const unchanged = await get(route);
     assert.equal(unchanged.cache, 'HIT', 'View writes invalidated the content cache');
@@ -155,10 +158,25 @@ try {
       assert(seen.slice(seen.indexOf(601)).every((value) => value >= 601), 'A stale number flashed after returning');
       await page.reload({ waitUntil: 'networkidle' });
       await waitCount(601);
-      assert((await page.evaluate(() => window.seenCounts)).every((value) => value >= 601), 'A stale number flashed on reload');
       assert.equal(JSON.parse(await readFile(statePath, 'utf8')).count, 601, 'The dedupe window issued another write');
+      await state('reader', 601, { viewFail: true, html: true });
+      await invalidate('views');
+      assert.match((await get(post, { RSC: '1' })).body, /"initialCount":null/);
+      await page.reload({ waitUntil: 'networkidle' });
+      await waitCount(601);
+      // An unknown server count still restores a returning reader's maximum.
+      const freshContext = await browser.newContext();
+      const freshPage = await freshContext.newPage();
+      await freshPage.route('**/api/views/', (route) => route.fulfill({ status: 204 }));
+      await freshPage.goto(base + post, { waitUntil: 'networkidle' });
+      await freshPage.getByText('— views', { exact: true }).waitFor();
+      const counterStyle = await freshPage.getByText('— views', { exact: true }).evaluate((el) => ({
+        minWidth: parseFloat(getComputedStyle(el).minWidth), digits: getComputedStyle(el).fontVariantNumeric,
+      }));
+      assert(counterStyle.minWidth > 0 && counterStyle.digits.includes('tabular-nums'));
+      await freshContext.close();
       assert.deepEqual(errors, []);
-      console.log(`Returning reader: home ${homeBefore} → post 601 → home ${homeAfter} → post ${await count().innerText()} → reload 601; one increment; no stale-number flash; HTML tokens present.`);
+      console.log(`Returning reader: home ${homeBefore} → post 601 → home ${homeAfter} → post ${await count().innerText()} → reload 601; one increment; no stale number on client navigation; HTML tokens present. Unknown SSR restores remembered 601; fresh reader sees a reserved-width placeholder.`);
     } finally {
       await browser.close();
     }
@@ -171,17 +189,49 @@ try {
     assert.match((await get(post, { RSC: '1' })).body, /"initialCount":500/);
     await state('outage', 700, { viewFail: true });
     const cold = '/posts/navigation-outage-fixture/';
-    assert.equal((await get(cold)).status, 500, 'Cold slug cached a fallback instead of failing');
-    console.log('Cold slug fails safely. Waiting for the real 60-second ISR interval.');
-    await new Promise((resolve) => setTimeout(resolve, 62000));
-    await get(post); // Start the failing background refresh.
-    await new Promise((resolve) => setTimeout(resolve, 15000));
-    assert.match((await get(post, { RSC: '1' })).body, /"initialCount":500/, 'Failed refresh replaced the last good count');
+    const coldPage = await get(cold, { RSC: '1' });
+    assert.equal(coldPage.status, 200, 'View read failure blocked a cold slug');
+    assert.match(coldPage.body, /"initialCount":null/, 'View read failure substituted a baseline');
+    await invalidate('views');
+    for (const route of routes) {
+      const fresh = await get(route);
+      assert.equal(fresh.status, 200, `View outage blocked ${route}`);
+      assert.match(fresh.body, /Published outage/, 'View outage blocked new content');
+      if (route !== post) assert.doesNotMatch(fresh.body, /class="ms-4 text-sm/, 'List showed a fallback count');
+    }
+    const outageDraft = await get(post, headers);
+    assert.equal(outageDraft.status, 200, 'View outage blocked draft preview');
+    assert.match(outageDraft.body, /Secret draft body outage/);
+    assert.match(outageDraft.policy, /private.*no-store/);
+    const skipped = await fetch(base + '/api/views/', { method: 'POST',
+      headers: { 'Content-Type': 'application/json', origin: base, 'user-agent': 'fixture-bot' },
+      body: JSON.stringify({ slug: 'navigation-cache-fixture' }),
+    });
+    assert.equal(skipped.status, 200);
+    assert.equal((await skipped.json()).viewCount, null, 'Skipped API request invented a count');
+    // The outage webhook invalidated the first cold-page render too. Cache its
+    // unknown result again so recovery below actually exercises timed ISR.
+    await get(cold);
+    const cachedUnknown = await get(cold, { RSC: '1' });
+    assert.equal(cachedUnknown.cache, 'HIT');
+    assert.match(cachedUnknown.body, /"initialCount":null/);
     await state('recovered', 700);
-    const recovered = await get(cold, { RSC: '1' });
+    console.log('Cold posts, published lists and drafts survive the outage with unknown counts. Waiting for normal ISR recovery.');
+    await new Promise((resolve) => setTimeout(resolve, 62000));
+    const stale = await get(cold); // Start background regeneration of the unknown page.
+    assert.equal(stale.cache, 'STALE', 'Recovery must exercise a cached unknown page');
+    let recovered;
+    for (let i = 0; i < 30; i++) {
+      recovered = await get(cold, { RSC: '1' });
+      if (/"initialCount":700/.test(recovered.body)) break;
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+    }
     assert.equal(recovered.status, 200);
-    assert.match(recovered.body, /"initialCount":700/, 'Cold fallback was cached across recovery');
-    console.log('View-read failure: previous ISR snapshot stays 500; cold slug recovers to 700 without a cached baseline.');
+    assert.match(recovered.body, /"initialCount":700/, 'Unknown snapshot did not recover during ISR');
+    await state('new-counter', 0, { viewMissing: true });
+    await invalidate('views');
+    assert.match((await get(post, { RSC: '1' })).body, /"initialCount":10/, 'Successful missing counter lost its valid baseline');
+    console.log('View-read failure: unknown snapshot recovers to 700 without a webhook; successful missing counter still uses baseline 10.');
   }
 } finally {
   server.kill('SIGTERM');

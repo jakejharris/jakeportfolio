@@ -12,7 +12,7 @@ Each post slug maps to one document:
 ```
 
 `viewCount` remains on the published post as the migration source and legacy
-fallback. `viewCountBase` is the next fallback. Public pages display:
+fallback. `viewCountBase` is the next fallback. After a successful read, public pages display:
 
 ```text
 postView.count ?? post.viewCountBase ?? post.viewCount ?? 0
@@ -24,16 +24,17 @@ batch their slugs into one GROQ query. These intervals use stale-while-revalidat
 they are not a hard maximum age, and prefetched client routes can live longer.
 The increment and admin APIs retain uncached reads (`cache: 'no-store'`).
 
-A failed cached view read throws instead of returning an empty snapshot. During
-ISR, Next keeps the last successful page rather than caching a lower baseline.
-A first render of a new slug, or a build with the read token configured, fails
-if no successful view read is available; retry after the upstream recovers. This
-is preferable to sharing a misleading fallback. Builds without a read token
-intentionally use the post's baseline; a successful read with no `postView`
-document also uses that baseline. Uncached API reads remain best-effort.
+A failed view read or missing read token returns an unknown snapshot (`null`).
+It never fails a page, build, publish refresh or draft preview. Home and tag lists
+hide unknown counts; posts show `— views` unless the reader has a remembered
+count or the increment API supplies one. A cached unknown remains honest until
+a later successful refresh; it does not become zero or the post's baseline.
+Only a successful read with no `postView` document uses that baseline. A previous
+successful snapshot may still be served during background revalidation.
 
 Published content uses a separate 300-second `post` cache tag, expired by the
-authenticated content webhook. The webhook ignores `postView` documents so
+authenticated content webhook. The webhook ignores `postView` documents and
+document ids starting with `views.` (even without a type in the payload), so
 increments cannot invalidate all published pages. Production webhook delivery
 should use `/api/revalidate/` and a filter for post/tag content changes.
 
@@ -48,7 +49,8 @@ or `Sec-Fetch-Site: same-origin`; conflicting or cross-origin headers return
 deriving `views.<slug>`. Unknown slugs return `404`. The route then uses one
 Sanity transaction to `createIfNotExists` at zero and increment `count`. A
 lightweight bot User-Agent denylist and best-effort two-second per-instance
-IP-and-slug throttle skip mutations and return the current live count.
+IP-and-slug throttle skip mutations and return the current live count, or `null`
+if the count is unknown. The client ignores unknown API counts.
 
 The browser stores `localStorage["viewed:<slug>"]` as a timestamp before the
 request. A valid marker suppresses another write for 24 hours. Storage access is
@@ -62,9 +64,14 @@ admin-corrected count can be shown. Successful responses are remembered even
 if the reader has already left the page. An in-memory copy protects same-tab
 navigation when storage is blocked; persistence across reloads requires storage.
 
-The post displays `— views` until hydration reads the remembered maximum, avoiding
-a brief stale number on revisits or reloads. Home and tag lists still show their
-shared cached snapshots and can lag behind the post's personalized maximum.
+Known server counts are visible immediately, including without JavaScript. A
+layout effect restores the remembered maximum before client navigation paints,
+so returning to a post does not lower its displayed count. A returning reader's
+hard reload or new tab can briefly show the older server snapshot until hydration
+raises it. Only unknown counts need a placeholder. Tabular digits and reserved
+counter width keep nearby tag pills stable for ordinary count changes. Home and
+tag lists still show their shared cached snapshots and can lag behind the post's
+personalized maximum.
 
 ## Migration and rollout
 

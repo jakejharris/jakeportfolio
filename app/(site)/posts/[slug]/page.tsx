@@ -451,7 +451,7 @@ export default async function PostPage({ params }: PageParams) {
   const displayDate = post.publishedAt || post._updatedAt;
   const liveViewCounts = await getLivePostViewCounts([slug], { revalidate: 60 });
   const displayedViewCount =
-    liveViewCounts[slug] ?? post.viewCountBase ?? post.viewCount ?? 0;
+    liveViewCounts === null ? null : liveViewCounts[slug] ?? post.viewCountBase ?? post.viewCount ?? 0;
 
   // Build image URL for JSON-LD
   const imageUrl = post.mainImage?.asset

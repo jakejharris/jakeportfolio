@@ -142,7 +142,7 @@ export default async function TagPage({
           <ul className="page-enter-2 space-y-2 mb-8">
             {posts.map((post) => {
               const displayedViewCount =
-                liveViewCounts[post.slug.current] ??
+                liveViewCounts === null ? null : liveViewCounts[post.slug.current] ??
                 post.viewCountBase ??
                 post.viewCount ??
                 0;
@@ -179,9 +179,9 @@ export default async function TagPage({
                           </div>
                         </div>
                       </div>
-                      <div className="ms-4 text-sm text-muted-foreground whitespace-nowrap flex items-center gap-1">
+                      {displayedViewCount !== null && <div className="ms-4 text-sm text-muted-foreground whitespace-nowrap flex items-center gap-1">
                         {displayedViewCount} <Eye className="h-4 w-4" />
-                      </div>
+                      </div>}
                     </TransitionLink>
                   </HoverCardTrigger>
                   <HoverCardContent className="w-80 hidden md:block">
