@@ -107,9 +107,6 @@
 .spark-hub :focus-visible { outline: 2px solid hsl(var(--foreground)); outline-offset: 5px; }
 .spark-hub-skip { position: fixed; top: 0.5rem; left: 1rem; z-index: 60; padding: 0.75rem 1rem; background: hsl(var(--background)); color: hsl(var(--foreground)); transform: translateY(-200%); }
 .spark-hub-skip:focus { transform: translateY(0); }
-.pixel-fluid-background-quiet .pixel-fluid-hero-glow {
-  background: radial-gradient(ellipse 26rem 32rem at 50% 24rem, hsl(var(--background) / 0.85), hsl(var(--background) / 0.5) 55%, transparent 100%);
-}
 @media (hover: hover) {
   .spark-hub .spark-hub-release:hover { background: hsl(var(--background) / 0.96); }
   .spark-hub-release:hover .spark-hub-release-action { text-decoration: underline; text-underline-offset: 4px; }

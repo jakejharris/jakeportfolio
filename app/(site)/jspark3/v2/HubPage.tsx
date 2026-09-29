@@ -40,8 +40,8 @@ export default function HubPage() {
     <PageLayout className="spark-hub">
       <a className="spark-hub-skip" href="#current">Skip to releases</a>
       <header className="hero spark-hub-intro">
-        <h1 className="hero-wordmark">JSPARK3</h1>
-        <p className="hero-standfirst">Three Sparks. One model server.<br />{HUB_COPY.standfirst}</p>
+        <h1 className="hero-wordmark" data-fluid-island>JSPARK3</h1>
+        <p className="hero-standfirst" data-fluid-island>Three Sparks. One model server.<br />{HUB_COPY.standfirst}</p>
       </header>
       <section id="current" className="spark-hub-releases" aria-labelledby="spark-releases-title">
         <h2 id="spark-releases-title" className="section-kicker">{HUB_COPY.releasesTitle}</h2>

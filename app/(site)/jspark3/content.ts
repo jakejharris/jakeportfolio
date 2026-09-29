@@ -1,6 +1,6 @@
 /**
- * Current Cadence copy and descriptive headlines, with historical v1.0.0
- * comparisons retained separately. Sources: sealed Cadence CLAIMS.json,
+ * Historical Cadence copy and v1.0.0 comparisons, plus current model attribution
+ * and release credits. Measurement sources: sealed Cadence CLAIMS.json,
  * the original-client C4 follow-up receipts, and frozen results/results.json.
  */
 
@@ -280,7 +280,7 @@ export const REFERENCE_ROWS: ReadonlyArray<ReferenceRow> = [
   {
     recipe: "FlyCockpit TP3",
     sparks: "3",
-    lane: "EXL3/TR3 4-bpw, Mia model files by default · DFlash2 k=7 · vLLM, TP3/EP3 over a mesh",
+    lane: "Brandon M. Music's EXL3/TR3 4-bpw checkpoint, Mia-AiLab's byte-identical re-host by default · DFlash2 k=7 · vLLM, TP3/EP3 over a mesh",
     context: "1,000,000",
     decode:
       'structured count 69.0 / 68.5 / 71.2 · code 52.3 / 58.7 / 58.2 · "hello" 37.9 / 36.9 / 37.3',
@@ -290,7 +290,7 @@ export const REFERENCE_ROWS: ReadonlyArray<ReferenceRow> = [
   {
     recipe: "Mia TP2",
     sparks: "2",
-    lane: "EXL3/TR3 4-bpw, Mia model files by default · DFlash2 k=7 · vLLM, TP2",
+    lane: "Brandon M. Music's EXL3/TR3 4-bpw checkpoint, Mia-AiLab's byte-identical re-host by default · DFlash2 k=7 · vLLM, TP2",
     context: "1,000,000",
     decode:
       "62.9 on high-accept prompts (sparkDash, single stream) · structured 65.1 / prose 27.1 (bench_decode, four streams, median of 5×400)",
@@ -462,9 +462,9 @@ export const RUN_LINKS: ReadonlyArray<{ title: string; body: string; href: strin
   },
   {
     title: "The model files on Hugging Face",
-    body: "Brandon M. Music made this version of GLM-5.3 Flash. Mia's AI Lab hosts a copy with credit, and JSPARK3 keeps a copy of the same model version. The model files are the same, so you only need to download them once. The model cards and other repository files differ. Cadence also needs the separate DFlash2 draft, a smaller model that helps generate answers faster.",
-    href: "https://huggingface.co/jakejharris/jspark3/tree/e7c34dba923916754cfcb0bdf6c2c75a9b7ff1fc",
-    cta: "huggingface.co/jakejharris/jspark3",
+    body: "Brandon M. Music created the EXL3/TR3 4-bpw checkpoint of Z.AI's GLM-5.3 Flash. The recipe downloads Mia-AiLab's byte-identical re-host; JSPARK3 provides a mirror. Download the model files once. The model cards and other repository files differ. The recipe also needs the separate DFlash2 draft, a smaller model that helps generate answers faster.",
+    href: "https://huggingface.co/brandonmusic/GLM-5.3-Flash-tr3-4bpw",
+    cta: "huggingface.co/brandonmusic/GLM-5.3-Flash-tr3-4bpw",
   },
   {
     title: "The full install",
@@ -519,15 +519,18 @@ export const PINNED_INPUTS: ReadonlyArray<{ label: string; value: ReadonlyArray<
   {
     label: "GLM model files",
     value: [
+      "Brandon M. Music created the ",
+      { text: "EXL3/TR3 4-bpw checkpoint", href: "https://huggingface.co/brandonmusic/GLM-5.3-Flash-tr3-4bpw" },
+      ". The recipe downloads Mia-AiLab's byte-identical re-host, ",
       { text: "Mia-AiLab/GLM-5.3-Flash-EXL3-TR3-4bpw", href: "https://huggingface.co/Mia-AiLab/GLM-5.3-Flash-EXL3-TR3-4bpw/tree/25a44fdbf16862a46b7cc9921142c6c81350af2f" },
       " at ",
       { text: "25a44fd", href: "https://huggingface.co/Mia-AiLab/GLM-5.3-Flash-EXL3-TR3-4bpw/tree/25a44fdbf16862a46b7cc9921142c6c81350af2f" },
-      ". Its model files match Brandon M. Music's ",
-      { text: "version credited by Mia, 5ab363a8", href: "https://huggingface.co/brandonmusic/GLM-5.3-Flash-tr3-4bpw/tree/5ab363a8dcf6405955fd5f99671e01a1c9fb124b" },
+      ". Its model files match Brandon's source revision ",
+      { text: "5ab363a8", href: "https://huggingface.co/brandonmusic/GLM-5.3-Flash-tr3-4bpw/tree/5ab363a8dcf6405955fd5f99671e01a1c9fb124b" },
       ", and ",
       { text: "later revision, 1ae6d70", href: "https://huggingface.co/brandonmusic/GLM-5.3-Flash-tr3-4bpw/tree/1ae6d70430a12d762917786696db06a7b4f9bbae" },
       ". You can also use ",
-      { text: "JSPARK3's copy of this model version", href: "https://huggingface.co/jakejharris/jspark3/tree/e7c34dba923916754cfcb0bdf6c2c75a9b7ff1fc" },
+      { text: "JSPARK3's mirror", href: "https://huggingface.co/jakejharris/jspark3/tree/e7c34dba923916754cfcb0bdf6c2c75a9b7ff1fc" },
       ". Download the model once. The model cards and other repository files differ.",
     ],
   },
@@ -612,39 +615,72 @@ export const CREDITS_INTRO =
 
 export const CREDITS_ROLL: ReadonlyArray<RichPart> = [
   { strong: "Brandon M. Music" },
-  " for the ShapleyMcg EXL3/TR3 4-bpw checkpoint that every rank loads. ",
+  " created the ",
+  { text: "ShapleyMcg EXL3/TR3 4-bpw checkpoint", href: "https://huggingface.co/brandonmusic/GLM-5.3-Flash-tr3-4bpw" },
+  " that every rank loads. The recipe downloads ",
+  { text: "Mia-AiLab's byte-identical re-host at 25a44fd", href: "https://huggingface.co/Mia-AiLab/GLM-5.3-Flash-EXL3-TR3-4bpw/tree/25a44fdbf16862a46b7cc9921142c6c81350af2f" },
+  ", declared byte-identical to ",
+  { text: "Brandon's source revision 5ab363a8", href: "https://huggingface.co/brandonmusic/GLM-5.3-Flash-tr3-4bpw/tree/5ab363a8dcf6405955fd5f99671e01a1c9fb124b" },
+  ". ",
+  { text: "JSpark3 provides a mirror", href: "https://huggingface.co/jakejharris/jspark3/tree/e7c34dba923916754cfcb0bdf6c2c75a9b7ff1fc" },
+  ". Thanks to ",
   { strong: "MiaAI-Lab" },
-  " for the two-Spark EXL3 recipe, the pinned container image, and the checkpoint re-host that JSpark3 mirrors in turn. ",
+  " for the EXL3 serving recipe and runtime work used by JSpark3, including prefix caching and the cooperative-MoE kernel adapted for TP3. ",
   { strong: "FlyCockpit" },
-  " for the three-Spark EXL3 lineage the TP3 overlay transform is reconstructed from. ",
+  " for the three-Spark EXL3 recipe. ",
+  { strong: "turboderp" },
+  " for ExLlamaV3. ",
+  { strong: "coolbho3k and gabewillen" },
+  " for display-reserve KV backing and its GLM adaptation. ",
+  { strong: "plotarmordev" },
+  " for fine-grained prefix hits. ",
   { strong: "vcruz305" },
-  " for the K-pool tail correction. ",
+  " for the K2 recipe lineage and the K-pool tail correction it inspired. ",
   { strong: "tonyd2wild" },
   " for scheduler and concurrency benchmarking context. ",
   { strong: "sfxnz" },
   " for DGX Spark serving context. ",
   { strong: "Inco AI" },
   " for DFlash2. ",
+  { strong: "z-lab" },
+  " for DFlash. ",
   { strong: "Z.AI" },
   " for GLM-5.3 Flash. The ",
   { strong: "vLLM" },
   " project for the engine.",
 ];
 
+/** Verbatim notice from the release's REQUIRED_ATTRIBUTION.md. */
+export const SHAPLEYMCG_ATTRIBUTION: ReadonlyArray<RichPart> = [
+  "This work includes or was produced using ShapleyMcg, created by Brandon M. Music (",
+  { text: "https://github.com/brandonmmusic-max/shapleymcg", href: "https://github.com/brandonmmusic-max/shapleymcg" },
+  '). ShapleyMcg is licensed under the ShapleyMcg License v1.0, an attribution-required license that grants no rights to the person known as "0xSero." Use of ShapleyMcg without this attribution is unlicensed.',
+];
+
 export const CREDITS_NOTE =
-  "Every upstream author is credited by name, repository, and pinned commit or revision in the repository's third-party notices.";
+  "The current release's third-party notices record upstream authors, repositories, revisions, and licenses. The required ShapleyMcg attribution is preserved in the repository and model mirrors.";
 
 export const CITE = {
   title: "Cite it",
   body: [
-    "The repository ships ",
-    { code: "CITATION.cff" },
+    "Cite the ",
+    { text: "current public release, v1.8.3", href: "https://github.com/jakejharris/jspark3/releases/tag/v1.8.3" },
+    ", together with the upstream work in its ",
+    { text: "third-party notices", href: "https://github.com/jakejharris/jspark3/blob/v1.8.3/THIRD_PARTY_NOTICES.md" },
     " and ",
-    { code: "CITATION.bib" },
-    ". Cite the release by name, version, and repository.",
+    { text: "required ShapleyMcg attribution", href: "https://github.com/jakejharris/jspark3/blob/v1.8.3/REQUIRED_ATTRIBUTION.md" },
+    ".",
   ] as ReadonlyArray<RichPart>,
-  citation: `JSpark3 v1.1 (Cadence), version 1.1.0 (2026)
-https://github.com/jakejharris/jspark3`,
+  citation: `JSpark3 v1.8.3 (2026)
+https://github.com/jakejharris/jspark3/releases/tag/v1.8.3`,
+  upstreamCitation: `@misc{music2026shapleymcg,
+  author = {Music, Brandon M.},
+  title  = {ShapleyMCG: An Auditable Calibration-to-Encoding Pipeline for
+            Low-Bit Mixture-of-Experts Models},
+  year   = {2026},
+  url    = {https://github.com/brandonmmusic-max/shapleymcg},
+  note   = {Licensed under the ShapleyMcg License v1.0}
+}`,
 };
 
 export const BLOCK_FOOTER: ReadonlyArray<string> = [
