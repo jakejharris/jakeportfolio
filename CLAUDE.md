@@ -39,7 +39,7 @@ This is a Next.js 15 portfolio and blog site using the App Router with Sanity CM
 
 | Route | Type | Description |
 |---|---|---|
-| `/` | Server | Homepage with post list (sorted by featured, then publishedAt) and PixelFluidBackground canvas |
+| `/` | Server | Homepage with post list (sorted by featured, then publishedAt) over the open pixel sea |
 | `/about` | Server | Static bio page with resume PDF and GitHub links |
 | `/contact` | Client | Email copy-to-clipboard and LinkedIn link; metadata exported from `contact/layout.tsx` |
 | `/posts/[slug]` | Server | Full blog post with PortableText, TableOfContents, ViewCounter, and JSON-LD (BlogPosting) |
@@ -66,17 +66,17 @@ This is a Next.js 15 portfolio and blog site using the App Router with Sanity CM
 - **Accent color system** — 5 options (default + red/blue/green/orange) controlled by `data-accent` attribute on `<html>`, persisted in `localStorage` under key `accent-index`. `AccentScript` applies the attribute before hydration to prevent flash. The swatches are CSS variables `--accent-0` to `--accent-4` in `globals.css`; `--accent-color` points at the active one.
 - **Appearance dock**: Theme and accent controls live in `AppearanceDock` (fixed, bottom right, mounted in the site layout), not in the navbar. A theme switch reveals the new theme from the button through the View Transitions API (`app/lib/pixel-tide.ts`), instant under reduced motion or without the API. Picking an accent pours it into the pixel background from the swatch.
 - **shadcn/ui** "new-york" style preset with `lucide-react` icons
-- **Component CSS** in `app/css/`: `page.css` (glassmorphism `.pageLinkContainer`), `animations.css` (transition particles, scanline sweep)
+- **Component CSS** in `app/css/`: `page.css` (glassmorphism `.pageLinkContainer`), `animations.css` (underlines, `.page-enter` entrances), `water.css` (the water layers), `navigation.css` (page-change states)
 - **Portable Text styles** in `globals.css` under `.portable-text` class
 
 ### Key Patterns
 
 - **Hydration mismatch prevention** — Components use `mounted` state pattern, opacity-based icon switching, or `ClientOnly` wrappers to avoid SSR/client mismatches
-- **Feature flags** — Top-of-file constants toggle features: `ENABLE_PAGE_TRANSITIONS = false` (TransitionOverlay), `ENABLE_PIXEL_FLUID_BACKGROUND = true` (canvas background)
-- **Pixel background**: `PixelFluidBackground` wraps the engine in `app/components/pixel-fluid/`. Text marked `data-fluid-island` is dry land: the background traces its glyphs and never draws near them. Mark any heading or standfirst that sits over the background (homepage hero, tag headers, JSPARK3 hub masthead).
+- **Feature flags** — Top-of-file constants toggle features: `ENABLE_PIXEL_FLUID_BACKGROUND = true` (canvas background)
+- **Pixel background**: one `PixelFluidBackground`, mounted in the site layout inside `main`, runs under every page and takes its shape from the route (`pixel-fluid/shapes.ts`): the open sea (`engine.ts`) on home, tag pages and the JSPARK3 hub; the shore (`shore.ts`) on posts, About, Contact and other reading pages; none on the release pages. Pages don't render it. On sea pages, text marked `data-fluid-island` is dry land: the background traces its glyphs and never draws near them. Mark any heading or standfirst that sits over the sea (homepage hero, tag headers, JSPARK3 hub masthead). On shore pages everything visible in `main` is land automatically (`pixel-fluid/land.ts`); the shore draws dotted contours only in open space, lies on the page (scrolls with it) and holds still once settled.
 - **Mobile menu**: `MobileNavbar` opens `SiteMenu` (`app/components/site-menu/`), a full-screen layer of the same pixel water. It floods in from the button in lattice cells (`app/lib/menu-tide.ts`), its links are islands (`data-menu-island`, a separate selector so the page background never traces them), and tapping one opens the water from the tap once the next page has arrived. Every request only retargets one running tide, so rapid taps cannot stack animations. While it is up, `main` and the footer are `inert`, `<html>` carries `data-menu-open` (scroll lock), and the page background rests.
-- **Navigation** — Internal links use `TransitionLink` (wraps Next.js `Link`) with `scroll={true}`. Navbar and mobile menu hrefs use clean paths (for example, `href="/about"`); post-card links retain the legacy trailing-`#` pattern
-- **Scroll management** — `ScrollToTop` component handles scroll reset on navigation; `experimental.scrollRestoration` is disabled in next.config.js
+- **Navigation** — Internal links use `TransitionLink` (Next.js `Link`) with `scroll={true}`. Navbar and mobile menu hrefs use clean paths (for example, `href="/about"`); post-card links retain the legacy trailing-`#` pattern. Page changes are handled once for the whole site by `components/navigation/NavigationFlow.tsx`, whatever started them: a tap starts the water running out from the finger and moves the navbar underline to the destination; a slow page dims (`[data-page-frame][data-leaving]`); on arrival `html[data-arrival]` is `push` (entrances shortened) or `restore` (entrances skipped), the new water comes in from the tap point (`pixel-fluid/water.ts`, `tide-front.ts`) and focus moves to the page's `h1`.
+- **Scroll management** — Next resets scroll on link navigations. Back and forward are restored by `NavigationFlow` (`history.scrollRestoration = 'manual'`, positions per page in `navigation/scroll-memory.ts`), in the same frame the page returns; reloads use the browser's own restoration. `experimental.scrollRestoration` in next.config.js only affects the Pages Router
 - **Portable Text headings** — Bold (`strong`-marked) text in normal paragraphs is treated as section headings (not Sanity's built-in h1–h4). Both `TableOfContents` and the custom block renderer generate heading IDs in format `section-{block._key}`
 - **Metadata** — Static pages export `metadata` directly. Dynamic posts use `generateMetadata()`. All include canonical URLs, OpenGraph, and Twitter cards. JSON-LD structured data in root layout (WebSite, Person) and post pages (BlogPosting)
 
