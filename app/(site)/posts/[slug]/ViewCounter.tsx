@@ -1,8 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-
-const VIEW_TTL_MS = 24 * 60 * 60 * 1000;
+import { rememberViewCount, VIEW_TTL_MS } from '@/app/lib/remembered-view-count';
 
 interface ViewCounterProps {
   slug: string;
@@ -10,31 +9,34 @@ interface ViewCounterProps {
 }
 
 export default function ViewCounter({ slug, initialCount }: ViewCounterProps) {
-  const [viewCount, setViewCount] = useState(initialCount);
+  const [viewCount, setViewCount] = useState<{ slug: string; count: number } | null>(null);
 
   useEffect(() => {
-    setViewCount(initialCount);
+    const now = Date.now();
+    let viewedAt: number | null = null;
 
     if (typeof window !== 'undefined') {
       try {
         const key = `viewed:${encodeURIComponent(slug)}`;
         const stored = Number(window.localStorage.getItem(key));
-        const now = Date.now();
-
         if (
           Number.isFinite(stored) &&
           stored >= 0 &&
           stored <= now &&
           now - stored < VIEW_TTL_MS
         ) {
-          return;
+          viewedAt = stored;
+        } else {
+          window.localStorage.setItem(key, String(now));
         }
-
-        window.localStorage.setItem(key, String(now));
       } catch {
         // Storage is best-effort; fail open and count the view.
       }
     }
+
+    const expiresAt = (viewedAt ?? now) + VIEW_TTL_MS;
+    setViewCount({ slug, count: rememberViewCount(slug, initialCount, expiresAt, now) });
+    if (viewedAt !== null) return;
 
     let cancelled = false;
     const incrementViewCount = async () => {
@@ -49,14 +51,15 @@ export default function ViewCounter({ slug, initialCount }: ViewCounterProps) {
 
         const data = (await response.json()) as { viewCount?: unknown };
         if (
-          !cancelled &&
           typeof data.viewCount === 'number' &&
-          Number.isFinite(data.viewCount)
+          Number.isFinite(data.viewCount) && data.viewCount >= 0
         ) {
-          setViewCount(data.viewCount);
+          // Persist even if the reader left while the request was in flight.
+          const count = rememberViewCount(slug, Math.max(initialCount, data.viewCount), expiresAt);
+          if (!cancelled) setViewCount({ slug, count });
         }
       } catch {
-        // View counting is best-effort; keep showing the server-rendered count.
+        // View counting is best-effort; keep the last displayed count.
       }
     };
 
@@ -66,5 +69,7 @@ export default function ViewCounter({ slug, initialCount }: ViewCounterProps) {
     };
   }, [slug, initialCount]);
 
-  return <div>{viewCount} views</div>;
+  // A cached SSR count can be older than this reader's last visit. Wait for
+  // storage before displaying a number, including after a hard reload.
+  return <div>{viewCount?.slug === slug ? viewCount.count : '—'} views</div>;
 }

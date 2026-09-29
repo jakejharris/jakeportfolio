@@ -18,8 +18,24 @@ fallback. `viewCountBase` is the next fallback. Public pages display:
 postView.count ?? post.viewCountBase ?? post.viewCount ?? 0
 ```
 
-All live reads bypass the CDN and Next.js data cache with `cache: 'no-store'`.
-Home and tag pages batch their slugs into one GROQ query.
+All reads bypass the Sanity CDN. Public home, post and tag pages use a 60-second
+Next.js data snapshot tagged `views`, alongside 60-second ISR. Home and tag pages
+batch their slugs into one GROQ query. These intervals use stale-while-revalidate;
+they are not a hard maximum age, and prefetched client routes can live longer.
+The increment and admin APIs retain uncached reads (`cache: 'no-store'`).
+
+A failed cached view read throws instead of returning an empty snapshot. During
+ISR, Next keeps the last successful page rather than caching a lower baseline.
+A first render of a new slug, or a build with the read token configured, fails
+if no successful view read is available; retry after the upstream recovers. This
+is preferable to sharing a misleading fallback. Builds without a read token
+intentionally use the post's baseline; a successful read with no `postView`
+document also uses that baseline. Uncached API reads remain best-effort.
+
+Published content uses a separate 300-second `post` cache tag, expired by the
+authenticated content webhook. The webhook ignores `postView` documents so
+increments cannot invalidate all published pages. Production webhook delivery
+should use `/api/revalidate/` and a filter for post/tag content changes.
 
 ## Write path
 
@@ -37,6 +53,18 @@ IP-and-slug throttle skip mutations and return the current live count.
 The browser stores `localStorage["viewed:<slug>"]` as a timestamp before the
 request. A valid marker suppresses another write for 24 hours. Storage access is
 wrapped in `try/catch` and fails open.
+
+The post counter also remembers the highest displayed server/API count in
+`localStorage["view-count:<slug>"]` as `{ count, expiresAt }`. During the same
+dedupe window, a stale server snapshot or lower API response cannot reduce that
+reader's count. Revisits do not extend expiry; after the window expires a lower
+admin-corrected count can be shown. Successful responses are remembered even
+if the reader has already left the page. An in-memory copy protects same-tab
+navigation when storage is blocked; persistence across reloads requires storage.
+
+The post displays `— views` until hydration reads the remembered maximum, avoiding
+a brief stale number on revisits or reloads. Home and tag lists still show their
+shared cached snapshots and can lag behind the post's personalized maximum.
 
 ## Migration and rollout
 

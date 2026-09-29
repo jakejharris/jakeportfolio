@@ -28,7 +28,7 @@ export default function CodeHighlighter({ code, language }: CodeHighlighterProps
 
   return (
     <SyntaxHighlighter
-      language={language}
+      language={language === 'html' ? 'markup' : language}
       style={isDarkMode ? oneDark : oneLight}
       customStyle={{ background: 'transparent', padding: 0, margin: 0 }}
       wrapLines={true}

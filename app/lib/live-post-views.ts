@@ -58,6 +58,9 @@ export async function getLivePostViewCounts(
       reason: error instanceof Error ? error.message.slice(0, 200) : 'unknown',
       ts: new Date().toISOString(),
     }));
+    // An ISR failure retains the last successful page. With no prior render
+    // (new slug/build), fail instead of caching a misleading baseline for all.
+    if (revalidate > 0) throw error;
     return {};
   }
 }

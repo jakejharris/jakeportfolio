@@ -123,7 +123,7 @@ GA_SERVICE_ACCOUNT_JSON          # Service-account JSON with Viewer access to th
 - `useCdn: false` and `perspective: 'published'` on the read client — drafts are never exposed
 - `writeClient` is only used server-side in API routes, never in page components
 - `sanityFetch()` adds the global `post` cache tag to every published query, including per-slug queries, so the content webhook expires all dependent pages
-- Public view-count reads use a 60-second cached snapshot tagged `views`; API increments and admin reads remain uncached. Counts in cached pages may lag while background revalidation finishes.
+- Public view-count reads use a 60-second cached snapshot tagged `views`; API increments and admin reads remain uncached. Counts in cached pages may lag while background revalidation finishes. Cached read failures throw to retain the last successful ISR page; initial renders/builds with a configured read token fail instead of caching a fallback. Post counters retain the reader's displayed maximum until the 24-hour dedupe window expires; list counts remain shared snapshots. The content webhook ignores `postView` documents.
 - The Sanity Studio is maintained in a separate `jakeportfolio-studio` repository
 
 ## Next.js Config Notes
