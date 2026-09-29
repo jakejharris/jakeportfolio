@@ -7,7 +7,7 @@ import '../css/link-ledger.css';
 export default function LinkLedger({ links }: { links: LedgerLink[] }) {
   return (
     <ul className="link-ledger">
-      {links.map(({ label, detail, href }) => {
+      {links.map(({ label, detail, href, rel }) => {
         const external = !href.startsWith('/');
         const row = (
           <>
@@ -20,7 +20,7 @@ export default function LinkLedger({ links }: { links: LedgerLink[] }) {
         return (
           <li key={href}>
             {external ? (
-              <a className="link-ledger-row" href={href} target="_blank" rel="noopener noreferrer">
+              <a className="link-ledger-row" href={href} target="_blank" rel={[rel, 'noopener noreferrer'].filter(Boolean).join(' ')}>
                 {row}
               </a>
             ) : (

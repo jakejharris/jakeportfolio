@@ -12,7 +12,7 @@ interface DesktopNavbarProps {
 
 export default function DesktopNavbar({ scrolled }: DesktopNavbarProps) {
   const pathname = usePathname();
-  const { isHome, isAbout, isContact } = getActiveNav(pathname);
+  const { isHome, isJspark3, isAbout, isContact } = getActiveNav(pathname);
   // The underline moves to where the reader is going the moment they tap.
   const shown = getActiveNav(usePendingPath() ?? pathname);
 
@@ -39,7 +39,17 @@ export default function DesktopNavbar({ scrolled }: DesktopNavbarProps) {
           <ul className="flex gap-2 items-center">
             <li className="flex items-center justify-center">
               <TransitionLink
-                href="/about"
+                href="/jspark3/"
+                scroll={true}
+                aria-current={isJspark3 ? 'page' : undefined}
+                className="px-3 py-2"
+              >
+                <span className={`animated-underline font-semibold ${shown.isJspark3 ? 'nav-active' : ''}`}>JSPARK3</span>
+              </TransitionLink>
+            </li>
+            <li className="flex items-center justify-center">
+              <TransitionLink
+                href="/about/"
                 scroll={true}
                 aria-current={isAbout ? 'page' : undefined}
                 className="px-3 py-2"
@@ -49,7 +59,7 @@ export default function DesktopNavbar({ scrolled }: DesktopNavbarProps) {
             </li>
             <li className="flex items-center justify-center">
               <TransitionLink
-                href="/contact"
+                href="/contact/"
                 scroll={true}
                 aria-current={isContact ? 'page' : undefined}
                 className="px-3 py-2"

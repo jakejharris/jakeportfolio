@@ -326,7 +326,7 @@ try {
     const tree = await page.locator("body").ariaSnapshot();
     assert.ok(tree.includes('navigation "Menu"'));
     assert.ok(!tree.includes(heading));
-    for (const word of ["About", "Contact", "Source"]) {
+    for (const word of ["JSPARK3", "About", "Contact", "Source"]) {
       await page.keyboard.press("Tab");
       assert.equal(await page.evaluate(() => document.activeElement.textContent), word);
     }

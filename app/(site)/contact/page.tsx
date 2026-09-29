@@ -3,12 +3,13 @@ import PageLayout from '../../components/PageLayout'
 import LinkLedger from '../../components/LinkLedger'
 import CopyEmail from './CopyEmail'
 import LocalTime from './LocalTime'
-import { EMAIL, PROFILES } from '../../lib/profiles'
+import { CALENDAR_LINK, EMAIL, PROFILE_LINKS } from '../../lib/profiles'
+import { SHARE_IMAGE } from '../../lib/entity'
 import '../../css/animations.css'
 import '../../css/hero.css'
 import './contact.css'
 
-const description = "Get in touch with Jake Harris: email, a call on his calendar, LinkedIn, X or GitHub.";
+const description = "Get in touch with Jake Harris: email, a call on his calendar, GitHub, Hugging Face, X or LinkedIn.";
 
 export const metadata: Metadata = {
   title: "Contact",
@@ -23,13 +24,15 @@ export const metadata: Metadata = {
     url: 'https://jakejh.com/contact/',
     title: 'Contact | Jake Harris',
     description,
+    images: [SHARE_IMAGE],
   },
   twitter: {
-    card: 'summary',
+    card: 'summary_large_image',
     site: '@jakeharrisdev',
     creator: '@jakeharrisdev',
     title: 'Contact | Jake Harris',
     description,
+    images: [SHARE_IMAGE],
   },
 };
 
@@ -50,7 +53,7 @@ export default function ContactPage() {
 
       <section className="page-enter-3 contact-elsewhere" aria-labelledby="contact-elsewhere-title">
         <h2 id="contact-elsewhere-title" className="section-kicker">Elsewhere</h2>
-        <LinkLedger links={[PROFILES.calendar, PROFILES.linkedin, PROFILES.x, PROFILES.github]} />
+        <LinkLedger links={[CALENDAR_LINK, ...PROFILE_LINKS]} />
         <p className="contact-local">
           Based in Chicago, IL<LocalTime />
         </p>

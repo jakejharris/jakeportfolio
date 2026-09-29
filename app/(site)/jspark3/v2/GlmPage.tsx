@@ -39,8 +39,13 @@ export default function GlmPage() {
       <header className="glm-hero">
         <div>
           <p className="glm-kicker">JSPARK3{name ? <> <Ph>{RELEASE}</Ph></> : null} · {LABELS.latest}</p>
-          <h1><Ph>{name ?? RELEASE}</Ph></h1>
-          <p className="glm-lede">GLM-5.3 Flash<br />on three DGX Sparks.</p>
+          {/* The lede is part of the heading, so the page's h1 names the project, the release and what it runs. */}
+          <h1>
+            <span className="glm-sr-only">JSPARK3 </span>
+            <span className="glm-version"><Ph>{name ?? RELEASE}</Ph></span>
+            <span className="glm-sr-only">: </span>
+            <span className="glm-lede">GLM-5.3 Flash <br />on three DGX Sparks.</span>
+          </h1>
           <SpeedHeadline />
           <p className="glm-intro">{GLM_COPY.intro}</p>
           <nav className="glm-actions" aria-label="Release resources">
