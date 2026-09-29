@@ -160,7 +160,10 @@ export default function PixelFluidBackground() {
     const handleDisturb = (event: Event) => {
       const detail = (event as CustomEvent<FluidDisturbance>).detail;
       if (!detail) return;
-      if (detail.dye) pendingDrop = { ...detail, at: performance.now() };
+      // The same accent again: <html> will not change, so pour it now.
+      if (detail.dye && detail.again) {
+        if (!water.still) water.dropDye(detail.x, detail.y, accent, detail.heat);
+      } else if (detail.dye) pendingDrop = { ...detail, at: performance.now() };
       else water.splash(detail.x, detail.y, 0.9);
     };
 
@@ -189,7 +192,7 @@ export default function PixelFluidBackground() {
       const now = performance.now();
       const changed = previous.some((channel, i) => channel !== accent[i]);
       if (changed && pendingDrop && now - pendingDrop.at < DROP_WINDOW_MS && !water.still) {
-        water.dropDye(pendingDrop.x, pendingDrop.y, previous);
+        water.dropDye(pendingDrop.x, pendingDrop.y, previous, pendingDrop.heat);
       }
       pendingDrop = null;
     });

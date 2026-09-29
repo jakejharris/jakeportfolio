@@ -11,7 +11,8 @@
 // while they are read. A tap in open water, the cursor passing through it or
 // a new accent sets it moving again, and it settles again by itself.
 
-import { CELL, type FluidColors } from './engine';
+import { CELL, type FluidColors, type Rgb } from './engine';
+import { Paint } from './paint';
 import { cellDistance, farthest, TideFront } from './tide-front';
 
 // Same swell as the sea, so contours line up across a front.
@@ -93,7 +94,8 @@ export class Shore {
   private rippleLast = new Float32Array(0);
   private rippleActive = false;
   private rippleClock = 0;
-  private dye: { x: number; y: number; start: number } | null = null;
+  // Accent pours from the dock, spreading through the water as rings.
+  private paint = new Paint(DYE_SPEED, DYE_BAND);
   private colors: FluidColors = { background: [10, 10, 10], accent: [255, 255, 255], isDark: true };
   private dirty = true;
   private colWave = new Float32Array(0);
@@ -198,10 +200,14 @@ export class Shore {
     return true;
   }
 
-  /** A new accent pours in from (x, y), in lattice px. */
-  dropDye(x: number, y: number, now: number) {
+  /**
+   * An accent pours in from (x, y), in lattice px, until its ring has
+   * travelled `reach` px. `heat` (0 to 1) is how fast the dock is being
+   * played; a hot pour leaves its color in the water behind it.
+   */
+  dropDye(x: number, y: number, now: number, heat = 0, reach = this.reachFrom(x, y)) {
     if (this.still || !this.layout) return;
-    this.dye = { x, y, start: now };
+    this.paint.pour(x, y, this.colors.accent, this.colors.accent, heat, now, reach);
     this.splash(x, y, 0.9);
     this.stir(now);
   }
@@ -212,7 +218,7 @@ export class Shore {
     return (
       this.dirty ||
       this.rippleActive ||
-      this.dye !== null ||
+      this.paint.active ||
       (this.front.active && !this.front.settled(now) && !this.front.drained(now)) ||
       now - this.stirred < SETTLE_MS ||
       now - this.rise < RISE_MS
@@ -221,7 +227,7 @@ export class Shore {
 
   /** Fronts, ripples and dye want every frame; a drift is fine at half. */
   fast(now: number) {
-    return this.rippleActive || this.dye !== null || (this.front.active && !this.front.settled(now));
+    return this.rippleActive || this.paint.active || (this.front.active && !this.front.settled(now));
   }
 
   /** The water drained away and nothing is coming back. */
@@ -307,7 +313,7 @@ export class Shore {
 
     const t = this.phase;
     const amplitude = this.still ? 1 : easeOutCubic((now - this.rise) / RISE_MS);
-    const { isDark, accent, background } = colors;
+    const { isDark, background } = colors;
     // A dot is a ninth of a cell, so it carries more ink than the sea's pen.
     const pen = (isDark ? 42 : 62) * 2.55;
     const lightSign = isDark ? 1 : -1;
@@ -317,10 +323,15 @@ export class Shore {
       bgG + (level - bgG) * alpha,
       bgB + (level - bgB) * alpha,
     );
-    const tint = (alpha: number) => pack(
-      bgR + (accent[0] - bgR) * alpha,
-      bgG + (accent[1] - bgG) * alpha,
-      bgB + (accent[2] - bgB) * alpha,
+    const tint = (color: Rgb, alpha: number) => pack(
+      bgR + (color[0] - bgR) * alpha,
+      bgG + (color[1] - bgG) * alpha,
+      bgB + (color[2] - bgB) * alpha,
+    );
+    // A pen dot, taking `amount` of `color`.
+    const washed = (color: Rgb, amount: number, alpha: number) => tint(
+      [pen + (color[0] - pen) * amount, pen + (color[1] - pen) * amount, pen + (color[2] - pen) * amount],
+      alpha,
     );
     const shelfWidth = this.mobile ? SHELF.mobile : SHELF.desktop;
     const front = this.front;
@@ -334,14 +345,8 @@ export class Shore {
     const ripple = this.ripple;
     const rippling = this.rippleActive;
 
-    let dyeRadius = -1;
-    let dye = this.dye;
-    if (dye) {
-      dyeRadius = ((now - dye.start) / 1000) * DYE_SPEED;
-      if (dyeRadius > farthest(cols * CELL, rows * CELL, dye.x, dye.y)) {
-        this.dye = dye = null;
-      }
-    }
+    const paint = this.paint;
+    const painting = !this.still && paint.active && paint.frame(now);
 
     const start = Math.max(0, Math.floor(from));
     const end = Math.min(rows, Math.ceil(to));
@@ -379,10 +384,10 @@ export class Shore {
         const shelf = smoothstep(0, shelfWidth, land.reach[i]);
         const ink = INK * (SHALLOW_INK + (1 - SHALLOW_INK) * shelf);
 
-        if (dye) {
-          const d = Math.hypot(x * CELL + CELL / 2 - dye.x, y * CELL + CELL / 2 - dye.y);
-          if (Math.abs(d - dyeRadius) < DYE_BAND && shelf > 0.3) {
-            dot(x, y, tint(0.9));
+        if (painting) {
+          paint.sample(x * CELL + CELL / 2, y * CELL + CELL / 2);
+          if (paint.ring && shelf > 0.3) {
+            dot(x, y, tint(paint.ring, 0.9));
             continue;
           }
         }
@@ -402,7 +407,10 @@ export class Shore {
         let height = (sinCol[x] + rowWave + Math.sin((x - docRow) * WAVE_SCALE * 0.5 + t * 0.3) + 3) / 6;
         height *= amplitude;
         if (rippling) height += ripple[i] * RIPPLE_GAIN;
-        if (height > CONTOUR_FLOOR && (height * CONTOUR_DENSITY) % 1 < CONTOUR_THICKNESS) dot(x, y, over(pen, ink));
+        if (height > CONTOUR_FLOOR && (height * CONTOUR_DENSITY) % 1 < CONTOUR_THICKNESS) {
+          // Where a hot pour passed, the contour takes its color for a moment.
+          dot(x, y, painting && paint.wash > 0 ? washed(paint.color, paint.wash, ink) : over(pen, ink));
+        }
       }
     }
     ctx.putImageData(image, 0, 0, 0, start * SUB, stride, (end - start) * SUB);

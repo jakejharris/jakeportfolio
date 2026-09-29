@@ -9,6 +9,7 @@
 // reflect off them.
 
 import type { IslandField } from './islands';
+import { Paint } from './paint';
 import { islandDistance } from './islands';
 import { cellDistance, cellNoise, TideFront } from './tide-front';
 
@@ -174,7 +175,8 @@ export class PixelFluid {
   private oldBias: Float32Array | null = null;
   private oldWater: Uint8Array | null = null;
   private colors: FluidColors = { background: [10, 10, 10], accent: [255, 255, 255], isDark: true };
-  private dye: { x: number; y: number; start: number; from: Rgb } | null = null;
+  // Accent pours from the dock, spreading through the water as rings.
+  private paint = new Paint(DYE_SPEED, DYE_BAND);
   private pointer = { x: 0, y: 0, active: false };
   /** Reduced motion: full amplitude, no drift, no ripples. */
   still = false;
@@ -331,9 +333,13 @@ export class PixelFluid {
     this.colors = colors;
   }
 
-  /** A new accent pours in from (x, y), in viewport px. */
-  dropDye(x: number, y: number, from: Rgb, now: number) {
-    this.dye = { x, y, start: now, from };
+  /**
+   * An accent pours in from (x, y), in viewport px: a new one replacing
+   * `from`, or the same one again. `heat` (0 to 1) is how fast the dock is
+   * being played; a hot pour leaves its color in the water behind it.
+   */
+  dropDye(x: number, y: number, from: Rgb, now: number, heat = 0, reach = this.reachFrom(x, y)) {
+    this.paint.pour(x, y, this.colors.accent, from, heat, now, reach);
     this.splash(x, y, 0.9);
   }
 
@@ -364,7 +370,7 @@ export class PixelFluid {
 
   /** Anything moving faster than the ambient drift wants a full frame rate. */
   get busy() {
-    return this.rippleActive || this.dye !== null || this.tide.active;
+    return this.rippleActive || this.paint.active || this.tide.active;
   }
 
   /** Distance from each cell to land, refreshed when the page scrolls. */
@@ -473,19 +479,8 @@ export class PixelFluid {
     const radii = tide.active ? tide.radii(now) : null;
     const { oldBias, oldWater } = this;
 
-    let dyeRadius = -1;
-    let dyeFade = 0;
-    let dye = this.dye;
-    if (dye) {
-      dyeRadius = ((now - dye.start) / 1000) * DYE_SPEED;
-      const reach = Math.hypot(Math.max(dye.x, cols * CELL - dye.x), Math.max(dye.y, rows * CELL - dye.y));
-      if (dyeRadius > reach + DYE_BAND) {
-        this.dye = dye = null;
-        dyeRadius = -1;
-      } else {
-        dyeFade = 1 - clamp01(dyeRadius / reach) * 0.55;
-      }
-    }
+    const paint = this.paint;
+    const painting = !this.still && paint.active && paint.frame(now);
 
     for (let y = 0; y < rows; y++) {
       const rowW = this.rowW[y];
@@ -520,13 +515,13 @@ export class PixelFluid {
         const value = (quiet ? 0.52 + height * 0.42 : height) * lerp(SHALLOW_HEIGHT, 1, shelf);
         const ink = presence * lerp(SHALLOW_INK, 1, shelf);
 
-        // Where a picked accent is spreading, its wavefront draws over open
-        // water as a dashed ring, and glints behind it take the new color.
-        let dyeDistance = Infinity;
-        if (dye) {
-          dyeDistance = Math.hypot(x * CELL + CELL / 2 - dye.x, y * CELL + CELL / 2 - dye.y);
-          if (Math.abs(dyeDistance - dyeRadius) < DYE_BAND && (x + y) % 3 !== 0 && shelf > 0.5) {
-            pixels[i] = over(accent[0], accent[1], accent[2], presence * dyeFade);
+        // Where an accent is being poured, its wavefront draws over open
+        // water as a dashed ring, and glints behind it take its color.
+        if (painting) {
+          paint.sample(x * CELL + CELL / 2, y * CELL + CELL / 2);
+          const ring = paint.ring;
+          if (ring && (x + y) % 3 !== 0 && shelf > 0.5) {
+            pixels[i] = over(ring[0], ring[1], ring[2], presence * paint.strength);
             continue;
           }
         }
@@ -573,7 +568,7 @@ export class PixelFluid {
         const contour = value > (chart ? CHART_FLOOR : 0.58)
           && (value * CONTOUR_DENSITY) % 1 < (chart ? CHART_THICKNESS : CONTOUR_THICKNESS);
         if (contour && (chart || (x + y) % 3 !== 0)) {
-          const glint = dye && dyeDistance > dyeRadius ? dye.from : accent;
+          const glint = painting ? paint.color : accent;
           const peak = chart ? cellNoise(x, y) < CHART_GLINT_SHARE : (x * y) % 13 === 0;
           if (value > 0.8 && peak && shelf === 1) {
             // Peak glints: the only place the accent appears whole.
@@ -611,6 +606,18 @@ export class PixelFluid {
             ? (even ? (isDark ? 4 : 100) : (isDark ? 10 : 96))
             : (even ? (isDark ? 10 : 96) : (isDark ? 15 : 92));
           r = g = b = (level + lightSign * illumination * 8) * 2.55;
+        }
+
+        // Where a hot pour passed, the water takes its color for a moment,
+        // each cell as strongly as it stands out from the page: the pen's
+        // lines take the full color, a quiet cell only a trace of it.
+        if (painting && paint.wash > 0) {
+          const tint = paint.color;
+          const strength = Math.min(1, Math.max(Math.abs(r - bgR), Math.abs(g - bgG), Math.abs(b - bgB))
+            / Math.max(1, Math.abs(pen - bgR)));
+          r += (bgR + (tint[0] - bgR) * strength - r) * paint.wash;
+          g += (bgG + (tint[1] - bgG) * strength - g) * paint.wash;
+          b += (bgB + (tint[2] - bgB) * strength - b) * paint.wash;
         }
 
         pixels[i] = over(r, g, b, ink);

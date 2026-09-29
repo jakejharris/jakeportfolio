@@ -124,8 +124,6 @@ try {
             };
             const found = [];
             for (const el of document.querySelectorAll("body *")) {
-              // The appearance dock is styled on its own.
-              if (el.closest(".appearance-dock")) continue;
               for (const pseudo of [null, "::before", "::after"]) {
                 const s = getComputedStyle(el, pseudo);
                 if (pseudo && s.content === "none") continue;

@@ -224,12 +224,18 @@ export class SiteWater {
     this.sea.clearPointer();
   }
 
-  dropDye(x: number, y: number, from: [number, number, number]) {
+  /**
+   * An accent pours in from (x, y), viewport px, replacing `from`. `heat`
+   * (0 to 1) is how fast the dock is being played. The ring only has to
+   * cross the screen, however long the page under it.
+   */
+  dropDye(x: number, y: number, from: [number, number, number], heat = 0) {
     const now = performance.now();
-    if (this.seaOn) this.sea.dropDye(x, y, from, now);
+    const reach = Math.hypot(Math.max(x, window.innerWidth - x), Math.max(y, window.innerHeight - y)) + CELL * 2;
+    if (this.seaOn) this.sea.dropDye(x, y, from, now, heat, reach);
     if (this.shoreOn) {
       const point = this.toShore(x, y);
-      this.shore.dropDye(point.x, point.y, now);
+      this.shore.dropDye(point.x, point.y, now, heat, reach);
     }
     this.kick();
   }
