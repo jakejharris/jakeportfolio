@@ -1,10 +1,14 @@
 /* Liquid glass post links. The pixel water runs under them and shows through,
    softened by a light frost: in the dark the glass gathers its light, so the
    water glows a little brighter under it; in the light it takes a shade out.
-   The glass is drawn with light alone, never a shadow: a rim lit from the
-   upper left, edges that catch more light than the middle, a window of light
-   across the surface, and, where the pointer or finger is, light that blooms
-   inside the glass (GlassLight.tsx places it). */
+   The glass is drawn with light alone, never a shadow: a hairline rim lit
+   from above, a soft light coming in at the top, a window of light across the
+   surface, and, where the pointer or finger is, light that blooms inside the
+   glass (GlassLight.tsx places it).
+
+   Every layer shares one shape: the card's own rounded box. There is no
+   border, so the frost, the fills, the rim and the clip all meet the same
+   curve at every corner. */
 
 /* How strongly the glass is lit: 0 at rest, up on hover, 1 pressed. A
    registered number, so it eases; inherited, so the rim sees it too. */
@@ -15,68 +19,53 @@
 }
 
 :root {
-  --glass-radius: 10px;
+  --glass-radius: var(--radius);
   --glass-lens: blur(3px) saturate(1.5) brightness(0.955);
   --glass-lens-lit: blur(3.5px) saturate(1.7) brightness(0.935);
   --glass-tint: hsl(0 0% 100% / 0);
-  --glass-edge: hsl(0 0% 100% / 0.55);
-  --glass-top-line: hsl(0 0% 100% / 1);
-  --glass-window: hsl(0 0% 100% / 0.5);
-  --glass-rim-top: hsl(0 0% 0% / 0.09);
-  --glass-rim-side: hsl(0 0% 0% / 0.1);
-  --glass-rim-bottom: hsl(0 0% 0% / 0.2);
-  --glass-rim-light: hsl(0 0% 0% / 0);
+  --glass-top-light: hsl(0 0% 100% / 0.5);
+  --glass-window: hsl(0 0% 100% / 0.45);
+  --glass-rim-top: hsl(0 0% 0% / 0.07);
+  --glass-rim-side: hsl(0 0% 0% / 0.08);
+  --glass-rim-bottom: hsl(0 0% 0% / 0.14);
   /* Where the pointer is: the rim darkens a touch on white. */
   --glass-glint: 0 0% 0%;
   --glass-glint-alpha: 0.2;
   --glass-bloom: 0 0% 100%;
   --glass-bloom-alpha: 0.7;
-  --glass-accent-wash: 12%;
 }
 
 .dark {
   --glass-lens: blur(3px) saturate(1.6) brightness(1.4);
   --glass-lens-lit: blur(3.5px) saturate(1.8) brightness(1.65);
-  --glass-tint: hsl(0 0% 100% / 0.01);
-  --glass-edge: hsl(0 0% 100% / 0.04);
-  --glass-top-line: hsl(0 0% 100% / 0.09);
-  --glass-window: hsl(0 0% 100% / 0.025);
-  --glass-rim-top: hsl(0 0% 100% / 0.3);
+  --glass-tint: hsl(0 0% 100% / 0.012);
+  --glass-top-light: hsl(0 0% 100% / 0.035);
+  --glass-window: hsl(0 0% 100% / 0.022);
+  --glass-rim-top: hsl(0 0% 100% / 0.2);
   --glass-rim-side: hsl(0 0% 100% / 0.08);
-  --glass-rim-bottom: hsl(0 0% 100% / 0.14);
-  --glass-rim-light: hsl(0 0% 100% / 0.5);
+  --glass-rim-bottom: hsl(0 0% 100% / 0.11);
   --glass-glint: 0 0% 100%;
-  --glass-glint-alpha: 0.75;
+  --glass-glint-alpha: 0.6;
   --glass-bloom-alpha: 0.13;
-  --glass-accent-wash: 9%;
 }
 
 .pageLinkContainer {
   --glass-x: 24%;
   --glass-y: 0%;
-  --glass-accent: transparent;
   position: relative;
-  padding: 12px 16px;
+  padding: 13px 17px;
   overflow: hidden;
   cursor: pointer;
-  border: 1px solid transparent;
+  border: 0;
   border-radius: var(--glass-radius);
   background:
     /* light blooming inside the glass from the pointer or finger */
     radial-gradient(circle at var(--glass-x) var(--glass-y), hsl(var(--glass-bloom) / calc(var(--glass-glow) * var(--glass-bloom-alpha))), transparent 70%),
-    /* the inner surface catching the light just under the top rim */
-    linear-gradient(to bottom, var(--glass-top-line), transparent 1px),
     /* a window of light reflected across the surface */
     linear-gradient(104deg, transparent 16%, var(--glass-window) 28%, transparent 42%),
-    /* a featured post's accent edge tints the glass it enters */
-    linear-gradient(to right, var(--glass-accent), transparent 28px),
-    /* the glass is thicker at its edges, and they gather more light */
-    linear-gradient(to bottom, var(--glass-edge), transparent 12px),
-    linear-gradient(to top, var(--glass-edge), transparent 8px),
-    linear-gradient(to right, var(--glass-edge), transparent 10px),
-    linear-gradient(to left, var(--glass-edge), transparent 10px),
+    /* light coming in at the top of the pane */
+    linear-gradient(to bottom, var(--glass-top-light), transparent 55%),
     var(--glass-tint);
-  /* Drawn once over the padding box, not repeated into the border. */
   background-repeat: no-repeat;
   -webkit-backdrop-filter: var(--glass-lens);
   backdrop-filter: var(--glass-lens);
@@ -88,39 +77,39 @@
     backdrop-filter 320ms ease;
 }
 
-/* The rim: a hairline lit from the upper left, catching the pointer's light. */
+/* The rim: a 1px ring on the inside of the card's own curve, lit from above
+   and catching the pointer's light. */
 .pageLinkContainer::before {
-  --glass-edge-color: transparent;
   content: "";
   position: absolute;
-  inset: -1px;
+  inset: 0;
   z-index: 1;
   padding: 1px;
   border-radius: inherit;
   background:
-    linear-gradient(to right, var(--glass-edge-color) var(--glass-radius), transparent var(--glass-radius)),
     radial-gradient(220px 110px at var(--glass-x) var(--glass-y), hsl(var(--glass-glint) / calc(var(--glass-glow) * var(--glass-glint-alpha))), transparent 70%),
-    radial-gradient(55% 160% at 14% 0%, var(--glass-rim-light), transparent 72%),
-    radial-gradient(35% 130% at 90% 100%, var(--glass-rim-light), transparent 72%),
-    linear-gradient(to bottom, var(--glass-rim-top), var(--glass-rim-side) 30%, var(--glass-rim-side) 70%, var(--glass-rim-bottom));
+    linear-gradient(to bottom, var(--glass-rim-top), var(--glass-rim-side) 40%, var(--glass-rim-side) 60%, var(--glass-rim-bottom));
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
   -webkit-mask-composite: xor;
   mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
   pointer-events: none;
 }
 
-/* Featured: the glass's left edge is the accent. */
-.pinnedLinkBorder {
-  --glass-accent: color-mix(in srgb, var(--accent-color) var(--glass-accent-wash), transparent);
-}
-
-.pinnedLinkBorder::before {
-  --glass-edge-color: var(--accent-color);
-  padding-left: 2px;
+/* A featured post: one accent square, the size of a point of the water,
+   in the margin beside the first line of its title. */
+.glass-mark {
+  position: absolute;
+  left: 6px;
+  align-self: flex-start;
+  width: 5px;
+  height: 5px;
+  /* The title's line is 1.25em tall: center on it. */
+  margin-top: calc(0.625em - 2.5px);
+  background: var(--accent-color);
 }
 
 /* The accent line drawn along the bottom edge on hover. */
-.pageLinkContainer:not(.pinnedLinkBorder)::after {
+.pageLinkContainer::after {
   content: "";
   position: absolute;
   bottom: 0;
@@ -142,7 +131,7 @@
     backdrop-filter: var(--glass-lens-lit);
   }
 
-  .pageLinkContainer:not(.pinnedLinkBorder):hover::after {
+  .pageLinkContainer:hover::after {
     transform: scaleX(1);
     transform-origin: bottom left;
   }
@@ -214,7 +203,7 @@
   }
 }
 
-/* Asked for less transparency: solid glass, the same edges and light. */
+/* Asked for less transparency: solid glass, the same rim and light. */
 @media (prefers-reduced-transparency: reduce) {
   .pageLinkContainer {
     --glass-tint: hsl(var(--card));
@@ -226,8 +215,9 @@
 /* Forced colors: a solid link with a plain outline. */
 @media (forced-colors: active) {
   .pageLinkContainer {
+    padding: 12px 16px;
     background: Canvas;
-    border-color: CanvasText;
+    border: 1px solid CanvasText;
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
   }

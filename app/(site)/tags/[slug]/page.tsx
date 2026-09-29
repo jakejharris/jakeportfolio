@@ -153,13 +153,14 @@ export default async function TagPage({
                   <HoverCardTrigger asChild>
                     <TransitionLink
                       href={`/posts/${post.slug.current}/`}
-                      className={`pageLinkContainer flex justify-between items-center border p-3 cursor-pointer group ${post.featured ? 'pinnedLinkBorder' : ''}`}
+                      className="pageLinkContainer flex justify-between items-center cursor-pointer group"
                       aria-label={`View ${post.title}`}
                       scroll={true}
                     >
                       <div className="flex items-center gap-3">
                         <div>
                           <div className="text-primary text-sm md:text-base font-medium mb-1 leading-tight flex items-center gap-1">
+                            {post.featured && <span className="glass-mark" aria-hidden="true" />}
                             {post.title}
                           </div>
                           <div className="flex items-center gap-2">

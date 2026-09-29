@@ -72,7 +72,7 @@ const glass = (page) => page.locator(".pageLinkContainer").first().evaluate((car
 try {
   for (const device of Object.keys(DEVICES)) {
     for (const theme of ["dark", "light"]) {
-      await check(`${device} ${theme}: the water shows through the glass`, { device, theme }, async (page) => {
+      await check(`${device} ${theme}: the water shows through one clean shape of glass`, { device, theme }, async (page) => {
         for (const path of LISTS) {
           await open(page, path);
           const report = await page.evaluate(() => [...document.querySelectorAll(".pageLinkContainer")].map((card) => {
@@ -92,12 +92,32 @@ try {
                 if (fades && holds) stops.push(`${el.tagName}.${el.className} (${animation.animationName})`);
               }
             }
-            return { blur: blur ? parseFloat(blur[1]) : null, stops };
+            // Every layer shares the card's one rounded box: no border for
+            // the frost to reach past, and a rim with the card's own inset
+            // and curve, so no corner shows an edge the sides do not.
+            const style = getComputedStyle(card);
+            const rim = getComputedStyle(card, "::before");
+            const shape = {
+              border: [style.borderTopWidth, style.borderRightWidth, style.borderBottomWidth, style.borderLeftWidth],
+              rimInset: [rim.top, rim.right, rim.bottom, rim.left],
+              rimRadius: rim.borderTopLeftRadius === style.borderTopLeftRadius,
+            };
+            // A featured post's mark is a square in the margin, clear of the
+            // corners; nothing runs along or around an edge.
+            const mark = card.querySelector(".glass-mark");
+            const box = card.getBoundingClientRect();
+            const markBox = mark?.getBoundingClientRect();
+            const radius = parseFloat(style.borderTopLeftRadius);
+            const clearOfCorners = !markBox || (markBox.left - box.left >= 4 && markBox.top - box.top >= radius
+              && markBox.width === markBox.height && markBox.width <= 6);
+            return { blur: blur ? parseFloat(blur[1]) : null, stops, shape, clearOfCorners };
           }));
           assert.ok(report.length > 0, `${path} has glass`);
-          for (const { blur, stops } of report) {
+          for (const { blur, stops, shape, clearOfCorners } of report) {
             assert.ok(blur !== null && blur >= 1 && blur <= 4, `${path}: a light frost, not a smear (${blur})`);
             assert.deepEqual(stops, [], `${path}: nothing between the glass and the water`);
+            assert.deepEqual(shape, { border: ["0px", "0px", "0px", "0px"], rimInset: ["0px", "0px", "0px", "0px"], rimRadius: true }, `${path}: one shape for every layer`);
+            assert.ok(clearOfCorners, `${path}: the featured mark stays clear of the corners`);
           }
         }
       });
