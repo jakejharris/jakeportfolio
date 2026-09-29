@@ -146,6 +146,10 @@ export default function NavigationFlow() {
       state.restoreKey = entryKey();
       // A change of hash alone keeps the page: put its place back now.
       if (trimPath(window.location.pathname) === state.path) {
+        // Back can cancel a pending route while staying on this document.
+        // There will be no pathname effect to undo its departure.
+        state.restoring = false;
+        stay();
         const y = memory.get(state.restoreKey);
         if (y !== undefined) window.scrollTo(0, y);
         return;

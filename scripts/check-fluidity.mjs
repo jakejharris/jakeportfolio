@@ -137,6 +137,42 @@ try {
     });
   }
 
+  await check("the homepage section label stays dry while water flows under its glass links", { device: phone }, async (page) => {
+    await waitSea(page);
+    await page.waitForTimeout(1500);
+    const label = page.locator(".section-kicker").first();
+    const box = await label.boundingBox();
+    await page.mouse.click(box.x + 65, box.y + box.height / 2);
+    const wet = await page.evaluate(async () => {
+      const label = document.querySelector(".section-kicker");
+      const range = document.createRange();
+      range.selectNodeContents(label);
+      const text = range.getBoundingClientRect();
+      const card = document.querySelector(".pageLinkContainer").getBoundingClientRect();
+      const canvas = document.querySelector(".pixel-fluid-canvas");
+      const rect = canvas.getBoundingClientRect();
+      const scale = rect.width / canvas.width;
+      const background = getComputedStyle(document.body).backgroundColor.match(/[\d.]+/g).slice(0, 3).map(Number);
+      let onText = 0;
+      let underGlass = 0;
+      for (let frame = 0; frame < 20; frame++) {
+        await new Promise(requestAnimationFrame);
+        const pixels = canvas.getContext("2d").getImageData(0, 0, canvas.width, canvas.height).data;
+        for (let y = 0; y < canvas.height; y++) for (let x = 0; x < canvas.width; x++) {
+          const i = (y * canvas.width + x) * 4;
+          if (!background.some((channel, c) => Math.abs(pixels[i + c] - channel) > 3)) continue;
+          const px = rect.left + (x + 0.5) * scale;
+          const py = rect.top + (y + 0.5) * scale;
+          if (px >= text.left && px <= text.right && py >= text.top && py <= text.bottom) onText++;
+          if (px >= card.left && px <= card.right && py >= card.top && py <= card.bottom) underGlass++;
+        }
+      }
+      return { onText, underGlass };
+    });
+    assert.equal(wet.onText, 0, "water must not paint behind the section label");
+    assert.ok(wet.underGlass > 0, "the glass links still have water underneath");
+  });
+
   await check("back and forward return to the exact place, content already there", { device: phone }, async (page) => {
     await page.evaluate(() => window.scrollTo(0, 600));
     await page.waitForTimeout(300);
@@ -257,8 +293,14 @@ try {
       await new Promise((resolve) => setTimeout(resolve, 25));
     }, targets);
     // The last request above was home; ask for one post to end somewhere new.
-    await page.evaluate(() => document.querySelector("main a[href^='/posts/']")?.click());
-    const last = await page.evaluate(() => document.querySelector("main a[href^='/posts/']")?.getAttribute("href").split("#")[0]);
+    await page.waitForURL(base + "/");
+    await firstPost(page).waitFor();
+    // Read the target before the click can replace the homepage's links.
+    const last = await firstPost(page).evaluate((link) => {
+      const href = link.getAttribute("href").split("#")[0];
+      link.click();
+      return href;
+    });
     await page.waitForURL(`**${last}`);
     await waitShore(page);
     await page.waitForTimeout(3500);
@@ -369,6 +411,31 @@ try {
     await page.waitForFunction(() => !location.hash);
     await page.waitForTimeout(300);
     assert.equal(await page.evaluate(() => Math.round(window.scrollY)), 0);
+  });
+
+  await check("back across an anchor cancels a pending page without leaving the page dimmed", { path: "/jspark3/" }, async (page) => {
+    const { release } = await hold(page, /\/about\/\?_rsc=/);
+    try {
+      await page.goto(base + "/jspark3/", { waitUntil: "domcontentloaded" });
+      await waitSea(page);
+      await page.locator("a[href='#current']").evaluate((link) => link.click());
+      await page.waitForFunction(() => location.hash === "#current" && window.scrollY > 0);
+      await page.locator("nav a[href='/about/']:visible").evaluate((link) => link.click());
+      await page.waitForTimeout(500);
+      assert.equal(await page.evaluate(() => location.pathname), "/jspark3/");
+      assert.equal(await page.locator("[data-page-frame]").evaluate((el) => el.hasAttribute("data-leaving")), true);
+      await page.goBack();
+      await page.waitForFunction(() => !location.hash);
+      await page.waitForTimeout(100);
+      assert.equal(await page.locator("[data-page-frame]").evaluate((el) => el.hasAttribute("data-leaving")), false);
+      assert.equal(await page.evaluate(() => window.scrollY), 0);
+      assert.equal(await page.locator("nav a[href='/about/']:visible .nav-active").count(), 0);
+      release();
+      await page.waitForTimeout(700);
+      assert.equal(await page.evaluate(() => location.pathname), "/jspark3/", "the canceled request stays canceled");
+    } finally {
+      release();
+    }
   });
 
   await check("back after a keyboard trip through the navbar hands focus back to it", { path: "/about/" }, async (page) => {

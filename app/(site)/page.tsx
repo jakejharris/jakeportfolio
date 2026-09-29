@@ -47,7 +47,7 @@ export default async function HomePage() {
       <PageLayout>
       <Hero />
       <div className="max-w-none">
-        <div className="section-kicker">Writing &amp; work</div>
+        <div className="section-kicker" data-fluid-island>Writing &amp; work</div>
         <GlassLight />
         <ul className="space-y-2 pb-8">
           {posts.map((post) => {
