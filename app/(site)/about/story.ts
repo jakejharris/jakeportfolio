@@ -91,9 +91,7 @@ export const STORY: Paragraph[] = [
       {
         min: 1,
         pieces: [
-          'Outside work, I build ',
-          { text: 'JSPARK3', href: '/jspark3/' },
-          ', which turns three small NVIDIA computers into one model server, and I publish the recipes and measured results so anyone with the same hardware can run it too.',
+          'Outside work, I’ve been moving deeper into AI models one layer at a time: the agents built on top of them, the context they’re given, the machines they run on, and next, the models themselves, through fine-tuning and post-training.',
         ],
       },
       {
