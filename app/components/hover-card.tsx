@@ -2,12 +2,37 @@
 
 import * as React from "react"
 import * as HoverCardPrimitive from "@radix-ui/react-hover-card"
+import { Slot } from "@radix-ui/react-slot"
 
 import { cn } from "../lib/utils"
 
 const HoverCard = HoverCardPrimitive.Root
 
-const HoverCardTrigger = HoverCardPrimitive.Trigger
+// Radix cancels touchstart to suppress touch previews, but React's touchstart
+// listener is passive. Keep the native link gesture and Radix's pointer/focus
+// handlers; Slot also preserves handlers supplied by the link itself.
+const NativeTouchTrigger = React.forwardRef<
+  HTMLAnchorElement,
+  React.ComponentPropsWithoutRef<typeof Slot> & {
+    onNativeTouchStart?: React.TouchEventHandler<HTMLAnchorElement>
+  }
+>(({ onNativeTouchStart, ...props }, ref) => {
+  delete props.onTouchStart
+  return <Slot {...props} ref={ref} onTouchStart={onNativeTouchStart} />
+})
+NativeTouchTrigger.displayName = "NativeTouchTrigger"
+
+const HoverCardTrigger = React.forwardRef<
+  React.ElementRef<typeof HoverCardPrimitive.Trigger>,
+  React.ComponentPropsWithoutRef<typeof HoverCardPrimitive.Trigger>
+>(({ asChild, children, onTouchStart, ...props }, ref) => (
+  <HoverCardPrimitive.Trigger {...props} ref={ref} asChild>
+    <NativeTouchTrigger onNativeTouchStart={onTouchStart}>
+      {asChild ? children : <a>{children}</a>}
+    </NativeTouchTrigger>
+  </HoverCardPrimitive.Trigger>
+))
+HoverCardTrigger.displayName = HoverCardPrimitive.Trigger.displayName
 
 const HoverCardContent = React.forwardRef<
   React.ElementRef<typeof HoverCardPrimitive.Content>,

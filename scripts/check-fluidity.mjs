@@ -95,6 +95,39 @@ try {
     assert.equal(await layer.evaluate((node) => node.isConnected), true, "the water was not remounted");
   });
 
+  await check("post previews still open for a mouse and for keyboard focus", {}, async (page) => {
+    const link = firstPost(page);
+    const preview = page.locator("[data-radix-popper-content-wrapper]");
+    await link.hover();
+    await preview.waitFor({ state: "visible" });
+    await page.mouse.move(0, 0);
+    await preview.waitFor({ state: "hidden" });
+    await link.focus();
+    await preview.waitFor({ state: "visible" });
+  });
+
+  await check("phone post taps keep native touch handling without passive-listener errors", { device: phone }, async (page) => {
+    const consoles = [];
+    page.on("console", (message) => {
+      if (message.type() === "error") consoles.push(message.text());
+    });
+    await page.evaluate(() => {
+      window.touchCancellationAttempts = 0;
+      const prevent = Event.prototype.preventDefault;
+      Event.prototype.preventDefault = function (...args) {
+        if (this.type === "touchstart") window.touchCancellationAttempts++;
+        return prevent.apply(this, args);
+      };
+    });
+    const link = firstPost(page);
+    const href = await link.getAttribute("href");
+    await press(page, link);
+    await page.waitForURL(base + href);
+    await waitShore(page);
+    assert.equal(await page.evaluate(() => window.touchCancellationAttempts), 0, "a post link must not try to cancel passive touchstart");
+    assert.deepEqual(consoles, [], "a phone tap must not log a console error");
+  });
+
   for (const [label, device] of [["desktop", desktop], ["phone", phone]]) {
     await check(`the shore keeps clear of every line of text (${label})`, { device, path: "/posts/joining-docusign/" }, async (page) => {
       await waitShore(page);
@@ -447,6 +480,50 @@ try {
     await page.waitForURL("**/about/");
     await page.waitForTimeout(300);
     assert.equal(await page.evaluate(() => document.activeElement?.getAttribute("href")), "/contact/");
+  });
+
+  await check("focus history stays bounded over many page changes", {}, async (page) => {
+    await page.evaluate(() => {
+      const set = Map.prototype.set;
+      Map.prototype.set = function (key, value) {
+        if (key === history.state?.__scroll && typeof value === "string" && value.startsWith("/")) {
+          window.observedFocusHistory = this;
+        }
+        return set.call(this, key, value);
+      };
+    });
+    for (let visit = 0; visit < 20; visit++) {
+      for (const path of ["/about/", "/contact/", "/"]) {
+        await page.locator(`nav a[href='${path}']:visible`).evaluate((link) => link.click());
+        await page.waitForFunction((path) => location.pathname === path, path);
+        await page.waitForFunction((path) => document.querySelector(`nav a[href='${path}'][aria-current='page']`), path);
+        await page.waitForTimeout(300);
+      }
+    }
+    const retained = await page.evaluate(() => window.observedFocusHistory?.size);
+    assert.ok(retained > 0, "the history used to return focus was observed");
+    assert.ok(retained <= 50, `focus history retained ${retained} entries after scroll history expired`);
+  });
+
+  await check("the article outline respects reduced motion, including preference changes", { path: "/posts/apres-surf-club/", reducedMotion: true }, async (page) => {
+    await page.getByRole("button", { name: "In This Article" }).click();
+    await page.waitForTimeout(400);
+    await page.evaluate(() => {
+      window.outlineScrolls = [];
+      const scroll = window.scrollTo.bind(window);
+      window.scrollTo = (...args) => {
+        if (args[0]?.behavior) window.outlineScrolls.push(args[0]);
+        return scroll(...args);
+      };
+    });
+    const heading = page.getByRole("navigation", { name: "Table of contents" }).getByRole("button").first();
+    await heading.click();
+    const quiet = await page.evaluate(() => window.outlineScrolls.at(-1));
+    assert.equal(quiet.behavior, "instant", "reduced motion must not request an animated scroll");
+    assert.ok(Math.abs(await page.evaluate(() => window.scrollY) - quiet.top) < 2, "the heading is reached immediately");
+    await page.emulateMedia({ reducedMotion: "no-preference" });
+    await heading.click();
+    assert.equal(await page.evaluate(() => window.outlineScrolls.at(-1).behavior), "smooth", "normal outline scrolling keeps its animation");
   });
 
   await check("the mobile menu still leaves through its own water", { device: phone }, async (page) => {

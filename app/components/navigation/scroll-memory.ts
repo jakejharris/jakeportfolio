@@ -5,7 +5,7 @@
 // Here the position is put back in the same frame the page arrives.
 
 const STORAGE_KEY = 'scroll-positions';
-const LIMIT = 50;
+export const SCROLL_MEMORY_LIMIT = 50;
 
 export function scrollKey(location: { pathname: string; search: string }) {
   const path = location.pathname === '/' ? '/' : location.pathname.replace(/\/+$/, '');
@@ -30,7 +30,7 @@ export class ScrollMemory {
     // Most recent last, so the oldest pages fall off first.
     this.positions.delete(key);
     this.positions.set(key, Math.max(0, Math.round(y)));
-    if (this.positions.size > LIMIT) {
+    if (this.positions.size > SCROLL_MEMORY_LIMIT) {
       const oldest = this.positions.keys().next().value;
       if (oldest !== undefined) this.positions.delete(oldest);
     }

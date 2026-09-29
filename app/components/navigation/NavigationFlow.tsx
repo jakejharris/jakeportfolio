@@ -19,7 +19,7 @@ import {
   type NavDeparture,
 } from "./navigation-events";
 import { focusQuietly } from "../../lib/focus-intent";
-import { ScrollMemory, scrollKey } from "./scroll-memory";
+import { SCROLL_MEMORY_LIMIT, ScrollMemory, scrollKey } from "./scroll-memory";
 import "../../css/navigation.css";
 
 // A page that has not arrived by then is not coming; undo the departure.
@@ -192,7 +192,14 @@ export default function NavigationFlow() {
       const x = event.detail === 0 ? rect.left + rect.width / 2 : event.clientX;
       const y = event.detail === 0 ? rect.top + rect.height / 2 : event.clientY;
       state.departure = { x, y, to, link };
+      // Focus history shares scroll history's limit, instead of retaining
+      // every departure for the lifetime of a long-open tab.
+      state.leftThrough.delete(here);
       state.leftThrough.set(here, link.getAttribute("href") ?? "");
+      if (state.leftThrough.size > SCROLL_MEMORY_LIMIT) {
+        const oldest = state.leftThrough.keys().next().value;
+        if (oldest !== undefined) state.leftThrough.delete(oldest);
+      }
       memory.save(here, window.scrollY);
       pageFrame()?.setAttribute("data-leaving", "");
       setPendingPath(to);
