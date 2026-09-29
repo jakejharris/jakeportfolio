@@ -11,7 +11,6 @@ import {
   HoverCardTrigger,
   HoverCardContent
 } from '../components/hover-card';
-import PixelFluidBackground from '../components/PixelFluidBackground';
 import TagPill from '../components/TagPill';
 import Hero from '../components/Hero';
 
@@ -42,7 +41,6 @@ export default async function HomePage() {
 
   return (
     <>
-      <PixelFluidBackground heroMode />
       <PageLayout>
       <Hero />
       <div className="max-w-none">

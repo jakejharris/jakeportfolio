@@ -1,6 +1,5 @@
 import React from 'react';
 import PageLayout from '../../../components/PageLayout';
-import PixelFluidBackground from '../../../components/PixelFluidBackground';
 import TransitionLink from '../../../components/TransitionLink';
 import { release } from './release-data';
 import { GLM_RELEASE, HEADLINE_ROWS, HUB_COPY, INTERNAL_BUILDS, IS_PLACEHOLDER, RELEASE, RELEASE_HISTORY, RELEASE_SUMMARY, releaseDate, valueText } from '../release-copy';
@@ -34,7 +33,6 @@ function LedgerRow({ href, children }: { href: string; children: React.ReactNode
 
 export default function HubPage() {
   return <>
-    <PixelFluidBackground heroMode quietShare={0.75} />
     <PageLayout className="spark-hub">
       <a className="spark-hub-skip" href="#current">Skip to releases</a>
       <header className="hero spark-hub-intro">

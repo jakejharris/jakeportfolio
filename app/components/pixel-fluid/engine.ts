@@ -10,6 +10,7 @@
 
 import type { IslandField } from './islands';
 import { islandDistance } from './islands';
+import { cellDistance, TideFront } from './tide-front';
 
 export const CELL = 18;
 
@@ -32,6 +33,10 @@ export interface FluidOptions {
 
 // Wave amplitude ramps 0 -> 1 on mount, then the drift settles to ambient.
 const RAMP_MS = 4000;
+// Water that comes back with a page rises behind its front, much faster,
+// and the front itself breaks as a band of foam.
+const FLOOD_RAMP_MS = 360;
+const FOAM_BAND = CELL * 1.5;
 const SETTLE_DELAY_MS = 8000;
 const SETTLE_MS = 6000;
 // Radians per second (the old per-frame steps at 60 fps).
@@ -131,7 +136,13 @@ export class PixelFluid {
   private shelf = SHELF.desktop;
   private phase = 0;
   private start = -1;
+  private rampMs = RAMP_MS;
   private last = -1;
+  // A page change: the old composition drains ahead of a front while the
+  // new one comes in behind it.
+  private tide = new TideFront(CELL);
+  private oldBias: Float32Array | null = null;
+  private oldWater: Uint8Array | null = null;
   private colors: FluidColors = { background: [10, 10, 10], accent: [255, 255, 255], isDark: true };
   private dye: { x: number; y: number; start: number; from: Rgb } | null = null;
   private pointer = { x: 0, y: 0, active: false };
@@ -140,6 +151,7 @@ export class PixelFluid {
 
   constructor(private canvas: HTMLCanvasElement, private options: FluidOptions) {
     this.ctx = canvas.getContext('2d');
+    this.rampMs = options.rampMs ?? RAMP_MS;
   }
 
   /** Size the lattice to the viewport. Cheap to call on every resize. */
@@ -169,6 +181,20 @@ export class PixelFluid {
     this.rowW = new Float32Array(rows);
     this.diagW = new Float32Array(cols + rows);
 
+    this.oldBias = null;
+    this.oldWater = null;
+    this.compose();
+  }
+
+  /** Change the art direction (homepage, hub or plain) of the same water. */
+  setShape(heroMode: boolean, quietShare: number) {
+    if (heroMode === this.options.heroMode && quietShare === this.options.quietShare) return;
+    this.options = { ...this.options, heroMode, quietShare };
+    this.compose();
+  }
+
+  private compose() {
+    const { cols, rows, mobile } = this;
     this.bias = new Float32Array(cols * rows);
     if (this.options.heroMode && cols > 1 && rows > 1) {
       for (let y = 0; y < rows; y++) {
@@ -194,6 +220,61 @@ export class PixelFluid {
       const count = Math.floor(ranked.length * (1 - clamp01(quietShare)));
       for (let i = 0; i < count; i++) this.water[ranked[i].index] = 1;
     }
+  }
+
+  /**
+   * The page is being left from (x, y), viewport px: the water runs out from
+   * there, cell by cell.
+   */
+  recede(x: number, y: number, now: number) {
+    if (!this.cols) return;
+    this.oldBias = this.bias;
+    this.oldWater = this.water;
+    this.tide.recede(x, y, this.reachFrom(x, y), now);
+  }
+
+  /**
+   * A page arrived: its water (the current shape) comes in from (x, y),
+   * behind whatever is left of the old. `rise`: there was no water showing,
+   * so the swell also rises from nothing.
+   */
+  flood(x: number, y: number, now: number, rise: boolean) {
+    if (!this.cols) return;
+    if (rise) {
+      // Whatever ran out of this water earlier is over; this front is new.
+      this.tide.clear();
+      this.oldBias = null;
+      this.oldWater = null;
+      this.start = now;
+      this.last = now;
+      this.rampMs = FLOOD_RAMP_MS;
+    } else if (!this.tide.active) {
+      this.oldBias = null;
+      this.oldWater = null;
+    }
+    this.tide.flood(x, y, this.reachFrom(x, y), now);
+  }
+
+  /**
+   * Show the current shape at once, with the swell rising in place, or
+   * already risen (`instant`, for a page that arrives out of sight).
+   */
+  rise(now: number, instant = false) {
+    this.tide.clear();
+    this.oldBias = null;
+    this.oldWater = null;
+    this.rampMs = FLOOD_RAMP_MS;
+    this.start = instant ? now - FLOOD_RAMP_MS : now;
+    this.last = now;
+  }
+
+  /** All the water has run out and none is coming back. */
+  drained(now: number) {
+    return this.tide.drained(now);
+  }
+
+  private reachFrom(x: number, y: number) {
+    return Math.hypot(Math.max(x, this.cols * CELL - x), Math.max(y, this.rows * CELL - y)) + CELL * 4;
   }
 
   setIslands(field: IslandField | null) {
@@ -238,7 +319,7 @@ export class PixelFluid {
 
   /** Anything moving faster than the ambient drift wants a full frame rate. */
   get busy() {
-    return this.rippleActive || this.dye !== null;
+    return this.rippleActive || this.dye !== null || this.tide.active;
   }
 
   /** Distance from each cell to land, refreshed when the page scrolls. */
@@ -305,7 +386,7 @@ export class PixelFluid {
     const dt = Math.min(100, Math.max(0, now - this.last));
     this.last = now;
     const elapsed = now - this.start;
-    const amplitude = this.still ? 1 : easeOutCubic(Math.min(1, elapsed / (this.options.rampMs ?? RAMP_MS)));
+    const amplitude = this.still ? 1 : easeOutCubic(Math.min(1, elapsed / this.rampMs));
     const settle = this.still ? 1 : easeOutCubic(clamp01((elapsed - SETTLE_DELAY_MS) / SETTLE_MS));
     if (!this.still) this.phase += lerp(this.speed.intro, this.speed.ambient, settle) * dt / 1000;
     const scrollProgress = clamp01(scrollY / Math.max(viewportHeight * 1.1, 1));
@@ -336,6 +417,15 @@ export class PixelFluid {
     const ripple = this.ripple;
     const rippling = this.rippleActive;
 
+    const tide = this.tide;
+    if (tide.active && tide.settled(now)) {
+      tide.clear();
+      this.oldBias = null;
+      this.oldWater = null;
+    }
+    const radii = tide.active ? tide.radii(now) : null;
+    const { oldBias, oldWater } = this;
+
     let dyeRadius = -1;
     let dyeFade = 0;
     let dye = this.dye;
@@ -355,12 +445,28 @@ export class PixelFluid {
       for (let x = 0; x < cols; x++) {
         const i = y * cols + x;
         const coast = shore[i];
-        if (!water[i] || coast < BEACH) {
+        let wet = water[i];
+        let lift = bias[i];
+        let foam = false;
+        if (radii) {
+          // Behind the incoming front, the new shape; beyond the outgoing
+          // one, what is left of the old; between them, bare page.
+          const d = cellDistance(x, y, tide.x, tide.y, CELL);
+          if (d >= radii.in) {
+            if (d < radii.out || !oldWater || !oldBias) {
+              pixels[i] = bgPixel;
+              continue;
+            }
+            wet = oldWater[i];
+            lift = oldBias[i];
+          } else foam = d > radii.in - FOAM_BAND && (x + y) % 2 === 0;
+        }
+        if (!wet || coast < BEACH) {
           pixels[i] = bgPixel;
           continue;
         }
 
-        let height = ((this.colW[x] + rowW + this.diagW[x - y + rows] + 3) / 6) * amplitude + bias[i] * amplitude;
+        let height = ((this.colW[x] + rowW + this.diagW[x - y + rows] + 3) / 6) * amplitude + lift * amplitude;
         if (rippling) height += ripple[i] * RIPPLE_GAIN * amplitude;
         height = clamp01(height);
         const shelf = smoothstep(BEACH, BEACH + this.shelf, coast);
@@ -376,6 +482,13 @@ export class PixelFluid {
             pixels[i] = over(accent[0], accent[1], accent[2], presence * dyeFade);
             continue;
           }
+        }
+
+        // The incoming front breaks as a checkerboard of foam.
+        if (foam && shelf > 0.3) {
+          const light = pen + lightSign * 26 * 2.55;
+          pixels[i] = over(light, light, light, ink);
+          continue;
         }
 
         // Ripple crests catch the light.

@@ -10,7 +10,6 @@ import {
   HoverCardTrigger,
   HoverCardContent,
 } from '@/app/components/hover-card';
-import PixelFluidBackground from '@/app/components/PixelFluidBackground';
 import TagPill from '@/app/components/TagPill';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
@@ -117,7 +116,6 @@ export default async function TagPage({
 
   return (
     <>
-    <PixelFluidBackground />
     <PageLayout>
       <div className="max-w-none">
         <div className="page-enter mb-6">

@@ -7,6 +7,7 @@ import { ThemeProvider } from "../components/theme-provider";
 import { Toaster } from "../components/ui/sonner";
 import { GoogleAnalytics } from '@next/third-parties/google'
 import AccentScript from "../components/AccentScript";
+import PixelFluidBackground from "../components/PixelFluidBackground";
 import NavigationFlow from "../components/navigation/NavigationFlow";
 import type { Metadata } from "next";
 
@@ -85,7 +86,10 @@ export default function SiteLayout({ children }: { children: React.ReactNode }) 
         <NavbarScrollProvider>
           <PortfolioChrome><Navbar /></PortfolioChrome>
           <PortfolioChrome><AppearanceDock /></PortfolioChrome>
-          <main className="flex-1">
+          {/* The water lives here, under every page, so it moves with page
+              changes instead of being replaced by them. */}
+          <main className="relative flex-1">
+            <PixelFluidBackground />
             <div data-page-frame="">{children}</div>
             {process.env.NODE_ENV === 'production' && (
               <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID!} />
