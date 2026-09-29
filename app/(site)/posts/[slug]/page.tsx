@@ -518,7 +518,7 @@ export default async function PostPage({ params }: PageParams) {
           </h1>
 
           <div className="page-enter flex flex-wrap items-center gap-x-4 gap-y-2 mb-6 text-sm text-muted-foreground">
-            <span>
+            <span className="w-full md:w-auto">
               By{' '}
               <Link href="/about/" rel="author" className="animated-underline text-foreground">Jake Harris</Link>
             </span>
