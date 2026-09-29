@@ -175,15 +175,13 @@ export default function AppearanceDock() {
   useEffect(() => {
     // During a root snapshot the browser hit-tests the captured page as
     // <html>, even with pointer-events disabled on the transition overlay.
-    // Keep just the dock usable so another pick can interrupt the flood.
-    const handleCapturedClick = (event: globalThis.MouseEvent) => {
-      if (event.target !== document.documentElement || !isThemeFloodActive()) return;
+    // Keep just the dock usable so another pick can join the flood.
+    const forward = (x: number, y: number) => {
       const buttons = dockRef.current?.querySelectorAll("button");
       if (!buttons) return;
       for (const button of buttons) {
         const rect = button.getBoundingClientRect();
-        if (rect.width && rect.height && event.clientX >= rect.left && event.clientX < rect.right
-          && event.clientY >= rect.top && event.clientY < rect.bottom) {
+        if (rect.width && rect.height && x >= rect.left && x < rect.right && y >= rect.top && y < rect.bottom) {
           button.focus({ preventScroll: true });
           button.click();
           return;
@@ -191,8 +189,38 @@ export default function AppearanceDock() {
       }
       setOpen(false);
     };
+    const captured = (event: Event) => event.target === document.documentElement && isThemeFloodActive();
+    // WebKit does not turn a tap on <html> into a click at all, so a touch
+    // that lands and lifts in place is forwarded as it lifts, and a click
+    // that may still follow it is let go.
+    let touch: { id: number; x: number; y: number; at: number } | null = null;
+    let tapped = -Infinity;
+    const handleCapturedDown = (event: PointerEvent) => {
+      touch = event.pointerType !== "mouse" && captured(event)
+        ? { id: event.pointerId, x: event.clientX, y: event.clientY, at: event.timeStamp }
+        : null;
+    };
+    const handleCapturedUp = (event: PointerEvent) => {
+      const down = touch;
+      touch = null;
+      // The flood may have ended since the touch landed; it still counts.
+      if (!down || down.id !== event.pointerId || event.target !== document.documentElement) return;
+      if (event.timeStamp - down.at > 500 || Math.hypot(event.clientX - down.x, event.clientY - down.y) > 10) return;
+      tapped = performance.now();
+      forward(event.clientX, event.clientY);
+    };
+    const handleCapturedClick = (event: globalThis.MouseEvent) => {
+      if (!captured(event) || performance.now() - tapped < 700) return;
+      forward(event.clientX, event.clientY);
+    };
+    document.addEventListener("pointerdown", handleCapturedDown);
+    document.addEventListener("pointerup", handleCapturedUp);
     document.addEventListener("click", handleCapturedClick);
-    return () => document.removeEventListener("click", handleCapturedClick);
+    return () => {
+      document.removeEventListener("pointerdown", handleCapturedDown);
+      document.removeEventListener("pointerup", handleCapturedUp);
+      document.removeEventListener("click", handleCapturedClick);
+    };
   }, []);
 
   // Ride above the site footer once it comes into view, so the dock never
