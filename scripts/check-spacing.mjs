@@ -17,8 +17,9 @@ const routes = [
   { route: "/posts/jspark3/", first: "main h1", last: "#external-links", tags: true, screenshots: true },
   { route: "/posts/joining-docusign/", first: "main h1", last: ".portable-text > :last-child, #external-links", tags: true, screenshots: true },
   { route: "/posts/apres-surf-club/", first: "main h1", last: ".portable-text > :last-child, #external-links", tags: true },
-  { route: "/", first: ".hero-wordmark", last: "main li:last-child .pageLinkContainer", screenshots: true },
+  { route: "/", first: ".hero-wordmark", last: "main li:last-child .pageLinkContainer", hiddenTags: true, screenshots: true },
   { route: "/tags/project-showcase/", first: "main h1", last: "main li:last-child .pageLinkContainer" },
+  { route: "/tags/web-development/", first: "main h1", last: "main li:last-child .pageLinkContainer" },
   { route: "/about/", first: ".hero-wordmark", last: ".about-elsewhere .link-ledger", screenshots: true },
   { route: "/contact/", first: ".hero-wordmark", last: ".contact-local" },
   { route: "/jspark3/", first: ".hero-wordmark", last: ".spark-hub-note", screenshots: true },
@@ -39,7 +40,7 @@ const measureGaps = (config) => {
   const image = config.tags && document.querySelector("main h1")?.previousElementSibling?.querySelector("img");
   const first = box(image?.parentElement || visible(config.first));
   const last = box([...document.querySelectorAll(config.last)].at(-1));
-  const tags = config.tags ? [...document.querySelectorAll('main a[href^="/tags/"]')].map((tag) => ({
+  const tags = config.tags || config.hiddenTags ? [...document.querySelectorAll("main .tag-pill, main [data-post-tags]")].map((tag) => ({
     visible: tag.getBoundingClientRect().width > 0 && tag.getBoundingClientRect().height > 0,
   })) : [];
   // Resolve the shared CSS token without changing the page's geometry.
@@ -94,9 +95,8 @@ try {
         const label = `${config.route} @ ${width}`;
         try {
           assertSpacing(gaps, label);
-          if (config.tags) {
-            assert.ok(gaps.tags.length > 0, `${label}: tagged post required`);
-            assert.ok(gaps.tags.every((tag) => tag.visible === (width >= 768)), `${label}: post tags must be hidden on phones and visible on desktop`);
+          if (config.tags || config.hiddenTags) {
+            assert.ok(gaps.tags.every((tag) => !tag.visible), `${label}: tag UI must be hidden at every width`);
           }
           console.log(`PASS ${label}: ${gaps.top.toFixed(2)} / ${gaps.bottom.toFixed(2)} CSS px`);
         } catch (error) {
@@ -138,10 +138,9 @@ try {
     await page.goto(base + "/posts/jspark3/", { waitUntil: "networkidle" });
     for (const width of [767, 768]) {
       await page.setViewportSize({ width, height: 900 });
-      const tags = page.locator('main a[href^="/tags/"]');
+      const tags = page.locator("main .tag-pill, main [data-post-tags]");
       try {
-        assert.ok(await tags.count() > 0, "tagged post required for breakpoint check");
-        for (const tag of await tags.all()) assert.equal(await tag.isVisible(), width >= 768, `post tag visibility @ ${width}`);
+        for (const tag of await tags.all()) assert.equal(await tag.isVisible(), false, `post tag visibility @ ${width}`);
         console.log(`PASS post tag breakpoint @ ${width}`);
       } catch (error) { failures.push(error.message); console.error(`FAIL ${error.message}`); }
     }

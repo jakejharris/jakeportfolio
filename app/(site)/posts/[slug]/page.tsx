@@ -21,6 +21,7 @@ import nextDynamic from 'next/dynamic';
 import TableOfContents from '@/app/components/TableOfContents';
 import { getPostHeadings } from '@/app/lib/post-headings';
 import TagPill from '@/app/components/TagPill';
+import { SHOW_POST_TAGS } from '@/app/lib/tag-display';
 import type { Metadata } from 'next';
 
 // Published pages refresh in the background; the webhook also expires content.
@@ -533,7 +534,7 @@ export default async function PostPage({ params }: PageParams) {
             )}
             <ViewCounter slug={slug} initialCount={displayedViewCount} />
 
-            {post.tags && post.tags.length > 0 && (
+            {SHOW_POST_TAGS && post.tags && post.tags.length > 0 && (
               <div className="hidden md:flex gap-2" data-post-tags>
                 <TagPill linked={true} tag={post.tags[0]} key={post.tags[0].slug.current} />
                 {post.tags.slice(1).map(tag => (
