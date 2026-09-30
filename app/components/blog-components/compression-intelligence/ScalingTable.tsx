@@ -1,454 +1,220 @@
 'use client';
 
-// Animated version of the table from "The Math That Should Have Killed the
-// Idea." Rows reveal one by one with counting animations to dramatize the
-// logarithmic scaling: at ~10:1 compression per layer, going from Claude's
-// 800KB context window to all of English Wikipedia takes just 5 layers, and
-// compressing every book ever written takes only 8. The punchline rows
-// (Library of Congress, all books) pulse to underscore the article's
-// realization: "Going from 'a textbook' to 'all human knowledge ever written'
-// costs five additional layers." The final row (1 EB — total data created per
-// year, 13 layers) glows to land the point that the scaling is logarithmic,
-// not linear.
+// The table from "The Math That Should Have Killed the Idea." Every layer
+// compresses about ten to one, so the layers a corpus needs to fit a 200K
+// token window (800 KB) are log₁₀ of its size over the window, rounded up.
+// Each layer is drawn as one cell: ten times the text costs one more cell.
+// Choosing a row walks its size down, layer by layer, until it fits.
 
-import { useEffect, useRef, useState, useCallback } from 'react';
-import { useTheme } from 'next-themes';
-import { getCanvasTheme } from './theme-colors';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
-// --- Table Data ---
-const TABLE_DATA = [
-  { size: '800 KB', description: "Claude's context window", layers: 0 },
-  { size: '1 GB', description: 'A large codebase', layers: 4 },
-  { size: '20 GB', description: 'All of English Wikipedia', layers: 5 },
-  { size: '1 TB', description: 'Estimated GPT-4 training data', layers: 7 },
-  { size: '15 TB', description: 'Library of Congress (text)', layers: 8 },
-  { size: '50 TB', description: 'All books ever written', layers: 8 },
-  { size: '1 EB', description: 'Total data created per year', layers: 13 },
-];
+import { cn } from '@/app/lib/utils';
 
-const PUNCHLINE_INDICES = [4, 5];
-const FINAL_INDEX = 6;
-const ROW_STAGGER_MS = 160;
-const ROW_ENTER_MS = 450;
-const LOOP_HOLD_MS = 3000;
-const FADE_OUT_MS = 600;
+import {
+  ACCENT,
+  DIM,
+  FAINT,
+  Figure,
+  LINE,
+  Replay,
+  useBeforePaint,
+  useReducedMotion,
+  useSeen,
+} from './figure';
+import { CONTEXT_BYTES, SCALE_ROWS, descent, formatBytes, layersFor } from './figures';
 
-// Ease-out cubic
-function easeOutCubic(t: number): number {
-  return 1 - Math.pow(1 - t, 3);
+const DEFAULT_ROW = SCALE_ROWS.findIndex((row) => row.what === 'All books ever written');
+const ROW_STAGGER_MS = 110;
+const CELL_STAGGER_MS = 45;
+const STEPS_MS = 1300;
+
+const ROWS = SCALE_ROWS.map((row) => ({ ...row, layers: layersFor(row.bytes) }));
+
+/** Pop cells or steps in, one after another, from wherever they are now. */
+function reveal(elements: Iterable<HTMLElement>, delayOf: (element: HTMLElement) => number) {
+  for (const element of elements) {
+    for (const animation of element.getAnimations()) animation.cancel();
+    element.animate(
+      [
+        { opacity: 0, transform: 'scale(0.4)' },
+        { opacity: 1, transform: 'none' },
+      ],
+      {
+        duration: 260,
+        delay: delayOf(element),
+        easing: 'cubic-bezier(0.2, 0.7, 0.3, 1)',
+        fill: 'backwards',
+      }
+    );
+  }
 }
 
 export default function ScalingTable() {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [isVisible, setIsVisible] = useState(false);
-  const [revealedRows, setRevealedRows] = useState(0);
-  const [countedValues, setCountedValues] = useState<number[]>(
-    TABLE_DATA.map(() => 0)
-  );
-  const [punchlineActive, setPunchlineActive] = useState(false);
-  const [finalRowActive, setFinalRowActive] = useState(false);
-  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
-  const [fadingOut, setFadingOut] = useState(false);
-  const [restartTrigger, setRestartTrigger] = useState(0);
+  const reduced = useReducedMotion();
+  const figureRef = useRef<HTMLElement>(null);
+  const tableRef = useRef<HTMLTableElement>(null);
+  const stepsRef = useRef<HTMLDivElement>(null);
+  const seen = useSeen(figureRef, 0.4);
+  const [selected, setSelected] = useState(DEFAULT_ROW);
+  const playedRef = useRef(false);
 
-  const countAnimations = useRef<Map<number, number>>(new Map());
-  const staggerTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
-  const completedRowsRef = useRef<Set<number>>(new Set());
-
-  const { resolvedTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => { setMounted(true); }, []);
-  const isDark = mounted ? resolvedTheme === 'dark' : true;
-  const theme = getCanvasTheme(isDark);
-
-  // --- Reduced motion detection ---
-  useEffect(() => {
-    const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
-    setPrefersReducedMotion(mq.matches);
-    const handler = (e: MediaQueryListEvent) => setPrefersReducedMotion(e.matches);
-    mq.addEventListener('change', handler);
-    return () => mq.removeEventListener('change', handler);
+  const playSteps = useCallback((delay: number) => {
+    const steps = stepsRef.current;
+    if (!steps) return;
+    const elements = steps.querySelectorAll<HTMLElement>('[data-step]');
+    // Short descents step at an even pace; long ones take no longer in all.
+    const pace = Math.min(140, STEPS_MS / Math.max(1, elements.length));
+    reveal(elements, (element) => delay + Number(element.dataset.step) * pace);
   }, []);
 
-  // --- Intersection Observer ---
+  const play = useCallback(() => {
+    const table = tableRef.current;
+    if (!table) return;
+    const cells = table.querySelectorAll<HTMLElement>('[data-cell]');
+    reveal(cells, (element) => {
+      const [row, k] = (element.dataset.cell ?? '0-0').split('-').map(Number);
+      return row * ROW_STAGGER_MS + k * CELL_STAGGER_MS;
+    });
+    table.dataset.hidden = 'false';
+    playSteps(ROWS.length * ROW_STAGGER_MS + 200);
+    if (stepsRef.current) stepsRef.current.dataset.hidden = 'false';
+  }, [playSteps]);
+
+  // Tell the table once, when it scrolls into view; reduced motion shows it whole.
   useEffect(() => {
-    const el = containerRef.current;
-    if (!el) return;
+    if (playedRef.current) return;
+    if (reduced) {
+      playedRef.current = true;
+      if (tableRef.current) tableRef.current.dataset.hidden = 'false';
+      if (stepsRef.current) stepsRef.current.dataset.hidden = 'false';
+      return;
+    }
+    if (!seen) return;
+    playedRef.current = true;
+    play();
+  }, [play, reduced, seen]);
 
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setIsVisible(true);
-          observer.disconnect();
-        }
-      },
-      { threshold: 0.3 }
-    );
+  const choose = (index: number) => {
+    if (index === selected) return;
+    setSelected(index);
+  };
 
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, []);
+  // A newly chosen row walks its own descent, hidden from its first frame.
+  // Before the table has played, its first run shows the descent instead.
+  const shownRef = useRef(selected);
+  useBeforePaint(() => {
+    if (shownRef.current === selected) return;
+    shownRef.current = selected;
+    if (!reduced && playedRef.current) playSteps(0);
+  }, [playSteps, reduced, selected]);
 
-  // --- Counting animation for a single row ---
-  const animateCount = useCallback(
-    (rowIndex: number) => {
-      const target = TABLE_DATA[rowIndex].layers;
-      if (target === 0) {
-        setCountedValues((prev) => {
-          const next = [...prev];
-          next[rowIndex] = 0;
-          return next;
-        });
-        return;
-      }
-
-      const duration = Math.min(
-        Math.max(300, target * 45),
-        rowIndex === FINAL_INDEX ? 650 : 500
-      );
-      const start = performance.now();
-
-      const tick = (now: number) => {
-        const elapsed = now - start;
-        const progress = Math.min(elapsed / duration, 1);
-        const eased = easeOutCubic(progress);
-        const current = Math.round(eased * target);
-
-        setCountedValues((prev) => {
-          const next = [...prev];
-          next[rowIndex] = current;
-          return next;
-        });
-
-        if (progress < 1) {
-          countAnimations.current.set(
-            rowIndex,
-            requestAnimationFrame(tick)
-          );
-        } else {
-          countAnimations.current.delete(rowIndex);
-
-          // Trigger punchline after both rows 4 and 5 finish
-          if (rowIndex === PUNCHLINE_INDICES[1]) {
-            setTimeout(() => setPunchlineActive(true), 100);
-          }
-          // Trigger final row emphasis
-          if (rowIndex === FINAL_INDEX) {
-            setTimeout(() => setFinalRowActive(true), 150);
-          }
-        }
-      };
-
-      countAnimations.current.set(rowIndex, requestAnimationFrame(tick));
-    },
-    []
-  );
-
-  // --- Staggered reveal chain + loop ---
-  useEffect(() => {
-    if (!isVisible || prefersReducedMotion) return;
-
-    const timers = staggerTimers.current;
-    const counts = countAnimations.current;
-
-    // Start header + rows after a short pause
-    const headerDelay = setTimeout(() => {
-      TABLE_DATA.forEach((_, i) => {
-        const timer = setTimeout(() => {
-          setRevealedRows((prev) => Math.max(prev, i + 1));
-          animateCount(i);
-        }, i * ROW_STAGGER_MS);
-        timers.push(timer);
-
-        // Track when each row's entrance animation completes
-        const animDoneTimer = setTimeout(() => {
-          completedRowsRef.current.add(i);
-        }, i * ROW_STAGGER_MS + ROW_ENTER_MS + 50);
-        timers.push(animDoneTimer);
-      });
-
-      // Schedule loop: after all animations + hold, fade out and restart
-      const totalAnimTime =
-        (TABLE_DATA.length - 1) * ROW_STAGGER_MS + // last row starts
-        650 + // longest count animation (final row)
-        150 + // finalRowActive delay
-        100;  // buffer
-
-      const loopTimer = setTimeout(() => {
-        setFadingOut(true);
-
-        const resetTimer = setTimeout(() => {
-          // Reset all animation state
-          completedRowsRef.current.clear();
-          setRevealedRows(0);
-          setCountedValues(TABLE_DATA.map(() => 0));
-          setPunchlineActive(false);
-          setFinalRowActive(false);
-          setFadingOut(false);
-          setRestartTrigger((prev) => prev + 1);
-        }, FADE_OUT_MS);
-        timers.push(resetTimer);
-      }, totalAnimTime + LOOP_HOLD_MS);
-      timers.push(loopTimer);
-    }, 200);
-
-    timers.push(headerDelay);
-
-    return () => {
-      timers.forEach(clearTimeout);
-      staggerTimers.current = [];
-      counts.forEach((id) => cancelAnimationFrame(id));
-      counts.clear();
-    };
-  }, [isVisible, prefersReducedMotion, animateCount, restartTrigger]);
-
-  // --- If reduced motion, show everything immediately ---
-  const showAll = prefersReducedMotion || !isVisible;
-  const headerVisible = isVisible;
-
-  // Theme-derived colors for inline styles
-  const headerColor = `rgba(${theme.labelDim}, 0.55)`;
-  const borderColor = `rgba(${theme.structLine}, 0.12)`;
-  const rowBorderColor = `rgba(${theme.structLine}, 0.08)`;
-  const sizeColor = `rgba(${theme.labelBright}, 0.85)`;
-  const descColor = isDark ? 'rgba(180, 190, 220, 0.7)' : 'rgba(60, 70, 100, 0.7)';
-  const descPunchColor = isDark ? 'rgba(200, 215, 245, 0.9)' : 'rgba(30, 45, 80, 0.9)';
-  const punchBlueBg = `rgba(${theme.blue}, 0.1)`;
-  const punchBlueBgMid = `rgba(${theme.blue}, 0.06)`;
-  const punchBlueBgFaint = `rgba(${theme.blue}, 0.03)`;
-  const punchBlueBgStatic = `rgba(${theme.blue}, 0.04)`;
-  const finalGlowColor = `rgba(${theme.blue}, 0.06)`;
-  const finalGlowColorFaint = `rgba(${theme.blue}, 0.03)`;
-  const topEdgeColor = `rgba(${theme.blueMid}, 0.1)`;
-  const bottomEdgeColor = `rgba(${theme.blueMid}, 0.06)`;
+  const row = ROWS[selected];
+  const sizes = descent(row.bytes);
 
   return (
-    <div
-      ref={containerRef}
-      className={`rounded-lg overflow-hidden border ${theme.wrapperClass} relative`}
-      style={{
-        background: `linear-gradient(135deg, ${theme.bg} 0%, ${theme.bgMid} 50%, ${theme.bg} 100%)`,
-        opacity: fadingOut ? 0 : 1,
-        transition: `opacity ${FADE_OUT_MS}ms ease-in-out`,
-      }}
+    <Figure
+      figureRef={figureRef}
+      label={`A table of corpora and the layers of ten to one compression each needs to fit a 200K token context window of about 800 KB. ${ROWS.map((r) => `${r.what}, ${r.size}: ${r.layers} layers.`).join(' ')}`}
+      title="Layers to fit a 200K window"
+      meta="10 to 1 per layer"
+      footer={
+        <>
+          <span className="flex-1 basis-64" style={{ color: DIM }}>
+            <span style={{ color: FAINT }}>layers = </span>log₁₀(T ÷ 200,000 tokens), rounded up.
+            Each layer divides by ten, so ten times the text costs one more layer.
+          </span>
+          <Replay onClick={play} />
+        </>
+      }
     >
-      <style>{`
-        @keyframes st-row-enter {
-          from {
-            opacity: 0;
-            transform: translateY(18px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-
-        @keyframes st-header-enter {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-
-        @keyframes st-punchline-pulse {
-          0% { background-color: transparent; }
-          30% { background-color: ${punchBlueBg}; }
-          70% { background-color: ${punchBlueBgMid}; }
-          100% { background-color: ${punchBlueBgFaint}; }
-        }
-
-        @keyframes st-final-glow {
-          0% { box-shadow: inset 0 0 0 0 transparent; }
-          50% { box-shadow: inset 0 0 20px ${finalGlowColor}; }
-          100% { box-shadow: inset 0 0 12px ${finalGlowColorFaint}; }
-        }
-
-        @keyframes st-number-pop {
-          0% { transform: scale(1); }
-          50% { transform: scale(1.15); }
-          100% { transform: scale(1); }
-        }
-
-        .st-row-animated {
-          opacity: 0;
-          animation: st-row-enter ${ROW_ENTER_MS}ms ease-out forwards;
-        }
-
-        .st-header-animated {
-          opacity: 0;
-          animation: st-header-enter 300ms ease-out forwards;
-        }
-
-        .st-punchline-cell {
-          animation: st-punchline-pulse 1.4s ease-out forwards;
-        }
-
-        .st-final-row {
-          animation: st-final-glow 1s ease-out forwards;
-        }
-
-        .st-number-pop {
-          animation: st-number-pop 300ms ease-out;
-        }
-
-        @media (prefers-reduced-motion: reduce) {
-          .st-row-animated,
-          .st-header-animated {
-            opacity: 1 !important;
-            animation: none !important;
-            transform: none !important;
-          }
-          .st-punchline-cell {
-            animation: none !important;
-            background-color: ${punchBlueBgStatic} !important;
-          }
-          .st-final-row {
-            animation: none !important;
-          }
-        }
-      `}</style>
-
-      <div className="overflow-x-auto" style={{ overflowY: 'hidden' }}>
+      <div className="px-3 pt-3 sm:px-4">
         <table
-          className="w-full border-collapse"
-          aria-label="Compression layers required by data size — logarithmic scaling from kilobytes to exabytes"
+          ref={tableRef}
+          data-hidden="true"
+          className="group/table w-full border-collapse text-[11px] leading-snug sm:text-xs"
         >
+          <caption className="sr-only">
+            Layers of ten to one compression to fit a 200K token window
+          </caption>
           <thead>
-            <tr
-              className={
-                headerVisible && !showAll ? 'st-header-animated' : ''
-              }
-              style={{ opacity: showAll ? 1 : undefined }}
-            >
-              <th
-                scope="col"
-                className="text-right px-3 sm:px-4 md:px-6 py-3 text-[10px] sm:text-xs font-medium tracking-widest uppercase"
-                style={{
-                  color: headerColor,
-                  fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
-                  borderBottom: `1px solid ${borderColor}`,
-                }}
-              >
-                Data Size
+            <tr style={{ color: FAINT }}>
+              <th scope="col" className="pb-2 pr-2 text-left font-normal">
+                Corpus
               </th>
-              <th
-                scope="col"
-                className="text-left px-3 sm:px-4 md:px-6 py-3 text-[10px] sm:text-xs font-medium tracking-widest uppercase"
-                style={{
-                  color: headerColor,
-                  borderBottom: `1px solid ${borderColor}`,
-                }}
-              >
-                What It Is
+              <th scope="col" className="pb-2 pr-3 text-right font-normal">
+                Size
               </th>
-              <th
-                scope="col"
-                className="text-center px-3 sm:px-4 md:px-6 py-3 text-[10px] sm:text-xs font-medium tracking-widest uppercase"
-                style={{
-                  color: headerColor,
-                  fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
-                  borderBottom: `1px solid ${borderColor}`,
-                }}
-              >
+              <th scope="col" className="pb-2 pr-3 text-right font-normal">
                 Layers
+              </th>
+              <th scope="col" className="pb-2 text-left font-normal">
+                <span className="sr-only">One cell per layer</span>
               </th>
             </tr>
           </thead>
           <tbody>
-            {TABLE_DATA.map((row, i) => {
-              const isRevealed = showAll || i < revealedRows;
-              const isPunchline = PUNCHLINE_INDICES.includes(i);
-              const isFinal = i === FINAL_INDEX;
-              const displayValue = showAll ? row.layers : countedValues[i];
-              const animComplete = completedRowsRef.current.has(i);
-
-              // The layer intensity — maps 0..13 to a faint blue bar
-              const layerIntensity = row.layers / 13;
-
+            {ROWS.map((entry, index) => {
+              const active = index === selected;
               return (
                 <tr
-                  key={`${restartTrigger}-${i}`}
-                  className={[
-                    'transition-colors',
-                    isRevealed && !showAll ? 'st-row-animated' : '',
-                    isFinal && finalRowActive ? 'st-final-row' : '',
-                  ]
-                    .filter(Boolean)
-                    .join(' ')}
+                  key={entry.what}
+                  onClick={() => choose(index)}
+                  className={cn(
+                    'cursor-pointer border-t transition-colors duration-200',
+                    !active && 'hover:bg-[color-mix(in_srgb,hsl(var(--foreground))_4%,transparent)]'
+                  )}
                   style={{
-                    opacity: showAll || animComplete ? 1 : undefined,
-                    animationDelay:
-                      isRevealed && !showAll ? '0ms' : undefined,
-                    borderBottom: `1px solid ${rowBorderColor}`,
+                    borderColor: LINE,
+                    backgroundColor: active
+                      ? 'color-mix(in srgb, var(--accent-color) 10%, transparent)'
+                      : undefined,
                   }}
                 >
-                  {/* Data Size */}
-                  <td
-                    className="text-right px-3 sm:px-4 md:px-6 py-2.5 sm:py-3 text-xs sm:text-sm whitespace-nowrap"
-                    style={{
-                      fontFamily:
-                        'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
-                      fontVariantNumeric: 'tabular-nums',
-                      color: sizeColor,
-                    }}
-                  >
-                    {row.size}
-                  </td>
-
-                  {/* Description */}
-                  <td
-                    className="text-left px-3 sm:px-4 md:px-6 py-2.5 sm:py-3 text-xs sm:text-sm"
-                    style={{
-                      color: isPunchline ? descPunchColor : descColor,
-                    }}
-                  >
-                    {row.description}
-                  </td>
-
-                  {/* Layers */}
-                  <td
-                    className={[
-                      'text-center px-3 sm:px-4 md:px-6 py-2.5 sm:py-3 relative',
-                      isPunchline && punchlineActive ? 'st-punchline-cell' : '',
-                    ]
-                      .filter(Boolean)
-                      .join(' ')}
-                    style={{
-                      fontFamily:
-                        'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
-                      fontVariantNumeric: 'tabular-nums',
-                    }}
-                  >
-                    {/* Faint background bar proportional to layer count */}
-                    <div
-                      className="absolute inset-0 pointer-events-none"
-                      style={{
-                        background: `linear-gradient(90deg, transparent 0%, rgba(${theme.blueMid}, ${
-                          0.03 + layerIntensity * 0.05
-                        }) 50%, transparent 100%)`,
-                        opacity: isRevealed ? 1 : 0,
-                        transition: 'opacity 400ms ease-out',
+                  <th scope="row" className="py-0 pr-2 text-left font-normal">
+                    <button
+                      type="button"
+                      aria-pressed={active}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        choose(index);
                       }}
-                    />
-                    <span
-                      className={[
-                        'relative z-10 font-semibold text-sm sm:text-base',
-                        isPunchline && punchlineActive ? 'st-number-pop' : '',
-                      ]
-                        .filter(Boolean)
-                        .join(' ')}
-                      style={{
-                        color:
-                          isFinal && finalRowActive
-                            ? `rgba(${theme.blueDeep}, 1)`
-                            : isPunchline && punchlineActive
-                              ? `rgba(${theme.blueDeep}, 0.95)`
-                              : `rgba(${isDark ? 150 + layerIntensity * 80 : 20 + layerIntensity * 40}, ${
-                                  isDark ? 180 + layerIntensity * 40 : 60 + layerIntensity * 40
-                                }, ${isDark ? 255 : 220}, ${0.7 + layerIntensity * 0.25})`,
-                      }}
+                      className="-mx-1 min-h-8 rounded-sm px-1 py-1.5 text-left transition-colors duration-200 focus-visible:outline focus-visible:outline-1 focus-visible:outline-offset-0 focus-visible:outline-[color:var(--accent-color)]"
+                      style={{ color: active ? 'hsl(var(--foreground))' : DIM }}
                     >
-                      {displayValue}
-                    </span>
+                      {entry.what}
+                    </button>
+                  </th>
+                  <td
+                    className="whitespace-nowrap pr-3 text-right tabular-nums"
+                    style={{ color: active ? 'hsl(var(--foreground))' : DIM }}
+                  >
+                    {entry.size}
+                  </td>
+                  <td
+                    className="pr-3 text-right tabular-nums"
+                    style={{ color: active ? ACCENT : DIM }}
+                  >
+                    {entry.layers}
+                  </td>
+                  <td className="w-[74px] sm:w-[30%]">
+                    {entry.layers === 0 ? (
+                      <span style={{ color: FAINT }}>fits</span>
+                    ) : (
+                      <span className="flex flex-wrap gap-px sm:gap-[2px]" aria-hidden="true">
+                        {Array.from({ length: entry.layers }, (_, k) => (
+                          <span
+                            key={k}
+                            data-cell={`${index}-${k}`}
+                            className="block h-[3px] w-[3px] transition-[background-color,opacity] duration-200 group-data-[hidden=true]/table:opacity-0 sm:h-[5px] sm:w-[5px]"
+                            style={{
+                              backgroundColor: active
+                                ? ACCENT
+                                : 'color-mix(in srgb, hsl(var(--foreground)) 38%, transparent)',
+                            }}
+                          />
+                        ))}
+                      </span>
+                    )}
                   </td>
                 </tr>
               );
@@ -457,21 +223,60 @@ export default function ScalingTable() {
         </table>
       </div>
 
-      {/* Subtle top/bottom edge fades for depth */}
+      {/* The chosen row, walked down one layer at a time. */}
       <div
-        className="absolute top-0 left-0 right-0 h-px pointer-events-none"
-        style={{
-          background:
-            `linear-gradient(90deg, transparent, ${topEdgeColor}, transparent)`,
-        }}
-      />
-      <div
-        className="absolute bottom-0 left-0 right-0 h-px pointer-events-none"
-        style={{
-          background:
-            `linear-gradient(90deg, transparent, ${bottomEdgeColor}, transparent)`,
-        }}
-      />
-    </div>
+        ref={stepsRef}
+        data-hidden="true"
+        className="group/steps mx-3 mb-3 mt-2 border-t pt-3 text-[11px] leading-relaxed sm:mx-4 sm:text-xs"
+        style={{ borderColor: LINE }}
+        aria-live="polite"
+      >
+        <div style={{ color: DIM }}>
+          {row.layers === 0 ? (
+            <>
+              {row.what}: {row.size} already fits.
+            </>
+          ) : (
+            <>
+              {row.what}, {row.layers} layers:
+            </>
+          )}
+        </div>
+        {row.layers > 0 && (
+          <div className="mt-1 flex flex-wrap items-baseline gap-x-1.5 gap-y-0.5 tabular-nums">
+            {sizes.map((size, step) => {
+              const last = step === sizes.length - 1;
+              return (
+                <span
+                  key={`${row.what}-${step}`}
+                  data-step={step}
+                  className="inline-flex items-baseline gap-x-1.5 whitespace-nowrap group-data-[hidden=true]/steps:opacity-0"
+                >
+                  {step > 0 && (
+                    <span aria-hidden="true" style={{ color: FAINT }}>
+                      →
+                    </span>
+                  )}
+                  <span
+                    style={{
+                      color: last ? ACCENT : step === 0 ? 'hsl(var(--foreground))' : DIM,
+                    }}
+                  >
+                    {size}
+                  </span>
+                </span>
+              );
+            })}
+            <span
+              data-step={sizes.length}
+              className="whitespace-nowrap group-data-[hidden=true]/steps:opacity-0"
+              style={{ color: FAINT }}
+            >
+              fits in {formatBytes(CONTEXT_BYTES)}
+            </span>
+          </div>
+        )}
+      </div>
+    </Figure>
   );
 }
