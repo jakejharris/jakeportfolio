@@ -12,6 +12,7 @@ import {
   HoverCardContent
 } from '../components/hover-card';
 import TagPill from '../components/TagPill';
+import { SHOW_POST_TAGS } from '../lib/tag-display';
 import Hero from '../components/Hero';
 import GlassLight from '../components/GlassLight';
 import PinnedBadge from '../components/PinnedBadge';
@@ -85,7 +86,7 @@ export default async function HomePage() {
                               month: 'short',
                             })}
                           </div>
-                          {post.tags && post.tags.length > 0 && (
+                          {SHOW_POST_TAGS && post.tags && post.tags.length > 0 && (
                             <div className="hidden md:flex gap-1">
                               {post.tags.map(tag => (
                                 <TagPill linked={false} tag={tag} key={tag.slug.current} />
