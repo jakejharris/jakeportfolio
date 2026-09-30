@@ -3,7 +3,6 @@ import LinkLedger from '../../components/LinkLedger';
 import LengthStory from './LengthStory';
 import { PROFILE_LINKS } from '../../lib/profiles';
 import type { Metadata } from 'next';
-import AboutLinks from './AboutLinks';
 import { ABOUT_URL, PERSON_DESCRIPTION, PERSON_ID, SHARE_IMAGE, WEBSITE_ID, jsonLd } from '../../lib/entity';
 import '../../css/animations.css';
 import '../../css/hero.css';
@@ -68,8 +67,6 @@ export default function AboutPage() {
             <div className="page-enter-2">
                 <LengthStory />
             </div>
-
-            <AboutLinks />
 
             <section className="page-enter-3 about-elsewhere" aria-labelledby="about-elsewhere-title">
                 <h2 id="about-elsewhere-title" className="section-kicker">Elsewhere</h2>
