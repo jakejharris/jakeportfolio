@@ -1,0 +1,33 @@
+{
+  "commit": "d62319334312f33c4a5bf4b338885f012139b746",
+  "results_path": "release/results-tf-glm-tp3.json",
+  "source_sha256": "917196d3b8180a6d8ac365569d14cbf8ce7cc1b9f076dab4e8dea58d41bd2b40",
+  "copy_source": {
+    "path": "README.md",
+    "sha256": "49372566223af0b02b024be7968335219f0612d4d328cc88c256df8ba7e833b6"
+  },
+  "site_v2": {
+    "exactness_claim": "Output byte-identical to serial decoding at TP=3 on its own 8-prompt greedy check, with speculative decoding on",
+    "comparison_claim": "Code and structured are above the reference line on every repeat; prose is below.",
+    "comparison": {
+      "same_conditions": false,
+      "source": "https://github.com/mmastrac/glm-5.3-flash-4x-gx10/blob/5d3cca861e715860bd1f841a1f25f74320636b18/experimental/tp3/README.md",
+      "line_source": "https://github.com/mmastrac/glm-5.3-flash-4x-gx10/blob/5d3cca861e715860bd1f841a1f25f74320636b18/README.md",
+      "engine_weights": "TensorFold uses Vontra's MLX affine weights; the published reference uses NVIDIA's NVFP4 checkpoint. The engines and weight formats differ.",
+      "topology": "This recipe uses Sparks cabled as a triangle."
+    },
+    "limitations": [
+      "No swapcheck receipt for this configuration.",
+      "A complete clean-room install on fresh hardware is still pending.",
+      "Use only documented draft-policy values; the parser accepts some invalid values.",
+      "Weights outside the mounted data directory cannot be used by the split script.",
+      "The test of the unquantized drafter does not establish that it drafted.",
+      "An identical resend misses the prompt cache and pays full prefill again; an appended turn reuses cached prompt tokens."
+    ],
+    "license": {
+      "notice": "The default DFlash2 drafter is non-commercial (CC BY-NC-ND 4.0). No mode is cleared for commercial use.",
+      "source": "https://huggingface.co/incoai/GLM-5.3-Flash-DFlash2/blob/bf582e4eacc1810f76656d1811693ff6c6737d2a/README.md"
+    },
+    "results_path": "release/results-tf-glm-tp3.json"
+  }
+}

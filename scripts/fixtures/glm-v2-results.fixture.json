@@ -1,0 +1,165 @@
+{
+  "schema": "jspark3-results/1",
+  "state": "fixture",
+  "fixture": true,
+  "tag": "v2.0.0",
+  "version": "v2.0",
+  "frozen_at": null,
+  "release_date": null,
+  "_note": "FIXTURE ONLY. Every measurement below is invented. No benchmark was run.",
+  "tf": {
+    "identity": {
+      "engine_repo": "taussoe/TensorFold",
+      "weights": "Vontra/GLM-5.3-Flash-MLX-4bit-MTP@76add2a341a1cd90ad0e86bb69839ea9c35827c6",
+      "drafter": "incoai/GLM-5.3-Flash-DFlash2@bf582e4eacc1810f76656d1811693ff6c6737d2a"
+    },
+    "exact": {},
+    "rows": {
+      "rigmark_code": {
+        "median": 11.200,
+        "worst": 11.100,
+        "values": [
+          11.100,
+          11.200,
+          11.300
+        ],
+        "n": 3,
+        "unit": "tok/s",
+        "class": "measured",
+        "instrument": "FIXTURE ONLY: RigMark, single stream. Invented layout data.",
+        "vs_line": "above",
+        "vs_line_pct": 5.500,
+        "vs_upstream_tp3": "above",
+        "evidence": [
+          "release/receipts/fixture.json"
+        ],
+        "display": {
+          "median": "11.2",
+          "worst": "11.1",
+          "values": [
+            "11.1",
+            "11.2",
+            "11.3"
+          ],
+          "vs_line_pct": "+5.5%"
+        }
+      },
+      "rigmark_prose": {
+        "median": 8.200,
+        "worst": 8.100,
+        "values": [
+          8.100,
+          8.200,
+          8.300
+        ],
+        "n": 3,
+        "unit": "tok/s",
+        "class": "measured",
+        "instrument": "FIXTURE ONLY: RigMark, single stream. Invented layout data.",
+        "vs_line": "below",
+        "vs_line_pct": -2.500,
+        "vs_upstream_tp3": "above",
+        "evidence": [
+          "release/receipts/fixture.json"
+        ],
+        "display": {
+          "median": "8.2",
+          "worst": "8.1",
+          "values": [
+            "8.1",
+            "8.2",
+            "8.3"
+          ],
+          "vs_line_pct": "-2.5%"
+        }
+      },
+      "rigmark_structured": {
+        "median": 12.200,
+        "worst": 12.100,
+        "values": [
+          12.100,
+          12.200,
+          12.300
+        ],
+        "n": 3,
+        "unit": "tok/s",
+        "class": "measured",
+        "instrument": "FIXTURE ONLY: RigMark, single stream. Invented layout data.",
+        "vs_line": "above",
+        "vs_line_pct": 3.300,
+        "vs_upstream_tp3": "above",
+        "evidence": [
+          "release/receipts/fixture.json"
+        ],
+        "display": {
+          "median": "12.2",
+          "worst": "12.1",
+          "values": [
+            "12.1",
+            "12.2",
+            "12.3"
+          ],
+          "vs_line_pct": "+3.3%"
+        }
+      }
+    },
+    "reference": {
+      "line": {
+        "class": "derived-midpoint",
+        "rigmark_code": 10.000,
+        "rigmark_prose": 10.000,
+        "rigmark_structured": 11.000,
+        "display": {
+          "rigmark_code": "10.0",
+          "rigmark_prose": "10.0",
+          "rigmark_structured": "11.0"
+        },
+        "conditions": "These are published figures, measured on a switched 200G fabric; this is not a matched-conditions comparison."
+      },
+      "upstream_tp3_set1": {
+        "class": "author-reported",
+        "rigmark_code": 7.100,
+        "rigmark_prose": 7.100,
+        "rigmark_structured": 7.100,
+        "display": {
+          "rigmark_code": "7.1",
+          "rigmark_prose": "7.1",
+          "rigmark_structured": "7.1"
+        },
+        "conditions": "These are published figures, measured on a switched 200G fabric; this is not a matched-conditions comparison."
+      },
+      "upstream_tp3_set2": {
+        "class": "author-reported",
+        "rigmark_code": 7.200,
+        "rigmark_prose": 7.200,
+        "rigmark_structured": 7.200,
+        "display": {
+          "rigmark_code": "7.2",
+          "rigmark_prose": "7.2",
+          "rigmark_structured": "7.2"
+        },
+        "conditions": "These are published figures, measured on a switched 200G fabric; this is not a matched-conditions comparison."
+      }
+    },
+    "quality": {}
+  },
+  "site_v2": {
+    "exactness_claim": null,
+    "comparison_claim": null,
+    "above_line_rows": null,
+    "total_rows": null,
+    "comparison": {
+      "same_conditions": false,
+      "source": "https://github.com/mmastrac/glm-5.3-flash-4x-gx10/blob/5d3cca861e715860bd1f841a1f25f74320636b18/experimental/tp3/README.md",
+      "line_source": "https://github.com/mmastrac/glm-5.3-flash-4x-gx10/blob/5d3cca861e715860bd1f841a1f25f74320636b18/README.md",
+      "engine_weights": "TensorFold uses Vontra's MLX affine weights; the published reference uses NVIDIA's NVFP4 checkpoint. The engines and weight formats differ.",
+      "topology": "This recipe uses Sparks cabled as a triangle."
+    },
+    "limitations": [],
+    "license": {
+      "notice": "The default DFlash2 drafter is non-commercial (CC BY-NC-ND 4.0). No mode is cleared for commercial use.",
+      "source": "https://huggingface.co/incoai/GLM-5.3-Flash-DFlash2/blob/bf582e4eacc1810f76656d1811693ff6c6737d2a/README.md"
+    },
+    "results_path": null
+  }
+}

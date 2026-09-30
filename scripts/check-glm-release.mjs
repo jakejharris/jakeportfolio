@@ -11,6 +11,7 @@
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
+import { spawnSync } from 'node:child_process';
 
 const REPO = 'https://github.com/jakejharris/jspark3';
 /** The five cells the page shows, in page order. Every set uses the same ids. */
@@ -368,6 +369,12 @@ async function check() {
 }
 
 try {
+  // The default ship gate covers the current GLM page as well as its preserved history.
+  // Explicit paths still validate a historical snapshot independently.
+  if (!process.argv.slice(2).some(arg => !arg.startsWith('--'))) {
+    const current = spawnSync('python3', ['scripts/glm_v2.py', '--check', ...(process.argv.includes('--preview') ? ['--preview'] : [])], { encoding: 'utf8' });
+    assert.equal(current.status, 0, current.stderr.trim() || 'current release validation failed');
+  }
   console.log(JSON.stringify(await check()));
 } catch (error) {
   // Newer Node versions append the compared values to an assertion's message; the first line is the reason.
