@@ -3,31 +3,15 @@
 import dynamic from 'next/dynamic';
 import type { ComponentType } from 'react';
 
+// The compression figures render on the server at their final size, so the
+// post does not shift when their code arrives.
 const componentRegistry: Record<string, ComponentType> = {
-  HeroCompression: dynamic(
-    () => import('./compression-intelligence/HeroCompression'),
-    { ssr: false }
-  ),
-  CompressionPyramid: dynamic(
-    () => import('./compression-intelligence/CompressionPyramid'),
-    { ssr: false }
-  ),
-  ScalingTable: dynamic(
-    () => import('./compression-intelligence/ScalingTable'),
-    { ssr: false }
-  ),
-  TokenCompression: dynamic(
-    () => import('./compression-intelligence/TokenCompression'),
-    { ssr: false }
-  ),
-  AgentHierarchy: dynamic(
-    () => import('./compression-intelligence/AgentHierarchy'),
-    { ssr: false }
-  ),
-  LossyDrift: dynamic(
-    () => import('./compression-intelligence/LossyDrift'),
-    { ssr: false }
-  ),
+  HeroCompression: dynamic(() => import('./compression-intelligence/HeroCompression')),
+  CompressionPyramid: dynamic(() => import('./compression-intelligence/CompressionPyramid')),
+  ScalingTable: dynamic(() => import('./compression-intelligence/ScalingTable')),
+  TokenCompression: dynamic(() => import('./compression-intelligence/TokenCompression')),
+  AgentHierarchy: dynamic(() => import('./compression-intelligence/AgentHierarchy')),
+  LossyDrift: dynamic(() => import('./compression-intelligence/LossyDrift')),
   SymphonyTimeline: dynamic(
     () => import('./symphony-anatomy/SymphonyTimeline'),
     { ssr: false }

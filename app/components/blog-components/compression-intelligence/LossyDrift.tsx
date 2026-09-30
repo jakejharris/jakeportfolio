@@ -1,505 +1,281 @@
 'use client';
 
-// Visualizes "Lossy drift" from "The Hard Problems." Signal particles (blue)
-// and noise particles (red/orange) flow left-to-right through eight
-// sequential compression filters. At each filter, ~5% of remaining noise is
-// caught and dissolves (red sparks), while signal passes through unimpeded.
-// After all eight layers, 66.34% of the original stream survives as pure
-// signal. Hover over filter barriers for real-time purge statistics.
+// "If each pass preserves 95% of reasoning-relevant information, eight
+// layers retain about 66% of the original signal. That sounds bad until you
+// realize: the 34% you lost was the noise." Two runs of eight passes over the
+// same hundred cells, 66 of signal and 34 of noise, each keeping 95% a pass.
+// With the same prompt at every depth, what goes is chance: a third of the
+// signal with it. With layer-aware prompts, only the noise goes. Same ratio,
+// different instructions.
 
-import { useEffect, useRef, useState, useCallback } from 'react';
-import { useTheme } from 'next-themes';
-import { getCanvasTheme } from './theme-colors';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
-// ─── Configuration & Math ─────────────────────────────────────────────────
-const MAX_PARTICLES = 350;
-const STAGE_PERCENTAGES = [100, 95.0, 90.3, 85.7, 81.5, 77.4, 73.5, 69.8, 66.3];
-const FILTER_POSITIONS = [0.15, 0.25, 0.35, 0.45, 0.55, 0.65, 0.75, 0.85];
+import { rgba, useCanvasColors } from '../canvas-theme';
+import {
+  Choice,
+  DIM,
+  FAINT,
+  Figure,
+  Replay,
+  useAnimator,
+  useBox,
+  useFontsReady,
+  useReducedMotion,
+  useSeen,
+} from './figure';
+import {
+  DRIFT_CELLS,
+  DRIFT_KEPT,
+  DRIFT_NOISE,
+  PASSES,
+  driftCells,
+  type DriftCell,
+  type DriftMode,
+} from './figures';
+import { clamp01, easeOut, monoFamily, prepare } from './lattice';
 
-// How much of the original 100% is lost at each specific filter (totaling ~33.66%)
-const STAGE_DROPS = [5.0, 4.75, 4.51, 4.29, 4.07, 3.87, 3.68, 3.49];
-const TOTAL_NOISE = 33.66; // 100 - 66.34
+const MS_PER_PASS = 520;
+const COLS = 10;
+const GAP = 3;
+const SIGNAL = DRIFT_CELLS - DRIFT_NOISE;
 
-type ParticleType = 'signal' | 'noise';
+const PANELS: Array<{ mode: DriftMode; title: string; short: string }> = [
+  { mode: 'same', title: 'Same prompt at every depth', short: 'Same prompt' },
+  { mode: 'aware', title: 'Layer-aware prompts', short: 'Layer-aware' },
+];
 
-interface Particle {
-  id: number;
-  type: ParticleType;
-  x: number;
-  y: number;
-  vx: number;
-  vy: number;
-  baseY: number;
-  targetY: number;
-  radius: number;
-  phase: number;
-  jitter: number;
-  deathFilter: number; // -1 if signal, 0-7 if noise
-  history: { x: number; y: number }[];
-  active: boolean;
+const PASS_OPTIONS = Array.from({ length: PASSES + 1 }, (_, pass) => ({
+  value: String(pass),
+  label: String(pass),
+}));
+
+interface Layout {
+  width: number;
+  height: number;
+  wide: boolean;
+  pitch: number;
+  grids: Array<{ x: number; y: number; titleX: number }>;
+  titleY: number;
+  statsY: number;
+  font: number;
 }
 
-interface Spark {
-  x: number;
-  y: number;
-  vx: number;
-  vy: number;
-  life: number;
-  maxLife: number;
-  rgb: string;
-}
-
-interface FilterStats {
-  purgedCount: number;
-  pulseTime: number;
-}
-
-// ─── Helpers ──────────────────────────────────────────────────────────────
-
-function getDeathFilter(): number {
-  let r = Math.random() * TOTAL_NOISE;
-  for (let i = 0; i < 8; i++) {
-    if (r < STAGE_DROPS[i]) return i;
-    r -= STAGE_DROPS[i];
-  }
-  return 7;
-}
-
-// ─── Component ──────────────────────────────────────────────────────────────
-export default function LossyDrift() {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const animFrameRef = useRef<number>(0);
-
-  const particlesRef = useRef<Particle[]>([]);
-  const sparksRef = useRef<Spark[]>([]);
-  const filterStatsRef = useRef<FilterStats[]>(
-    Array(8).fill(null).map(() => ({ purgedCount: 0, pulseTime: 0 }))
+function layoutFor(width: number, height: number): Layout {
+  const wide = width >= 480;
+  const font = wide ? 11 : 10;
+  const titleY = 12;
+  const gridTop = wide ? 30 : 26;
+  const statsRoom = wide ? 44 : 40;
+  const panelW = (width - (wide ? 24 : 12) * 3) / 2;
+  const pitch = Math.max(
+    6,
+    Math.min(
+      wide ? 15 : 13,
+      Math.floor(panelW / COLS),
+      Math.floor((height - gridTop - statsRoom) / COLS)
+    )
   );
-  const particleIdCounter = useRef(0);
+  const gridW = COLS * pitch - GAP;
+  const grids = [0, 1].map((i) => {
+    const panelX = (wide ? 24 : 12) * (i + 1) + panelW * i;
+    const x = Math.round(panelX + (panelW - gridW) / 2);
+    return { x, y: gridTop, titleX: x };
+  });
+  return {
+    width,
+    height,
+    wide,
+    pitch,
+    grids,
+    titleY,
+    statsY: gridTop + COLS * pitch + 6,
+    font,
+  };
+}
 
-  const mouseRef = useRef({ x: -1000, y: -1000, activeFilter: -1 });
-  const visibleRef = useRef(true);
-  const dimsRef = useRef({ w: 0, h: 0 });
-  const timeRef = useRef(0);
-  const [noMotion, setNoMotion] = useState(false);
+/** Cells of a pass go one after another, not all in one frame. */
+const stagger = (index: number) => (((index * 37) % 23) / 23) * 0.4;
 
-  const { resolvedTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => { setMounted(true); }, []);
-  const isDark = mounted ? resolvedTheme === 'dark' : true;
-  const theme = getCanvasTheme(isDark);
+function counts(cells: DriftCell[], pass: number) {
+  const alive = cells.filter((cell) => cell.dropped === 0 || cell.dropped > pass);
+  const signal = alive.filter((cell) => !cell.noise).length;
+  return { alive: alive.length, signal, noise: alive.length - signal };
+}
 
-  // --- Spawner ---
-  const spawnParticle = useCallback((w: number, h: number, startX: number = 0) => {
-    const isNoise = Math.random() < (TOTAL_NOISE / 100);
-    const type: ParticleType = isNoise ? 'noise' : 'signal';
-    const baseY = h * 0.50 + (Math.random() - 0.5) * (h * 0.35);
+export default function LossyDrift() {
+  const colors = useCanvasColors();
+  const reduced = useReducedMotion();
+  const fontsReady = useFontsReady();
+  const figureRef = useRef<HTMLElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const metaRef = useRef<HTMLSpanElement>(null);
+  const layoutRef = useRef<Layout | null>(null);
+  const box = useBox(canvasRef);
+  const seen = useSeen(figureRef, 0.5);
+  const [pass, setPass] = useState(0);
+  const passRef = useRef(0);
 
-    particlesRef.current.push({
-      id: particleIdCounter.current++,
-      type,
-      x: startX,
-      y: baseY,
-      vx: w * 0.0012 + Math.random() * (w * 0.0005),
-      vy: 0,
-      baseY,
-      targetY: h * 0.50,
-      radius: type === 'signal' ? 2.5 + Math.random() * 1.0 : 1.5 + Math.random() * 1.5,
-      phase: Math.random() * Math.PI * 2,
-      jitter: type === 'noise' ? 3 + Math.random() * 3 : 0.5 + Math.random() * 1,
-      deathFilter: isNoise ? getDeathFilter() : -1,
-      history: [],
-      active: true,
-    });
-  }, []);
+  const runs = useMemo(() => PANELS.map((panel) => driftCells(panel.mode)), []);
 
-  // --- Main Render Loop ---
-  const draw = useCallback((ctx: CanvasRenderingContext2D, w: number, h: number, dt: number) => {
-    if (w === 0 || h === 0) return;
-    const time = timeRef.current;
-    const particles = particlesRef.current;
-    const sparks = sparksRef.current;
-    const filterStats = filterStatsRef.current;
-    const mouse = mouseRef.current;
-
-    // 1. Background
-    const bgGrad = ctx.createLinearGradient(0, 0, 0, h);
-    bgGrad.addColorStop(0, theme.bg);
-    bgGrad.addColorStop(0.5, theme.bgMid);
-    bgGrad.addColorStop(1, theme.bg);
-    ctx.fillStyle = bgGrad;
-    ctx.fillRect(0, 0, w, h);
-
-    // Subtle horizontal flow lines
-    ctx.save();
-    ctx.strokeStyle = isDark ? 'rgba(255, 255, 255, 0.02)' : 'rgba(0, 0, 0, 0.03)';
-    ctx.lineWidth = 1;
-    for (let y = h * 0.25; y <= h * 0.75; y += 20) {
-      ctx.beginPath();
-      ctx.moveTo(0, y);
-      ctx.lineTo(w, y);
-      ctx.stroke();
-    }
-    ctx.restore();
-
-    // 2. Filter Barriers & Percentages
-    let hoveredFilterIndex = -1;
-
-    for (let i = 0; i < 8; i++) {
-      const fx = FILTER_POSITIONS[i] * w;
-      const isHovered = Math.abs(mouse.x - fx) < w * 0.04 && mouse.y < h * 0.92;
-      if (isHovered) hoveredFilterIndex = i;
-
-      // Pulse effect from catching noise
-      const timeSincePulse = time - filterStats[i].pulseTime;
-      const pulseIntensity = Math.max(0, 1 - timeSincePulse * 2);
-
-      // Filter Line
-      ctx.save();
-      ctx.setLineDash([4, 6]);
-      ctx.lineDashOffset = -time * 10;
-      ctx.strokeStyle = `rgba(${theme.filterLine}, ${0.15 + pulseIntensity * 0.5})`;
-      ctx.lineWidth = isHovered ? 2 : 1;
-      ctx.beginPath();
-      ctx.moveTo(fx, h * 0.15);
-      ctx.lineTo(fx, h * 0.80);
-      ctx.stroke();
-      ctx.restore();
-
-      // Glow when active or hit
-      if (isHovered || pulseIntensity > 0) {
-        const glowGrad = ctx.createLinearGradient(fx - 15, 0, fx + 15, 0);
-        const glowAlpha = isHovered ? 0.1 : pulseIntensity * 0.2;
-        glowGrad.addColorStop(0, `rgba(${theme.filterLine}, 0)`);
-        glowGrad.addColorStop(0.5, `rgba(${theme.filterLine}, ${glowAlpha})`);
-        glowGrad.addColorStop(1, `rgba(${theme.filterLine}, 0)`);
-        ctx.fillStyle = glowGrad;
-        ctx.fillRect(fx - 15, h * 0.15, 30, h * 0.65);
-      }
-
-      // Filter label (top)
-      ctx.fillStyle = `rgba(${theme.labelDim}, 0.6)`;
-      ctx.font = `600 ${Math.max(10, w * 0.012)}px ui-monospace, monospace`;
-      ctx.textAlign = 'center';
-      ctx.fillText(`L${i + 1}`, fx, h * 0.12);
-
-      // Percentage label (bottom)
-      ctx.fillStyle = isHovered
-        ? `rgba(${theme.labelBright}, 1)`
-        : `rgba(${theme.blue}, ${0.4 + (i / 8) * 0.4})`;
-      ctx.fillText(`${STAGE_PERCENTAGES[i + 1]}%`, fx, h * 0.87);
-    }
-    mouse.activeFilter = hoveredFilterIndex;
-
-    // Start/End labels
-    ctx.font = `600 ${Math.max(10, w * 0.012)}px ui-monospace, monospace`;
-    ctx.fillStyle = `rgba(${theme.noise}, 0.7)`;
-    ctx.textAlign = 'left';
-    ctx.fillText('100% INPUT', w * 0.02, h * 0.87);
-
-    ctx.fillStyle = `rgba(${theme.signal}, 0.9)`;
-    ctx.textAlign = 'right';
-    ctx.fillText(`${STAGE_PERCENTAGES[8]}% SIGNAL`, w * 0.98, h * 0.87);
-
-    // 3. Update & Draw Particles
-    if (!noMotion) {
-      if (particles.length < MAX_PARTICLES && Math.random() < 0.7) {
-        spawnParticle(w, h, -20);
-      }
-
-      for (let i = particles.length - 1; i >= 0; i--) {
-        const p = particles[i];
-
-        p.history.push({ x: p.x, y: p.y });
-        if (p.history.length > (p.type === 'signal' ? 12 : 6)) p.history.shift();
-
-        // Check Filter Crossings
-        let crossedFilter = -1;
-        for (let j = 0; j < 8; j++) {
-          const fx = FILTER_POSITIONS[j] * w;
-          if (p.x < fx && p.x + p.vx >= fx) {
-            crossedFilter = j;
-            break;
-          }
-        }
-
-        if (crossedFilter !== -1) {
-          if (p.type === 'noise' && p.deathFilter === crossedFilter) {
-            // CAUGHT! Strip the noise
-            filterStats[crossedFilter].purgedCount++;
-            filterStats[crossedFilter].pulseTime = time;
-
-            // Shatter into sparks
-            for (let s = 0; s < 4; s++) {
-              sparks.push({
-                x: FILTER_POSITIONS[crossedFilter] * w,
-                y: p.y,
-                vx: (Math.random() - 0.5) * 60,
-                vy: (Math.random() * 40) + 20,
-                life: 0,
-                maxLife: 0.5 + Math.random() * 0.5,
-                rgb: theme.noise,
-              });
-            }
-            particles.splice(i, 1);
-            continue;
-          }
-        }
-
-        // Physics
-        p.x += p.vx;
-        const funnelStrength = p.type === 'signal' ? 0.02 * (p.x / w) : 0.005;
-        p.vy += (p.targetY - p.y) * funnelStrength;
-        p.vy *= 0.9;
-        const wobble = Math.sin(time * 5 + p.phase) * p.jitter;
-        p.y += p.vy + wobble;
-
-        // Cleanup off-screen
-        if (p.x > w + 20) particles.splice(i, 1);
-      }
-    }
-
-    // 4. Render Particles
-    ctx.save();
-    for (const p of particles) {
-      const isSignal = p.type === 'signal';
-      const alpha = isSignal ? 0.85 : 0.6;
-      const rgb = isSignal ? theme.signal : theme.noise;
-
-      // Trails
-      if (p.history.length > 1 && !noMotion) {
-        ctx.beginPath();
-        ctx.moveTo(p.history[0].x, p.history[0].y);
-        for (let i = 1; i < p.history.length; i++) {
-          ctx.lineTo(p.history[i].x, p.history[i].y);
-        }
-        const grad = ctx.createLinearGradient(p.history[0].x, p.history[0].y, p.x, p.y);
-        grad.addColorStop(0, `rgba(${rgb}, 0)`);
-        grad.addColorStop(1, `rgba(${rgb}, ${alpha * 0.5})`);
-        ctx.strokeStyle = grad;
-        ctx.lineWidth = p.radius * 1.5;
-        ctx.lineCap = 'round';
-        ctx.stroke();
-      }
-
-      // Core
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(${rgb}, ${alpha})`;
-      ctx.fill();
-
-      // Glow for signal
-      if (isSignal) {
-        const glow = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.radius * 3);
-        glow.addColorStop(0, `rgba(${rgb}, 0.3)`);
-        glow.addColorStop(1, `rgba(${rgb}, 0)`);
-        ctx.fillStyle = glow;
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.radius * 3, 0, Math.PI * 2);
-        ctx.fill();
-      }
-    }
-    ctx.restore();
-
-    // 5. Render Sparks (Caught Noise)
-    for (let i = sparks.length - 1; i >= 0; i--) {
-      const s = sparks[i];
-      s.life += dt;
-      if (s.life >= s.maxLife) {
-        sparks.splice(i, 1);
-        continue;
-      }
-
-      s.vy += 200 * dt;
-      s.x += s.vx * dt;
-      s.y += s.vy * dt;
-
-      const alpha = 1 - (s.life / s.maxLife);
-      ctx.fillStyle = `rgba(${s.rgb}, ${alpha})`;
-      ctx.beginPath();
-      ctx.arc(s.x, s.y, 1.5, 0, Math.PI * 2);
-      ctx.fill();
-
-      ctx.strokeStyle = `rgba(${s.rgb}, ${alpha * 0.5})`;
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.moveTo(s.x, s.y);
-      ctx.lineTo(s.x - s.vx * dt * 2, s.y - s.vy * dt * 2);
-      ctx.stroke();
-    }
-
-    // 6. Output Collector Glow (Right side)
-    const oCx = w;
-    const oCy = h * 0.50;
-    const oGr = 80 + 10 * Math.sin(time * 2);
-    const oGlow = ctx.createRadialGradient(oCx, oCy, 0, oCx, oCy, oGr);
-    oGlow.addColorStop(0, `rgba(${theme.signal}, 0.25)`);
-    oGlow.addColorStop(0.5, `rgba(${theme.signal}, 0.05)`);
-    oGlow.addColorStop(1, `rgba(${theme.signal}, 0)`);
-    ctx.fillStyle = oGlow;
-    ctx.beginPath();
-    ctx.arc(oCx, oCy, oGr, 0, Math.PI * 2);
-    ctx.fill();
-
-    // 7. Interactive HUD
-    if (hoveredFilterIndex !== -1) {
-      const stats = filterStats[hoveredFilterIndex];
-      const tWidth = 180;
-      const tHeight = 85;
-
-      let tx = mouse.x + 15;
-      let ty = mouse.y + 15;
-      if (tx + tWidth > w) tx = mouse.x - tWidth - 15;
-      if (ty + tHeight > h) ty = mouse.y - tHeight - 15;
-
-      ctx.save();
-
-      // Tooltip BG
-      ctx.fillStyle = isDark ? 'rgba(15, 15, 25, 0.95)' : 'rgba(240, 242, 248, 0.95)';
-      ctx.strokeStyle = `rgba(${theme.filterLine}, 0.5)`;
-      ctx.lineWidth = 1.5;
-      ctx.beginPath();
-      ctx.roundRect(tx, ty, tWidth, tHeight, 4);
-      ctx.fill();
-      ctx.stroke();
-
-      const pad = 12;
-      const lh = 20;
-
-      ctx.fillStyle = isDark ? '#FFFFFF' : '#1a1a2e';
-      ctx.font = 'bold 12px ui-sans-serif, system-ui, sans-serif';
-      ctx.textAlign = 'left';
-      ctx.textBaseline = 'top';
-      ctx.fillText(`Layer ${hoveredFilterIndex + 1} Filter`, tx + pad, ty + pad);
-
-      ctx.fillStyle = `rgba(${theme.signal}, 1)`;
-      ctx.font = '11px ui-monospace, SFMono-Regular, monospace';
-      ctx.fillText(`Passing : ${STAGE_PERCENTAGES[hoveredFilterIndex + 1]}%`, tx + pad, ty + pad + lh * 1.3);
-
-      ctx.fillStyle = `rgba(${theme.noise}, 1)`;
-      ctx.fillText(`Noise Purged: ${stats.purgedCount}`, tx + pad, ty + pad + lh * 2.3);
-
-      ctx.restore();
-    }
-
-  }, [noMotion, spawnParticle, theme, isDark]);
-
-  // --- Reduced motion detection ---
-  useEffect(() => {
-    const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
-    setNoMotion(mq.matches);
-    const handler = (e: MediaQueryListEvent) => setNoMotion(e.matches);
-    mq.addEventListener('change', handler);
-    return () => mq.removeEventListener('change', handler);
-  }, []);
-
-  // --- Visibility gating (skip draw when off-screen) ---
-  useEffect(() => {
-    const cvs = canvasRef.current;
-    if (!cvs) return;
-    const obs = new IntersectionObserver(
-      ([entry]) => { visibleRef.current = entry.isIntersecting; },
-      { threshold: 0.05 }
-    );
-    obs.observe(cvs);
-    return () => obs.disconnect();
-  }, []);
-
-  // --- Initialization & Loop ---
-  useEffect(() => {
-    const cvs = canvasRef.current;
-    if (!cvs) return;
-    const ctx = cvs.getContext('2d');
+  const draw = (value: number) => {
+    const canvas = canvasRef.current;
+    const layout = layoutRef.current;
+    if (!canvas || !layout || !colors.ready) return;
+    const ctx = prepare(canvas, layout.width, layout.height);
     if (!ctx) return;
 
-    const resize = () => {
-      const rect = cvs.getBoundingClientRect();
-      const { w: prevW, h: prevH } = dimsRef.current;
-      if (prevW > 0 && Math.abs(rect.width - prevW) < 1 && Math.abs(rect.height - prevH) < 1) return;
-      const dpr = window.devicePixelRatio || 1;
-      cvs.width = rect.width * dpr;
-      cvs.height = rect.height * dpr;
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      dimsRef.current = { w: rect.width, h: rect.height };
+    const { fg, accent, isDark } = colors;
+    const { pitch } = layout;
+    const size = pitch - GAP;
+    const signalInk = rgba(accent, 1);
+    const noiseInk = rgba(fg, isDark ? 0.34 : 0.3);
+    const family = monoFamily(canvas);
+    const reached = Math.floor(value + 1e-6);
 
-      // Pre-fill particles
-      particlesRef.current = [];
-      filterStatsRef.current = Array(8).fill(null).map(() => ({ purgedCount: 0, pulseTime: 0 }));
-      particleIdCounter.current = 0;
-      for (let i = 0; i < MAX_PARTICLES * 0.7; i++) {
-        spawnParticle(rect.width, rect.height, Math.random() * rect.width);
-      }
-    };
+    runs.forEach((cells, i) => {
+      const grid = layout.grids[i];
 
-    resize();
-    window.addEventListener('resize', resize);
-
-    const handleMouseMove = (e: MouseEvent) => {
-      const rect = cvs.getBoundingClientRect();
-      mouseRef.current.x = e.clientX - rect.left;
-      mouseRef.current.y = e.clientY - rect.top;
-    };
-    const handleMouseLeave = () => {
-      mouseRef.current.x = -1000;
-      mouseRef.current.y = -1000;
-    };
-    if (dimsRef.current.w >= 768) {
-      cvs.addEventListener('mousemove', handleMouseMove);
-      cvs.addEventListener('mouseleave', handleMouseLeave);
-    }
-
-    let lastTime = performance.now();
-
-    const animate = (now: number) => {
-      const dt = Math.min((now - lastTime) / 1000, 0.05);
-      lastTime = now;
-      timeRef.current += dt;
-
-      if (visibleRef.current) {
-        if (mouseRef.current.activeFilter !== -1) {
-          cvs.style.cursor = 'crosshair';
-        } else {
-          cvs.style.cursor = 'default';
+      cells.forEach((cell, index) => {
+        const x = grid.x + (index % COLS) * pitch;
+        const y = grid.y + Math.floor(index / COLS) * pitch;
+        const gone =
+          cell.dropped === 0
+            ? 0
+            : easeOut(clamp01((value - (cell.dropped - 1) - stagger(index)) / 0.6));
+        const ink = cell.noise ? noiseInk : signalInk;
+        if (gone < 1) {
+          ctx.globalAlpha = 1 - gone;
+          ctx.fillStyle = ink;
+          ctx.fillRect(x, y, size, size);
         }
+        if (gone > 0) {
+          // What a pass dropped stays as an outline, so the loss can be read.
+          ctx.globalAlpha = gone * (cell.noise ? 0.9 : 0.75);
+          ctx.strokeStyle = ink;
+          ctx.lineWidth = 1;
+          ctx.strokeRect(x + 0.5, y + 0.5, size - 1, size - 1);
+        }
+      });
 
-        draw(ctx, dimsRef.current.w, dimsRef.current.h, dt);
-      }
-      animFrameRef.current = requestAnimationFrame(animate);
-    };
+      // Title and running counts.
+      ctx.globalAlpha = 1;
+      ctx.font = `${layout.font}px ${family}`;
+      ctx.textBaseline = 'middle';
+      ctx.textAlign = 'left';
+      ctx.fillStyle = rgba(fg, 0.85);
+      const panel = PANELS[i];
+      ctx.fillText(layout.wide ? panel.title : panel.short, grid.titleX, layout.titleY);
 
-    animFrameRef.current = requestAnimationFrame(animate);
+      const now = counts(cells, reached);
+      const lead = layout.font + 5;
+      const line = (label: string, count: number, total: number, y: number, strong: boolean) => {
+        ctx.fillStyle = rgba(fg, 0.5);
+        ctx.fillText(label, grid.x, y);
+        const labelWidth = ctx.measureText(label).width;
+        ctx.fillStyle = strong ? rgba(accent, 1) : rgba(fg, 0.85);
+        ctx.fillText(`${count}`, grid.x + labelWidth, y);
+        const countWidth = ctx.measureText(`${count}`).width;
+        ctx.fillStyle = rgba(fg, 0.5);
+        ctx.fillText(` of ${total}`, grid.x + labelWidth + countWidth, y);
+      };
+      line(layout.wide ? 'signal kept ' : 'signal ', now.signal, SIGNAL, layout.statsY + 6, true);
+      line(
+        layout.wide ? 'noise kept ' : 'noise ',
+        now.noise,
+        DRIFT_NOISE,
+        layout.statsY + 6 + lead,
+        false
+      );
+    });
 
-    return () => {
-      window.removeEventListener('resize', resize);
-      cvs.removeEventListener('mousemove', handleMouseMove);
-      cvs.removeEventListener('mouseleave', handleMouseLeave);
-      if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
-    };
-  }, [noMotion, draw, spawnParticle]);
+    if (metaRef.current) {
+      metaRef.current.textContent = `${DRIFT_KEPT[Math.min(PASSES, reached)]} of ${DRIFT_CELLS} left`;
+    }
+    if (reached !== passRef.current) {
+      passRef.current = reached;
+      setPass(reached);
+    }
+  };
+
+  const animator = useAnimator(draw, MS_PER_PASS);
+
+  useEffect(() => {
+    if (!box) return;
+    layoutRef.current = layoutFor(box.width, box.height);
+    animator.redraw();
+  }, [animator, box, colors, fontsReady]);
+
+  useEffect(() => {
+    if (reduced) {
+      animator.to(PASSES, true);
+      return;
+    }
+    if (!seen) return;
+    const timer = window.setTimeout(() => animator.to(PASSES), 350);
+    return () => window.clearTimeout(timer);
+  }, [animator, reduced, seen]);
 
   return (
-    <div className="w-full flex justify-center items-center">
-      <div className="w-full max-w-5xl">
-        <div
-          ref={containerRef}
-          className={`relative rounded-xl overflow-hidden border group ${
-            isDark
-              ? 'border-white/10'
-              : 'border-black/10'
-          }`}
-        >
-          <canvas
-            ref={canvasRef}
-            className="w-full h-[320px] sm:h-[400px] md:h-[480px] outline-none touch-pan-y"
-            aria-label="Interactive simulation showing red noise particles being filtered out of a blue signal stream across 8 sequential layers. Hover over filter barriers for real-time purge statistics."
-            role="img"
-          />
-          <div className={`absolute inset-0 pointer-events-none rounded-xl ring-1 ring-inset ${
-            isDark ? 'ring-white/10' : 'ring-black/5'
-          }`} />
-        </div>
-      </div>
+    <Figure
+      figureRef={figureRef}
+      label={`Two runs of eight compression passes over the same 100 cells, ${SIGNAL} of signal and ${DRIFT_NOISE} of noise. Each pass keeps 95%, so both end with 66 cells. With the same prompt at every depth, 44 of the 66 signal cells survive. With layer-aware prompts, all 66 survive and the 34 cells lost are all noise.`}
+      title="Eight passes, 95% kept each"
+      meta={
+        <span ref={metaRef}>
+          {DRIFT_CELLS} of {DRIFT_CELLS} left
+        </span>
+      }
+      footer={
+        <>
+          <span className="flex-1 basis-72" style={{ color: DIM }}>
+            Both keep 95% a pass and end with 66 cells. The same prompt everywhere loses a third of
+            the signal; layer-aware prompts lose only the noise.
+          </span>
+          <span className="flex w-full flex-wrap items-center justify-between gap-x-4 gap-y-2">
+            <span className="flex items-center gap-2 max-[479px]:w-full">
+              <span style={{ color: FAINT }}>Pass</span>
+              <Choice
+                label="Show the cells after this many passes"
+                options={PASS_OPTIONS}
+                fill
+                value={String(pass)}
+                onChange={(next) => animator.to(Number(next), reduced, 2)}
+              />
+            </span>
+            <Replay onClick={() => animator.run(0, PASSES)} />
+          </span>
+        </>
+      }
+    >
+      <canvas ref={canvasRef} aria-hidden="true" className="block h-[206px] w-full sm:h-[224px]" />
+      <Legend />
+    </Figure>
+  );
+}
+
+function Legend() {
+  const swatch = 'inline-block h-[9px] w-[9px] align-[-1px]';
+  return (
+    <div
+      aria-hidden="true"
+      className="flex flex-wrap gap-x-4 gap-y-1 px-3 pb-1 pt-1 text-[11px] sm:px-4"
+      style={{ color: FAINT }}
+    >
+      <span className="inline-flex items-center gap-1.5">
+        <span className={swatch} style={{ backgroundColor: 'var(--accent-color)' }} />
+        signal
+      </span>
+      <span className="inline-flex items-center gap-1.5">
+        <span
+          className={swatch}
+          style={{ backgroundColor: 'color-mix(in srgb, hsl(var(--foreground)) 32%, transparent)' }}
+        />
+        noise
+      </span>
+      <span className="inline-flex items-center gap-1.5">
+        <span className={swatch} style={{ outline: `1px solid ${FAINT}`, outlineOffset: '-1px' }} />
+        dropped
+      </span>
     </div>
   );
 }

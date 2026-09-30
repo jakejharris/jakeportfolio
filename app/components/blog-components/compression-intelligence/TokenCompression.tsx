@@ -1,660 +1,448 @@
 'use client';
 
-// Visualizes the graduated reading protocol described in "The Hard Problems"
-// and the agent hierarchy section. A grid of ~600 blocks represents 15,000
-// tokens of raw file content. Three compression phases play in sequence —
-// `tree` (15k→4k), `rg` (4k→1.5k), `sed -n` (1.5k→670) — eliminating
-// blocks from the edges inward until only a small surviving cluster remains.
-// This is the article's concrete example of inference-time compression:
-// "A graduated reading protocol uses about 670 tokens where reading all
-// relevant files would cost 15,000+. That's 95% savings, and it's not a
-// trick. It's compression."
+// "A graduated reading protocol (tree → rg → sed -n) uses about 670 tokens
+// where reading all relevant files would cost 15,000+." The relevant files
+// are drawn as strips of cells, one cell per 25 tokens, two lines of code
+// each. Reading every file lights all 600 of them. The protocol lights 27:
+// the map from tree, the five lines rg matches, and the lines sed prints
+// around the definition. Both reads fill a context bar underneath.
 
-import { useEffect, useRef, useState, useCallback } from 'react';
-import { useTheme } from 'next-themes';
-import { getCanvasTheme } from './theme-colors';
+import { useEffect, useRef, useState } from 'react';
 
-// --- Phase Configuration ---
-const PHASES = [
-  { label: 'tree', startCount: 15000, endCount: 4000, duration: 800, pause: 400 },
-  { label: 'rg', startCount: 4000, endCount: 1500, duration: 600, pause: 400 },
-  { label: 'sed -n', startCount: 1500, endCount: 670, duration: 500, pause: 0 },
-] as const;
+import { rgba, useCanvasColors } from '../canvas-theme';
+import {
+  ACCENT,
+  DIM,
+  FAINT,
+  Figure,
+  Replay,
+  useAnimator,
+  useBox,
+  useFontsReady,
+  useReducedMotion,
+  useSeen,
+} from './figure';
+import {
+  FULL_READ_TOKENS,
+  GRADUATED_TOKENS,
+  MATCHES,
+  REPO,
+  SED_LINES,
+  STEPS,
+  TOKENS_PER_READ_CELL,
+  cellOfLine,
+  savedShare,
+  type StepId,
+} from './figures';
+import { easeOut, lerp, monoFamily, prepare, span } from './lattice';
 
-const INITIAL_PAUSE = 500;
-const FINAL_SAVINGS_DELAY = 300;
-const MAX_DISPLAY_BLOCKS = 600;
-const BLOCK_GAP = 1;
-const BLOCK_MIN_SIZE = 3;
-const BLOCK_MAX_SIZE = 6;
+const STORY_MS = 7200;
+const CAT: [number, number] = [0.03, 0.3];
+const CLEAR: [number, number] = [0.33, 0.42];
+const PHASES: Record<StepId, [number, number]> = {
+  tree: [0.45, 0.55],
+  rg: [0.58, 0.7],
+  sed: [0.73, 0.9],
+};
 
-// Loop timing
-const LOOP_HOLD = 3000;
-const FADE_DURATION = 500;
-const FADE_IN_DURATION = 400;
+const TOTAL_CELLS = REPO.reduce((sum, file) => sum + file.cells, 0);
+const STEP_CELLS = STEPS.map((step) => step.cells);
+const GRADUATED_CELLS = STEP_CELLS.reduce((sum, cells) => sum + cells, 0);
+const SED_FILE = 0;
+const SED_CELLS: [number, number] = [cellOfLine(SED_LINES[0]), cellOfLine(SED_LINES[1])];
+const HITS = MATCHES.map(([file, line]) => ({ file, cell: cellOfLine(line) }));
 
-const MONOSPACE = 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace';
+const fmt = (tokens: number) => tokens.toLocaleString('en-US');
+const basename = (path: string) => path.slice(path.lastIndexOf('/') + 1);
 
-// --- Helpers ---
-function easeOutCubic(t: number): number {
-  return 1 - Math.pow(1 - t, 3);
-}
-
-function lerp(a: number, b: number, t: number): number {
-  return a + (b - a) * t;
-}
-
-function clamp(min: number, value: number, max: number): number {
-  return Math.max(min, Math.min(max, value));
-}
-
-// --- Types ---
-type AnimPhase =
-  | 'idle'
-  | 'initial-hold'
-  | 'phase-0'
-  | 'pause-0'
-  | 'phase-1'
-  | 'pause-1'
-  | 'phase-2'
-  | 'complete'
-  | 'fade-out'
-  | 'fade-in';
-
-interface Block {
-  col: number;
-  row: number;
-  initX: number;
-  initY: number;
+interface Strip {
   x: number;
   y: number;
-  targetX: number;
-  targetY: number;
-  initSize: number;
-  size: number;
-  opacity: number;
-  eliminatedInPhase: number; // 0, 1, 2, or -1 (survivor)
-  distFromCenter: number;
-  stagger: number; // 0..1 normalized stagger delay
-  alive: boolean;
+  name: string;
+  nameX: number;
+  nameY: number;
+  /** Where this file's cells start in the order `cat` reads them. */
+  offset: number;
+  cells: number;
 }
 
-// --- Block creation ---
-function createBlocks(width: number, height: number): Block[] {
-  const padding = { top: 52, bottom: 16, left: 20, right: 20 };
-  const usableW = width - padding.left - padding.right;
-  const usableH = height - padding.top - padding.bottom;
+interface Bar {
+  x: number;
+  y: number;
+  rows: number;
+  cols: number;
+  labelX: number;
+  labelY: number;
+  countX: number;
+  countY: number;
+  countAlign: CanvasTextAlign;
+}
 
-  const blockSize = clamp(BLOCK_MIN_SIZE, Math.floor(Math.min(usableW, usableH) / 28), BLOCK_MAX_SIZE);
-  const stride = blockSize + BLOCK_GAP;
+interface Layout {
+  width: number;
+  height: number;
+  wide: boolean;
+  pitch: number;
+  cell: number;
+  cols: number;
+  strips: Strip[];
+  bars: [Bar, Bar];
+  font: number;
+}
 
-  const cols = Math.floor(usableW / stride);
-  const rows = Math.floor(usableH / stride);
-  const totalSlots = cols * rows;
-  const blockCount = Math.min(totalSlots, MAX_DISPLAY_BLOCKS);
+const BAR_PITCH = 3;
 
-  const gridW = cols * stride - BLOCK_GAP;
-  const gridH = Math.ceil(blockCount / cols) * stride - BLOCK_GAP;
-  const offsetX = padding.left + (usableW - gridW) / 2;
-  const offsetY = padding.top + (usableH - gridH) / 2;
+function barShape(room: number) {
+  const cols = Math.floor((room + 1) / BAR_PITCH);
+  const rows = Math.ceil(TOTAL_CELLS / cols);
+  return { rows, cols: Math.ceil(TOTAL_CELLS / rows) };
+}
 
-  // Center of grid in grid-coordinate space
-  const actualRows = Math.ceil(blockCount / cols);
-  const centerCol = (cols - 1) / 2;
-  const centerRow = (actualRows - 1) / 2;
+function layoutFor(width: number, height: number): Layout {
+  // Wide figures set full paths and token counts beside the lattice:
+  // 168 + 299 + 100 px, and a margin each side.
+  const wide = width >= 592;
+  const cols = wide ? 50 : 40;
+  const nameW = wide ? 168 : 84;
+  const countW = wide ? 100 : 0;
+  // The smallest phones get a finer lattice, so the strips still fit.
+  const pitch = wide ? 6 : nameW + cols * 5 + 23 <= width ? 5 : 4;
+  const stripW = cols * pitch - 1;
+  const contentW = nameW + stripW + countW;
+  const left = Math.max(12, Math.round((width - contentW) / 2));
+  const stripX = left + nameW;
 
-  // Build blocks with distance from center
-  const blocks: Block[] = [];
-  for (let i = 0; i < blockCount; i++) {
-    const col = i % cols;
-    const row = Math.floor(i / cols);
-    const px = offsetX + col * stride + blockSize / 2;
-    const py = offsetY + row * stride + blockSize / 2;
-
-    const dc = Math.sqrt(
-      Math.pow((col - centerCol) / Math.max(centerCol, 1), 2) +
-      Math.pow((row - centerRow) / Math.max(centerRow, 1), 2)
-    );
-
-    blocks.push({
-      col, row,
-      initX: px, initY: py,
-      x: px, y: py,
-      targetX: offsetX + centerCol * stride + blockSize / 2,
-      targetY: offsetY + centerRow * stride + blockSize / 2,
-      initSize: blockSize,
-      size: blockSize,
-      opacity: 0.55 + Math.random() * 0.35,
-      eliminatedInPhase: -1, // assigned below
-      distFromCenter: dc,
-      stagger: 0,
-      alive: true,
+  const strips: Strip[] = [];
+  let y = wide ? 18 : 16;
+  let offset = 0;
+  for (const file of REPO) {
+    const rows = Math.ceil(file.cells / cols);
+    strips.push({
+      x: stripX,
+      y,
+      name: wide ? file.path : basename(file.path),
+      nameX: left,
+      nameY: y + (pitch - 1) / 2,
+      offset,
+      cells: file.cells,
     });
+    offset += file.cells;
+    y += rows * pitch + (wide ? 10 : 8);
   }
 
-  // Sort by distance (ascending — center first)
-  const sorted = [...blocks].sort((a, b) => a.distFromCenter - b.distFromCenter);
-
-  // Assign phases based on proportional token counts
-  const survivorCount = Math.max(1, Math.round(blockCount * (670 / 15000)));
-  const phase2Deaths = Math.round(blockCount * ((1500 - 670) / 15000));
-  const phase1Deaths = Math.round(blockCount * ((4000 - 1500) / 15000));
-
-  for (let i = 0; i < sorted.length; i++) {
-    if (i < survivorCount) {
-      sorted[i].eliminatedInPhase = -1; // survives
-    } else if (i < survivorCount + phase2Deaths) {
-      sorted[i].eliminatedInPhase = 2;
-    } else if (i < survivorCount + phase2Deaths + phase1Deaths) {
-      sorted[i].eliminatedInPhase = 1;
-    } else {
-      sorted[i].eliminatedInPhase = 0;
+  const shape = barShape(stripW);
+  const barH = shape.rows * BAR_PITCH - 1;
+  const bars = [0, 1].map((i): Bar => {
+    if (wide) {
+      const barY = y + 12 + i * (barH + 14);
+      return {
+        x: stripX,
+        y: barY,
+        ...shape,
+        labelX: left,
+        labelY: barY + barH / 2,
+        countX: stripX + stripW + 12,
+        countY: barY + barH / 2,
+        countAlign: 'left',
+      };
     }
-  }
+    const barY = y + 16 + i * (barH + 22);
+    return {
+      x: stripX,
+      y: barY,
+      ...shape,
+      labelX: left,
+      labelY: barY + barH / 2,
+      countX: stripX + stripW,
+      countY: barY - 8,
+      countAlign: 'right',
+    };
+  }) as [Bar, Bar];
 
-  // Compute stagger within each phase group (normalized 0..1, edge-first)
-  for (const phase of [0, 1, 2]) {
-    const group = blocks.filter((b) => b.eliminatedInPhase === phase);
-    if (group.length === 0) continue;
-    const maxDist = Math.max(...group.map((b) => b.distFromCenter));
-    const minDist = Math.min(...group.map((b) => b.distFromCenter));
-    const range = maxDist - minDist || 1;
-    for (const b of group) {
-      // Invert: farther blocks get lower stagger (start first)
-      b.stagger = 1 - (b.distFromCenter - minDist) / range;
-      // Add small random perturbation
-      b.stagger = clamp(0, b.stagger + (Math.random() - 0.5) * 0.15, 1);
-    }
-  }
-
-  return blocks;
+  return {
+    width,
+    height,
+    wide,
+    pitch,
+    cell: pitch - 1,
+    cols,
+    strips,
+    bars,
+    font: wide ? 11 : 10,
+  };
 }
 
-function resetBlocks(blocks: Block[]) {
-  for (const b of blocks) {
-    b.x = b.initX;
-    b.y = b.initY;
-    b.size = b.initSize;
-    b.opacity = 0.55 + Math.random() * 0.35;
-    b.alive = true;
-  }
+function cellIn(strip: Strip, index: number, layout: Layout) {
+  return {
+    x: strip.x + (index % layout.cols) * layout.pitch,
+    y: strip.y + Math.floor(index / layout.cols) * layout.pitch,
+  };
 }
 
-// --- Component ---
+/** Bars fill column by column, so they grow left to right. */
+function slotIn(bar: Bar, index: number) {
+  return {
+    x: bar.x + Math.floor(index / bar.rows) * BAR_PITCH,
+    y: bar.y + (index % bar.rows) * BAR_PITCH,
+  };
+}
+
+/** Which step of the protocol is playing at `value`, if any. */
+function stepAt(value: number): StepId | null {
+  for (const step of STEPS) {
+    const [start, end] = PHASES[step.id];
+    if (value >= start && value < end + 0.02) return step.id;
+  }
+  return null;
+}
+
 export default function TokenCompression() {
+  const colors = useCanvasColors();
+  const reduced = useReducedMotion();
+  const fontsReady = useFontsReady();
+  const figureRef = useRef<HTMLElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const blocksRef = useRef<Block[]>([]);
-  const animFrameRef = useRef<number>(0);
+  const stepRefs = useRef<Partial<Record<StepId, HTMLButtonElement | null>>>({});
+  const layoutRef = useRef<Layout | null>(null);
+  const box = useBox(canvasRef);
+  const seen = useSeen(figureRef, 0.5);
+  const [focus, setFocus] = useState<StepId | null>(null);
+  const focusRef = useRef<StepId | null>(null);
 
-  // Animation state
-  const phaseRef = useRef<AnimPhase>('idle');
-  const phaseStartRef = useRef(0);
-  const globalTimeRef = useRef(0);
-  const globalAlphaRef = useRef(1);
+  const markStep = (active: StepId | null, value: number) => {
+    for (const step of STEPS) {
+      const element = stepRefs.current[step.id];
+      if (!element) continue;
+      // A step is lit while it plays and once it has played.
+      const done = value >= PHASES[step.id][0];
+      element.dataset.state = active === step.id ? 'active' : done ? 'done' : 'waiting';
+    }
+  };
 
-  // Counter
-  const displayCountRef = useRef(15000);
-  const countFromRef = useRef(15000);
-  const countToRef = useRef(15000);
-  const countStartRef = useRef(0);
-  const countDurRef = useRef(800);
-
-  // Labels & final
-  const activeLabelIdx = useRef(-1);
-  const showSavingsRef = useRef(false);
-  const savingsTimeRef = useRef(0);
-
-  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
-  const [isVisible, setIsVisible] = useState(false);
-
-  const { resolvedTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => { setMounted(true); }, []);
-  const isDark = mounted ? resolvedTheme === 'dark' : true;
-  const theme = getCanvasTheme(isDark);
-
-  // --- Counter helper ---
-  const startCount = useCallback((from: number, to: number, dur: number) => {
-    countFromRef.current = from;
-    countToRef.current = to;
-    countStartRef.current = performance.now();
-    countDurRef.current = dur;
-  }, []);
-
-  // --- Phase transition logic ---
-  const advancePhase = useCallback(
-    (now: number) => {
-      const phase = phaseRef.current;
-      const elapsed = now - phaseStartRef.current;
-
-      if (phase === 'initial-hold' && elapsed >= INITIAL_PAUSE) {
-        phaseRef.current = 'phase-0';
-        phaseStartRef.current = now;
-        activeLabelIdx.current = 0;
-        startCount(15000, 4000, PHASES[0].duration);
-      } else if (phase === 'phase-0' && elapsed >= PHASES[0].duration) {
-        // Mark phase-0 blocks dead
-        for (const b of blocksRef.current) {
-          if (b.eliminatedInPhase === 0) b.alive = false;
-        }
-        phaseRef.current = 'pause-0';
-        phaseStartRef.current = now;
-      } else if (phase === 'pause-0' && elapsed >= PHASES[0].pause) {
-        phaseRef.current = 'phase-1';
-        phaseStartRef.current = now;
-        activeLabelIdx.current = 1;
-        startCount(4000, 1500, PHASES[1].duration);
-      } else if (phase === 'phase-1' && elapsed >= PHASES[1].duration) {
-        for (const b of blocksRef.current) {
-          if (b.eliminatedInPhase === 1) b.alive = false;
-        }
-        phaseRef.current = 'pause-1';
-        phaseStartRef.current = now;
-      } else if (phase === 'pause-1' && elapsed >= PHASES[1].pause) {
-        phaseRef.current = 'phase-2';
-        phaseStartRef.current = now;
-        activeLabelIdx.current = 2;
-        startCount(1500, 670, PHASES[2].duration);
-      } else if (phase === 'phase-2' && elapsed >= PHASES[2].duration) {
-        for (const b of blocksRef.current) {
-          if (b.eliminatedInPhase === 2) b.alive = false;
-        }
-        phaseRef.current = 'complete';
-        phaseStartRef.current = now;
-        // Schedule savings text
-        savingsTimeRef.current = now + FINAL_SAVINGS_DELAY;
-        showSavingsRef.current = false;
-      } else if (phase === 'complete') {
-        // Show savings text
-        if (!showSavingsRef.current && now >= savingsTimeRef.current) {
-          showSavingsRef.current = true;
-          savingsTimeRef.current = now; // reuse as appearance time for fade-in
-        }
-        // After savings shown + hold, start fade-out for loop
-        if (showSavingsRef.current) {
-          const sinceShown = now - savingsTimeRef.current;
-          if (sinceShown >= LOOP_HOLD) {
-            phaseRef.current = 'fade-out';
-            phaseStartRef.current = now;
-          }
-        }
-      } else if (phase === 'fade-out') {
-        globalAlphaRef.current = Math.max(0, 1 - elapsed / FADE_DURATION);
-        if (elapsed >= FADE_DURATION) {
-          // Reset everything for next loop
-          resetBlocks(blocksRef.current);
-          displayCountRef.current = 15000;
-          countFromRef.current = 15000;
-          countToRef.current = 15000;
-          countStartRef.current = now;
-          activeLabelIdx.current = -1;
-          showSavingsRef.current = false;
-          globalAlphaRef.current = 0;
-          phaseRef.current = 'fade-in';
-          phaseStartRef.current = now;
-        }
-      } else if (phase === 'fade-in') {
-        globalAlphaRef.current = Math.min(1, elapsed / FADE_IN_DURATION);
-        if (elapsed >= FADE_IN_DURATION) {
-          globalAlphaRef.current = 1;
-          phaseRef.current = 'initial-hold';
-          phaseStartRef.current = now;
-        }
-      }
-    },
-    [startCount]
-  );
-
-  // --- Draw ---
-  const draw = useCallback(
-    (ctx: CanvasRenderingContext2D, w: number, h: number, now: number) => {
-      const phase = phaseRef.current;
-      const phaseElapsed = now - phaseStartRef.current;
-
-      // Background gradient (always full alpha)
-      const bgGrad = ctx.createLinearGradient(0, 0, w, h);
-      bgGrad.addColorStop(0, theme.bg);
-      bgGrad.addColorStop(0.5, theme.bgMid);
-      bgGrad.addColorStop(1, theme.bg);
-      ctx.fillStyle = bgGrad;
-      ctx.fillRect(0, 0, w, h);
-
-      // Apply global alpha for fade transitions (after background)
-      ctx.globalAlpha = globalAlphaRef.current;
-
-      // --- Phase labels (top-left) ---
-      const labelFontSize = Math.max(10, w * 0.022);
-      ctx.font = `${labelFontSize}px ${MONOSPACE}`;
-      ctx.textAlign = 'left';
-      ctx.textBaseline = 'top';
-
-      let labelX = 16;
-      const labelY = 16;
-      for (let i = 0; i < PHASES.length; i++) {
-        if (i > 0) {
-          ctx.fillStyle = `rgba(${theme.labelDim}, 0.3)`;
-          ctx.fillText('>', labelX, labelY);
-          labelX += ctx.measureText('>').width + 8;
-        }
-
-        const isActive = i === activeLabelIdx.current;
-        const isPast = i < activeLabelIdx.current;
-
-        if (isActive) {
-          // Fade in over 150ms
-          const fadeT = clamp(0, phaseElapsed / 150, 1);
-          const alpha = 0.3 + fadeT * 0.55;
-          ctx.fillStyle = `rgba(${theme.labelMid}, ${alpha})`;
-        } else if (isPast) {
-          ctx.fillStyle = `rgba(${theme.labelMid}, 0.5)`;
-        } else {
-          ctx.fillStyle = `rgba(${theme.labelDim}, 0.3)`;
-        }
-
-        ctx.fillText(PHASES[i].label, labelX, labelY);
-        labelX += ctx.measureText(PHASES[i].label).width + 10;
-      }
-
-      // --- Counter (top-right) ---
-      const countElapsed = now - countStartRef.current;
-      const countProgress = clamp(0, countElapsed / countDurRef.current, 1);
-      const countEased = easeOutCubic(countProgress);
-      displayCountRef.current =
-        countFromRef.current + (countToRef.current - countFromRef.current) * countEased;
-
-      const counterFontSize = Math.max(14, w * 0.035);
-      ctx.font = `600 ${counterFontSize}px ${MONOSPACE}`;
-      ctx.textAlign = 'right';
-      ctx.textBaseline = 'top';
-      ctx.fillStyle = `rgba(${theme.labelBright}, 0.9)`;
-      const countStr = Math.round(displayCountRef.current).toLocaleString() + ' tokens';
-      ctx.fillText(countStr, w - 16, 14);
-
-      // --- "95% compression" text ---
-      if (showSavingsRef.current) {
-        const savingsAge = now - savingsTimeRef.current;
-        const savingsAlpha = clamp(0, savingsAge / 400, 1);
-        const savFontSize = Math.max(11, w * 0.024);
-        ctx.font = `500 ${savFontSize}px ${MONOSPACE}`;
-        ctx.textAlign = 'right';
-        ctx.textBaseline = 'top';
-        ctx.fillStyle = `rgba(${theme.blueDeep}, ${savingsAlpha * 0.95})`;
-        ctx.fillText('95% compression', w - 16, 18 + counterFontSize);
-      }
-
-      // --- Blocks ---
-      const blocks = blocksRef.current;
-
-      // Determine current phase index for elimination animation
-      let currentPhaseIdx = -1;
-      let phaseDur = 0;
-      if (phase === 'phase-0') { currentPhaseIdx = 0; phaseDur = PHASES[0].duration; }
-      else if (phase === 'phase-1') { currentPhaseIdx = 1; phaseDur = PHASES[1].duration; }
-      else if (phase === 'phase-2') { currentPhaseIdx = 2; phaseDur = PHASES[2].duration; }
-
-      // Compute survivor cluster center for glow
-      let scx = 0, scy = 0, sCount = 0;
-
-      for (const b of blocks) {
-        // Skip already dead blocks
-        if (!b.alive && b.eliminatedInPhase !== currentPhaseIdx) {
-          continue;
-        }
-
-        // Animate blocks being eliminated in current phase
-        if (b.eliminatedInPhase === currentPhaseIdx && currentPhaseIdx >= 0) {
-          const blockDelay = b.stagger * phaseDur * 0.4;
-          const blockElapsed = Math.max(0, phaseElapsed - blockDelay);
-          const blockDur = phaseDur - blockDelay;
-          const t = clamp(0, blockElapsed / blockDur, 1);
-          const e = easeOutCubic(t);
-
-          b.x = lerp(b.initX, b.targetX, e * 0.5);
-          b.y = lerp(b.initY, b.targetY, e * 0.5);
-          b.size = lerp(b.initSize, 0, e);
-          b.opacity = lerp(0.55 + 0.35 * b.stagger, 0, e);
-        }
-
-        // Skip invisible
-        if (b.opacity < 0.01 || b.size < 0.3) continue;
-
-        // Track survivor center
-        if (b.eliminatedInPhase === -1) {
-          scx += b.x;
-          scy += b.y;
-          sCount++;
-        }
-
-        // Color: survivors glow brighter, dying blocks dim
-        let r: number, g: number, bv: number;
-        if (b.eliminatedInPhase === -1) {
-          // Survivors: brighter blue, pulse in complete state
-          const pulse =
-            phase === 'complete'
-              ? 0.8 + 0.2 * Math.sin(globalTimeRef.current * 2.5 + b.stagger * Math.PI * 2)
-              : 0.85;
-          r = isDark ? Math.round(100 + pulse * 40) : Math.round(30 + pulse * 40);
-          g = isDark ? Math.round(160 + pulse * 40) : Math.round(100 + pulse * 40);
-          bv = isDark ? 255 : Math.round(200 + pulse * 20);
-        } else {
-          // Being eliminated: shift toward dim
-          r = isDark ? 70 : 100;
-          g = isDark ? 100 : 130;
-          bv = isDark ? 180 : 200;
-        }
-
-        ctx.fillStyle = `rgba(${r}, ${g}, ${bv}, ${b.opacity})`;
-        ctx.fillRect(
-          Math.round(b.x - b.size / 2),
-          Math.round(b.y - b.size / 2),
-          Math.round(b.size),
-          Math.round(b.size)
-        );
-      }
-
-      // --- Survivor glow (complete state) ---
-      if (phase === 'complete' && sCount > 0) {
-        const cx = scx / sCount;
-        const cy = scy / sCount;
-        const glowR = 35 + 8 * Math.sin(globalTimeRef.current * 1.5);
-        const glow = ctx.createRadialGradient(cx, cy, 0, cx, cy, glowR);
-        glow.addColorStop(0, `rgba(${theme.blue}, 0.18)`);
-        glow.addColorStop(0.5, `rgba(${theme.blue}, 0.06)`);
-        glow.addColorStop(1, `rgba(${theme.blue}, 0)`);
-        ctx.fillStyle = glow;
-        ctx.beginPath();
-        ctx.arc(cx, cy, glowR, 0, Math.PI * 2);
-        ctx.fill();
-      }
-
-      // Reset global alpha
-      ctx.globalAlpha = 1;
-    },
-    [isDark, theme]
-  );
-
-  // --- Draw static reduced-motion frame ---
-  const drawStatic = useCallback(
-    (ctx: CanvasRenderingContext2D, w: number, h: number) => {
-      // Background
-      const bgGrad = ctx.createLinearGradient(0, 0, w, h);
-      bgGrad.addColorStop(0, theme.bg);
-      bgGrad.addColorStop(0.5, theme.bgMid);
-      bgGrad.addColorStop(1, theme.bg);
-      ctx.fillStyle = bgGrad;
-      ctx.fillRect(0, 0, w, h);
-
-      const blocks = blocksRef.current;
-      const midX = w / 2;
-
-      // Left side: dense grid (before)
-      for (const b of blocks) {
-        // Shift blocks to left half
-        const shiftedX = b.initX * 0.45 + w * 0.02;
-        const shiftedY = b.initY;
-        ctx.fillStyle = isDark ? 'rgba(70, 100, 180, 0.5)' : 'rgba(80, 110, 190, 0.45)';
-        ctx.fillRect(
-          Math.round(shiftedX - b.initSize / 2),
-          Math.round(shiftedY - b.initSize / 2),
-          Math.round(b.initSize),
-          Math.round(b.initSize)
-        );
-      }
-
-      // Right side: only survivors
-      const survivors = blocks.filter((b) => b.eliminatedInPhase === -1);
-      // Cluster survivors in right half center
-      const rightCX = w * 0.75;
-      const rightCY = h * 0.5;
-      const spacing = Math.max(4, w * 0.012);
-      const survCols = Math.ceil(Math.sqrt(survivors.length));
-      for (let i = 0; i < survivors.length; i++) {
-        const col = i % survCols;
-        const row = Math.floor(i / survCols);
-        const sx = rightCX + (col - survCols / 2) * spacing;
-        const sy = rightCY + (row - Math.ceil(survivors.length / survCols) / 2) * spacing;
-        ctx.fillStyle = `rgba(${theme.blueDeep}, 0.85)`;
-        ctx.fillRect(
-          Math.round(sx - survivors[0].initSize / 2),
-          Math.round(sy - survivors[0].initSize / 2),
-          Math.round(survivors[0].initSize),
-          Math.round(survivors[0].initSize)
-        );
-      }
-
-      // Arrow
-      const arrowY = h / 2;
-      ctx.strokeStyle = `rgba(${theme.labelMid}, 0.4)`;
-      ctx.lineWidth = 1.5;
-      ctx.beginPath();
-      ctx.moveTo(midX - 30, arrowY);
-      ctx.lineTo(midX + 20, arrowY);
-      ctx.moveTo(midX + 12, arrowY - 6);
-      ctx.lineTo(midX + 20, arrowY);
-      ctx.lineTo(midX + 12, arrowY + 6);
-      ctx.stroke();
-
-      // Labels
-      const labelFont = Math.max(10, w * 0.022);
-      ctx.font = `${labelFont}px ${MONOSPACE}`;
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'bottom';
-
-      ctx.fillStyle = `rgba(${theme.labelBright}, 0.9)`;
-      ctx.fillText('15,000 tokens', w * 0.24, h - 14);
-      ctx.fillText('670 tokens', w * 0.75, h - 14);
-
-      // Phase labels
-      ctx.textBaseline = 'top';
-      ctx.fillStyle = `rgba(${theme.labelMid}, 0.5)`;
-      ctx.fillText('tree  >  rg  >  sed -n', midX, 16);
-
-      // 95% compression
-      ctx.fillStyle = `rgba(${theme.blueDeep}, 0.95)`;
-      ctx.font = `500 ${Math.max(12, w * 0.028)}px ${MONOSPACE}`;
-      ctx.fillText('95% compression', midX, 16 + labelFont + 6);
-    },
-    [isDark, theme]
-  );
-
-  // --- Prefers reduced motion ---
-  useEffect(() => {
-    const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
-    setPrefersReducedMotion(mq.matches);
-    const handler = (e: MediaQueryListEvent) => setPrefersReducedMotion(e.matches);
-    mq.addEventListener('change', handler);
-    return () => mq.removeEventListener('change', handler);
-  }, []);
-
-  // --- Intersection Observer (continuous — toggles visibility) ---
-  useEffect(() => {
-    const el = containerRef.current;
-    if (!el) return;
-
-    const observer = new IntersectionObserver(
-      ([entry]) => setIsVisible(entry.isIntersecting),
-      { threshold: 0.3 }
-    );
-
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, []);
-
-  // --- Canvas setup & animation loop ---
-  useEffect(() => {
+  const draw = (value: number) => {
     const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    const ctx = canvas.getContext('2d');
+    const layout = layoutRef.current;
+    if (!canvas || !layout || !colors.ready) return;
+    const ctx = prepare(canvas, layout.width, layout.height);
     if (!ctx) return;
 
-    const resize = () => {
-      const rect = canvas.getBoundingClientRect();
-      const dpr = window.devicePixelRatio || 1;
-      canvas.width = rect.width * dpr;
-      canvas.height = rect.height * dpr;
-      ctx.scale(dpr, dpr);
-      blocksRef.current = createBlocks(rect.width, rect.height);
-    };
+    const { fg, accent, isDark } = colors;
+    const { cell } = layout;
+    const selected = focusRef.current;
+    const dim = (step: StepId) => (selected && selected !== step ? 0.25 : 1);
 
-    resize();
-    window.addEventListener('resize', resize);
+    const catRead = Math.floor(span(value, ...CAT) * TOTAL_CELLS);
+    const cleared = easeOut(span(value, ...CLEAR));
+    const phase = (step: StepId) => span(value, ...PHASES[step]);
+    const tree = phase('tree');
+    const rg = phase('rg');
+    const sed = phase('sed');
 
-    if (prefersReducedMotion) {
-      const rect = canvas.getBoundingClientRect();
-      drawStatic(ctx, rect.width, rect.height);
-    } else if (isVisible) {
-      // Reset state for fresh play
-      resetBlocks(blocksRef.current);
-      phaseRef.current = 'initial-hold';
-      phaseStartRef.current = performance.now();
-      globalTimeRef.current = 0;
-      globalAlphaRef.current = 1;
-      displayCountRef.current = 15000;
-      countFromRef.current = 15000;
-      countToRef.current = 15000;
-      countStartRef.current = performance.now();
-      activeLabelIdx.current = -1;
-      showSavingsRef.current = false;
+    const faint = rgba(fg, isDark ? 0.14 : 0.12);
+    const read = rgba(fg, isDark ? 0.5 : 0.42);
+    const ink = rgba(accent, 1);
 
-      const animate = () => {
-        const now = performance.now();
-        globalTimeRef.current += 0.016;
-
-        advancePhase(now);
-
-        const rect = canvas.getBoundingClientRect();
-        draw(ctx, rect.width, rect.height, now);
-        animFrameRef.current = requestAnimationFrame(animate);
-      };
-
-      animFrameRef.current = requestAnimationFrame(animate);
-    } else {
-      // Not visible, draw idle state (full grid)
-      const rect = canvas.getBoundingClientRect();
-      globalAlphaRef.current = 1;
-      displayCountRef.current = 15000;
-      draw(ctx, rect.width, rect.height, performance.now());
+    // The files: every cell faint until something reads it.
+    const catAlpha = 1 - cleared;
+    for (const strip of layout.strips) {
+      for (let i = 0; i < strip.cells; i++) {
+        const { x, y } = cellIn(strip, i, layout);
+        ctx.globalAlpha = selected ? 0.6 : 1;
+        ctx.fillStyle = faint;
+        ctx.fillRect(x, y, cell, cell);
+        if (strip.offset + i < catRead && catAlpha > 0) {
+          ctx.globalAlpha = catAlpha;
+          ctx.fillStyle = read;
+          ctx.fillRect(x, y, cell, cell);
+        }
+      }
     }
 
-    return () => {
-      window.removeEventListener('resize', resize);
-      if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
+    // rg: the five matching lines, one after another.
+    ctx.fillStyle = ink;
+    HITS.forEach((hit, k) => {
+      const shown = easeOut(span(rg, k / HITS.length, (k + 0.6) / HITS.length));
+      if (shown <= 0) return;
+      const { x, y } = cellIn(layout.strips[hit.file], hit.cell, layout);
+      ctx.globalAlpha = shown * dim('rg');
+      ctx.fillRect(x, y, cell, cell);
+      if (selected === 'rg') {
+        ctx.strokeStyle = rgba(accent, 0.6);
+        ctx.lineWidth = 1;
+        ctx.strokeRect(x - 2.5, y - 2.5, cell + 5, cell + 5);
+      }
+    });
+
+    // sed: lines 138 to 160 of user.py, in order.
+    const sedCount = SED_CELLS[1] - SED_CELLS[0] + 1;
+    for (let j = 0; j < sedCount; j++) {
+      const shown = easeOut(span(sed, j / sedCount, (j + 2) / sedCount));
+      if (shown <= 0) continue;
+      const { x, y } = cellIn(layout.strips[SED_FILE], SED_CELLS[0] + j, layout);
+      ctx.globalAlpha = shown * dim('sed');
+      ctx.fillStyle = ink;
+      ctx.fillRect(x, y, cell, cell);
+    }
+
+    // Names: tree reads them, and nothing else.
+    const family = monoFamily(canvas);
+    ctx.font = `${layout.font}px ${family}`;
+    ctx.textBaseline = 'middle';
+    ctx.textAlign = 'left';
+    const named = easeOut(tree);
+    for (const strip of layout.strips) {
+      ctx.globalAlpha = dim('tree');
+      ctx.fillStyle = rgba(fg, lerp(0.45, 0.85, named));
+      ctx.fillText(strip.name, strip.nameX, strip.nameY);
+    }
+
+    // Two context bars, 600 slots each: every file, and the protocol.
+    const [catBar, stepBar] = layout.bars;
+    const dot = rgba(fg, isDark ? 0.24 : 0.22);
+    const drawSlots = (
+      bar: Bar,
+      filled: (index: number) => string | null,
+      alpha: (index: number) => number
+    ) => {
+      for (let i = 0; i < TOTAL_CELLS; i++) {
+        const { x, y } = slotIn(bar, i);
+        const color = filled(i);
+        if (color) {
+          ctx.globalAlpha = alpha(i);
+          ctx.fillStyle = color;
+          ctx.fillRect(x, y, BAR_PITCH - 1, BAR_PITCH - 1);
+        } else {
+          ctx.globalAlpha = selected ? 0.6 : 1;
+          ctx.fillStyle = dot;
+          ctx.fillRect(x, y, 1, 1);
+        }
+      }
     };
-  }, [isVisible, prefersReducedMotion, draw, drawStatic, advancePhase]);
+    drawSlots(
+      catBar,
+      (i) => (i < catRead ? read : null),
+      () => (selected ? 0.4 : 1)
+    );
+    const stepCounts = [
+      Math.round(tree * STEP_CELLS[0]),
+      Math.round(rg * STEP_CELLS[1]),
+      Math.round(sed * STEP_CELLS[2]),
+    ];
+    const stepOf = (i: number) =>
+      i < STEP_CELLS[0] ? 0 : i < STEP_CELLS[0] + STEP_CELLS[1] ? 1 : 2;
+    const starts = [0, STEP_CELLS[0], STEP_CELLS[0] + STEP_CELLS[1]];
+    drawSlots(
+      stepBar,
+      (i) => {
+        if (i >= GRADUATED_CELLS) return null;
+        const s = stepOf(i);
+        if (i - starts[s] >= stepCounts[s]) return null;
+        return s === 0 ? rgba(fg, 0.75) : ink;
+      },
+      (i) => (i < GRADUATED_CELLS ? dim(STEPS[stepOf(i)].id) : 1)
+    );
+
+    // Bar labels and running totals.
+    const litSteps = stepCounts.reduce((sum, count) => sum + count, 0);
+    const bars: Array<[Bar, string, string, boolean]> = [
+      [catBar, 'cat every file', `${fmt(catRead * TOKENS_PER_READ_CELL)} tokens`, catRead > 0],
+      [
+        stepBar,
+        layout.wide ? 'tree → rg → sed -n' : 'tree → rg → sed',
+        `${fmt(Math.round((litSteps / GRADUATED_CELLS) * GRADUATED_TOKENS))} tokens`,
+        litSteps > 0,
+      ],
+    ];
+    for (const [bar, label, count, started] of bars) {
+      ctx.globalAlpha = selected ? 0.6 : 1;
+      ctx.textAlign = 'left';
+      ctx.fillStyle = rgba(fg, 0.85);
+      ctx.fillText(label, bar.labelX, layout.wide ? bar.labelY : bar.countY);
+      if (started) {
+        ctx.textAlign = bar.countAlign;
+        ctx.fillStyle = rgba(fg, 0.6);
+        ctx.fillText(count, bar.countX, bar.countY);
+      }
+    }
+    ctx.globalAlpha = 1;
+
+    if (!selected) markStep(stepAt(value), value);
+  };
+
+  const animator = useAnimator(draw, STORY_MS);
+
+  useEffect(() => {
+    if (!box) return;
+    layoutRef.current = layoutFor(box.width, box.height);
+    animator.redraw();
+  }, [animator, box, colors, fontsReady]);
+
+  useEffect(() => {
+    if (reduced) {
+      animator.to(1, true);
+      return;
+    }
+    if (!seen) return;
+    const timer = window.setTimeout(() => animator.to(1), 300);
+    return () => window.clearTimeout(timer);
+  }, [animator, reduced, seen]);
+
+  useEffect(() => {
+    focusRef.current = focus;
+    if (focus) {
+      for (const step of STEPS) {
+        const element = stepRefs.current[step.id];
+        if (element) element.dataset.state = step.id === focus ? 'active' : 'done';
+      }
+    }
+    animator.redraw();
+  }, [animator, focus]);
 
   return (
-    <div
-      ref={containerRef}
-      className={`rounded-lg overflow-hidden border ${theme.wrapperClass}`}
+    <Figure
+      figureRef={figureRef}
+      label={`Six relevant files drawn as cells, one cell per 25 tokens. Reading every file costs ${fmt(FULL_READ_TOKENS)} tokens. The graduated protocol, tree then rg then sed -n, reads the map, five matching lines and the lines around line 142 of user.py: about ${GRADUATED_TOKENS} tokens, ${savedShare()}% less.`}
+      title="Reading for one bug"
+      meta={`1 cell = ${TOKENS_PER_READ_CELL} tokens`}
+      footer={
+        <>
+          <div
+            role="group"
+            aria-label="The graduated reading protocol"
+            className="-mx-2 basis-full"
+          >
+            {STEPS.map((step) => (
+              <button
+                key={step.id}
+                ref={(element) => {
+                  stepRefs.current[step.id] = element;
+                }}
+                type="button"
+                aria-pressed={focus === step.id}
+                onClick={() => setFocus((current) => (current === step.id ? null : step.id))}
+                data-state="waiting"
+                className="group flex min-h-8 w-full flex-col gap-x-4 rounded-sm sm:flex-row sm:flex-wrap sm:items-baseline sm:justify-between px-2 py-1.5 text-left text-[11px] leading-snug transition-colors duration-200 focus-visible:outline focus-visible:outline-1 focus-visible:outline-offset-0 focus-visible:outline-[color:var(--accent-color)] aria-pressed:bg-[color-mix(in_srgb,var(--accent-color)_14%,transparent)]"
+              >
+                <span className="break-all text-foreground/45 transition-colors duration-200 group-data-[state=active]:text-foreground group-data-[state=done]:text-foreground/85">
+                  <span style={{ color: FAINT }}>$ </span>
+                  {step.command}
+                </span>
+                <span className="text-foreground/35 transition-colors duration-200 group-data-[state=active]:text-[color:var(--accent-color)] group-data-[state=done]:text-foreground/55">
+                  {step.what}
+                </span>
+              </button>
+            ))}
+          </div>
+          <span className="flex-1 basis-56" style={{ color: DIM }}>
+            About {GRADUATED_TOKENS} tokens instead of {fmt(FULL_READ_TOKENS)}:{' '}
+            <span style={{ color: ACCENT }}>{savedShare()}% less</span>, and only the lines it
+            needs.
+          </span>
+          <Replay onClick={() => animator.run(0, 1)} />
+        </>
+      }
     >
-      <canvas
-        ref={canvasRef}
-        className="w-full h-[260px] sm:h-[320px] md:h-[380px]"
-        aria-label="Animated visualization showing token compression: a graduated reading protocol using tree, ripgrep, and sed reduces 15,000 tokens to 670 tokens, achieving 95% compression"
-        role="img"
-      />
-    </div>
+      <canvas ref={canvasRef} aria-hidden="true" className="block h-[244px] w-full" />
+    </Figure>
   );
 }

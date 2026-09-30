@@ -1,690 +1,549 @@
 'use client';
 
-// Visualizes the three-tier agent hierarchy described in "What I Learned
-// Running Three-Tier Agent Hierarchies." Six cheap Haiku explore agents feed
-// into three mid-tier Sonnet workers, which feed into one Opus coordinator,
-// which reports to the human. Flow particles travel upward along Bezier
-// curves, and a compression threshold (4 Haiku arrivals spawn 1 Sonnet
-// particle) demonstrates the key insight: "Every tier compresses information
-// for the tier above it." The result is a live depiction of context cost
-// dropping from O(file_size) to O(result_count) at each boundary.
+// "Every tier compresses information for the tier above it." Each agent is
+// drawn as its own context window, one cell per 100 tokens. Ten Haiku agents
+// read 4,000 tokens of code each and reply with 300: a reference, not the
+// file. Each Sonnet reads five replies, 1,500 tokens, and writes a plan. Opus
+// reads the plans and decides. The windows shrink as the models get smarter:
+// the most expensive model thinks against the smallest, densest input.
 
-import { useEffect, useRef, useState, useCallback } from 'react';
-import { useTheme } from 'next-themes';
-import { getCanvasTheme } from './theme-colors';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
-// --- Types ---
+import { rgba, useCanvasColors } from '../canvas-theme';
+import {
+  ACCENT,
+  Choice,
+  DIM,
+  Figure,
+  Replay,
+  useAnimator,
+  useBox,
+  useFontsReady,
+  useReducedMotion,
+  useSeen,
+} from './figure';
+import {
+  HAIKU_PER_SONNET,
+  HAIKU_READS,
+  HAIKU_RETURNS,
+  SONNET_READS,
+  SONNETS,
+  TIER_EXAMPLES,
+  TOKENS_PER_CELL,
+} from './figures';
+import { dotted, easeInOut, easeOut, lerp, monoFamily, prepare, seeded, span } from './lattice';
 
-interface HierarchyNode {
-  id: string;
-  tier: 'haiku' | 'sonnet' | 'opus' | 'human';
+type Tier = 'opus' | 'sonnet' | 'haiku';
+type Part = Tier | 'rest';
+
+const STORY_MS = 7000;
+const READ: [number, number] = [0.04, 0.3];
+const REPLY: [number, number] = [0.3, 0.37];
+const CLIMB: [number, number] = [0.37, 0.53];
+const PLAN: [number, number] = [0.57, 0.65];
+const RISE: [number, number] = [0.65, 0.79];
+const DECIDE: [number, number] = [0.84, 0.94];
+
+// Windows, in cells: a Haiku window holds what it read, 4,000 tokens; a
+// Sonnet window the five replies; the Opus window the two plans.
+const HAIKU_COLS = 5;
+const HAIKU_CELLS = HAIKU_READS / TOKENS_PER_CELL;
+const HAIKU_ROWS = HAIKU_CELLS / HAIKU_COLS;
+const REPLY_CELLS = HAIKU_RETURNS / TOKENS_PER_CELL;
+const REPLY_COL = 2;
+const PLAN_COL = Math.floor(HAIKU_PER_SONNET / 2);
+const PLAN_CELLS = 3;
+const HAIKUS = SONNETS * HAIKU_PER_SONNET;
+
+const fmt = (tokens: number) => tokens.toLocaleString('en-US');
+
+const PARTS: Part[] = ['rest', 'haiku', 'sonnet', 'opus'];
+
+const TIERS: Array<{ value: Tier; label: string }> = [
+  { value: 'haiku', label: 'Haiku' },
+  { value: 'sonnet', label: 'Sonnet' },
+  { value: 'opus', label: 'Opus' },
+];
+
+const CAPTIONS: Record<Part, { text: string; example?: string }> = {
+  rest: {
+    text: 'Every tier compresses for the tier above it, so the most expensive model reads the least.',
+  },
+  haiku: {
+    text: `Each Haiku reads ${fmt(HAIKU_READS)} tokens of code in its own window and returns ${fmt(HAIKU_RETURNS)}: a reference, not the file.`,
+    example: TIER_EXAMPLES.haiku,
+  },
+  sonnet: {
+    text: `Each Sonnet reads the replies of five Haiku, ${fmt(SONNET_READS)} tokens, and writes a plan.`,
+    example: TIER_EXAMPLES.sonnet,
+  },
+  opus: {
+    text: 'Opus reads the plans and makes the decision.',
+    example: TIER_EXAMPLES.opus,
+  },
+};
+
+interface Rect {
   x: number;
   y: number;
-  radius: number;
-  color: string;
-  pulsePhase: number;
-}
-
-interface Connection {
-  from: HierarchyNode;
-  to: HierarchyNode;
-  color: string;
-}
-
-interface FlowParticle {
-  connection: Connection;
-  progress: number;
-  speed: number;
-  radius: number;
-  colorBase: string; // e.g. "78, 205, 196"
-  opacity: number;
-  tier: 'haiku' | 'sonnet' | 'coordination';
-}
-
-interface TierConfig {
-  tier: 'haiku' | 'sonnet' | 'opus' | 'human';
-  nodeCount: number;
-  yPosition: number;
-  nodeRadius: number;
-  color: string;
-  colorRgb: string; // "r, g, b" for rgba construction
-  label: string;
-  subtitle: string;
-  particleRadius: number;
+  w: number;
+  h: number;
 }
 
 interface Layout {
-  nodes: HierarchyNode[];
-  connections: Connection[];
-  haikuConnections: Connection[];
-  sonnetToOpusConnections: Connection[];
-  downwardConnections: Connection[];
-  verticalOffset: number; // responsive horizontal offset for vertically-aligned curves
+  width: number;
+  height: number;
+  pitch: number;
+  cell: number;
+  wide: boolean;
+  haiku: Rect[];
+  sonnet: Rect[];
+  opus: Rect;
+  decision: Rect;
+  rows: Record<Tier, { top: number; bottom: number; center: number }>;
 }
 
-// --- Constants ---
+function gridRect(cx: number, top: number, cols: number, rows: number, pitch: number): Rect {
+  const w = cols * pitch - 1;
+  const h = rows * pitch - 1;
+  return { x: Math.round(cx - w / 2), y: Math.round(top), w, h };
+}
 
-const TIER_CONFIGS: TierConfig[] = [
-  {
-    tier: 'haiku',
-    nodeCount: 9,
-    yPosition: 0.82,
-    nodeRadius: 7,
-    color: '#4ecdc4',
-    colorRgb: '78, 205, 196',
-    label: 'Haiku',
-    subtitle: 'Readers',
-    particleRadius: 2,
-  },
-  {
-    tier: 'sonnet',
-    nodeCount: 3,
-    yPosition: 0.56,
-    nodeRadius: 14,
-    color: '#7c6cff',
-    colorRgb: '124, 108, 255',
-    label: 'Sonnet',
-    subtitle: 'Workers',
-    particleRadius: 3.2,
-  },
-  {
-    tier: 'opus',
-    nodeCount: 1,
-    yPosition: 0.34,
-    nodeRadius: 20,
-    color: '#b794f6',
-    colorRgb: '183, 148, 246',
-    label: 'Opus',
-    subtitle: 'Coordinator',
-    particleRadius: 4,
-  },
-  {
-    tier: 'human',
-    nodeCount: 1,
-    yPosition: 0.16,
-    nodeRadius: 16,
-    color: '#e8d5b7',
-    colorRgb: '232, 213, 183',
-    label: 'Me',
-    subtitle: 'Human',
-    particleRadius: 0,
-  },
-];
+/** Where the labels go: beside the rows when there is room, else over them. */
+const LABEL_COLUMN = 124;
 
-// Each group of 3 haiku nodes feeds into exactly one sonnet (no crossover)
-const HAIKU_TO_SONNET: number[][] = [
-  [0], // haiku-0 -> sonnet-0
-  [0], // haiku-1 -> sonnet-0
-  [0], // haiku-2 -> sonnet-0
-  [1], // haiku-3 -> sonnet-1
-  [1], // haiku-4 -> sonnet-1
-  [1], // haiku-5 -> sonnet-1
-  [2], // haiku-6 -> sonnet-2
-  [2], // haiku-7 -> sonnet-2
-  [2], // haiku-8 -> sonnet-2
-];
+function layoutFor(width: number, height: number): Layout {
+  // The wide layout stacks the tiers with room to spare; the canvas only
+  // grows tall enough for it at the sm breakpoint.
+  const wide = width >= 600 && height >= 280;
+  const agentGap = wide ? 8 : 4;
+  const groupGap = wide ? 30 : 14;
+  const room = wide ? width - 2 * LABEL_COLUMN : width - 24;
+  const rowWidth = (pitch: number) => {
+    const groupW = HAIKU_PER_SONNET * (HAIKU_COLS * pitch - 1) + (HAIKU_PER_SONNET - 1) * agentGap;
+    return SONNETS * groupW + (SONNETS - 1) * groupGap;
+  };
+  let pitch = 7;
+  while (pitch > 4 && rowWidth(pitch) > room) pitch--;
+  const cell = pitch - 1;
+  const haikuW = HAIKU_COLS * pitch - 1;
+  const groupW = HAIKU_PER_SONNET * haikuW + (HAIKU_PER_SONNET - 1) * agentGap;
+  const left = Math.round((width - rowWidth(pitch)) / 2);
 
-const MAX_PARTICLES = 100;
-const HAIKU_SPAWN_INTERVAL = 0.4; // seconds per spawn per connection
-const COMPRESSION_THRESHOLD = 3;  // haiku arrivals before sonnet particle spawns
+  const haikuH = HAIKU_ROWS * pitch - 1;
+  const haikuTop = height - (wide ? 22 : 14) - haikuH;
+  const sonnetTop = Math.round(haikuTop - (wide ? 84 : 62) - REPLY_CELLS * pitch);
+  // Narrow figures put a line of text over the decision, so Opus hangs from the top.
+  const opusTop = wide ? Math.round(sonnetTop - 60 - PLAN_CELLS * pitch) : 48;
 
-// Coordination (downward) particles
-const COORDINATION_SPAWN_INTERVAL = 1.8;
-const COORDINATION_PARTICLE_RADIUS = 1.8;
-const COORDINATION_OPACITY_MAX = 0.45;
-const COORDINATION_SPEED_BASE = 0.003;
-
-// --- Layout ---
-
-function calculateLayout(width: number, height: number): Layout {
-  const nodes: HierarchyNode[] = [];
-  const nodesByTier: Record<string, HierarchyNode[]> = {};
-
-  // On short canvases, shift tiers down to prevent top clipping
-  const yOffsets: Record<string, number> = {};
-  if (height < 380) {
-    // Compress spread and add top margin so human label isn't clipped
-    yOffsets['human'] = 0.20;
-    yOffsets['opus'] = 0.40;
-    yOffsets['sonnet'] = 0.60;
-    yOffsets['haiku'] = 0.82;
-  }
-
-  const horizontalPadding = width < 400 ? 0.12 : 0.10;
-  const nodeUsableWidth = width * (1 - 2 * horizontalPadding);
-  const nodeStartX = width * horizontalPadding;
-
-  for (const config of TIER_CONFIGS) {
-    const tierNodes: HierarchyNode[] = [];
-    const yPos = yOffsets[config.tier] ?? config.yPosition;
-    const y = yPos * height;
-
-    for (let i = 0; i < config.nodeCount; i++) {
-      let x: number;
-      if (config.nodeCount === 1) {
-        x = nodeStartX + nodeUsableWidth / 2;
-      } else {
-        x = nodeStartX + (nodeUsableWidth * i) / (config.nodeCount - 1);
-      }
-
-      tierNodes.push({
-        id: `${config.tier}-${i}`,
-        tier: config.tier,
-        x,
-        y,
-        radius: config.nodeRadius,
-        color: config.color,
-        pulsePhase: Math.random() * Math.PI * 2,
-      });
+  const haiku: Rect[] = [];
+  const sonnet: Rect[] = [];
+  for (let s = 0; s < SONNETS; s++) {
+    const groupX = left + s * (groupW + groupGap);
+    for (let h = 0; h < HAIKU_PER_SONNET; h++) {
+      haiku.push({ x: groupX + h * (haikuW + agentGap), y: haikuTop, w: haikuW, h: haikuH });
     }
-    nodesByTier[config.tier] = tierNodes;
-    nodes.push(...tierNodes);
+    sonnet.push(gridRect(groupX + groupW / 2, sonnetTop, HAIKU_PER_SONNET, REPLY_CELLS, pitch));
   }
+  const opus = gridRect(width / 2, opusTop, SONNETS, PLAN_CELLS, pitch);
+  const decision = gridRect(width / 2, opusTop - (wide ? 28 : 20), 1, 1, pitch);
 
-  const connections: Connection[] = [];
-  const haikuNodes = nodesByTier['haiku'];
-  const sonnetNodes = nodesByTier['sonnet'];
-  const opusNodes = nodesByTier['opus'];
-  const humanNodes = nodesByTier['human'];
-
-  // Haiku -> Sonnet
-  const haikuConnections: Connection[] = [];
-  HAIKU_TO_SONNET.forEach((sonnetIndices, haikuIdx) => {
-    sonnetIndices.forEach(sonnetIdx => {
-      const conn: Connection = {
-        from: haikuNodes[haikuIdx],
-        to: sonnetNodes[sonnetIdx],
-        color: `rgba(78, 205, 196, 0.12)`,
-      };
-      connections.push(conn);
-      haikuConnections.push(conn);
-    });
+  const band = (rect: Rect, extra: number) => ({
+    top: rect.y - extra,
+    bottom: rect.y + rect.h + extra,
+    center: rect.y + rect.h / 2,
   });
 
-  // Sonnet -> Opus
-  const sonnetToOpusConnections: Connection[] = [];
-  sonnetNodes.forEach(sonnet => {
-    const conn: Connection = {
-      from: sonnet,
-      to: opusNodes[0],
-      color: `rgba(124, 108, 255, 0.12)`,
-    };
-    connections.push(conn);
-    sonnetToOpusConnections.push(conn);
-  });
-
-  // Opus -> Human
-  if (humanNodes.length > 0) {
-    connections.push({
-      from: opusNodes[0],
-      to: humanNodes[0],
-      color: `rgba(183, 148, 246, 0.12)`,
-    });
-  }
-
-  // --- Downward coordination connections (separate from main connections) ---
-  const downwardConnections: Connection[] = [];
-
-  // Human -> Opus (human gold color)
-  if (humanNodes.length > 0) {
-    downwardConnections.push({
-      from: humanNodes[0],
-      to: opusNodes[0],
-      color: `rgba(232, 213, 183, 0.08)`,
-    });
-  }
-
-  // Opus -> each Sonnet (opus purple color)
-  for (const sonnet of sonnetNodes) {
-    downwardConnections.push({
-      from: opusNodes[0],
-      to: sonnet,
-      color: `rgba(183, 148, 246, 0.08)`,
-    });
-  }
-
-  // Responsive horizontal offset for vertically-aligned bezier curves
-  const verticalOffset = Math.min(25, width * 0.04);
-
-  return { nodes, connections, haikuConnections, sonnetToOpusConnections, downwardConnections, verticalOffset };
-}
-
-// --- Particle helpers ---
-
-function spawnParticle(connection: Connection, tier: 'haiku' | 'sonnet'): FlowParticle {
-  const config = TIER_CONFIGS.find(t => t.tier === tier)!;
   return {
-    connection,
-    progress: 0,
-    speed: 0.004 + Math.random() * 0.004,
-    radius: config.particleRadius + (Math.random() - 0.5) * 0.6,
-    colorBase: config.colorRgb,
-    opacity: 0,
-    tier,
+    width,
+    height,
+    pitch,
+    cell,
+    wide,
+    haiku,
+    sonnet,
+    opus,
+    decision,
+    rows: {
+      opus: { ...band(opus, 16), top: decision.y - 14 },
+      sonnet: band(sonnet[0], 18),
+      haiku: band(haiku[0], 16),
+    },
   };
 }
 
-function spawnCoordinationParticle(connection: Connection, colorBase: string): FlowParticle {
-  return {
-    connection,
-    progress: 0,
-    speed: COORDINATION_SPEED_BASE + Math.random() * 0.002,
-    radius: COORDINATION_PARTICLE_RADIUS + (Math.random() - 0.5) * 0.4,
-    colorBase,
-    opacity: 0,
-    tier: 'coordination',
-  };
+function cellAt(rect: Rect, cols: number, index: number, pitch: number) {
+  return { x: rect.x + (index % cols) * pitch, y: rect.y + Math.floor(index / cols) * pitch };
 }
 
-// Bezier control point for a connection (slight horizontal offset for organic curves)
-function getControlPoint(from: HierarchyNode, to: HierarchyNode): { cx: number; cy: number } {
-  const midY = (from.y + to.y) / 2;
-  const dx = to.x - from.x;
-  return { cx: from.x + dx * 0.5 + dx * 0.15, cy: midY };
+interface Label {
+  tier: Tier;
+  text: string;
+  x: number;
+  y: number;
+  align: 'left' | 'right';
+  strong: boolean;
 }
 
-// Mirrored control point for downward connections — bows opposite direction to form a lens shape
-function getDownwardControlPoint(
-  from: HierarchyNode,
-  to: HierarchyNode,
-  verticalOffset: number
-): { cx: number; cy: number } {
-  const midY = (from.y + to.y) / 2;
-  const dx = to.x - from.x;
-  // For vertically aligned nodes (dx ≈ 0), use a fixed pixel offset
-  if (Math.abs(dx) < 5) {
-    return { cx: from.x - verticalOffset, cy: midY };
+const WORDS: Record<Tier, { name: string; role: string; reads: string; returns: string }> = {
+  opus: { name: 'Opus', role: 'coordinates', reads: 'reads 2 plans', returns: 'decides' },
+  sonnet: {
+    name: 'Sonnet',
+    role: 'implements',
+    reads: `reads ${fmt(SONNET_READS)}`,
+    returns: 'writes a plan',
+  },
+  haiku: {
+    name: 'Haiku',
+    role: 'reads code',
+    reads: `reads ${fmt(HAIKU_READS)}`,
+    returns: `returns ${HAIKU_RETURNS}`,
+  },
+};
+
+/** Names on the left, what each tier reads and returns on the right. */
+function labelsFor(layout: Layout): Label[] {
+  const labels: Label[] = [];
+  for (const tier of ['opus', 'sonnet', 'haiku'] as Tier[]) {
+    const row = layout.rows[tier];
+    const words = WORDS[tier];
+    if (layout.wide) {
+      const left = 20;
+      const right = layout.width - 20;
+      labels.push(
+        { tier, text: words.name, x: left, y: row.center - 7, align: 'left', strong: true },
+        { tier, text: words.role, x: left, y: row.center + 8, align: 'left', strong: false },
+        { tier, text: words.reads, x: right, y: row.center - 7, align: 'right', strong: false },
+        { tier, text: words.returns, x: right, y: row.center + 8, align: 'right', strong: false }
+      );
+    } else {
+      const y = row.top - 1;
+      labels.push(
+        { tier, text: words.name, x: 12, y, align: 'left', strong: true },
+        {
+          tier,
+          text: `${words.reads}, ${words.returns}`,
+          x: layout.width - 12,
+          y,
+          align: 'right',
+          strong: false,
+        }
+      );
+    }
   }
-  return { cx: from.x + dx * 0.5 - dx * 0.15, cy: midY };
+  return labels;
 }
 
-// Position along quadratic bezier at t
-function bezierPoint(
-  from: HierarchyNode,
-  to: HierarchyNode,
-  ctrl: { cx: number; cy: number },
-  t: number
-): { x: number; y: number } {
-  const u = 1 - t;
-  return {
-    x: u * u * from.x + 2 * u * t * ctrl.cx + t * t * to.x,
-    y: u * u * from.y + 2 * u * t * ctrl.cy + t * t * to.y,
-  };
-}
+const topOf = (rect: Rect) => ({ x: rect.x + rect.w / 2, y: rect.y - 4 });
+const bottomOf = (rect: Rect) => ({ x: rect.x + rect.w / 2, y: rect.y + rect.h + 4 });
 
-// --- Component ---
+/** Progress of one reply's climb, staggered left to right within a group. */
+const replyFlight = (climb: number, slot: number) => span(climb, slot * 0.05, 0.8 + slot * 0.05);
+/** Progress of one plan's rise to Opus. */
+const planFlight = (rise: number, s: number) => span(rise, s * 0.15, 0.85 + s * 0.15);
+const landed = (flight: number) => flight >= 0.999;
 
 export default function AgentHierarchy() {
+  const colors = useCanvasColors();
+  const reduced = useReducedMotion();
+  const fontsReady = useFontsReady();
+  const figureRef = useRef<HTMLElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const particlesRef = useRef<FlowParticle[]>([]);
-  const animFrameRef = useRef<number>(0);
-  const timeRef = useRef(0);
-  const layoutRef = useRef<Layout>({ nodes: [], connections: [], haikuConnections: [], sonnetToOpusConnections: [], downwardConnections: [], verticalOffset: 25 });
-  const accumulatorsRef = useRef<Record<string, number>>({});
-  const spawnTimersRef = useRef<Record<string, number>>({});
-  const arrivalPulseRef = useRef<Record<string, number>>({});
-  const visibleRef = useRef(true);
-  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
+  const captionRefs = useRef<Partial<Record<Part, HTMLSpanElement | null>>>({});
+  const shownRef = useRef<Part>('rest');
+  const layoutRef = useRef<Layout | null>(null);
+  const box = useBox(canvasRef);
+  const seen = useSeen(figureRef, 0.5);
+  // A tier picked with the buttons or a tap stays until it is released; a
+  // mouse over the canvas shows its tier only while it is there.
+  const [picked, setPicked] = useState<Tier | null>(null);
+  const [hovered, setHovered] = useState<Tier | null>(null);
+  const focus = hovered ?? picked;
+  const focusRef = useRef<Tier | null>(null);
 
-  const { resolvedTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => { setMounted(true); }, []);
-  const isDark = mounted ? resolvedTheme === 'dark' : true;
-  const canvasTheme = getCanvasTheme(isDark);
-
-  const draw = useCallback((ctx: CanvasRenderingContext2D, width: number, height: number) => {
-    const time = timeRef.current;
-    const layout = layoutRef.current;
-    const { nodes, connections, downwardConnections, verticalOffset } = layout;
-    const particles = particlesRef.current;
-    const arrivalPulses = arrivalPulseRef.current;
-
-    // --- Decay arrival pulses ---
-    for (const id in arrivalPulses) {
-      arrivalPulses[id] *= 0.92;
-      if (arrivalPulses[id] < 0.001) delete arrivalPulses[id];
-    }
-
-    // --- Background ---
-    const bgGrad = ctx.createLinearGradient(0, 0, 0, height);
-    bgGrad.addColorStop(0, canvasTheme.bg);
-    bgGrad.addColorStop(0.5, canvasTheme.bgMid);
-    bgGrad.addColorStop(1, canvasTheme.bg);
-    ctx.fillStyle = bgGrad;
-    ctx.fillRect(0, 0, width, height);
-
-    // --- Upward connection lines (solid) ---
-    ctx.save();
-    for (const conn of connections) {
-      const ctrl = getControlPoint(conn.from, conn.to);
-      const pulse = 0.12 + 0.03 * Math.sin(time * 1.5);
-      const baseColor = conn.color.replace(/[\d.]+\)$/, `${pulse})`);
-      ctx.strokeStyle = baseColor;
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.moveTo(conn.from.x, conn.from.y);
-      ctx.quadraticCurveTo(ctrl.cx, ctrl.cy, conn.to.x, conn.to.y);
-      ctx.stroke();
-    }
-    ctx.restore();
-
-    // --- Downward connection lines (dashed) ---
-    ctx.save();
-    ctx.setLineDash([4, 6]);
-    for (const conn of downwardConnections) {
-      const ctrl = getDownwardControlPoint(conn.from, conn.to, verticalOffset);
-      const pulse = 0.08 + 0.02 * Math.sin(time * 1.2 + 1.0);
-      const baseColor = conn.color.replace(/[\d.]+\)$/, `${pulse})`);
-      ctx.strokeStyle = baseColor;
-      ctx.lineWidth = 0.8;
-      ctx.beginPath();
-      ctx.moveTo(conn.from.x, conn.from.y);
-      ctx.quadraticCurveTo(ctrl.cx, ctrl.cy, conn.to.x, conn.to.y);
-      ctx.stroke();
-    }
-    ctx.setLineDash([]);
-    ctx.restore();
-
-    // --- Particles (upward + coordination) ---
-    for (const p of particles) {
-      const ctrl = p.tier === 'coordination'
-        ? getDownwardControlPoint(p.connection.from, p.connection.to, verticalOffset)
-        : getControlPoint(p.connection.from, p.connection.to);
-      const pos = bezierPoint(p.connection.from, p.connection.to, ctrl, p.progress);
-
-      // Glow
-      const glowR = p.radius * 3;
-      const glow = ctx.createRadialGradient(pos.x, pos.y, 0, pos.x, pos.y, glowR);
-      glow.addColorStop(0, `rgba(${p.colorBase}, ${p.opacity * 0.5})`);
-      glow.addColorStop(0.5, `rgba(${p.colorBase}, ${p.opacity * 0.15})`);
-      glow.addColorStop(1, `rgba(${p.colorBase}, 0)`);
-      ctx.fillStyle = glow;
-      ctx.beginPath();
-      ctx.arc(pos.x, pos.y, glowR, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Core
-      ctx.fillStyle = `rgba(${p.colorBase}, ${p.opacity})`;
-      ctx.beginPath();
-      ctx.arc(pos.x, pos.y, p.radius, 0, Math.PI * 2);
-      ctx.fill();
-    }
-
-    // --- Nodes (with arrival pulse) ---
-    for (const node of nodes) {
-      const config = TIER_CONFIGS.find(t => t.tier === node.tier)!;
-      const arrivalBump = arrivalPulses[node.id] || 0;
-      const pulseScale = prefersReducedMotion
-        ? 1 + arrivalBump
-        : 1 + 0.06 * Math.sin(time * 1.2 + node.pulsePhase) + arrivalBump;
-      const r = node.radius * pulseScale;
-
-      // Outer glow (brightened during arrival pulse)
-      const glowAlpha = 0.25 + arrivalBump * 0.6;
-      const glowR = r * 2.8;
-      const glow = ctx.createRadialGradient(node.x, node.y, r * 0.4, node.x, node.y, glowR);
-      glow.addColorStop(0, `rgba(${config.colorRgb}, ${glowAlpha})`);
-      glow.addColorStop(1, `rgba(${config.colorRgb}, 0)`);
-      ctx.fillStyle = glow;
-      ctx.beginPath();
-      ctx.arc(node.x, node.y, glowR, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Solid circle
-      ctx.fillStyle = node.color;
-      ctx.beginPath();
-      ctx.arc(node.x, node.y, r, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Center highlight
-      ctx.fillStyle = canvasTheme.centerHighlight;
-      ctx.beginPath();
-      ctx.arc(node.x, node.y, r * 0.35, 0, Math.PI * 2);
-      ctx.fill();
-    }
-
-    // --- Labels ---
-    const fontSize = Math.max(10, Math.min(13, width * 0.026));
-    const subFontSize = Math.max(9, fontSize - 2);
-
-    for (const config of TIER_CONFIGS) {
-      // Skip labels for multi-node tiers (Haiku Readers, Sonnet Workers)
-      if (config.nodeCount > 1) continue;
-
-      const tierNodes = nodes.filter(n => n.tier === config.tier);
-      const tierY = tierNodes[0]?.y ?? config.yPosition * height;
-
-      if (config.nodeCount === 1) {
-        // Single-node tiers: annotation to the right of the node
-        const nodeX = tierNodes[0]?.x ?? width / 2;
-        const labelX = nodeX + config.nodeRadius + 10;
-        ctx.textAlign = 'left';
-        ctx.textBaseline = 'middle';
-
-        // Bold model name
-        ctx.font = `bold ${fontSize}px ui-monospace, SFMono-Regular, monospace`;
-        ctx.fillStyle = `rgba(${canvasTheme.labelDim}, 0.6)`;
-        ctx.fillText(config.label, labelX, tierY - subFontSize * 0.4);
-
-        // Lighter subtitle below
-        ctx.font = `${subFontSize}px ui-monospace, SFMono-Regular, monospace`;
-        ctx.fillStyle = `rgba(${canvasTheme.labelDim}, 0.35)`;
-        ctx.fillText(config.subtitle, labelX, tierY + subFontSize * 0.7);
-      } else {
-        // Multi-node tiers: name + subtitle centered as a group above the nodes
-        const tierCenterX = tierNodes.reduce((sum, n) => sum + n.x, 0) / tierNodes.length;
-        const labelY = tierY - config.nodeRadius - 8;
-        const gap = 5;
-
-        // Measure both to center the combined text
-        ctx.font = `bold ${fontSize}px ui-monospace, SFMono-Regular, monospace`;
-        const nameWidth = ctx.measureText(config.label).width;
-        ctx.font = `${subFontSize}px ui-monospace, SFMono-Regular, monospace`;
-        const subWidth = ctx.measureText(config.subtitle).width;
-        const totalWidth = nameWidth + gap + subWidth;
-        const startX = tierCenterX - totalWidth / 2;
-
-        // Draw both left-aligned from the computed start
-        ctx.textAlign = 'left';
-        ctx.textBaseline = 'bottom';
-
-        ctx.font = `bold ${fontSize}px ui-monospace, SFMono-Regular, monospace`;
-        ctx.fillStyle = `rgba(${canvasTheme.labelDim}, 0.6)`;
-        ctx.fillText(config.label, startX, labelY);
-
-        ctx.font = `${subFontSize}px ui-monospace, SFMono-Regular, monospace`;
-        ctx.fillStyle = `rgba(${canvasTheme.labelDim}, 0.35)`;
-        ctx.fillText(config.subtitle, startX + nameWidth + gap, labelY);
-      }
-    }
-
-  }, [prefersReducedMotion, canvasTheme]);
-
-  // Reduced motion detection
-  useEffect(() => {
-    const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
-    setPrefersReducedMotion(mq.matches);
-    const handler = (e: MediaQueryListEvent) => setPrefersReducedMotion(e.matches);
-    mq.addEventListener('change', handler);
-    return () => mq.removeEventListener('change', handler);
+  // Each Haiku starts reading a moment apart.
+  const readStart = useMemo(() => {
+    const random = seeded(4000);
+    return Array.from({ length: HAIKUS }, () => random() * 0.12);
   }, []);
 
-  // --- Visibility gating (skip draw when off-screen) ---
-  useEffect(() => {
-    const cvs = canvasRef.current;
-    if (!cvs) return;
-    const obs = new IntersectionObserver(
-      ([entry]) => { visibleRef.current = entry.isIntersecting; },
-      { threshold: 0.05 }
-    );
-    obs.observe(cvs);
-    return () => obs.disconnect();
-  }, []);
+  const showCaption = (part: Part) => {
+    if (shownRef.current === part) return;
+    shownRef.current = part;
+    for (const key of PARTS) {
+      const element = captionRefs.current[key];
+      if (element) element.style.visibility = key === part ? 'visible' : 'hidden';
+    }
+  };
 
-  // Main canvas and animation loop
-  useEffect(() => {
+  const draw = (value: number) => {
     const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
+    const layout = layoutRef.current;
+    if (!canvas || !layout || !colors.ready) return;
+    const ctx = prepare(canvas, layout.width, layout.height);
     if (!ctx) return;
 
-    let prevDims = { w: 0, h: 0 };
-    const resize = () => {
-      const rect = canvas.getBoundingClientRect();
-      if (prevDims.w > 0 && Math.abs(rect.width - prevDims.w) < 1 && Math.abs(rect.height - prevDims.h) < 1) return;
-      prevDims = { w: rect.width, h: rect.height };
-      const dpr = window.devicePixelRatio || 1;
-      canvas.width = rect.width * dpr;
-      canvas.height = rect.height * dpr;
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      layoutRef.current = calculateLayout(rect.width, rect.height);
-      particlesRef.current = [];
-      accumulatorsRef.current = {};
-      spawnTimersRef.current = {};
-      arrivalPulseRef.current = {};
+    const { fg, accent, isDark } = colors;
+    const { pitch, cell } = layout;
+    const selected = focusRef.current;
+    const dim = (tier: Tier) => (selected && selected !== tier ? 0.3 : 1);
+
+    const read = span(value, ...READ);
+    const reply = span(value, ...REPLY);
+    const climb = span(value, ...CLIMB);
+    const plan = span(value, ...PLAN);
+    const rise = span(value, ...RISE);
+    const decide = span(value, ...DECIDE);
+
+    const ink = rgba(accent, 1);
+    const code = rgba(fg, isDark ? 0.34 : 0.3);
+    // Once a window has passed its reply up, what it read stays behind.
+    const spent = (flight: number) => lerp(1, 0.45, easeOut(flight));
+
+    // Every agent's own window.
+    ctx.strokeStyle = rgba(fg, isDark ? 0.22 : 0.24);
+    ctx.lineWidth = 1;
+    const frame = (rect: Rect, tier: Tier) => {
+      ctx.globalAlpha = dim(tier);
+      ctx.strokeRect(rect.x - 2.5, rect.y - 2.5, rect.w + 5, rect.h + 5);
     };
+    layout.haiku.forEach((rect) => frame(rect, 'haiku'));
+    layout.sonnet.forEach((rect) => frame(rect, 'sonnet'));
+    frame(layout.opus, 'opus');
 
-    resize();
-    window.addEventListener('resize', resize);
+    // Dotted connectors: who reports to whom.
+    ctx.fillStyle = rgba(fg, isDark ? 0.3 : 0.32);
+    ctx.globalAlpha = selected ? 0.5 : 1;
+    layout.haiku.forEach((rect, i) =>
+      dotted(ctx, topOf(rect), bottomOf(layout.sonnet[Math.floor(i / HAIKU_PER_SONNET)]), 3)
+    );
+    layout.sonnet.forEach((rect) => dotted(ctx, topOf(rect), bottomOf(layout.opus), 3));
 
-    if (prefersReducedMotion) {
-      // Static frame with particles placed along connections to suggest flow
-      const { haikuConnections, sonnetToOpusConnections, downwardConnections: downConns } = layoutRef.current;
-      const staticParticles: FlowParticle[] = [];
-      for (const conn of haikuConnections) {
-        const p = spawnParticle(conn, 'haiku');
-        p.progress = 0.2 + Math.random() * 0.6;
-        p.opacity = 0.55;
-        staticParticles.push(p);
+    // Names and numbers. On a wide figure they sit beside the rows; on a
+    // narrow one, over them, cut out of the connectors so they stay legible.
+    const family = monoFamily(canvas);
+    ctx.textBaseline = 'middle';
+    ctx.font = `${layout.wide ? 11 : 10}px ${family}`;
+    const texts = labelsFor(layout);
+    if (!layout.wide) {
+      for (const text of texts) {
+        const width = ctx.measureText(text.text).width;
+        const x = text.align === 'left' ? text.x : text.x - width;
+        ctx.clearRect(x - 3, text.y - 7, width + 6, 14);
       }
-      for (const conn of sonnetToOpusConnections) {
-        const p = spawnParticle(conn, 'sonnet');
-        p.progress = 0.3 + Math.random() * 0.4;
-        p.opacity = 0.55;
-        staticParticles.push(p);
-      }
-      // Static coordination particles (1 per downward connection)
-      for (let i = 0; i < downConns.length; i++) {
-        const colorBase = i === 0 ? '232, 213, 183' : '183, 148, 246';
-        const p = spawnCoordinationParticle(downConns[i], colorBase);
-        p.progress = 0.3 + Math.random() * 0.4;
-        p.opacity = 0.7 * COORDINATION_OPACITY_MAX;
-        staticParticles.push(p);
-      }
-      particlesRef.current = staticParticles;
-      const rect = canvas.getBoundingClientRect();
-      draw(ctx, rect.width, rect.height);
-    } else {
-      let lastTime = performance.now();
-
-      const animate = (now: number) => {
-        const dt = Math.min((now - lastTime) / 1000, 0.05);
-        lastTime = now;
-        timeRef.current += dt;
-
-        const particles = particlesRef.current;
-        const accumulators = accumulatorsRef.current;
-        const spawnTimers = spawnTimersRef.current;
-        const arrivalPulses = arrivalPulseRef.current;
-        const { haikuConnections, sonnetToOpusConnections, downwardConnections: downConns } = layoutRef.current;
-
-        // --- Spawn haiku particles ---
-        for (let i = 0; i < haikuConnections.length; i++) {
-          const key = `h${i}`;
-          spawnTimers[key] = (spawnTimers[key] || 0) + dt;
-          const interval = HAIKU_SPAWN_INTERVAL + (i % 3) * 0.08; // slight per-connection variation
-          if (spawnTimers[key] >= interval && particles.length < MAX_PARTICLES) {
-            particles.push(spawnParticle(haikuConnections[i], 'haiku'));
-            spawnTimers[key] = 0;
-          }
-        }
-
-        // --- Spawn coordination particles ---
-        for (let i = 0; i < downConns.length; i++) {
-          const key = `coord${i}`;
-          spawnTimers[key] = (spawnTimers[key] || 0) + dt;
-          const interval = COORDINATION_SPAWN_INTERVAL + i * 0.15;
-          if (spawnTimers[key] >= interval && particles.length < MAX_PARTICLES) {
-            const colorBase = i === 0 ? '232, 213, 183' : '183, 148, 246';
-            particles.push(spawnCoordinationParticle(downConns[i], colorBase));
-            spawnTimers[key] = 0;
-          }
-        }
-
-        // --- Update particles ---
-        const toRemove: number[] = [];
-        for (let i = 0; i < particles.length; i++) {
-          const p = particles[i];
-          p.progress += p.speed;
-
-          // Fade in/out envelope
-          if (p.progress < 0.1) {
-            p.opacity = p.progress / 0.1;
-          } else if (p.progress > 0.85) {
-            p.opacity = Math.max(0, (1 - p.progress) / 0.15);
-          } else {
-            p.opacity = 0.85;
-          }
-
-          // Cap coordination particles at lower opacity
-          if (p.tier === 'coordination' && p.opacity > COORDINATION_OPACITY_MAX) {
-            p.opacity = COORDINATION_OPACITY_MAX;
-          }
-
-          if (p.progress >= 1.0) {
-            toRemove.push(i);
-            const destId = p.connection.to.id;
-
-            if (p.tier === 'haiku') {
-              // Arrival pulse on sonnet node
-              arrivalPulses[destId] = 0.10;
-              accumulators[destId] = (accumulators[destId] || 0) + 1;
-              if (accumulators[destId] >= COMPRESSION_THRESHOLD) {
-                accumulators[destId] = 0;
-                const outConn = sonnetToOpusConnections.find(c => c.from.id === destId);
-                if (outConn && particles.length < MAX_PARTICLES) {
-                  particles.push(spawnParticle(outConn, 'sonnet'));
-                }
-              }
-            } else if (p.tier === 'sonnet') {
-              // Arrival pulse on opus node (stronger)
-              arrivalPulses[destId] = 0.14;
-            } else if (p.tier === 'coordination') {
-              // Subtle arrival pulse
-              arrivalPulses[destId] = 0.05;
-            }
-          }
-        }
-
-        // Remove completed particles (reverse order)
-        for (let i = toRemove.length - 1; i >= 0; i--) {
-          particles.splice(toRemove[i], 1);
-        }
-
-        if (visibleRef.current) {
-          const rect = canvas.getBoundingClientRect();
-          draw(ctx, rect.width, rect.height);
-        }
-        animFrameRef.current = requestAnimationFrame(animate);
-      };
-
-      animFrameRef.current = requestAnimationFrame(animate);
     }
 
-    return () => {
-      window.removeEventListener('resize', resize);
-      if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
-    };
-  }, [prefersReducedMotion, draw]);
+    // Haiku: each window fills with the code it reads, then three cells of it
+    // light up, the reply, and climb to its Sonnet.
+    layout.haiku.forEach((rect, agent) => {
+      const s = Math.floor(agent / HAIKU_PER_SONNET);
+      const slot = agent % HAIKU_PER_SONNET;
+      const flight = replyFlight(climb, slot);
+      const filled = Math.floor(
+        span(read, readStart[agent], readStart[agent] + 0.86) * HAIKU_CELLS
+      );
+      for (let i = 0; i < filled; i++) {
+        const isReply = i % HAIKU_COLS === REPLY_COL && Math.floor(i / HAIKU_COLS) < REPLY_CELLS;
+        const { x, y } = cellAt(rect, HAIKU_COLS, i, pitch);
+        ctx.globalAlpha = dim('haiku') * spent(flight);
+        ctx.fillStyle = code;
+        ctx.fillRect(x, y, cell, cell);
+        if (isReply && reply > 0) {
+          ctx.globalAlpha = dim('haiku') * easeOut(reply);
+          ctx.fillStyle = ink;
+          ctx.fillRect(x, y, cell, cell);
+        }
+      }
+      if (flight > 0 && !landed(flight)) {
+        const from = cellAt(rect, HAIKU_COLS, REPLY_COL, pitch);
+        const to = cellAt(layout.sonnet[s], HAIKU_PER_SONNET, slot, pitch);
+        const t = easeInOut(flight);
+        ctx.globalAlpha = dim('haiku');
+        ctx.fillStyle = ink;
+        for (let k = 0; k < REPLY_CELLS; k++) {
+          ctx.fillRect(
+            Math.round(lerp(from.x, to.x, t)),
+            Math.round(lerp(from.y, to.y, t)) + k * pitch,
+            cell,
+            cell
+          );
+        }
+      }
+    });
+
+    // Sonnet: the five replies land column by column. The middle column
+    // brightens into the plan, and the plan rises to Opus.
+    layout.sonnet.forEach((rect, s) => {
+      const flight = planFlight(rise, s);
+      for (let slot = 0; slot < HAIKU_PER_SONNET; slot++) {
+        if (!landed(replyFlight(climb, slot))) continue;
+        const alpha =
+          slot === PLAN_COL
+            ? lerp(0.55, 1, easeOut(plan))
+            : lerp(0.55, 0.4, easeOut(plan)) * spent(flight);
+        ctx.globalAlpha = dim('sonnet') * alpha;
+        ctx.fillStyle = ink;
+        for (let k = 0; k < REPLY_CELLS; k++) {
+          const { x, y } = cellAt(rect, HAIKU_PER_SONNET, slot + k * HAIKU_PER_SONNET, pitch);
+          ctx.fillRect(x, y, cell, cell);
+        }
+      }
+      if (flight > 0 && !landed(flight)) {
+        const from = cellAt(rect, HAIKU_PER_SONNET, PLAN_COL, pitch);
+        const to = cellAt(layout.opus, SONNETS, s, pitch);
+        const t = easeInOut(flight);
+        ctx.globalAlpha = dim('sonnet');
+        ctx.fillStyle = ink;
+        for (let k = 0; k < PLAN_CELLS; k++) {
+          ctx.fillRect(
+            Math.round(lerp(from.x, to.x, t)),
+            Math.round(lerp(from.y, to.y, t)) + k * pitch,
+            cell,
+            cell
+          );
+        }
+      }
+    });
+
+    // Opus holds the two plans, and decides.
+    ctx.fillStyle = ink;
+    for (let s = 0; s < SONNETS; s++) {
+      if (!landed(planFlight(rise, s))) continue;
+      ctx.globalAlpha = dim('opus');
+      for (let k = 0; k < PLAN_CELLS; k++) {
+        const { x, y } = cellAt(layout.opus, SONNETS, s + k * SONNETS, pitch);
+        ctx.fillRect(x, y, cell, cell);
+      }
+    }
+    if (decide > 0) {
+      const d = layout.decision;
+      const shown = easeOut(decide);
+      const lift = Math.round((1 - shown) * 10);
+      ctx.globalAlpha = dim('opus') * shown;
+      ctx.fillRect(d.x, d.y + lift, cell, cell);
+      ctx.strokeStyle = rgba(accent, 0.6);
+      ctx.strokeRect(d.x - 3.5, d.y + lift - 3.5, cell + 7, cell + 7);
+    }
+
+    for (const text of texts) {
+      ctx.globalAlpha = dim(text.tier);
+      ctx.textAlign = text.align;
+      ctx.fillStyle = rgba(fg, text.strong ? 0.85 : 0.5);
+      ctx.fillText(text.text, text.x, text.y);
+    }
+    ctx.globalAlpha = 1;
+
+    // The caption follows the story, then rests on the rule.
+    if (!selected) {
+      showCaption(
+        value >= 1 || value < READ[0]
+          ? 'rest'
+          : value < CLIMB[0]
+            ? 'haiku'
+            : value < RISE[0]
+              ? 'sonnet'
+              : 'opus'
+      );
+    }
+  };
+
+  const animator = useAnimator(draw, STORY_MS);
+
+  useEffect(() => {
+    if (!box) return;
+    layoutRef.current = layoutFor(box.width, box.height);
+    animator.redraw();
+  }, [animator, box, colors, fontsReady]);
+
+  useEffect(() => {
+    if (reduced) {
+      animator.to(1, true);
+      return;
+    }
+    if (!seen) return;
+    const timer = window.setTimeout(() => animator.to(1), 300);
+    return () => window.clearTimeout(timer);
+  }, [animator, reduced, seen]);
+
+  useEffect(() => {
+    focusRef.current = focus;
+    if (focus) showCaption(focus);
+    animator.redraw();
+    // showCaption only touches refs.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [animator, focus]);
+
+  const tierAt = (clientY: number): Tier | null => {
+    const canvas = canvasRef.current;
+    const layout = layoutRef.current;
+    if (!canvas || !layout) return null;
+    const y = clientY - canvas.getBoundingClientRect().top;
+    for (const tier of ['opus', 'sonnet', 'haiku'] as Tier[]) {
+      const row = layout.rows[tier];
+      if (y >= row.top && y <= row.bottom) return tier;
+    }
+    return null;
+  };
 
   return (
-    <div className={`rounded-lg overflow-hidden border ${canvasTheme.wrapperClass}`}>
+    <Figure
+      figureRef={figureRef}
+      label="Three tiers of agents, each drawn as its own context window at one cell per 100 tokens. Ten Haiku agents each read 4,000 tokens of code and return 300. Two Sonnet agents each read five replies, 1,500 tokens, and write a plan. Opus reads the two plans and decides."
+      title="Three tiers of agents"
+      meta="1 cell = 100 tokens"
+      footer={
+        <>
+          {/* Every caption shares one grid cell, so the figure keeps the
+              height of the longest and never jumps as the story plays. */}
+          <span className="grid basis-full">
+            {PARTS.map((part) => (
+              <span
+                key={part}
+                ref={(element) => {
+                  captionRefs.current[part] = element;
+                }}
+                className="col-start-1 row-start-1"
+                style={{ visibility: part === 'rest' ? 'visible' : 'hidden' }}
+              >
+                <span style={{ color: DIM }}>{CAPTIONS[part].text}</span>
+                {CAPTIONS[part].example && (
+                  <span className="mt-1 block break-words" style={{ color: ACCENT }}>
+                    {CAPTIONS[part].example}
+                  </span>
+                )}
+              </span>
+            ))}
+          </span>
+          <Choice
+            label="Show one tier"
+            options={TIERS}
+            value={picked}
+            onChange={setPicked}
+            onClear={() => setPicked(null)}
+          />
+          <Replay onClick={() => animator.run(0, 1)} />
+          <span className="sr-only" aria-live="polite">
+            {picked ? `${CAPTIONS[picked].text} ${CAPTIONS[picked].example ?? ''}` : ''}
+          </span>
+        </>
+      }
+    >
       <canvas
         ref={canvasRef}
-        className="w-full h-[300px] sm:h-[380px] md:h-[440px] touch-pan-y"
-        aria-label="Animated diagram showing a three-tier agent hierarchy: many small Haiku reader nodes at the bottom send data particles upward to Sonnet worker nodes in the middle, which compress and forward fewer, larger particles to a single Opus coordinator at the top, demonstrating data compression at each tier"
-        role="img"
+        aria-hidden="true"
+        className="block h-[236px] w-full touch-manipulation sm:h-[300px]"
+        onPointerMove={(event) => {
+          if (event.pointerType === 'mouse') setHovered(tierAt(event.clientY));
+        }}
+        onPointerLeave={(event) => {
+          if (event.pointerType === 'mouse') setHovered(null);
+        }}
+        onPointerUp={(event) => {
+          if (event.pointerType === 'mouse') return;
+          const tier = tierAt(event.clientY);
+          setPicked((current) => (current === tier ? null : tier));
+        }}
       />
-    </div>
+    </Figure>
   );
 }
