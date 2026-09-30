@@ -96,11 +96,7 @@ export const STORY: Paragraph[] = [
       },
       {
         min: 2,
-        pieces: [
-          'Most of what I write here comes back to one idea: ',
-          { text: 'context is the bottleneck, not intelligence', href: '/posts/compression-as-intelligence/' },
-          '.',
-        ],
+        pieces: ['Mostly, I’m doing it to understand what comes next, and what the next few years will look like.'],
       },
     ],
   },
