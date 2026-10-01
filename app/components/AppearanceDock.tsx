@@ -1,20 +1,25 @@
 "use client";
 
-import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
-import type { KeyboardEvent, MouseEvent } from "react";
+import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from "react";
+import type { CSSProperties, HTMLAttributes, KeyboardEvent, MouseEvent } from "react";
 import { flushSync } from "react-dom";
 import { useTheme } from "next-themes";
 import { useNavbarScroll } from "./NavbarScrollContext";
 import { disturbWater } from "./pixel-fluid/disturb";
 import { focusQuietly } from "../lib/focus-intent";
 import { floodTheme, isThemeFloodActive } from "../lib/pixel-tide";
-import { BURST_GAP_MS, Burst, dropFlight, dropsFor, heatOf, MAX_DROPS } from "../lib/dock-play";
+import { BURST_GAP_MS, Burst, dropFlight, dropsFor, FOLD_MS, heatOf, MAX_DROPS } from "../lib/dock-play";
 import "../css/appearance-dock.css";
 
-// Theme and accent controls, docked in the bottom right corner in the same
-// square cells as the pixel water. A new accent is poured into the water from
-// its swatch; a theme switch floods the page from the button. With a mouse on
-// a wide screen all five swatches show; elsewhere they fold into one.
+// Theme and accent controls, docked in the bottom right corner as a little
+// window from a 16-bit game, drawn in 2px pixels around the pixel water's
+// square cells. Folded, it shows the chosen color and the theme button, which
+// is always there and never moves. A press on the color unrolls the palette
+// to its left: the window opens a few frames at a time while the strip of
+// colors slides under it, so the chosen one travels from the fold to its
+// place, wearing the cursor. A new accent is poured into the water from its
+// swatch; a theme switch floods the page from the button. Once a color is
+// picked and the presses stop, the palette rolls back up by itself.
 //
 // It is also a toy. Every press pours its swatch's color into the water, the
 // color already chosen included, and presses in quick succession build: their
@@ -25,6 +30,9 @@ import "../css/appearance-dock.css";
 
 const STORAGE_KEY = "accent-index";
 const ACCENTS = ["Mono", "Red", "Blue", "Green", "Amber"];
+// The dock hops above the site footer once the footer is this close below
+// the screen, so it is out of the way before the footer arrives.
+const LIFT_AHEAD = 64;
 
 // 9 x 9 pixel icons, one string per row.
 const SUN = [
@@ -58,8 +66,33 @@ const PRESS: Keyframe[] = [
   { transform: "scale(1)" },
 ];
 const PRESS_MS = 150;
+// The theme button's new icon rises into its cell in three 6px steps, at the
+// menu button's 45ms a frame.
+const RISE: Keyframe[] = [
+  { transform: "translateY(100%)", easing: "steps(3, jump-start)" },
+  { transform: "translateY(0)" },
+];
+const RISE_MS = 135;
 // A drop in flight trails a fainter dot this many steps behind it.
 const TRAIL_STEPS = 2;
+// React 18 writes `inert` only from a string; its types already expect
+// React 19's boolean.
+const INERT = { inert: "" } as unknown as HTMLAttributes<HTMLDivElement>;
+
+/** One path through the lit pixels of `rows`, a run of a row at a time. */
+function pixelPath(rows: string[]) {
+  let path = "";
+  rows.forEach((row, y) => {
+    for (let x = 0; x < row.length; x++) {
+      if (row[x] !== "#") continue;
+      const start = x;
+      while (row[x + 1] === "#") x++;
+      const run = x - start + 1;
+      path += `M${start} ${y}h${run}v1h-${run}z`;
+    }
+  });
+  return path;
+}
 
 function PixelIcon({ rows, className }: { rows: string[]; className: string }) {
   return (
@@ -70,14 +103,19 @@ function PixelIcon({ rows, className }: { rows: string[]; className: string }) {
       aria-hidden="true"
       focusable="false"
     >
-      {rows.flatMap((row, y) =>
-        [...row].map((pixel, x) =>
-          pixel === "#" ? <rect key={`${x}-${y}`} x={x} y={y} width="1" height="1" /> : null
-        )
-      )}
+      <path d={pixelPath(rows)} />
     </svg>
   );
 }
+
+// The sun and moon never change, so they are made once and React passes over
+// them whenever the dock renders again.
+const THEME_ICONS = (
+  <span className="appearance-dock-icon">
+    <PixelIcon rows={SUN} className="appearance-dock-sun" />
+    <PixelIcon rows={MOON} className="appearance-dock-moon" />
+  </span>
+);
 
 function center(element: HTMLElement) {
   const rect = element.getBoundingClientRect();
@@ -88,7 +126,7 @@ function calm() {
   return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
 
-function press(target: Element | null) {
+function press(target: Element | null | undefined) {
   if (!target) return;
   for (const animation of target.getAnimations()) animation.cancel();
   target.animate(PRESS, { duration: PRESS_MS });
@@ -145,6 +183,12 @@ export default function AppearanceDock() {
   const burst = useRef(new Burst());
   const cooling = useRef(0);
   const [open, setOpen] = useState(false);
+  const openRef = useRef(false);
+  // Folding by itself: armed by a pick with a pointer, held off while a
+  // mouse rests on the dock.
+  const foldTimer = useRef(0);
+  const picked = useRef(false);
+  const resting = useRef(false);
   const dockRef = useRef<HTMLDivElement>(null);
   const dropsRef = useRef<HTMLSpanElement>(null);
   const toggleRef = useRef<HTMLButtonElement>(null);
@@ -170,6 +214,7 @@ export default function AppearanceDock() {
     return () => {
       cancelAnimationFrame(accentFrame.current);
       window.clearTimeout(cooling.current);
+      window.clearTimeout(foldTimer.current);
       drops?.getAnimations({ subtree: true }).forEach((animation) => animation.cancel());
     };
   }, []);
@@ -177,6 +222,28 @@ export default function AppearanceDock() {
   useEffect(() => {
     requestedTheme.current = resolvedTheme;
   }, [resolvedTheme]);
+
+  // Roll the palette back up into the chosen color. `refocus` hands focus to
+  // the toggle, so a key press still reaches the dock.
+  const fold = useCallback((refocus: boolean) => {
+    window.clearTimeout(foldTimer.current);
+    picked.current = false;
+    if (!openRef.current) return;
+    openRef.current = false;
+    flushSync(() => setOpen(false));
+    if (refocus) focusQuietly(toggleRef.current);
+  }, []);
+
+  // After a pick with a pointer the palette folds once the presses stop, but
+  // not from under a resting mouse: then it waits for the mouse to leave.
+  const foldLater = useCallback(() => {
+    window.clearTimeout(foldTimer.current);
+    if (!picked.current || !openRef.current || resting.current) return;
+    foldTimer.current = window.setTimeout(() => {
+      // Focus left on a folded color would fall to the page.
+      fold(swatchRefs.current.some((swatch) => swatch === document.activeElement));
+    }, FOLD_MS);
+  }, [fold]);
 
   useEffect(() => {
     // During a root snapshot the browser hit-tests the captured page as
@@ -186,14 +253,18 @@ export default function AppearanceDock() {
       const buttons = dockRef.current?.querySelectorAll("button");
       if (!buttons) return;
       for (const button of buttons) {
+        // Folded colors and the toggle under the open palette still have a
+        // box, but nothing there to press.
+        if (button.closest("[inert]") || getComputedStyle(button).visibility === "hidden") continue;
         const rect = button.getBoundingClientRect();
         if (rect.width && rect.height && x >= rect.left && x < rect.right && y >= rect.top && y < rect.bottom) {
           focusQuietly(button);
-          button.click();
+          // A press like any other, so a pick here can fold the palette.
+          button.dispatchEvent(new globalThis.MouseEvent("click", { bubbles: true, cancelable: true, detail: 1 }));
           return;
         }
       }
-      setOpen(false);
+      fold(false);
     };
     const captured = (event: Event) => event.target === document.documentElement && isThemeFloodActive();
     // WebKit does not turn a tap on <html> into a click at all, so a touch
@@ -227,61 +298,67 @@ export default function AppearanceDock() {
       document.removeEventListener("pointerup", handleCapturedUp);
       document.removeEventListener("click", handleCapturedClick);
     };
-  }, []);
+  }, [fold]);
 
-  // Ride above the site footer once it comes into view, so the dock never
-  // covers its links. Page height changes on client navigation, not only on
-  // scroll, so watch the body too.
+  // Ride above the site footer while it is near, so the dock never covers its
+  // links: one hop up as the footer comes, one back down as it goes. Nothing
+  // runs while the page scrolls, and a page that opens with its footer in
+  // view starts out lifted, without a hop.
   useEffect(() => {
     const footer = document.querySelector<HTMLElement>("[data-site-footer]");
     const dock = dockRef.current;
-    if (!footer || !dock) return;
+    if (!footer || !dock || typeof IntersectionObserver === "undefined") return;
+    let first = true;
     let frame = 0;
-    const update = () => {
-      cancelAnimationFrame(frame);
-      frame = requestAnimationFrame(() => {
-        const lift = Math.max(0, window.innerHeight - footer.getBoundingClientRect().top);
-        dock.style.setProperty("--dock-lift", `${Math.round(lift)}px`);
-      });
-    };
-    const bodySize = new ResizeObserver(update);
-    bodySize.observe(document.body);
-    update();
-    window.addEventListener("scroll", update, { passive: true });
-    window.addEventListener("resize", update);
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry) return;
+        const lift = entry.isIntersecting ? Math.round(entry.boundingClientRect.height) : 0;
+        if (first) {
+          first = false;
+          dock.dataset.still = "";
+          frame = requestAnimationFrame(() => {
+            frame = requestAnimationFrame(() => delete dock.dataset.still);
+          });
+        }
+        dock.style.setProperty("--dock-lift", `${lift}px`);
+        dock.toggleAttribute("data-ashore", lift > 0);
+      },
+      { rootMargin: `0px 0px ${LIFT_AHEAD}px 0px` },
+    );
+    observer.observe(footer);
     return () => {
       cancelAnimationFrame(frame);
-      bodySize.disconnect();
-      window.removeEventListener("scroll", update);
-      window.removeEventListener("resize", update);
+      observer.disconnect();
     };
   }, []);
 
-  // Close the palette on a click or tap anywhere else.
+  // Fold the palette on a press anywhere else.
   useEffect(() => {
     if (!open) return;
     const handlePointerDown = (event: PointerEvent) => {
       if (event.target === document.documentElement && isThemeFloodActive()) return;
-      if (!dockRef.current?.contains(event.target as Node)) setOpen(false);
+      if (!dockRef.current?.contains(event.target as Node)) fold(false);
     };
     document.addEventListener("pointerdown", handlePointerDown);
     return () => document.removeEventListener("pointerdown", handlePointerDown);
-  }, [open]);
+  }, [open, fold]);
 
-  // The toggle disappears when the palette opens. Move focus in the same
+  // The toggle is hidden while the palette is open. Move focus in the same
   // commit so an immediate Escape reaches the palette, not the menu behind it.
   useLayoutEffect(() => {
     if (open) focusQuietly(swatchRefs.current[accentRef.current]);
   }, [open]);
 
-  // Every press counts toward the burst and answers in the dock: the cell
-  // dips, a hot burst flicks drops of `color` and warms the dock's edge.
-  // Returns how hot the burst is.
-  const play = (cell: HTMLElement, color: string) => {
+  // Every press counts toward the burst and answers in the dock: `dip`, the
+  // pressed cell's content, dips; a hot burst flicks drops of `color` and
+  // warms the dock's frame. Returns how hot the burst is.
+  const play = (cell: HTMLElement, color: string, dip = cell.firstElementChild) => {
+    window.clearTimeout(foldTimer.current);
     const count = burst.current.press(performance.now());
     if (calm()) return 0;
     const dock = dockRef.current;
-    press(cell.firstElementChild);
+    press(dip);
     if (dropsRef.current) fling(dropsRef.current, cell, color, dropsFor(count));
     if (dock && count > 2) {
       dock.dataset.hot = "";
@@ -297,15 +374,11 @@ export default function AppearanceDock() {
   };
 
   const openPalette = (event: MouseEvent<HTMLButtonElement>) => {
-    play(event.currentTarget, "var(--accent-color)");
+    // The folded window shows the chosen color, so that is what dips.
+    play(event.currentTarget, "var(--accent-color)", swatchRefs.current[accentRef.current]?.firstElementChild);
+    picked.current = false;
+    openRef.current = true;
     setOpen(true);
-  };
-
-  // Folding back only means something where the palette folds.
-  const closePalette = () => {
-    if (!open) return;
-    flushSync(() => setOpen(false));
-    focusQuietly(toggleRef.current);
   };
 
   // Only the last press before paint needs a pour or a page-wide restyle.
@@ -329,15 +402,23 @@ export default function AppearanceDock() {
     } catch {}
   };
 
-  const pickAccent = (index: number, from: HTMLElement) => {
+  // `pointer`: picked with a finger or a mouse, rather than with keys.
+  const pickAccent = (index: number, from: HTMLElement, pointer: boolean) => {
     const heat = play(from, `var(--accent-${index})`);
     // One press on the color already chosen folds the palette; pressed again
     // and again, it pours again.
-    if (index === accentRef.current && burst.current.count < 2) closePalette();
+    const done = index === accentRef.current && burst.current.count < 2;
     accentRef.current = index;
     pour.current = { ...center(from), heat };
     if (!accentFrame.current) accentFrame.current = requestAnimationFrame(applyAccent);
     setAccent(index);
+    if (done) {
+      fold(true);
+      return;
+    }
+    // Keys walk the palette and leave it open.
+    picked.current = pointer;
+    foldLater();
   };
 
   // Theme requests only change what the page should end up as; the flood
@@ -359,11 +440,18 @@ export default function AppearanceDock() {
     flushSync(() => setTheme(next));
     window.getComputedStyle(document.body);
     setTimeout(() => freeze.remove(), 1);
+    // The new sky's icon rises into the button.
+    if (!calm()) {
+      dockRef.current
+        ?.querySelector(next === "dark" ? ".appearance-dock-sun" : ".appearance-dock-moon")
+        ?.animate(RISE, RISE_MS);
+    }
   };
 
   const switchTheme = (event: MouseEvent<HTMLButtonElement>) => {
     const button = event.currentTarget;
     play(button, "currentColor");
+    foldLater();
     requestedTheme.current = (requestedTheme.current ?? shownTheme()) === "dark" ? "light" : "dark";
     const origin = center(button);
     disturbWater(origin);
@@ -376,14 +464,14 @@ export default function AppearanceDock() {
     const step = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[event.key];
     if (event.key === "Escape") {
       event.preventDefault();
-      closePalette();
+      fold(true);
     } else if (step) {
       event.preventDefault();
       const index = (accentRef.current + step + ACCENTS.length) % ACCENTS.length;
       const swatch = swatchRefs.current[index];
       if (swatch) {
         focusQuietly(swatch);
-        pickAccent(index, swatch);
+        pickAccent(index, swatch, false);
       }
     }
   };
@@ -400,49 +488,63 @@ export default function AppearanceDock() {
         // Only a focus move to somewhere else closes it. Safari moves focus to
         // nothing when a button is clicked, which must not count.
         const next = event.relatedTarget as Node | null;
-        if (open && next && !event.currentTarget.contains(next)) setOpen(false);
+        if (open && next && !event.currentTarget.contains(next)) fold(false);
+      }}
+      onPointerEnter={(event) => {
+        if (event.pointerType !== "mouse") return;
+        resting.current = true;
+        window.clearTimeout(foldTimer.current);
+      }}
+      onPointerLeave={(event) => {
+        if (event.pointerType !== "mouse") return;
+        resting.current = false;
+        foldLater();
       }}
     >
       <span ref={dropsRef} className="appearance-dock-drops" aria-hidden="true" />
-      <button
-        ref={toggleRef}
-        type="button"
-        aria-expanded={open}
-        aria-controls={paletteId}
-        aria-label={mounted ? `Accent color: ${ACCENTS[accent]}` : "Accent color"}
-        title="Accent color"
-        className="appearance-dock-cell appearance-dock-toggle"
-        onClick={openPalette}
-      >
-        <span className="appearance-dock-swatch" style={{ background: "var(--accent-color)" }} />
-      </button>
-      <div
-        id={paletteId}
-        role="radiogroup"
-        aria-label="Accent color"
-        className="appearance-dock-palette"
-        onKeyDown={handlePaletteKeys}
-      >
-        {ACCENTS.map((name, index) => (
-          <button
-            key={name}
-            ref={(element) => {
-              swatchRefs.current[index] = element;
-            }}
-            type="button"
-            role="radio"
-            aria-checked={accent === index}
-            aria-label={name}
-            title={name}
-            tabIndex={accent === index ? 0 : -1}
-            className="appearance-dock-cell"
-            data-swatch={index}
-            style={{ "--swatch-index": index } as React.CSSProperties}
-            onClick={(event) => pickAccent(index, event.currentTarget)}
-          >
-            <span className="appearance-dock-swatch" style={{ background: `var(--accent-${index})` }} />
-          </button>
-        ))}
+      {/* The palette's window: one cell wide when folded, five when open. */}
+      <div className="appearance-dock-reel">
+        <div
+          id={paletteId}
+          role="radiogroup"
+          aria-label="Accent color"
+          className="appearance-dock-palette"
+          onKeyDown={handlePaletteKeys}
+          // Folded, the strip only shows the chosen color through the window;
+          // none of it can be reached until it opens.
+          {...(open ? null : INERT)}
+        >
+          <span className="appearance-dock-cursor" aria-hidden="true" />
+          {ACCENTS.map((name, index) => (
+            <button
+              key={name}
+              ref={(element) => {
+                swatchRefs.current[index] = element;
+              }}
+              type="button"
+              role="radio"
+              aria-checked={accent === index}
+              aria-label={name}
+              title={name}
+              tabIndex={accent === index ? 0 : -1}
+              className="appearance-dock-cell"
+              data-swatch={index}
+              onClick={(event) => pickAccent(index, event.currentTarget, event.detail > 0)}
+            >
+              <span className="appearance-dock-swatch" style={{ "--swatch": `var(--accent-${index})` } as CSSProperties} />
+            </button>
+          ))}
+        </div>
+        <button
+          ref={toggleRef}
+          type="button"
+          aria-expanded={open}
+          aria-controls={paletteId}
+          aria-label={mounted ? `Accent color: ${ACCENTS[accent]}` : "Accent color"}
+          title="Accent color"
+          className="appearance-dock-cell appearance-dock-toggle"
+          onClick={openPalette}
+        />
       </div>
       <span className="appearance-dock-rule" aria-hidden="true" />
       <button
@@ -454,10 +556,7 @@ export default function AppearanceDock() {
         className="appearance-dock-cell appearance-dock-theme"
         onClick={switchTheme}
       >
-        <span className="appearance-dock-icon">
-          <PixelIcon rows={SUN} className="appearance-dock-sun" />
-          <PixelIcon rows={MOON} className="appearance-dock-moon" />
-        </span>
+        {THEME_ICONS}
       </button>
     </div>
   );

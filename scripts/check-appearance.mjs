@@ -19,8 +19,9 @@ const cpu = Number(process.env.CPU || 1);
 const longMs = Number(process.env.LONG_MS || 12000);
 // Drop nodes in the air at once: MAX_DROPS in app/lib/dock-play.ts.
 const MAX_DROP_NODES = 24;
-// app/lib/dock-play.ts BURST_GAP_MS and app/lib/pixel-tide.ts CALM_MS.
+// app/lib/dock-play.ts BURST_GAP_MS and FOLD_MS, app/lib/pixel-tide.ts CALM_MS.
 const BURST_GAP_MS = 450;
+const FOLD_MS = 700;
 const CALM_MS = 400;
 // After the last press: rings cross the screen, drops land and the wash
 // fades well inside this.
@@ -41,6 +42,8 @@ try {
     page.on("pageerror", (error) => errors.push(error.message));
     try {
       await page.goto(base, { waitUntil: "networkidle" });
+      await page.locator(".appearance-dock-toggle").click();
+      await page.waitForFunction(() => document.querySelector(".appearance-dock").hasAttribute("data-open"));
       await page.locator("[data-swatch='2']").click();
       await page.waitForFunction(() => document.documentElement.dataset.accent === "2");
       const theme = page.locator(".appearance-dock-theme");
@@ -149,12 +152,19 @@ try {
     const probe = () => page.evaluate(() => window.dockProbe());
     const accentNow = () =>
       page.evaluate(() => document.documentElement.getAttribute("data-accent") ?? "0");
-    // On a phone the palette folds into one swatch; open it when folded.
+    // The palette rests folded into the chosen color; open it when folded,
+    // and wait for the window to finish unrolling, since presses land by
+    // coordinates.
     const unfold = async () => {
-      if (phone && !(await probe()).open) {
+      if (!(await probe()).open) {
         await tap(".appearance-dock-toggle");
         await page.waitForFunction(() => window.dockProbe().open);
       }
+      await page.waitForFunction(() =>
+        [".appearance-dock-reel", ".appearance-dock-palette"].every(
+          (selector) => document.querySelector(selector).getAnimations().length === 0,
+        ),
+      );
     };
     // Everything the dock started has finished.
     const rest = async () => {
@@ -274,7 +284,7 @@ try {
         String(initial !== "true"),
       );
 
-      if (phone) await page.locator(".appearance-dock-toggle").tap();
+      await unfold();
       for (let i = 0; i < 201; i++) {
         const box = await page
           .locator(`[data-swatch="${i % 5}"]`)
@@ -344,48 +354,64 @@ try {
       assert.equal(await page.evaluate(() => localStorage.getItem("accent-index")), "2");
     });
 
-    if (!phone)
-      await test("desktop pressing the chosen color pours it again and changes nothing", async () => {
-        await rest();
-        const current = await accentNow();
-        const before = await probe();
-        await tap(swatch(current));
-        let peak = before.colored;
-        for (let i = 0; i < 8; i++) {
-          await page.waitForTimeout(50);
-          peak = Math.max(peak, (await probe()).colored);
-        }
-        assert.ok(peak > before.colored + 20, `a ring pours (${before.colored} -> ${peak})`);
-        assert.equal(await accentNow(), current);
-        assert.equal(await page.locator(swatch(current)).getAttribute("aria-checked"), "true");
-      });
-
-    if (phone)
-      await test("phone one press on the chosen color folds the palette, a burst plays", async () => {
-        await rest();
-        await unfold();
-        await page.waitForTimeout(BURST_GAP_MS + 100);
-        const current = await accentNow();
-        await tap(swatch(current));
-        await page.waitForFunction(() => !window.dockProbe().open);
-        await page.waitForTimeout(BURST_GAP_MS + 100);
-        await tap(".appearance-dock-toggle");
-        for (let i = 0; i < 5; i++) await tap(swatch(current));
-        assert.equal((await probe()).open, true, "a burst keeps the palette open");
-        assert.equal(await accentNow(), current);
-        await page.waitForTimeout(BURST_GAP_MS + 100);
-        await tap(swatch(current));
-        await page.waitForFunction(() => !window.dockProbe().open);
+    await test(`${label} one press on the chosen color pours it again and folds, a burst plays`, async () => {
+      await rest();
+      await unfold();
+      await page.waitForTimeout(BURST_GAP_MS + 100);
+      const current = await accentNow();
+      const before = await probe();
+      await tap(swatch(current));
+      let peak = before.colored;
+      for (let i = 0; i < 8; i++) {
+        await page.waitForTimeout(50);
+        peak = Math.max(peak, (await probe()).colored);
+      }
+      assert.ok(peak > before.colored + 20, `a ring pours (${before.colored} -> ${peak})`);
+      assert.equal((await probe()).open, false, "and the palette folds");
+      assert.equal(
+        await page.evaluate(() => document.activeElement?.classList.contains("appearance-dock-toggle")),
+        true,
+        "folding hands focus to the toggle",
+      );
+      assert.equal(await accentNow(), current);
+      assert.equal(await page.locator(swatch(current)).getAttribute("aria-checked"), "true");
+      await page.waitForTimeout(BURST_GAP_MS + 100);
+      await unfold();
+      for (let i = 0; i < 5; i++) await tap(swatch(current));
+      assert.equal((await probe()).open, true, "a burst keeps the palette open");
+      assert.equal(await accentNow(), current);
+      if (phone) {
+        // Once the burst is over the palette rolls back up by itself, and
+        // focus is not left on a folded color.
+        await page.waitForFunction(() => !window.dockProbe().open, null, { timeout: FOLD_MS * 4 });
         assert.equal(
-          await page.evaluate(() => document.activeElement?.classList.contains("appearance-dock-toggle")),
-          true,
-          "folding hands focus to the toggle",
+          await page.evaluate(() => Boolean(document.activeElement?.closest("[inert]"))),
+          false,
         );
-      });
+      }
+    });
+
+    await test(`${label} a pick folds the palette once the presses stop${phone ? "" : " and the mouse leaves"}`, async () => {
+      await rest();
+      await unfold();
+      await page.waitForTimeout(BURST_GAP_MS + 100);
+      const next = (Number(await accentNow()) + 1) % 5;
+      await tap(swatch(next));
+      await page.waitForTimeout(FOLD_MS + 300);
+      // A mouse resting on the palette holds it open.
+      assert.equal((await probe()).open, !phone);
+      if (!phone) {
+        await page.mouse.move(200, 300, { steps: 4 });
+        await page.waitForFunction(() => !window.dockProbe().open, null, { timeout: FOLD_MS + 1000 });
+      }
+      assert.equal(await accentNow(), String(next));
+      assert.equal(await page.locator(swatch(next)).getAttribute("aria-checked"), "true");
+    });
 
     if (!phone)
       await test("desktop holding an arrow key walks the palette and ends where it stops", async () => {
         await rest();
+        await unfold();
         const start = Number(await accentNow());
         await page.focus(swatch(start));
         for (let i = 0; i < 23; i++) await page.keyboard.press("ArrowRight");
@@ -510,7 +536,7 @@ try {
       // Compare the same idle accent at both ends. Starting from mono
       // otherwise counts ordinary colored crest glints as painted rings.
       await tap(swatch(3));
-      await unfold(); // A first press on the selected swatch folds the phone palette.
+      await unfold(); // A first press on the selected swatch folds the palette.
       await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))));
       const before = await probe();
       let most = { drops: 0, colored: before.colored };
@@ -679,6 +705,11 @@ try {
       });
     const before = await colored();
     let peak = before;
+    await page.locator(".appearance-dock-toggle").click();
+    await page.waitForFunction(() =>
+      document.querySelector(".appearance-dock").hasAttribute("data-open") &&
+      document.querySelector(".appearance-dock-palette").getAnimations().length === 0,
+    );
     for (const index of [1, 2, 3, 1, 2, 3, 1, 2, 3, 1]) {
       const box = await page.locator(`[data-swatch="${index}"]`).boundingBox();
       await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
