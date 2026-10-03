@@ -48,7 +48,7 @@ test('every c8, c-ladder and stall figure on /jspark3/glm/ names its condition, 
   const { default: GlmFactsPage } = await import('./GlmFactsPage');
   const facts = JSON.parse(readFileSync(join(root, 'app/(site)/jspark3/glm-facts.json'), 'utf8')).facts;
   const html = renderToStaticMarkup(React.createElement(GlmFactsPage));
-  // RigMark's "Against v1.8.4" rows follow RigMark's own protocol under its scope line, not the release's templates:
+  // RigMark's v1.8.4 comparison rows follow RigMark's own protocol under its scope line, not the release's templates:
   // rigmark.comparison_public.c1_ttft_row (rendered as c1_ttft) carries no condition, since a borrowed one would be false.
   const rigmark = html.match(/<figure class="[^"]*glm2-compare[^"]*"[\s\S]*?<\/figure>/);
   const inRigmark = (index: number) => !!rigmark && index >= rigmark.index! && index < rigmark.index! + rigmark[0].length;

@@ -174,17 +174,17 @@ export default function GlmFactsPage() {
     <section className="glm-results" id="results" aria-labelledby="results-title">
       <div className="glm-shell">
         <div className="glm-section-heading">
-          <h2 id="results-title">{GLM_COPY.resultsTitle}</h2>
+          <h2 id="results-title"><Fact slot={VERSION} />, measured on our three Sparks.</h2>
           <p className="glm-band-line">Every figure names the weights it was measured with, and whether the draft model was on.</p>
           {CONDITIONS.all ? null : <p><Fact slot={SETS_CONDITIONS} /></p>}
         </div>
         {RIGMARK_SHOWN ? <>
-          <h3 className="glm2-subhead" id="against-v184">Against v1.8.4</h3>
+          <h3 className="glm2-subhead" id="against-v184"><Fact slot={VERSION} /> against the v1.8.4 baseline</h3>
           {RIGMARK === 'undecided' ? <p className="glm2-decision"><span className="jspark-ph jspark-tbd">Shown only if RigMark is published with this release</span></p> : null}
           <CompareFigure />
           <RigmarkBlocks />
         </> : null}
-        <h3 className="glm2-subhead" id="sets">Every measured set</h3>
+        <h3 className="glm2-subhead" id="sets">Every measured <Fact slot={VERSION} /> set</h3>
         <div className="glm2-pair">
           <ColdStartChart />
           <ConcurrencyChart />
