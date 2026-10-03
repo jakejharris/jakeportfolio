@@ -3,7 +3,7 @@ import { Card } from '@/app/components/ui/card';
 import ArchitectureDiagram from '../ArchitectureDiagram';
 import CopyButton from '../CopyButton';
 import Fold from '../Fold';
-import { AuthorBenchmarks, SameTaskComparison, ScreenComparison } from '../ComparisonFigures';
+import { AuthorBenchmarks, ComparisonDate, SameTaskComparison, ScreenComparison } from '../ComparisonFigures';
 import OverlayDeltaFigure from '../OverlayDeltaFigure';
 import ReferenceRecipes from '../ReferenceRecipes';
 import Rich, { plainText } from '../Rich';
@@ -18,6 +18,7 @@ import {
   BENCHMARK_FACTS_CONDITION,
   BENCHMARKS_LEDE,
   CITE,
+  COMPARISON_DATES,
   CREDITS_INTRO,
   CREDITS_NOTE,
   CREDITS_ROLL,
@@ -255,6 +256,7 @@ export default function GlmArchive() {
             </Card>
           ))}
         </div>
+        <ComparisonDate when={COMPARISON_DATES.localRuns} />
         </Fold>
 
         {/* Evidence class one: the published reference table, author-reported. */}
@@ -269,6 +271,7 @@ export default function GlmArchive() {
             <ReferenceRecipes />
           </div>
           <p className="mt-3 text-sm text-muted-foreground">{REFERENCE_NOTE}</p>
+          <ComparisonDate when={COMPARISON_DATES.references} reported className="mt-2" />
         </Fold>
 
         {/* Evidence class three: the internal ablation. Deliberately compact and

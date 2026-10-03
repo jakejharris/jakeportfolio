@@ -1,0 +1,184 @@
+/*
+ * The current GLM release page (/jspark3/glm/), rendered from the release facts. It builds on
+ * glm.css: the same shell, tokens, bars and folds. This file adds only what the facts page
+ * needs: comparison series, the weights variants, and the plain text sections. No shadows.
+ */
+
+/* Pending facts: the placeholder hatch, allowed to wrap, so a long slot never widens the page. */
+.jspark-tbd { white-space: normal; overflow-wrap: anywhere; }
+.glm2 a[data-pending] { cursor: not-allowed; outline: 1.5px dashed #f0b429; outline-offset: -3px; background-image: repeating-linear-gradient(135deg, rgba(240, 180, 41, .08) 0 5px, rgba(240, 180, 41, .2) 5px 10px); }
+.glm2 .glm-results a[data-pending] { outline-color: #b07a00; }
+
+/* The draft line above the page, and the pointer on an earlier release's page. */
+.glm2-draft, .glm2-pointer { margin: 0; padding: 10px 24px; text-align: center; font: 13px/1.5 var(--font-geist-mono), monospace; border-bottom: 1px solid var(--glm-line); }
+.glm2-draft { color: #f0b429; }
+.glm2-pointer { background: var(--glm-panel); }
+.glm2-pointer a { color: var(--glm-gold) !important; }
+
+.glm2-specs { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+
+/* Series: the earlier release in grey, the default weights in the release gold, the other weights in slate. */
+.glm2-series-before { --series: #9aa2ab; }
+.glm2-series-default { --series: var(--glm-gold-deep); }
+.glm2-series-other { --series: var(--glm-other); }
+.glm2-series-plain { --series: var(--glm-plain); }
+.glm2-series-plain .glm-bar-name { color: var(--glm-paper-ink); }
+.glm-bar[data-state="absent"] .glm-bar-value small { color: var(--glm-paper-muted); font-size: 12.5px; }
+.glm2-series-default .glm-bar-name, .glm2-series-other .glm-bar-name { color: var(--glm-paper-ink); }
+.glm2-series-default .glm-bar-value { font-weight: 700; }
+.glm2-chart .glm-bar { grid-template-columns: 8rem minmax(0, 1fr) 6.5rem; }
+.glm2-chart .glm-bar-value small { font-size: 12px; font-weight: 400; color: var(--glm-paper-muted); }
+.glm2-chart .glm2-scale { margin-left: calc(8rem + 12px) !important; width: calc(100% - 14.5rem - 24px); }
+.glm2-chart .glm-group-label span { color: var(--glm-paper-muted); font-size: 13px; }
+
+/* Results subheads: the comparison with v1.8.4, then every measured set. */
+.glm .glm2-subhead { margin-top: 40px; font-size: 22px; font-weight: 500; line-height: 1.3; letter-spacing: -.4px; }
+.glm .glm2-subhead + .glm-chart, .glm .glm2-subhead + .glm2-pair { margin-top: 14px; }
+
+/* RigMark's own headline blocks, as it prints them: monospaced, scrolling sideways rather than wrapping. */
+.glm2-rigmark { margin-top: 20px; }
+.glm2-rigmark-blocks { display: grid; gap: 16px; }
+.glm2-rigmark-block { margin: 0; min-width: 0; }
+.glm2-rigmark-block figcaption { font: 12px/1.5 var(--font-geist-mono), monospace; color: var(--glm-paper-muted); margin-bottom: 6px; }
+.glm2-rigmark-block pre { margin: 0; padding: 14px 16px; overflow-x: auto; background: var(--glm-bg); color: var(--glm-text); font: 12.5px/1.55 var(--font-geist-mono), monospace; }
+
+/* The comparison with v1.8.4: one group per figure, two to a row on wide screens. */
+.glm2-compare-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 26px 40px; margin-top: 22px; }
+/* How the release's own benchmark set reasoning, once beneath its figures (only when the release labels them). */
+.glm .glm2-relbench-label { margin-top: 18px; font-size: 13px; line-height: 1.55; color: var(--glm-paper-muted); }
+
+/* The sentence a figure is never shown without, directly beneath its set's line. */
+.glm-figure .glm2-partner { margin-top: 4px !important; font-size: 13px; line-height: 1.55; color: var(--glm-paper-ink); }
+/* Which estimator each set's partner uses: once, under the last set. */
+.glm-figure .glm2-condition { margin-top: 4px !important; font-size: 13px; line-height: 1.5; color: var(--glm-paper-muted); }
+.glm-figure .glm2-partner-note { margin-top: 10px !important; font-size: 13px; line-height: 1.55; color: var(--glm-paper-ink); }
+
+/* What the comparison is (and is not), under its title; a row's own note, under its bars. */
+.glm2-chart .glm2-compare-scope { margin-top: 6px; font-size: 14px; line-height: 1.5; color: var(--glm-paper-ink); }
+.glm2-chart .glm2-compare-note { margin-top: 8px; font-size: 13px; line-height: 1.5; color: var(--glm-paper-muted); }
+.glm2-conditions { margin-top: 8px !important; font-size: 13px; line-height: 1.55; color: var(--glm-paper-muted); }
+.glm2-pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; margin-top: 24px; align-items: start; }
+
+/* How each family of figures was measured. */
+.glm2-method { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px 32px; margin-top: 32px; padding-top: 20px; border-top: 1px solid var(--glm-paper-line); }
+.glm2-method dt { font: 12px/1.5 var(--font-geist-mono), monospace; color: var(--glm-paper-muted); letter-spacing: .04em; }
+.glm2-method dd { margin-top: 6px; font-size: 14px; line-height: 1.6; }
+
+/* Dark sections: a heading column and a content column, divided by the page's hairlines. */
+.glm2-section { padding-block: 48px; border-top: 1px solid var(--glm-line); }
+.glm2-section:first-of-type { border-top: 0; }
+.glm2-split { display: grid; grid-template-columns: 1fr 1.25fr; gap: 48px; }
+.glm2-prose p { color: var(--glm-muted); line-height: 1.7; }
+.glm2-prose p + p { margin-top: 14px; }
+.glm2 code { font: 13px/1.5 var(--font-geist-mono), monospace; color: var(--glm-text); background: var(--glm-panel); border: 1px solid var(--glm-line); padding: 2px 6px; overflow-wrap: anywhere; }
+
+/* The weights a user chooses at install, side by side. The default carries the gold rule. */
+.glm2-variants { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; gap: 24px; margin-top: 28px; }
+.glm2-variant { background: var(--glm-panel); border: 1px solid var(--glm-line); border-top: 2px solid var(--glm-other); padding: 24px; min-width: 0; }
+.glm2-variant[data-default] { border-top-color: var(--glm-gold); }
+.glm2-variant-kicker { font: 12px/1.5 var(--font-geist-mono), monospace; letter-spacing: .08em; text-transform: uppercase; color: var(--glm-muted); }
+.glm2-variant[data-default] .glm2-variant-kicker { color: var(--glm-gold); }
+.glm2-variant h3 { margin-top: 8px; font-size: 22px; font-weight: 500; letter-spacing: -.4px; }
+.glm2-variant > p { margin-top: 10px; color: var(--glm-muted); }
+.glm2-variant dl { display: grid; gap: 10px; margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--glm-line); }
+.glm2-variant dl > div { display: grid; grid-template-columns: 6.5rem minmax(0, 1fr); gap: 12px; font-size: 14px; }
+.glm2-variant dt { color: var(--glm-muted); }
+.glm2-variant dd a { text-decoration: underline; text-decoration-color: var(--glm-gold); overflow-wrap: anywhere; }
+.glm2-responsibility { margin-top: 18px !important; padding: 12px 14px; border-left: 2px solid var(--glm-gold); background: color-mix(in srgb, var(--glm-gold) 7%, transparent); color: var(--glm-text) !important; font-size: 14px; line-height: 1.6; }
+
+/* A source's terms, quoted verbatim under the card. */
+.glm2-terms { margin: 18px 0 0; }
+.glm2-terms figcaption { font: 12px/1.5 var(--font-geist-mono), monospace; color: var(--glm-muted); }
+.glm2-terms blockquote { margin: 8px 0 0; padding: 12px 14px; border-left: 2px solid var(--glm-line); color: var(--glm-muted); font-size: 13.5px; line-height: 1.6; }
+.glm2-terms ul { margin: 0; padding-left: 18px; list-style: disc; }
+.glm2-terms li + li, .glm2-terms blockquote > * + * { margin-top: 8px; }
+.glm2-terms strong { color: var(--glm-text); font-weight: 600; }
+
+/* Compatibility: a plain definition list. */
+.glm2-defs { display: grid; gap: 1px; background: var(--glm-line); border: 1px solid var(--glm-line); align-self: start; }
+.glm2-defs > div { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); gap: 16px; padding: 14px 16px; background: var(--glm-panel); font-size: 14px; }
+.glm2-defs dd { color: var(--glm-muted); }
+
+/* Earlier releases: the GLM page's fold rows, as links; an unpublished build is a plain row. */
+.glm2-history { padding-top: 0; border-top: 1px solid var(--glm-line); align-self: start; }
+.glm2-history-internal { cursor: default; color: var(--glm-muted); margin: 0; }
+.glm2-rev { color: var(--glm-muted); font: 12.5px var(--font-geist-mono), monospace; }
+.glm2-prose > * + * { margin-top: 18px; }
+
+/* Known issues and credits. */
+.glm2-list { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--glm-line); align-self: start; }
+.glm2-list li { padding-block: 14px; border-bottom: 1px solid var(--glm-line); color: var(--glm-muted); line-height: 1.6; }
+.glm2-credits li { display: grid; gap: 2px; }
+.glm2-credits li > :first-child { color: var(--glm-text); }
+.glm2-credits a { text-decoration: underline; text-decoration-color: var(--glm-gold); text-underline-offset: 3px; }
+
+@media (max-width: 1000px) {
+  .glm2-specs { grid-template-columns: 1fr 1fr; }
+  .glm2-specs > div:last-child { grid-column: auto; }
+  .glm2-split { gap: 32px; }
+}
+@media (max-width: 800px) {
+  .glm2-specs { grid-template-columns: 1fr; }
+  .glm2-compare-grid, .glm2-method, .glm2-variants, .glm2-split, .glm2-pair { grid-template-columns: 1fr; }
+  .glm2-split { gap: 20px; }
+  .glm2-section { padding-block: 40px; }
+}
+@media (max-width: 520px) {
+  .glm2-chart .glm-bar { grid-template-columns: minmax(0, 1fr) auto; }
+  .glm2-chart .glm2-scale { margin-left: 0 !important; width: 100%; }
+  .glm2-variant { padding: 18px; }
+  .glm2-variant dl > div { grid-template-columns: minmax(0, 1fr); gap: 2px; }
+  .glm2-defs > div { grid-template-columns: minmax(0, 1fr); gap: 4px; }
+  .glm2-draft, .glm2-pointer { padding-inline: 16px; }
+}
+
+/* Where the headline figures come from, under the speed lines. */
+
+/* A section that ships only on the release's decision. */
+.glm2-decision { margin-top: 8px; font-size: 13px; }
+
+/* The measurement paragraph, when the release writes one for every figure. */
+.glm2-method-all { display: block; }
+.glm2-method-all p + p { margin-top: 8px; max-width: 72ch; font-size: 14px; line-height: 1.65; }
+
+/* Install facts sit under the install claim. */
+.glm2-install-defs { margin-top: 20px; }
+@media (min-width: 801px) {
+  .glm2-install-defs > div { grid-template-columns: 9rem minmax(0, 1fr); }
+}
+
+/* What each install step takes: one line per measure, its name in small mono beside the figure. */
+.glm .glm2-costs { margin-top: 14px; }
+.glm2-costs dd > span { display: grid; grid-template-columns: 6.5rem minmax(0, 1fr); column-gap: 8px; align-items: baseline; }
+.glm2-costs dd > span + span { margin-top: 2px; }
+.glm2-cost-label { color: var(--glm-muted); font: 12px/1.6 var(--font-geist-mono), monospace; letter-spacing: .02em; }
+.glm2-costs dd { color: var(--glm-text); }
+.glm2-costs-note { margin-top: 10px; max-width: 72ch; color: var(--glm-muted); font-size: 13px; line-height: 1.6; }
+
+/* Figures stacked beside a chart. */
+.glm2-figcol { display: grid; gap: 24px; align-content: start; }
+
+/* The shared install switch, under the weights heading. */
+.glm2-switch { margin-top: 12px; color: var(--glm-muted); font-size: 15px; line-height: 1.6; max-width: 72ch; }
+
+/* Draft acceptance, one line per kind of prompt. */
+.glm2-acceptance { display: block; }
+.glm2-acceptance + .glm2-acceptance { margin-top: 6px; }
+
+/* Errata: corrections to the engine's own files, after the known issues and apart from them. */
+.glm .glm2-errata .glm2-subhead { margin-top: 32px; font-size: 18px; }
+.glm2-errata p { margin-top: 8px; max-width: 72ch; color: var(--glm-muted); font-size: 14px; line-height: 1.65; }
+/* Inside code, words never break at their own hyphens (Fact wraps each word). */
+.glm2-nobreak { white-space: nowrap; }
+
+/* Disk per host, by component: the parts are listed, never added up. */
+.glm2-disk { display: grid; gap: 4px; margin: 0; padding: 0; list-style: none; color: var(--glm-text); }
+.glm2-disk li { display: grid; grid-template-columns: 7.75rem minmax(0, 1fr); column-gap: 8px; align-items: baseline; }
+
+/* Paragraphs inside a definition (the commercial path and its contact). */
+.glm2-paras p + p { margin-top: 8px; }
+/* A command to copy: wrapped to the column (soft wraps paste as one line). */
+.glm2-command { margin-top: 10px; min-width: 0; }
+.glm2-command p { font-size: 13px; }
+.glm2-command pre { margin-top: 4px; padding: 8px 10px; overflow-x: auto; border: 1px solid var(--glm-line); background: var(--glm-bg, transparent); color: var(--glm-text); font: 12.5px/1.5 var(--font-geist-mono), monospace; white-space: pre-wrap; overflow-wrap: anywhere; }
+.glm2 .glm2-command pre code { padding: 0; border: 0; background: none; font: inherit; }

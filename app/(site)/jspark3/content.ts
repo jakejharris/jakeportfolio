@@ -250,6 +250,18 @@ export const SAME_TASK = {
   note: "One agent prompt, independent runs; each agent chose its own path.",
 } as const;
 
+/**
+ * When each comparison with another project's build was measured, for the dated line under it: other
+ * projects have released newer versions since. Each date comes from the commit that introduced the
+ * block's numbers: the day where that commit is the measurement, else its month.
+ */
+export const COMPARISON_DATES = {
+  authorBenchmarks: 'on 2026-09-02', // c2c1c99, with the block's own "Measured on 2026-09-02"
+  screen: 'in September 2026', // c2c1c99, ported from the v1.0.0 site
+  sameTask: 'in September 2026', // c2c1c99, ported from the v1.0.0 site
+  localRuns: 'in September 2026', // c2c1c99, ported from the v1.0.0 site
+  references: 'in September 2026', // c2c1c99, the authors' published figures as collected then
+} as const;
 /** Evidence class one: the published reference recipes, quoted as their authors reported them. */
 export interface ReferenceRow {
   recipe: string;
@@ -658,14 +670,16 @@ export const SHAPLEYMCG_ATTRIBUTION: ReadonlyArray<RichPart> = [
 ];
 
 export const CREDITS_NOTE =
-  "The current release's third-party notices record upstream authors, repositories, revisions, and licenses. The required ShapleyMcg attribution is preserved in the repository and model mirrors.";
+  "This release's third-party notices record upstream authors, repositories, revisions, and licenses. The required ShapleyMcg attribution is preserved in the repository and model mirrors.";
 
 export const CITE = {
   title: "Cite it",
   body: [
-    "Cite the ",
-    { text: "current public release, v1.8.4", href: "https://github.com/jakejharris/jspark3/releases/tag/v1.8.4" },
-    ", together with the upstream work in its ",
+    "Cite ",
+    { text: "this release, v1.8.4", href: "https://github.com/jakejharris/jspark3/releases/tag/v1.8.4" },
+    " (superseded by ",
+    { text: "v2.0.1", href: "/jspark3/glm/" },
+    "), together with the upstream work in its ",
     { text: "third-party notices", href: "https://github.com/jakejharris/jspark3/blob/v1.8.4/THIRD_PARTY_NOTICES.md" },
     " and ",
     { text: "required ShapleyMcg attribution", href: "https://github.com/jakejharris/jspark3/blob/v1.8.4/REQUIRED_ATTRIBUTION.md" },

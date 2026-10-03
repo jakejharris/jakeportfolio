@@ -7,8 +7,20 @@ import {
   TableHeader,
   TableRow,
 } from '@/app/components/ui/table';
-import { AUTHOR_BENCHMARKS, SAME_TASK, SCREEN_COMPARISON } from './content';
+import { AUTHOR_BENCHMARKS, COMPARISON_DATES, SAME_TASK, SCREEN_COMPARISON } from './content';
 import Fold from './Fold';
+
+/**
+ * The dated line under a comparison with another project's build: when it was measured (or, for figures
+ * the authors published, collected), and that those projects have released newer versions since.
+ */
+export function ComparisonDate({ when, reported = false, className = 'mt-3' }: { when: string; reported?: boolean; className?: string }) {
+  return (
+    <p className={`${className} text-[13px] leading-relaxed text-muted-foreground`}>
+      {reported ? 'Figures as published by their authors, collected' : 'Comparison as measured'} {when}; other projects have released newer versions since.
+    </p>
+  );
+}
 
 /**
  * The headline comparison figures at the top of the evidence section.
@@ -161,6 +173,7 @@ export function AuthorBenchmarks() {
       <p className="mt-2 max-w-[82ch] text-sm leading-relaxed text-muted-foreground">
         {AUTHOR_BENCHMARKS.subtitle}
       </p>
+      <ComparisonDate when={COMPARISON_DATES.authorBenchmarks} className="mt-2" />
 
       <Fold
         className="mt-5 border-t border-border pt-5"
@@ -268,6 +281,7 @@ export function ScreenComparison() {
       <p className="mt-4 text-[13px] leading-relaxed text-muted-foreground">
         {SCREEN_COMPARISON.condition}
       </p>
+      <ComparisonDate when={COMPARISON_DATES.screen} className="mt-2" />
     </Panel>
   );
 }
@@ -292,6 +306,7 @@ export function SameTaskComparison() {
         ))}
       </div>
       <p className="mt-4 text-[13px] leading-relaxed text-muted-foreground">{SAME_TASK.note}</p>
+      <ComparisonDate when={COMPARISON_DATES.sameTask} className="mt-2" />
     </Panel>
   );
 }
