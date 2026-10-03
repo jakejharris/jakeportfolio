@@ -25,20 +25,22 @@ function MiaNote() {
 }
 
 /**
- * The GLM release page: the Tempo project shell with the Spark's own palette.
+ * The v1.8.4 release page: the Tempo project shell with the Spark's own palette.
  * The numbers lead; the first community run follows. Every value comes from
- * glm-release.json, so filling that file updates the whole page.
+ * glm-release.json, so filling that file updates the whole page. Since v2.0.1 it is
+ * kept whole at /jspark3/glm/v1.8.4, with a pointer to the newer release (newer).
  */
-export default function GlmPage() {
+export default function GlmPage({ newer }: { newer?: React.ReactNode } = {}) {
   const { name, published, links, headline } = GLM_RELEASE;
   return <div className="glm" id="glm-top">
     <a className="glm-skip" href="#results">Skip to results</a>
     <FoldAnchors />
+    {newer ? <p className="glm2-pointer">{newer}</p> : null}
     <div className="glm-shell">
       <ProjectHeader prefix="glm" nav={NAV} />
       <header className="glm-hero">
         <div>
-          <p className="glm-kicker">JSPARK3{name ? <> <Ph>{RELEASE}</Ph></> : null} · {LABELS.latest}</p>
+          <p className="glm-kicker">JSPARK3{name ? <> <Ph>{RELEASE}</Ph></> : null} · {newer ? LABELS.earlier : LABELS.latest}</p>
           {/* The lede is part of the heading, so the page's h1 names the project, the release and what it runs. */}
           <h1>
             <span className="glm-sr-only">JSPARK3 </span>

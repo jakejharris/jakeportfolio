@@ -69,6 +69,8 @@
   white-space: nowrap;
 }
 .spark-hub-figure-value small { margin-left: 0.4rem; color: var(--hub-muted); font: 400 0.75rem/1 var(--font-geist-mono), monospace; letter-spacing: 0; }
+.spark-hub-figure-weights { font-size: 0.75rem; font-weight: 500; line-height: 1.45; }
+.spark-hub-figure-caption { color: var(--hub-muted); font-size: 0.75rem; line-height: 1.45; text-wrap: balance; }
 .spark-hub .spark-hub-release-named { gap: 0.3rem; padding: 1.1rem 1.5rem; }
 .spark-hub-release-named .spark-hub-release-title { margin-top: 0.1rem; font-size: 1.25rem; letter-spacing: -0.03em; }
 .spark-hub-release-named .spark-hub-release-action { margin-top: 0.3rem; }

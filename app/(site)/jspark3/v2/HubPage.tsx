@@ -3,28 +3,15 @@ import PageLayout from '../../../components/PageLayout';
 import TransitionLink from '../../../components/TransitionLink';
 import GlassLight from '../../../components/GlassLight';
 import { release } from './release-data';
-import { GLM_RELEASE, HEADLINE_ROWS, HUB_COPY, INTERNAL_BUILDS, IS_PLACEHOLDER, RELEASE, RELEASE_HISTORY, RELEASE_SUMMARY, releaseDate, valueText } from '../release-copy';
-import { Ph } from '../Placeholder';
-import Band from './Band';
+import { HUB_COPY, INTERNAL_BUILDS, LABELS, RELEASE_HISTORY } from '../release-copy';
+import { ENGINE, HISTORY, PUBLISHED, RELBENCH_LABEL, TILES_LINE, TILE_FIGURES, VERSION, releaseDate } from '../glm-facts';
+import { Fact } from './Fact';
 
 /**
- * The card's four figures, from the release's own start: prefill, code and prose for one stream, and code
- * for four streams. prose_c1 is the release's decode_prose_c1; the others are headline rows. A figure the
- * release's numbers leave out is skipped, and with no measured start of the release the card shows none.
+ * The latest card's figures are the release's chosen metrics, as the facts write them (glm-facts.ts TILE_FIGURES).
+ * No v1.8.4 figure stands beside them: the release compares the two only in RigMark's "Against v1.8.4".
+ * A figure from other weights names them; a concurrency figure carries its condition as its caption.
  */
-type HubCell = { lo_text: string | null; hi_text: string | null; median_text?: string; unit: string };
-const HUB_TILES = HUB_COPY.glmCard.tiles.flatMap(tile => {
-  const cell: HubCell | undefined = tile.id === 'prose_c1'
-    ? (GLM_RELEASE.headline.missing || !GLM_RELEASE.headline.prose_c1 ? undefined : { ...GLM_RELEASE.headline.prose_c1, unit: 'tok/s' })
-    : HEADLINE_ROWS.find(item => item.id === tile.id);
-  return cell && (IS_PLACEHOLDER || cell.hi_text !== null) ? [{ ...tile, cell }] : [];
-});
-const FIGURE = HUB_COPY.glmCard.figure;
-
-/** A recorded code median, otherwise the complete recorded range. */
-function HubFigure({ cell }: { cell: HubCell }) {
-  return cell.median_text ? <Ph>{valueText(cell.median_text)}</Ph> : <Band lo={cell.lo_text} hi={cell.hi_text} />;
-}
 
 function LedgerRow({ href, children }: { href: string; children: React.ReactNode }) {
   return href.startsWith('/')
@@ -33,6 +20,7 @@ function LedgerRow({ href, children }: { href: string; children: React.ReactNode
 }
 
 export default function HubPage() {
+  const latestDate = releaseDate();
   return <>
     <PageLayout className="spark-hub">
       <a className="spark-hub-skip" href="#current">Skip to releases</a>
@@ -46,17 +34,18 @@ export default function HubPage() {
         <ol className="spark-hub-list">
           <li>
             <TransitionLink href="/jspark3/glm/" className="pageLinkContainer spark-hub-release">
-              <span className="spark-hub-release-meta">{`${HUB_COPY.glmCard.meta} `}<span><Ph>{RELEASE}</Ph>{GLM_RELEASE.published ? <> · <Ph>{releaseDate(GLM_RELEASE.published)}</Ph></> : null}</span></span>
-              <span className="spark-hub-release-title">{HUB_COPY.glmCard.title} <span aria-hidden="true">↗</span></span>
-              {RELEASE_SUMMARY ? <span className="spark-hub-release-detail">{RELEASE_SUMMARY}</span> : null}
-              {HUB_TILES.length ? <span className="spark-hub-figures" data-figure={FIGURE}>
-                {HUB_TILES.map(({ id, label, cell }) => <span key={id} className="spark-hub-figure" data-metric-id={id}>
+              <span className="spark-hub-release-meta">{`${LABELS.latest} `}<span><Fact slot={VERSION} />{latestDate ? <> · {latestDate}</> : null}</span></span>
+              <span className="spark-hub-release-title">GLM-5.3 Flash <span aria-hidden="true">↗</span></span>
+              <span className="spark-hub-figures" data-figure="facts">
+                {TILE_FIGURES.map(({ key, label, unit, value, weights, caption }) => <span key={key} className="spark-hub-figure" data-metric-id={key}>
                   <span className="spark-hub-figure-label">{label}</span>
-                  <span className="spark-hub-figure-value"><HubFigure cell={cell} /><small>{cell.unit}</small></span>
+                  <span className="spark-hub-figure-value"><Fact slot={value.slot} /><small>{unit}</small></span>
+                  {weights ? <span className="spark-hub-figure-weights"><Fact slot={weights} /></span> : null}
+                  {caption ? <span className="spark-hub-figure-caption"><Fact slot={caption} /></span> : null}
                 </span>)}
-              </span> : null}
-              <span className="spark-hub-release-detail">{HUB_TILES.length ? HUB_COPY.glmCard.caption[FIGURE] : HUB_COPY.glmCard.caption.none}</span>
-              {HUB_TILES.length && HUB_COPY.glmCard.installNote ? <span className="spark-hub-release-detail" data-hub-install-note>{HUB_COPY.glmCard.installNote}</span> : null}
+              </span>
+              <span className="spark-hub-release-detail">{TILES_LINE ? <Fact slot={TILES_LINE} /> : null}{RELBENCH_LABEL ? <>, <Fact slot={RELBENCH_LABEL.short} /></> : null}</span>
+              {RELBENCH_LABEL ? <span className="spark-hub-release-detail spark-hub-relbench" data-relbench-label="full"><Fact slot={RELBENCH_LABEL.full} /></span> : null}
               <span className="spark-hub-release-action">{HUB_COPY.glmCard.action} <span aria-hidden="true">→</span></span>
             </TransitionLink>
           </li>
@@ -75,25 +64,34 @@ export default function HubPage() {
         <ol className="spark-hub-ledger">
           <li>
             <LedgerRow href="/jspark3/glm/">
-              <span className="spark-hub-ledger-version"><Ph>{RELEASE}</Ph></span>
-              <span className="spark-hub-ledger-what">{GLM_RELEASE.name ? `${GLM_RELEASE.name}, GLM-5.3 Flash` : 'GLM-5.3 Flash'}<span className="spark-hub-ledger-pill">Latest</span></span>
-              <span className="spark-hub-ledger-when">{GLM_RELEASE.published ? <Ph>{releaseDate(GLM_RELEASE.published, false)}</Ph> : null}</span>
+              <span className="spark-hub-ledger-version"><Fact slot={VERSION} /></span>
+              <span className="spark-hub-ledger-what">GLM-5.3 Flash on <Fact slot={ENGINE.provenance} /><span className="spark-hub-ledger-pill">Latest</span></span>
+              <span className="spark-hub-ledger-when">{releaseDate(false) ?? <Fact slot={PUBLISHED} />}</span>
             </LedgerRow>
           </li>
-          {INTERNAL_BUILDS ? <li className="spark-hub-ledger-internal">
+          {HISTORY.map((item, index) => <li key={`internal-${index}`} className="spark-hub-ledger-internal">
             <span className="spark-hub-ledger-row">
-              <span className="spark-hub-ledger-version">{INTERNAL_BUILDS.first}{INTERNAL_BUILDS.last ? <> to <Ph>{INTERNAL_BUILDS.last}</Ph></> : null}</span>
-              <span className="spark-hub-ledger-what">{HUB_COPY.internalRow}</span>
-              <span className="spark-hub-ledger-when">Sep</span>
+              <span className="spark-hub-ledger-version"><Fact slot={item.version} /></span>
+              <span className="spark-hub-ledger-what"><Fact slot={item.note} /></span>
+              <span className="spark-hub-ledger-when" />
             </span>
-          </li> : null}
-          {RELEASE_HISTORY.map(item => <li key={item.version}>
-            <LedgerRow href={item.href}>
-              <span className="spark-hub-ledger-version">{item.version}</span>
-              <span className="spark-hub-ledger-what">{'recipes' in item ? `${item.what} · recipe v2.0.0 to ${release.identity.candidate}` : item.what}</span>
-              <span className="spark-hub-ledger-when">{item.when}</span>
-            </LedgerRow>
           </li>)}
+          {RELEASE_HISTORY.map(item => <React.Fragment key={item.version}>
+            <li>
+              <LedgerRow href={item.href}>
+                <span className="spark-hub-ledger-version">{item.version}</span>
+                <span className="spark-hub-ledger-what">{'recipes' in item ? `${item.what} · recipe v2.0.0 to ${release.identity.candidate}` : item.what}</span>
+                <span className="spark-hub-ledger-when">{item.when}</span>
+              </LedgerRow>
+            </li>
+            {item.version === 'v1.8.0' && INTERNAL_BUILDS ? <li className="spark-hub-ledger-internal">
+              <span className="spark-hub-ledger-row">
+                <span className="spark-hub-ledger-version">{INTERNAL_BUILDS.first} to {INTERNAL_BUILDS.last}</span>
+                <span className="spark-hub-ledger-what">{HUB_COPY.internalRow}</span>
+                <span className="spark-hub-ledger-when">Sep</span>
+              </span>
+            </li> : null}
+          </React.Fragment>)}
         </ol>
       </section>
       <p className="spark-hub-note">{HUB_COPY.note}</p>

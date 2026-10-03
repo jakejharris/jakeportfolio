@@ -18,6 +18,8 @@
   --glm-paper-line: #c1c6cc;
   --glm-gold-deep: #80611d;
   --glm-olive: #d6eea2;
+  --glm-other: #4e6e8e;
+  --glm-plain: #6f8a6a;
   background: var(--glm-bg);
   color: var(--glm-text);
   font: 16px/1.6 var(--font-geist-sans), Arial, sans-serif;
@@ -49,6 +51,24 @@
 .glm-speed-sub { color: var(--glm-muted); font: 13px/1.5 var(--font-geist-mono), monospace; margin-top: 8px !important; }
 .glm-speed-reference { font-size: 15px; line-height: 1.5; margin-top: 8px !important; }
 .glm-intro { color: var(--glm-muted); max-width: 470px; margin-top: 18px !important; }
+/* The release's tiles, as on the share card: two by two, each ruled like the specs row. Each tile's label,
+   figure and lines share rows with its neighbour's (subgrid), so a two-line label keeps the figures level. */
+.glm-tiles { max-width: 540px; margin-top: 26px; }
+.glm-tiles-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 28px; margin: 0; }
+.glm-tile { display: grid; grid-row: span 4; grid-template-rows: subgrid; align-content: start; min-width: 0; margin-bottom: 20px; padding-top: 12px; border-top: 1px solid var(--glm-line); }
+.glm-tile dt { color: var(--glm-muted); font: 12.5px/1.45 var(--font-geist-mono), monospace; letter-spacing: .3px; }
+.glm-tile dd { margin: 0; }
+.glm-tile .glm-tile-value { margin-top: 6px; color: var(--glm-gold); font: 700 clamp(34px, 3.3vw, 44px)/1.05 var(--font-wordmark), Georgia, serif; letter-spacing: -.03em; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.glm-tile-value small { margin-left: .3em; color: var(--glm-muted); font: 500 14px var(--font-geist-sans), Arial, sans-serif; letter-spacing: 0; }
+.glm-tile .glm-tile-weights { margin-top: 6px; font-size: 13.5px; font-weight: 500; line-height: 1.45; }
+/* A tile measured with other weights is keyed as the results key them: their series color, ruled as on their card
+   and swatched as in the legends. */
+.glm-tile[data-tone] { padding-top: 11px; border-top: 2px solid var(--tile-tone); }
+.glm-tile[data-tone="other"] { --tile-tone: var(--glm-other); }
+.glm-tile[data-tone="plain"] { --tile-tone: var(--glm-plain); }
+.glm-tile[data-tone] .glm-tile-weights::before { content: ''; display: inline-block; width: 9px; height: 9px; margin-right: 7px; background: var(--tile-tone); }
+.glm-tile .glm-tile-condition { margin-top: 6px; color: var(--glm-muted); font-size: 13px; line-height: 1.5; text-wrap: balance; }
+.glm-tiles-line { margin-top: -2px !important; color: var(--glm-muted); font: 12.5px/1.5 var(--font-geist-mono), monospace; }
 .glm-actions { display: flex; align-items: center; gap: 24px; flex-wrap: wrap; margin-top: 26px; }
 .glm-actions a { display: inline-flex; align-items: center; min-height: 48px; font-size: 14px; }
 .glm-button { display: inline-flex; min-height: 48px; align-items: center; justify-content: center; gap: .3em; padding: 12px 18px; color: var(--glm-gold-ink) !important; background: var(--glm-gold); font-size: 14px; font-weight: 600; }
@@ -61,6 +81,9 @@
 .glm .jsv-svg-rank, .glm .jsv-svg-cap { display: none; }
 .glm .jsv-cluster figcaption { border-top: 1px solid var(--glm-line); padding-top: 12px; font-size: 14px; color: var(--glm-muted); text-align: center; }
 .glm .jsv-cluster figcaption span { display: block; margin-top: 3px; font-size: 13px; }
+/* Beside the tiles, the drawing's caption ends on the tiles' own line, above the install row (26px + 48px). Only the
+   release page (.glm2) has tiles; the v1.8.4 hero keeps its drawing at the top. */
+.glm2 .glm-hero .jsv-cluster { align-self: end; margin-bottom: 74px; }
 .glm #jsv-grid circle { fill: #6b6f75; }
 .glm .jsv-fabric-link use:nth-of-type(1) { stroke: #0d0e10; }
 .glm .jsv-fabric-link use:nth-of-type(2) { stroke: #8d7646; }
@@ -69,7 +92,6 @@
 .glm .jsv-token-halo { stroke: var(--glm-gold); }
 .glm .jsv-fabric-link-02 .jsv-token { animation-duration: 5.6s; animation-delay: -2.6s; animation-direction: reverse; }
 .glm .jsv-fabric-link-12 .jsv-token { animation-duration: 6.4s; animation-delay: -.6s; }
-.glm .jsv-cluster svg > g[fill="#242d20"] { fill: #25282c; stroke: var(--glm-muted); }
 @keyframes glm-token-flow {
   from { stroke-dashoffset: 0; }
   to { stroke-dashoffset: -100; }
@@ -248,6 +270,9 @@
   .glm-version { font-size: clamp(56px, 18vw, 78px); }
   .glm-lede { font-size: 23px; }
   .glm-speed-line { font-size: 18px; }
+  .glm-tiles-grid { column-gap: 18px; }
+  .glm-tile { margin-bottom: 16px; }
+  .glm-tile .glm-tile-value { font-size: 30px; }
   .glm-actions { gap: 12px 20px; }
   .glm h2 { font-size: 26px; }
   .glm-results { padding-block: 40px; }

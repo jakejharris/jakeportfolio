@@ -7,6 +7,9 @@ type Recipe = 'tempo' | 'mia' | 'tony';
 type Workload = 'code' | 'prose' | 'all';
 const names: Record<Recipe, string> = { tempo: 'Tempo', mia: 'Mia', tony: 'Tony' };
 const workloads: Record<Workload, string> = { code: 'Code', prose: 'Prose', all: '8-category mean' };
+/** When the comparisons were measured: the data's cohort ("September 2026; ..."), the month of b89dddd and 08c4968, which introduced its numbers. */
+const MEASURED = data.cohort.split(';')[0];
+const dated = `Comparison as measured in ${MEASURED}; other projects have released newer versions since.`;
 
 function RateBar({ recipe, value, max, basis }: { recipe: Recipe; value: number; max: number; basis: string }) {
   return <div className={`tempo-rate tempo-series-${recipe}`} data-recipe={recipe} data-value={value}>
@@ -77,6 +80,7 @@ export function ShortScreenComparison() {
       <p><strong>Same short screen, different recipes.</strong> Completion tokens across all streams ÷ shared HTTP wall time, including initial wait. One wave per category and concurrency, 150–256-token caps. These fixtures measure speed, not answer quality.</p>
       <p><strong>Comparisons stop at 4 offered streams, within Mia’s active-request cap.</strong> Tempo allows 8 active requests. These are recipe-level comparisons, not an isolated kernel or quantization test.</p>
       <p className="tempo-reference-note">{workload === 'all' ? 'The eight-category mean excludes counting. Tony’s TP3 figures are author-published on his three Sparks, not a rerun on ours. Hardware state and recipe settings differ.' : 'Tony’s published aggregate reference is available in “8-category mean”. It is separate from the code and prose measurements shown here.'}</p>
+      <p>{dated}</p>
       <p className="tempo-comparison-sources"><a href="https://github.com/MiaAI-Lab/DeepSeek-v4.1-Flash-DGX-Sparks">Mia’s recipe ↗</a><a href="https://github.com/tonyd2wild/DeepSeek-V4.1-Flash-vLLM-DGX-Spark">Tony’s recipe ↗</a><a href="/jspark3/tempo-comparison-methods.html">Measurement notes ↗</a></p>
     </div>
     <details className="tempo-comparison-table"><summary>C1–C4 values and sources</summary>
@@ -108,6 +112,7 @@ export function WorkComparison() {
     </div>
     <p className="tempo-condition">Accepted backend tokens ÷ 180 seconds, including unfinished output, health probes, and small launch/drain overhead. Same initial tasks; later tool histories diverge. Repeat uses fresh Pi sessions with caches intact.</p>
     <p className="tempo-condition">One cohort, no output-quality score or productivity claim. Three agents stay within every recipe’s active-request cap. Tony’s local run includes fabric, storage, loader, and allocator adaptations; it is separate from his published short-screen figures.</p>
+    <p className="tempo-condition">{dated}</p>
     <a className="tempo-work-source" href="/jspark3/l5-benchmarks.html#work">All Work rounds and methods ↗</a>
   </article>;
 }

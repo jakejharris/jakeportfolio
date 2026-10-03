@@ -218,6 +218,7 @@ function referenceClause(speed: HeadlineSpeed | null) {
 
 export const LABELS = {
   latest: 'Latest release',
+  earlier: 'Earlier release',
   named: 'Named release',
   experimental: 'Experimental',
 } as const;
@@ -225,7 +226,8 @@ export const LABELS = {
 export const HUB_COPY = {
   metaDescription: 'Release history, serving recipes, and measured results for three NVIDIA DGX Sparks.',
   standfirst: 'The releases, recipes, and measured results.',
-  note: 'Numbered JSPARK3 releases are the main line, and it runs GLM-5.3 Flash. Tempo is a named release: a DeepSeek experiment with its own recipe versions. Earlier GLM links still lead to the GLM page.',
+  note: 'Numbered JSPARK3 releases are the main line, and it runs GLM-5.3 Flash. Tempo is a named release: a DeepSeek experiment with its own recipe versions, numbered apart from the main line. Links to earlier GLM releases lead to the v1.8.4 page, kept as published.',
+  /** The latest card's caption, around the default weights' name from the release facts. */
   glmCard: {
     meta: LABELS.latest,
     version: RELEASE,
@@ -259,11 +261,15 @@ export const HUB_COPY = {
   internalRow: 'Internal builds, not published',
 } as const;
 
-/** Published releases before the latest one, newest first. The latest GLM release and the internal builds come from glm-release.json. */
+/**
+ * Published releases before the latest one, newest first. The latest GLM release comes from the release
+ * facts (glm-facts.ts); the internal builds row follows v1.8.0. v1.8.x ran on vLLM, the engine v2.0.1 replaced.
+ */
 export const RELEASE_HISTORY = [
-  { version: 'v1.8.0', what: 'GLM-5.3 Flash', when: 'Sep 27', href: '/jspark3/glm/#v180-results' },
+  { version: 'v1.8.4', what: 'GLM-5.3 Flash · vLLM', when: 'Sep 29', href: '/jspark3/glm/v1.8.4' },
+  { version: 'v1.8.0', what: 'GLM-5.3 Flash · vLLM', when: 'Sep 27', href: '/jspark3/glm/v1.8.4#v180-results' },
   { version: 'Tempo', what: 'DeepSeek-V4.1 Flash', recipes: true, when: 'Sep 13', href: '/jspark3/deepseek/' },
-  { version: 'v1.1 Cadence', what: 'GLM-5.3 Flash', when: 'Sep 7', href: '/jspark3/glm/#releases' },
+  { version: 'v1.1 Cadence', what: 'GLM-5.3 Flash', when: 'Sep 7', href: '/jspark3/glm/v1.8.4#releases' },
   { version: 'v1.0', what: 'GLM-5.3 Flash', when: 'Sep 2', href: 'https://github.com/jakejharris/jspark3/releases/tag/v1.0.0' },
 ] as const;
 

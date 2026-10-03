@@ -48,6 +48,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
     { url: `${BASE_URL}/jspark3/deepseek/`, changeFrequency: "monthly", priority: 0.7 },
     { url: `${BASE_URL}/jspark3/glm/`, changeFrequency: "monthly", priority: 0.7 },
+    { url: `${BASE_URL}/jspark3/glm/v1.8.4`, changeFrequency: "yearly", priority: 0.4 },
   ];
 
   const postEntries: MetadataRoute.Sitemap = posts.map((post) => ({
