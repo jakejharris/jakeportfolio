@@ -9,7 +9,7 @@ import { Fact } from './Fact';
 
 /**
  * The latest card's figures are the release's chosen metrics, as the facts write them (glm-facts.ts TILE_FIGURES).
- * No v1.8.4 figure stands beside them: the release compares the two only in RigMark's "Against v1.8.4".
+ * No v1.8.4 figure stands beside them: the release compares the two only in RigMark's comparison with v1.8.4.
  * A figure from other weights names them; a concurrency figure carries its condition as its caption.
  */
 

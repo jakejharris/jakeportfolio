@@ -1,5 +1,5 @@
 import React from 'react';
-import { COMPARE, COMPARE_SETS, CONTEXTS, DECODE_CELLS, FIRST_TOKEN_ESTIMATORS, PARTNERS, RELBENCH_LABEL, RIGMARK_BLOCKS, RIGMARK_SCOPE, SETS, STREAMS, amount, cell, metricInfo, partner, tileCaption, type Cell, type ResultSet } from '../glm-facts';
+import { COMPARE, COMPARE_SETS, CONTEXTS, DECODE_CELLS, FIRST_TOKEN_ESTIMATORS, PARTNERS, RELBENCH_LABEL, RIGMARK_BLOCKS, RIGMARK_SCOPE, SETS, STREAMS, VERSION, amount, cell, metricInfo, partner, tileCaption, type Cell, type ResultSet } from '../glm-facts';
 import { Fact } from './Fact';
 
 /** A round axis end at or just above the largest value, so bars are drawn to scale from zero. */
@@ -35,10 +35,11 @@ function Bar({ series, end, unit }: { series: Series; end: number | null; unit: 
   </div>;
 }
 
+/** Beside v1.8.4, each set names this release, so no bar reads as the earlier release's. */
 function Legend({ sets, before = false }: { sets: ResultSet[]; before?: boolean }) {
   return <ul className="glm-legend">
-    {before ? <li className={TONE.before}><i aria-hidden="true" />v1.8.4 on vLLM</li> : null}
-    {sets.map(set => <li key={set.id} className={TONE[set.tone]}><i aria-hidden="true" /><Fact slot={set.label} /></li>)}
+    {before ? <li className={TONE.before}><i aria-hidden="true" />v1.8.4 on vLLM, the baseline</li> : null}
+    {sets.map(set => <li key={set.id} className={TONE[set.tone]}><i aria-hidden="true" />{before ? <><Fact slot={VERSION} />, </> : null}<Fact slot={set.label} /></li>)}
   </ul>;
 }
 
@@ -49,14 +50,14 @@ function Legend({ sets, before = false }: { sets: ResultSet[]; before?: boolean 
  */
 export function CompareFigure() {
   return <figure className="glm-chart glm2-chart glm2-compare" aria-labelledby="glm2-compare-title">
-    <p id="glm2-compare-title" className="glm-label">RigMark, the same protocol on v1.8.4 and this release · each figure drawn to its own scale from zero</p>
+    <p id="glm2-compare-title" className="glm-label">RigMark, the same protocol on v1.8.4 and <Fact slot={VERSION} /> · each figure drawn to its own scale from zero</p>
     <p className="glm2-compare-scope"><Fact slot={RIGMARK_SCOPE} /></p>
     <Legend sets={COMPARE_SETS} before />
     <div className="glm2-compare-grid">
       {COMPARE.map(row => {
         const series: Series[] = [
           { key: 'v1_8_4', name: 'v1.8.4', tone: 'before', cell: { state: row.before.pending ? 'pending' : 'value', slot: row.before } },
-          ...COMPARE_SETS.map(set => ({ key: set.id, name: set.short, tone: set.tone, cell: row.values[set.id] })),
+          ...COMPARE_SETS.map(set => ({ key: set.id, name: `${VERSION.text} ${set.short}`, tone: set.tone, cell: row.values[set.id] })),
         ];
         const end = axisEnd(series.map(item => (item.cell.state === 'value' ? amount(item.cell.slot.text) : null)));
         return <div className="glm-group" key={row.id} role="group" aria-label={row.label} data-metric-id={row.id}>
@@ -75,7 +76,7 @@ export function RigmarkBlocks() {
     <summary>RigMark output, as RigMark reports it</summary>
     <div className="glm2-rigmark-blocks">
       {RIGMARK_BLOCKS.map(block => <figure key={block.id} className="glm2-rigmark-block">
-        <figcaption><Fact slot={block.title} /></figcaption>
+        <figcaption>{block.id === 'v1_8_4' ? null : <><Fact slot={VERSION} />, </>}<Fact slot={block.title} /></figcaption>
         {block.text.pending ? <p><Fact slot={block.text} /></p> : <pre>{block.text.text}</pre>}
       </figure>)}
     </div>
@@ -83,7 +84,7 @@ export function RigmarkBlocks() {
 }
 
 /**
- * A group's bars: one per set. v1.8.4 appears beside this release only in RigMark's "Against v1.8.4",
+ * A group's bars: one per set. v1.8.4 appears beside this release only in RigMark's comparison with v1.8.4,
  * so no other chart draws it.
  */
 const groupSeries = (metric: string): Series[] => SETS.map(set => ({ key: set.id, name: set.short, tone: set.tone, cell: cell(set, metric) }));
