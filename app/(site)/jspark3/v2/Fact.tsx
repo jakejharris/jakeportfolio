@@ -5,7 +5,7 @@ import '../placeholder.css';
 /** Facts text with its `code` spans (API fields, flags) set as code. */
 function Text({ text }: { text: string }) {
   const parts = text.split(/`([^`]+)`/);
-  // A command wraps only at its spaces: "--weights" split after its hyphens would read as two words. The text copies unchanged.
+  // Keep short words such as "--weights" together; CSS lets a word wider than its column wrap. Text copies unchanged.
   const unbroken = (code: string) => code.split(/( +)/).map((word, index) => (index % 2 || !word ? word : <span key={index} className="glm2-nobreak">{word}</span>));
   return parts.length === 1 ? <>{text}</> : <>{parts.map((part, index) => (index % 2 ? <code key={index}>{unbroken(part)}</code> : part))}</>;
 }

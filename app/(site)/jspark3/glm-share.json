@@ -1,10 +1,43 @@
 {
   "image": "/og/jspark3-glm-v2.0.1.png",
   "facts_sha256": "70490d33185ec2a084a709127f31417b0ea7ce83a1db5949cd070428118c3167",
-  "figures": [
-    "Code, one request: 92.5 tok/s",
-    "Prose, one request: 73.6 tok/s",
-    "Reading a 32K-token prompt: 2,149 tok/s",
-    "Four at once, end to end (RigMark): 113.4 tok/s"
-  ]
+  "hero": {
+    "title": "JSpark3 v2.0.1: GLM-5.3 Flash on three DGX Sparks.",
+    "measured": "Measured with base weights + draft model · RigMark from the release; the rest re-measured October 3, 2026.",
+    "cells": [
+      {
+        "key": "remeasured.reply-one.natural-code",
+        "label": "Code, one request",
+        "unit": "tok/s",
+        "value": "92.5",
+        "weights": null,
+        "caption": "Fresh prompt. One request asked for a complete program, natural length (5,543 tokens), user-visible rate including first token"
+      },
+      {
+        "key": "remeasured.reply-one.long-prose",
+        "label": "Prose, one request",
+        "unit": "tok/s",
+        "value": "73.5",
+        "weights": null,
+        "caption": "Replies forced to 2,000 tokens, thinking requested off, prompt already cached"
+      },
+      {
+        "key": "remeasured.long-prompt.32k",
+        "label": "Reading a 32K-token prompt",
+        "unit": "tok/s",
+        "value": "≈2,149",
+        "weights": null,
+        "caption": "Estimated as prompt tokens ÷ client first-token time (15.3 s). One request, unique prompt (no cache), 400-token reply"
+      },
+      {
+        "key": "rigmark.c4",
+        "label": "Four at once, end to end (RigMark)",
+        "unit": "tok/s",
+        "value": "113.4",
+        "weights": null,
+        "caption": "Fresh prompts; four short-code requests at once, 256-token cap each; median of three waves, end-to-end including prompt reading"
+      }
+    ]
+  },
+  "image_sha256": "a5688eb4c2910b7d8f27d62e6273375d8499fd6aeeb6c526319658e134052e79"
 }
