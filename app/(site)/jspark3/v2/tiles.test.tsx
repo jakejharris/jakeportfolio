@@ -108,6 +108,25 @@ test('/jspark3/glm/ shows no figure measured at eight requests at once, outside 
   for (const clause of METHODS_HELD.clauses) assert.ok(methods.includes(clause), `the methods paragraph no longer says "${clause}"`);
 });
 
+test('every release decode and concurrency row on /jspark3/glm/ says whether its prompts were fresh or cached, and RigMark says it once', async () => {
+  const React = await import('react');
+  Object.assign(globalThis, { React });
+  const { renderToStaticMarkup } = await import('react-dom/server');
+  const { default: GlmFactsPage } = await import('./GlmFactsPage');
+  const { COMPARE_CACHE } = await import('./remeasured-data');
+  const html = renderToStaticMarkup(React.createElement(GlmFactsPage));
+  for (const id of ['glm2-decode', 'glm2-streams']) {
+    const chart = html.match(new RegExp(`<figure[^>]*aria-labelledby="${id}-title"[\\s\\S]*?</figure>`))?.[0];
+    assert.ok(chart, `no ${id} chart`);
+    const rows = [...chart.matchAll(/<p class="glm-group-label">([\s\S]*?)<\/p>/g)].map(match => match[1]);
+    assert.ok(rows.length >= 3, `${id} has ${rows.length} rows`);
+    for (const row of rows) assert.match(row, /data-cache-of="[^"]+">[^<]*\b(?:fresh|cached)\b/, `${id}: a row says nothing of its prompts: ${row}`);
+  }
+  const rigmark = html.match(/<figure class="[^"]*glm2-compare[^"]*"[\s\S]*?<\/figure>/)?.[0] ?? '';
+  const scope = rigmark.match(/<p class="glm2-compare-scope">([\s\S]*?)<\/p>/)?.[1] ?? '';
+  assert.ok(scope.endsWith(` ${COMPARE_CACHE}`), `the RigMark scope line does not say what each side's prompts were: ${scope}`);
+});
+
 test('the gate asks for the same templates the page uses', async () => {
   const { captionTemplate } = await import('../glm-facts');
   const gate = readFileSync(join(root, 'scripts/check-glm-facts.mjs'), 'utf8');

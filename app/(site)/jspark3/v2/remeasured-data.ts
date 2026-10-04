@@ -242,8 +242,10 @@ export const HERO_RELEASE_TILES: ReleaseTile[] = [
  * row in place of the release's note, and says what each side's prompts were. The synced facts keep the release's
  * words, and RigMark's own output stays as it printed it.
  */
+/** Every RigMark row's prompts on each side (rigmark/CACHED-TOKENS.json; v1.8.4 recorded none): once, in the chart's scope line. */
+export const COMPARE_CACHE = 'v2.0.1 measured on fresh prompts; v1.8.4 cache status was not recorded.';
 export const COMPARE_NOTES: Record<string, string> = {
-  c4: 'RigMark 1.1.0, same harness on both. C4: four short-code requests, 256-token cap each, median of three end-to-end waves including prompt reading. v2.0.1 measured on fresh prompts; v1.8.4 cache status was not recorded.',
+  c4: `RigMark 1.1.0, same harness on both. C4: four short-code requests, 256-token cap each, median of three end-to-end waves including prompt reading. ${COMPARE_CACHE}`,
 };
 
 /**

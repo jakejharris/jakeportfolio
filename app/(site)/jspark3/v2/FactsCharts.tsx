@@ -1,6 +1,7 @@
 import React from 'react';
 import { COMPARE_SETS, CONTEXTS, DECODE_CELLS, FIRST_TOKEN_ESTIMATORS, PARTNERS, RELBENCH_LABEL, RIGMARK_BLOCKS, RIGMARK_SCOPE, SETS, SHOWN_STREAMS, VERSION, amount, cell, metricInfo, partner, tileCaption, type Cell, type ResultSet } from '../glm-facts';
 import { Fact } from './Fact';
+import { COMPARE_CACHE } from './remeasured-data';
 import { COMPARE_ROWS } from './remeasured-figures';
 
 /** A round axis end at or just above the largest value, so bars are drawn to scale from zero. */
@@ -53,7 +54,7 @@ export function Legend({ sets, before = false }: { sets: ResultSet[]; before?: b
 export function CompareFigure() {
   return <figure className="glm-chart glm2-chart glm2-compare" aria-labelledby="glm2-compare-title">
     <p id="glm2-compare-title" className="glm-label">RigMark, the same protocol on v1.8.4 and <Fact slot={VERSION} /> · each figure drawn to its own scale from zero</p>
-    <p className="glm2-compare-scope"><Fact slot={RIGMARK_SCOPE} /></p>
+    <p className="glm2-compare-scope"><Fact slot={RIGMARK_SCOPE} /> {COMPARE_CACHE}</p>
     <Legend sets={COMPARE_SETS} before />
     <div className="glm2-compare-grid">
       {COMPARE_ROWS.map(row => {
@@ -91,8 +92,11 @@ export function RigmarkBlocks() {
  */
 const groupSeries = (metric: string): Series[] => SETS.map(set => ({ key: set.id, name: set.short, tone: set.tone, cell: cell(set, metric) }));
 
-/** One group per row, one bar per measured set, all groups on one scale. A concurrency group names its condition and N. */
-function SetChart({ id, title, groups, unit, better }: { id: string; title: string; groups: Array<{ key: string; label: string; metric: string }>; unit: string; better: 'higher' | 'lower' }) {
+/**
+ * One group per row, one bar per measured set, all groups on one scale. A concurrency group names its condition and N;
+ * a group with a prompt cache line says whether its prompts were fresh or cached.
+ */
+function SetChart({ id, title, groups, unit, better }: { id: string; title: string; groups: Array<{ key: string; label: string; metric: string; cache?: string }>; unit: string; better: 'higher' | 'lower' }) {
   const series = groups.map(group => groupSeries(group.metric));
   const conditions = groups.map(group => tileCaption(group.metric));
   const end = axisEnd(series.flat().map(item => (item.cell.state === 'value' ? amount(item.cell.slot.text) : null)));
@@ -101,7 +105,11 @@ function SetChart({ id, title, groups, unit, better }: { id: string; title: stri
     <Legend sets={SETS} />
     <div className="glm-groups">
       {groups.map((group, index) => <div className="glm-group" key={group.key} role="group" aria-label={group.label} data-metric-id={group.metric}>
-        <p className="glm-group-label"><strong>{group.label}</strong>{conditions[index] ? <span data-condition-of={group.metric}><Fact slot={conditions[index]} /></span> : null}</p>
+        <p className="glm-group-label"><strong>{group.label}</strong>{conditions[index] || group.cache ? <span>
+          {conditions[index] ? <span data-condition-of={group.metric}><Fact slot={conditions[index]} /></span> : null}
+          {conditions[index] && group.cache ? ', ' : null}
+          {group.cache ? <span data-cache-of={group.metric}>{group.cache}</span> : null}
+        </span> : null}</p>
         {series[index].map(item => <Bar key={item.key} series={item} end={end} unit={unit} />)}
       </div>)}
     </div>
@@ -122,14 +130,27 @@ const DECODE_GROUPS: Record<string, string> = {
   'decode_long_tok_s': 'Code after a 32k prompt',
 };
 
+/**
+ * Each decode cell's prompt cache, from each set's CACHED-TOKENS.json, since the release facts give none. A short
+ * reply is the median of three requests, the first fresh and the next two the same prompt, so the median request's
+ * own cache decides; the long-prompt requests were all fresh. Every request in the concurrency rows reported zero
+ * cached tokens, as the release requires.
+ */
+const DECODE_CACHE: Record<string, string> = {
+  'decode_short_tok_s.code': 'prompt cached on Base and Abliterated, fresh with no draft',
+  'decode_short_tok_s.prose': 'prompt cached on Base, fresh on Abliterated and with no draft',
+  'decode_long_tok_s': 'fresh prompts',
+};
+const STREAMS_CACHE = 'fresh prompts';
+
 export function DecodeChart() {
   return <SetChart id="glm2-decode" title="Decode speed, one request at a time" unit="tok/s" better="higher"
-    groups={DECODE_CELLS.map(metric => ({ key: metric, label: DECODE_GROUPS[metric] ?? metricInfo(metric).label, metric }))} />;
+    groups={DECODE_CELLS.map(metric => ({ key: metric, label: DECODE_GROUPS[metric] ?? metricInfo(metric).label, metric, cache: DECODE_CACHE[metric] }))} />;
 }
 
 export function ConcurrencyChart() {
   return <SetChart id="glm2-streams" title="Decode with requests running at once, all streams combined" unit="tok/s" better="higher"
-    groups={SHOWN_STREAMS.map(streams => { const count = Number(streams.slice(1)); return { key: streams, label: count === 1 ? 'One request' : `${count} requests`, metric: `concurrency_aggregate_tok_s.${streams}` }; })} />;
+    groups={SHOWN_STREAMS.map(streams => { const count = Number(streams.slice(1)); return { key: streams, label: count === 1 ? 'One request' : `${count} requests`, metric: `concurrency_aggregate_tok_s.${streams}`, cache: STREAMS_CACHE }; })} />;
 }
 
 /** A cell with its unit, as a line of text. */
