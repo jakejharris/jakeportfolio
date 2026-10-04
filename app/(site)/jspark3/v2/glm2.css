@@ -30,6 +30,7 @@
 /* Comparison bars name the release as well as the weights. */
 .glm2-compare .glm-bar { grid-template-columns: 9.5rem minmax(0, 1fr) 6.5rem; }
 .glm2-chart .glm-bar-value small { font-size: 12px; font-weight: 400; color: var(--glm-paper-muted); }
+.glm2-chart .glm-bar-name .glm2-bar-cache { display: block; font-size: 11px; font-weight: 400; color: var(--glm-paper-muted); }
 .glm2-chart .glm2-scale { margin-left: calc(8rem + 12px) !important; width: calc(100% - 14.5rem - 24px); }
 .glm2-chart .glm-group-label span { color: var(--glm-paper-muted); font-size: 13px; }
 

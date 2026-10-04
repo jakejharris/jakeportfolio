@@ -113,15 +113,30 @@ test('every release decode and concurrency row on /jspark3/glm/ says whether its
   Object.assign(globalThis, { React });
   const { renderToStaticMarkup } = await import('react-dom/server');
   const { default: GlmFactsPage } = await import('./GlmFactsPage');
+  const { DECODE_CACHE_NOTE } = await import('./FactsCharts');
   const { COMPARE_CACHE } = await import('./remeasured-data');
   const html = renderToStaticMarkup(React.createElement(GlmFactsPage));
+  const chartOf = (id: string) => html.match(new RegExp(`<figure[^>]*aria-labelledby="${id}-title"[\\s\\S]*?</figure>`))?.[0] ?? '';
   for (const id of ['glm2-decode', 'glm2-streams']) {
-    const chart = html.match(new RegExp(`<figure[^>]*aria-labelledby="${id}-title"[\\s\\S]*?</figure>`))?.[0];
-    assert.ok(chart, `no ${id} chart`);
-    const rows = [...chart.matchAll(/<p class="glm-group-label">([\s\S]*?)<\/p>/g)].map(match => match[1]);
-    assert.ok(rows.length >= 3, `${id} has ${rows.length} rows`);
-    for (const row of rows) assert.match(row, /data-cache-of="[^"]+">[^<]*\b(?:fresh|cached)\b/, `${id}: a row says nothing of its prompts: ${row}`);
+    const groups = chartOf(id).split('<div class="glm-group"').slice(1);
+    assert.ok(groups.length >= 3, `${id} has ${groups.length} rows`);
+    for (const group of groups) {
+      // Once for the row, or under every set's name.
+      const label = group.match(/<p class="glm-group-label">([\s\S]*?)<\/p>/)?.[1] ?? '';
+      const bars = group.split('<div class="glm-bar').slice(1);
+      const each = bars.length > 0 && bars.every(bar => /class="glm2-bar-cache" data-cache-of="[^"]+">(?:prompt cached|fresh prompt)</.test(bar));
+      assert.ok(/data-cache-of="[^"]+">[^<]*\b(?:fresh|cached)\b/.test(label) || each, `${id}: a row says nothing of its prompts: ${label}`);
+    }
   }
+  // Forge's ruling: the short replies' Base and Abliterated columns are "prompt cached", no draft "fresh prompt";
+  // the long-prompt code row is all fresh; the note says why the cache barely matters at one request.
+  const decode = chartOf('glm2-decode');
+  for (const metric of ['decode_short_tok_s.code', 'decode_short_tok_s.prose']) {
+    const group = decode.split(`data-metric-id="${metric}"`)[1]?.split('<div class="glm-group"')[0] ?? '';
+    for (const [set, cache] of [['V-D', 'prompt cached'], ['O-D', 'prompt cached'], ['V-N', 'fresh prompt']]) assert.ok(group.includes(`data-cache-of="${set}">${cache}<`), `${metric}: ${set} is not "${cache}"`);
+  }
+  assert.match(decode.split('data-metric-id="decode_long_tok_s"')[1] ?? '', /data-cache-of="decode_long_tok_s">fresh prompts</);
+  assert.ok(decode.includes(`<p class="glm2-compare-note">${DECODE_CACHE_NOTE.replace(/'/g, '&#x27;')}</p>`), 'the decode chart has no note on the cache');
   const rigmark = html.match(/<figure class="[^"]*glm2-compare[^"]*"[\s\S]*?<\/figure>/)?.[0] ?? '';
   const scope = rigmark.match(/<p class="glm2-compare-scope">([\s\S]*?)<\/p>/)?.[1] ?? '';
   assert.ok(scope.endsWith(` ${COMPARE_CACHE}`), `the RigMark scope line does not say what each side's prompts were: ${scope}`);

@@ -14,7 +14,7 @@ export function axisEnd(values: Array<number | null>) {
 
 /** Series colors: the earlier release grey, the default set the release gold, the other weights slate, no draft model green-grey. */
 const TONE = { before: 'glm2-series-before', default: 'glm2-series-default', other: 'glm2-series-other', plain: 'glm2-series-plain' } as const;
-export type Series = { key: string; name: string; tone: keyof typeof TONE; cell: Cell };
+export type Series = { key: string; name: string; tone: keyof typeof TONE; cell: Cell; cache?: string };
 
 export const direction = (better: 'higher' | 'lower' | null) => (better === 'lower' ? 'lower is better' : better === 'higher' ? 'higher is better' : null);
 /** The benchmark's short reasoning label after a caption, when the release labels its figures. */
@@ -31,7 +31,7 @@ export function Bar({ series, end, unit }: { series: Series; end: number | null;
   const value = state === 'value' ? amount(slot.text) : null;
   const width = value !== null && end ? (value / end) * 100 : null;
   return <div className={`glm-bar ${TONE[series.tone]}${state === 'pending' ? ' glm-bar-placeholder' : ''}`} data-state={state}>
-    <span className="glm-bar-name">{series.name}</span>
+    <span className="glm-bar-name">{series.name}{series.cache ? <small className="glm2-bar-cache" data-cache-of={series.key}>{series.cache}</small> : null}</span>
     <span className="glm-bar-track" aria-hidden="true">{width !== null ? <i style={{ width: `${width}%` }} /> : state === 'pending' ? <i style={{ width: '48%' }} /> : null}</span>
     <span className="glm-bar-value">{state === 'pending' ? <span className="jspark-ph">{slot.text}</span> : state === 'absent' ? <small>{slot.text}</small> : <>{slot.text}<small> {unit}</small></>}</span>
   </div>;
@@ -90,14 +90,16 @@ export function RigmarkBlocks() {
  * A group's bars: one per set. v1.8.4 appears beside this release only in RigMark's comparison with v1.8.4,
  * so no other chart draws it.
  */
-const groupSeries = (metric: string): Series[] => SETS.map(set => ({ key: set.id, name: set.short, tone: set.tone, cell: cell(set, metric) }));
+const groupSeries = (metric: string, caches?: Record<string, string>): Series[] => SETS.map(set => ({ key: set.id, name: set.short, tone: set.tone, cell: cell(set, metric), cache: caches?.[set.id] }));
 
 /**
- * One group per row, one bar per measured set, all groups on one scale. A concurrency group names its condition and N;
- * a group with a prompt cache line says whether its prompts were fresh or cached.
+ * One group per row, one bar per measured set, all groups on one scale. A concurrency group names its condition and N.
+ * Each row says whether its prompts were fresh or cached: once for the row (cache), or under each set's name
+ * (caches, by set id). A note follows the chart.
  */
-function SetChart({ id, title, groups, unit, better }: { id: string; title: string; groups: Array<{ key: string; label: string; metric: string; cache?: string }>; unit: string; better: 'higher' | 'lower' }) {
-  const series = groups.map(group => groupSeries(group.metric));
+type SetGroup = { key: string; label: string; metric: string; cache?: string; caches?: Record<string, string> };
+function SetChart({ id, title, groups, unit, better, note }: { id: string; title: string; groups: SetGroup[]; unit: string; better: 'higher' | 'lower'; note?: string }) {
+  const series = groups.map(group => groupSeries(group.metric, group.caches));
   const conditions = groups.map(group => tileCaption(group.metric));
   const end = axisEnd(series.flat().map(item => (item.cell.state === 'value' ? amount(item.cell.slot.text) : null)));
   return <figure className="glm-chart glm2-chart" aria-labelledby={`${id}-title`}>
@@ -114,6 +116,7 @@ function SetChart({ id, title, groups, unit, better }: { id: string; title: stri
       </div>)}
     </div>
     <p className="glm-scale glm2-scale" aria-hidden="true"><span>0</span><span>{end === null ? 'scale follows the numbers' : `${end.toLocaleString('en-US')} ${unit}`}</span></p>
+    {note ? <p className="glm2-compare-note">{note}</p> : null}
   </figure>;
 }
 
@@ -131,21 +134,25 @@ const DECODE_GROUPS: Record<string, string> = {
 };
 
 /**
- * Each decode cell's prompt cache, from each set's CACHED-TOKENS.json, since the release facts give none. A short
- * reply is the median of three requests, the first fresh and the next two the same prompt, so the median request's
- * own cache decides; the long-prompt requests were all fresh. Every request in the concurrency rows reported zero
- * cached tokens, as the release requires.
+ * The prompt cache of each decode row, since the release facts give none (Forge's ruling, from each set's
+ * CACHED-TOKENS.json). A short reply is the median of three requests, the first fresh and the next two the same
+ * prompt, so the Base and Abliterated columns say "prompt cached"; Base with no draft ran all three fresh.
+ * The long-prompt requests were all fresh. Every request in the concurrency rows reported zero cached tokens, as
+ * the release requires.
  */
-const DECODE_CACHE: Record<string, string> = {
-  'decode_short_tok_s.code': 'prompt cached on Base and Abliterated, fresh with no draft',
-  'decode_short_tok_s.prose': 'prompt cached on Base, fresh on Abliterated and with no draft',
-  'decode_long_tok_s': 'fresh prompts',
+const SHORT_REPLY_CACHE: Record<string, string> = { 'V-D': 'prompt cached', 'O-D': 'prompt cached', 'V-N': 'fresh prompt' };
+const DECODE_CACHE: Record<string, Pick<SetGroup, 'cache' | 'caches'>> = {
+  'decode_short_tok_s.code': { caches: SHORT_REPLY_CACHE },
+  'decode_short_tok_s.prose': { caches: SHORT_REPLY_CACHE },
+  'decode_long_tok_s': { cache: 'fresh prompts' },
 };
+/** Why the cache barely matters here: row 8 of the re-measurement, measured both ways. */
+export const DECODE_CACHE_NOTE = 'At one request the rate window starts at the first token, so the cache doesn\'t enter it (code 107.7 fresh vs 107.8 cached).';
 const STREAMS_CACHE = 'fresh prompts';
 
 export function DecodeChart() {
-  return <SetChart id="glm2-decode" title="Decode speed, one request at a time" unit="tok/s" better="higher"
-    groups={DECODE_CELLS.map(metric => ({ key: metric, label: DECODE_GROUPS[metric] ?? metricInfo(metric).label, metric, cache: DECODE_CACHE[metric] }))} />;
+  return <SetChart id="glm2-decode" title="Decode speed, one request at a time" unit="tok/s" better="higher" note={DECODE_CACHE_NOTE}
+    groups={DECODE_CELLS.map(metric => ({ key: metric, label: DECODE_GROUPS[metric] ?? metricInfo(metric).label, metric, ...DECODE_CACHE[metric] }))} />;
 }
 
 export function ConcurrencyChart() {
