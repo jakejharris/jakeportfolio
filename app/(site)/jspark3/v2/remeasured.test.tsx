@@ -128,6 +128,14 @@ test('the round-once audit: withdrawn figures stay off, timings say fresh or cac
   const fresh = after(/0\.31 s/g, 65);
   assert.ok(fresh.length, 'the short replies\' first token is not shown');
   for (const line of fresh) assert.match(line, /fresh prompt/, line);
+  // Row 8: the one-stream pair names each side's prompt cache in the audit's words, and the claim that v1.8
+  // never repeated a prompt is gone. Its two- to eight-stream cells stay off until the fresh-against-fresh recompute.
+  const ladder = 'Prompt cache: v1.8 fresh, v2.0.1 cached. At one stream the rate is timed from the first token, so the cache doesn\'t enter it (v2.0.1 one-stream code measured 107.7 fresh vs 107.8 cached).';
+  assert.ok(!/repeated the same prompts|did not repeat/i.test(copy), 'v1.8 is said never to have repeated a prompt');
+  const pair = [...copy.matchAll(/(?:49\.1|67\.9) tok\/s/g)];
+  assert.ok(pair.length >= 2, 'the one-stream pair is not shown');
+  for (const match of pair) assert.ok(copy.slice(match.index, match.index + 400).includes(ladder), `${match[0]} shows without its prompt cache`);
+  for (const figure of ['138.0', '87.4', '147.9', '102.5', '156.3', '113.1', '205.0', '142.4']) assert.ok(!copy.includes(figure), `row 8's ${figure} renders`);
 });
 
 test('tonight\'s rows in every measured set: base + draft from the band, other sets not yet re-measured until a figure drops in', async () => {

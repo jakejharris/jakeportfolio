@@ -195,13 +195,14 @@ export const CHARTS: RemeasuredChart[] = [
     title: 'Prose decode, one stream, on the v1.8 ladder',
     unit: 'tok/s',
     better: 'higher',
-    smallPrint: 'Best of 3 runs. Replies of 400 tokens started together, thinking requested off, temperature 0. Combined rate = tokens after each first token ÷ time from the earliest first token to the latest last token, the same formula as v1.8\'s ladder, which used 512-token replies. Measured 2026-10-03',
+    smallPrint: 'Replies of 400 tokens started together, thinking requested off, temperature 0. Combined rate = tokens after each first token ÷ time from the earliest first token to the latest last token, the same formula as v1.8\'s ladder, which used 512-token replies. Measured 2026-10-03',
     methods: 'With one stream, the combined rate is that stream\'s own rate after its first token.',
     groups: [
       {
         key: 'prose-c1',
         label: 'Prose, one stream',
-        notes: ['New runs repeated the same prompts; v1.8\'s did not.', 'Grey figure is v1.8.0\'s published ladder, better of 2 runs, unscreened for repetition.'],
+        smallPrint: 'Prompt cache: v1.8 fresh, v2.0.1 cached. At one stream the rate is timed from the first token, so the cache doesn\'t enter it (v2.0.1 one-stream code measured 107.7 fresh vs 107.8 cached).',
+        notes: ['Grey figure is v1.8.0\'s published ladder, better of 2 runs, unscreened for repetition.'],
         bars: [
           { name: 'v1.8.0', tone: 'before', value: prose180.hi_text, screen: 'PUBLISHABLE', source: 'glm-v180.json headline.prose_c1.hi_text (v1.8.0 results release_m0.decode_prose_c1.hi)' },
           { name: 'v2.0.1', tone: 'default', value: '67.9', screen: 'PUBLISHABLE', source: 'row 8' },
