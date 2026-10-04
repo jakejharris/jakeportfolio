@@ -3,7 +3,7 @@
   "facts_sha256": "70490d33185ec2a084a709127f31417b0ea7ce83a1db5949cd070428118c3167",
   "figures": [
     "Code, one request: 92.5 tok/s",
-    "Prose, one request: 73.6 tok/s",
+    "Prose, one request: 73.5 tok/s",
     "Reading a 32K-token prompt: 2,149 tok/s",
     "Four at once, end to end (RigMark): 113.4 tok/s"
   ]

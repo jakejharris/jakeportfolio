@@ -85,6 +85,23 @@ test('the rendered section keeps its rules: speeds after the first token say so,
   assert.ok(!/time to first token|back in/i.test(text(resume)), 'the resume chart reads as a first-token time');
 });
 
+test('withdrawn figures stay off, and the short replies\' first token is the fresh-prompt time', async () => {
+  const React = await import('react');
+  Object.assign(globalThis, { React });
+  const { renderToStaticMarkup } = await import('react-dom/server');
+  const { default: Remeasured } = await import('./Remeasured');
+  const { HERO_SUMMARY } = await import('./remeasured-figures');
+  const copy = `${text(renderToStaticMarkup(React.createElement(Remeasured)))} ${HERO_SUMMARY ?? ''}`;
+  // Rounded twice (73.6, decode 92.9), or an average of a cold run with cached ones (0.15 / 0.13 s).
+  for (const figure of ['73.6', '92.9', '0.15 s', '0.13 s']) assert.ok(!copy.includes(figure), `${figure} renders`);
+  // The cached-prompt time never shows alone, and the short replies' first token always says it is a fresh prompt.
+  const after = (pattern: RegExp, length: number) => [...copy.matchAll(pattern)].map(match => copy.slice(match.index, match.index + length));
+  for (const line of after(/0\.07-0\.08 s/g, 45)) assert.match(line, /^0\.07-0\.08 s when the prompt is already cached/, line);
+  const fresh = after(/0\.31 s/g, 65);
+  assert.ok(fresh.length, 'the short replies\' first token is not shown');
+  for (const line of fresh) assert.match(line, /fresh prompt/, line);
+});
+
 test('tonight\'s rows in every measured set: base + draft from the band, other sets not yet re-measured until a figure drops in', async () => {
   const React = await import('react');
   Object.assign(globalThis, { React });

@@ -12,6 +12,10 @@
  * Row 2's first streamed token was reasoning, so it never shows without the time its answer text began (the
  * release's partner rule).
  *
+ * Each figure is rounded once, from the receipt's unrounded value. Row 5's first token is the fresh-prompt time;
+ * the cached-prompt time shows only beside it, and its earlier figure, which averaged a cold run with cached ones,
+ * is withdrawn.
+ *
  * While PLACEHOLDER is true the section stays off in production; JSPARK3_REMEASURED_PREVIEW=1 shows it locally.
  */
 
@@ -91,7 +95,7 @@ export const CHARTS: RemeasuredChart[] = [
       {
         key: 'short',
         label: 'Short replies',
-        condition: 'first token 0.15 s code, 0.13 s prose',
+        condition: 'first token 0.31 s (code) / 0.25 s (prose) on a fresh prompt; 0.07-0.08 s when the prompt is already cached',
         smallPrint: 'Replies forced to 128 tokens (the llama-bench tg128 length)',
         bars: [
           { name: 'Code', tone: 'default', value: '102.7', screen: 'PUBLISHABLE', source: 'row 5' },
@@ -102,7 +106,7 @@ export const CHARTS: RemeasuredChart[] = [
         key: 'long-prose',
         label: 'Long prose',
         smallPrint: 'Replies forced to 2,000 tokens, thinking requested off',
-        bars: [{ name: 'Prose', tone: 'default', value: '73.6', screen: 'PUBLISHABLE', source: 'row 4' }],
+        bars: [{ name: 'Prose', tone: 'default', value: '73.5', screen: 'PUBLISHABLE', source: 'row 4' }],
       },
     ],
   },
@@ -202,7 +206,7 @@ export const CHARTS: RemeasuredChart[] = [
 /** Above the charts: what one user feels first. */
 export const LEAD: LeadFigure[] = [
   { chart: 'reply-one', group: 'natural-code', label: 'A complete program, one request', value: '92.5', unit: 'tok/s', line: 'user-visible, from send to the last token' },
-  { chart: 'reply-one', group: 'short', label: 'First token on a short reply', value: '0.15', unit: 's', line: 'code; 0.13 s for prose' },
+  { chart: 'reply-one', group: 'short', label: 'First token on a short reply', value: '0.31', unit: 's', line: 'code, on a fresh prompt; 0.25 s for prose; 0.07-0.08 s when the prompt is already cached' },
   { chart: 'long-prompt', group: '32k', label: 'First token after a 32K-token prompt', value: '15.3', unit: 's' },
 ];
 
@@ -212,7 +216,7 @@ export const LEAD: LeadFigure[] = [
  */
 export const HERO: LeadFigure[] = [
   { chart: 'reply-one', group: 'natural-code', label: 'Code, one request', value: '92.5', unit: 'tok/s' },
-  { chart: 'reply-one', group: 'long-prose', label: 'Prose, one request', value: '73.6', unit: 'tok/s' },
+  { chart: 'reply-one', group: 'long-prose', label: 'Prose, one request', value: '73.5', unit: 'tok/s' },
   { chart: 'long-prompt', group: '32k', label: 'Reading a 32K-token prompt', value: '2,149', unit: 'tok/s', line: 'first token at 15.3 s' },
 ];
 export const HERO_RELEASE_TILES = ['rigmark.c4'];
