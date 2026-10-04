@@ -30,6 +30,8 @@
 /* Comparison bars name the release as well as the weights. */
 .glm2-compare .glm-bar { grid-template-columns: 9.5rem minmax(0, 1fr) 6.5rem; }
 .glm2-chart .glm-bar-value small { font-size: 12px; font-weight: 400; color: var(--glm-paper-muted); }
+/* Missing values are prose, so they may wrap inside the value column at every breakpoint. */
+.glm2-chart .glm-bar[data-state="absent"] .glm-bar-value { min-width: 0; white-space: normal; overflow-wrap: anywhere; }
 .glm2-chart .glm-bar-name .glm2-bar-cache { display: block; font-size: 11px; font-weight: 400; color: var(--glm-paper-muted); }
 .glm2-chart .glm2-scale { margin-left: calc(8rem + 12px) !important; width: calc(100% - 14.5rem - 24px); }
 .glm2-chart .glm-group-label span { color: var(--glm-paper-muted); font-size: 13px; }
@@ -75,7 +77,7 @@
 .glm2-split { display: grid; grid-template-columns: 1fr 1.25fr; gap: 48px; }
 .glm2-prose p { color: var(--glm-muted); line-height: 1.7; }
 .glm2-prose p + p { margin-top: 14px; }
-.glm2 code { font: 13px/1.5 var(--font-geist-mono), monospace; color: var(--glm-text); background: var(--glm-panel); border: 1px solid var(--glm-line); padding: 2px 6px; overflow-wrap: anywhere; }
+.glm2 code { display: inline-block; max-width: 100%; font: 13px/1.5 var(--font-geist-mono), monospace; color: var(--glm-text); background: var(--glm-panel); border: 1px solid var(--glm-line); padding: 2px 6px; overflow-wrap: anywhere; }
 
 /* The weights a user chooses at install, side by side. The default carries the gold rule. */
 .glm2-variants { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; gap: 24px; margin-top: 28px; }
@@ -88,6 +90,7 @@
 .glm2-variant dl { display: grid; gap: 10px; margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--glm-line); }
 .glm2-variant dl > div { display: grid; grid-template-columns: 6.5rem minmax(0, 1fr); gap: 12px; font-size: 14px; }
 .glm2-variant dt { color: var(--glm-muted); }
+.glm2-variant dd { min-width: 0; overflow-wrap: anywhere; }
 .glm2-variant dd a { text-decoration: underline; text-decoration-color: var(--glm-gold); overflow-wrap: anywhere; }
 .glm2-responsibility { margin-top: 18px !important; padding: 12px 14px; border-left: 2px solid var(--glm-gold); background: color-mix(in srgb, var(--glm-gold) 7%, transparent); color: var(--glm-text) !important; font-size: 14px; line-height: 1.6; }
 
@@ -102,7 +105,7 @@
 /* Compatibility: a plain definition list. */
 .glm2-defs { display: grid; gap: 1px; background: var(--glm-line); border: 1px solid var(--glm-line); align-self: start; }
 .glm2-defs > div { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); gap: 16px; padding: 14px 16px; background: var(--glm-panel); font-size: 14px; }
-.glm2-defs dd { color: var(--glm-muted); }
+.glm2-defs dd { min-width: 0; overflow-wrap: anywhere; color: var(--glm-muted); }
 
 /* Earlier releases: the GLM page's fold rows, as links; an unpublished build is a plain row. */
 .glm2-history { padding-top: 0; border-top: 1px solid var(--glm-line); align-self: start; }
@@ -152,6 +155,7 @@
 
 /* Install facts sit under the install claim. */
 .glm2-install-defs { margin-top: 20px; }
+.glm2-install-defs dd { container-type: inline-size; }
 @media (min-width: 801px) {
   .glm2-install-defs > div { grid-template-columns: 9rem minmax(0, 1fr); }
 }
@@ -177,12 +181,16 @@
 /* Errata: corrections to the engine's own files, after the known issues and apart from them. */
 .glm .glm2-errata .glm2-subhead { margin-top: 32px; font-size: 18px; }
 .glm2-errata p { margin-top: 8px; max-width: 72ch; color: var(--glm-muted); font-size: 14px; line-height: 1.65; }
-/* Inside code, words never break at their own hyphens (Fact wraps each word). */
-.glm2-nobreak { white-space: nowrap; }
+/* Keep short flags together; oversized identifiers wrap without changing the copied text. */
+.glm2-nobreak { display: inline-block; max-width: 100%; white-space: normal; overflow-wrap: anywhere; }
 
 /* Disk per host, by component: the parts are listed, never added up. */
 .glm2-disk { display: grid; gap: 4px; margin: 0; padding: 0; list-style: none; color: var(--glm-text); }
 .glm2-disk li { display: grid; grid-template-columns: 7.75rem minmax(0, 1fr); column-gap: 8px; align-items: baseline; }
+/* These definitions can be narrow even on a wide viewport, inside the install's two-column layout. */
+@container (max-width: 18rem) {
+  .glm2-costs dd > span, .glm2-disk li { grid-template-columns: minmax(0, 1fr); row-gap: 2px; }
+}
 
 /* Paragraphs inside a definition (the commercial path and its contact). */
 .glm2-paras p + p { margin-top: 8px; }
