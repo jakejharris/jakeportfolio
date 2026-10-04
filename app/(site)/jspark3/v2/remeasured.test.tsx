@@ -179,15 +179,19 @@ test('tonight\'s rows in every measured set: base + draft from the band, other s
   }
 });
 
-test('the GLM page leads with the natural figures: hero, the re-measured band, every set, RigMark against v1.8.4, then the rest in order', async () => {
+test('the GLM page leads with the natural figures: hero, the re-measured band, every set, its re-measured rows apart, RigMark against v1.8.4, then the rest in order', async () => {
   const React = await import('react');
   Object.assign(globalThis, { React });
   const { renderToStaticMarkup } = await import('react-dom/server');
   const { default: GlmFactsPage } = await import('./GlmFactsPage');
   const { RIGMARK_SHOWN } = await import('../glm-facts');
   const { ANCHOR } = await import('./remeasured-data');
+  const { REMEASURED_DATE, REMEASURED_ON } = await import('./remeasured-figures');
   const html = renderToStaticMarkup(React.createElement(GlmFactsPage));
-  const order = ['class="glm-tiles"', 'id="results"', `id="${ANCHOR}"`, 'id="results-title"', 'id="sets"', ...(RIGMARK_SHOWN ? ['id="against-v184"'] : []), 'id="weights"', 'id="draft-model"', 'id="compatibility"', 'id="install"', 'id="known-issues"', 'id="built-on"', 'id="why-glm"', 'id="history"'];
+  // The re-measured rows of every set follow the release's charts and methods, under a heading of their own.
+  const remeasured = REMEASURED_ON ? ['id="sets-remeasured"', `${ANCHOR}-sets-reply`, `${ANCHOR}-sets-long-prompt`] : [];
+  if (REMEASURED_ON) assert.ok(html.includes(`id="sets-remeasured">Re-measured ${REMEASURED_DATE}: its own runs</h3>`), 'the re-measured rows have no heading of their own');
+  const order = ['class="glm-tiles"', 'id="results"', `id="${ANCHOR}"`, 'id="results-title"', 'id="sets"', 'glm2-decode-title', 'glm2-method-all', ...remeasured, ...(RIGMARK_SHOWN ? ['id="against-v184"'] : []), 'id="weights"', 'id="draft-model"', 'id="compatibility"', 'id="install"', 'id="known-issues"', 'id="built-on"', 'id="why-glm"', 'id="history"'];
   const at = order.map(marker => html.indexOf(marker));
   order.forEach((marker, index) => assert.ok(at[index] > (index ? at[index - 1] : -1), `${marker} is out of order`));
   // The hero is user-visible figures: no server prefill, no first streamed reasoning.

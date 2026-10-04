@@ -5,7 +5,7 @@ import LegacyFragments from '../LegacyFragments';
 import ProjectHeader from './ProjectHeader';
 import Remeasured, { RemeasuredSetChart } from './Remeasured';
 import { ANCHOR as REMEASURED } from './remeasured-data';
-import { HERO_FIGURES, HERO_LINE, HERO_TILES, REMEASURED_ON } from './remeasured-figures';
+import { HERO_FIGURES, HERO_LINE, HERO_TILES, REMEASURED_DATE, REMEASURED_ON } from './remeasured-figures';
 import { ColdStartChart, CompareFigure, ConcurrencyChart, DecodeChart, Relbench, RelbenchNote, RigmarkBlocks, SetFigure } from './FactsCharts';
 import { Fact, FactLink } from './Fact';
 import {
@@ -207,10 +207,6 @@ export default function GlmFactsPage() {
           <DecodeChart />
           {SINGLE_FIGURES.length ? <div className="glm2-figcol">{SINGLE_FIGURES.map(item => <SetFigure key={item.metric} {...item} />)}</div> : null}
         </div>
-        {REMEASURED_ON ? <div className="glm2-pair">
-          <RemeasuredSetChart id="sets-reply" />
-          <RemeasuredSetChart id="sets-long-prompt" />
-        </div> : null}
         <RelbenchNote />
         {METHODS
           ? <div className="glm2-method glm2-method-all"><p className="glm-label">{REMEASURED_ON ? 'How the release-day figures were measured' : 'How every figure was measured'}</p><p><Fact slot={METHODS} /></p>{CONDITIONS.results ? <p><Fact slot={CONDITIONS.results} /></p> : null}{PROMPT_MIX_LINE ? <p><Fact slot={PROMPT_MIX_LINE} /></p> : null}</div>
@@ -219,6 +215,14 @@ export default function GlmFactsPage() {
             <div><dt>Decode</dt><dd><Fact slot={CONDITIONS.decode} /></dd></div>
             <div><dt>Requests at once</dt><dd><Fact slot={CONDITIONS.concurrency} /></dd></div>
           </dl>}
+        {/* The re-measurement's own runs of these rows, under their own heading, apart from the release's figures and methods above. */}
+        {REMEASURED_ON ? <>
+          <h3 className="glm2-subhead" id="sets-remeasured">Re-measured {REMEASURED_DATE}: its own runs</h3>
+          <div className="glm2-pair">
+            <RemeasuredSetChart id="sets-reply" />
+            <RemeasuredSetChart id="sets-long-prompt" />
+          </div>
+        </> : null}
         {RIGMARK_SHOWN ? <>
           <h3 className="glm2-subhead" id="against-v184"><Fact slot={VERSION} /> against the v1.8.4 baseline</h3>
           {RIGMARK === 'undecided' ? <p className="glm2-decision"><span className="jspark-ph jspark-tbd">Shown only if RigMark is published with this release</span></p> : null}
