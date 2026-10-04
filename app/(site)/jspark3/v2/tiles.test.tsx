@@ -128,12 +128,16 @@ test('every release decode and concurrency row on /jspark3/glm/ says whether its
       assert.ok(/data-cache-of="[^"]+">[^<]*\b(?:fresh|cached)\b/.test(label) || each, `${id}: a row says nothing of its prompts: ${label}`);
     }
   }
-  // Forge's ruling: the short replies' Base and Abliterated columns are "prompt cached", no draft "fresh prompt";
-  // the long-prompt code row is all fresh; the note says why the cache barely matters at one request.
+  // Forge's per-cell ruling: short code is cached for Base and Abliterated; short prose is cached
+  // for Base but fresh for Abliterated. No draft is fresh in both; long-prompt code is all fresh.
   const decode = chartOf('glm2-decode');
-  for (const metric of ['decode_short_tok_s.code', 'decode_short_tok_s.prose']) {
+  const shortReplyCaches = {
+    'decode_short_tok_s.code': { 'V-D': 'prompt cached', 'O-D': 'prompt cached', 'V-N': 'fresh prompt' },
+    'decode_short_tok_s.prose': { 'V-D': 'prompt cached', 'O-D': 'fresh prompt', 'V-N': 'fresh prompt' },
+  };
+  for (const [metric, caches] of Object.entries(shortReplyCaches)) {
     const group = decode.split(`data-metric-id="${metric}"`)[1]?.split('<div class="glm-group"')[0] ?? '';
-    for (const [set, cache] of [['V-D', 'prompt cached'], ['O-D', 'prompt cached'], ['V-N', 'fresh prompt']]) assert.ok(group.includes(`data-cache-of="${set}">${cache}<`), `${metric}: ${set} is not "${cache}"`);
+    for (const [set, cache] of Object.entries(caches)) assert.ok(group.includes(`data-cache-of="${set}">${cache}<`), `${metric}: ${set} is not "${cache}"`);
   }
   assert.match(decode.split('data-metric-id="decode_long_tok_s"')[1] ?? '', /data-cache-of="decode_long_tok_s">fresh prompts</);
   assert.ok(decode.includes(`<p class="glm2-compare-note">${DECODE_CACHE_NOTE.replace(/'/g, '&#x27;')}</p>`), 'the decode chart has no note on the cache');

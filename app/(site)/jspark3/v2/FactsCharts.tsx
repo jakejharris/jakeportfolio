@@ -135,15 +135,16 @@ const DECODE_GROUPS: Record<string, string> = {
 
 /**
  * The prompt cache of each decode row, since the release facts give none (Forge's ruling, from each set's
- * CACHED-TOKENS.json). A short reply is the median of three requests, the first fresh and the next two the same
- * prompt, so the Base and Abliterated columns say "prompt cached"; Base with no draft ran all three fresh.
- * The long-prompt requests were all fresh. Every request in the concurrency rows reported zero cached tokens, as
- * the release requires.
+ * CACHED-TOKENS.json). Short code is prompt cached for Base and Abliterated. Short prose is prompt cached
+ * for Base, but fresh for Abliterated: its retained median request reported zero of 33 prompt tokens cached.
+ * Base with no draft is fresh in both short rows. The long-prompt requests were all fresh. Every request in
+ * the concurrency rows reported zero cached tokens, as the release requires.
  */
-const SHORT_REPLY_CACHE: Record<string, string> = { 'V-D': 'prompt cached', 'O-D': 'prompt cached', 'V-N': 'fresh prompt' };
+const SHORT_CODE_CACHE: Record<string, string> = { 'V-D': 'prompt cached', 'O-D': 'prompt cached', 'V-N': 'fresh prompt' };
+const SHORT_PROSE_CACHE: Record<string, string> = { 'V-D': 'prompt cached', 'O-D': 'fresh prompt', 'V-N': 'fresh prompt' };
 const DECODE_CACHE: Record<string, Pick<SetGroup, 'cache' | 'caches'>> = {
-  'decode_short_tok_s.code': { caches: SHORT_REPLY_CACHE },
-  'decode_short_tok_s.prose': { caches: SHORT_REPLY_CACHE },
+  'decode_short_tok_s.code': { caches: SHORT_CODE_CACHE },
+  'decode_short_tok_s.prose': { caches: SHORT_PROSE_CACHE },
   'decode_long_tok_s': { cache: 'fresh prompts' },
 };
 /** Why the cache barely matters here: row 8 of the re-measurement, measured both ways. */
