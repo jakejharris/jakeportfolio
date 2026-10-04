@@ -1,0 +1,89 @@
+/* A post's call to action (PostCallToAction). On a phone it fills the column
+   and stands taller than a thumb; on a wider screen it is as wide as its
+   words and lines up with the text. Fill and rim carry it, no shadow. */
+.post-cta-row {
+  margin: 2rem 0;
+}
+
+.post-cta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.25rem;
+  width: 100%;
+  min-height: 3.25rem;
+  padding: 0.75rem 1.125rem 0.75rem 1.25rem;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  font-size: 1.0625rem;
+  font-weight: 600;
+  line-height: 1.35;
+  text-decoration: none;
+  transition: background-color 0.15s ease, border-color 0.15s ease, transform 0.1s ease;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+@media (min-width: 640px) {
+  .post-cta {
+    display: inline-flex;
+    width: auto;
+    min-width: 17rem;
+  }
+}
+
+.post-cta-primary {
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+}
+
+.post-cta-secondary {
+  background: hsl(var(--secondary));
+  color: hsl(var(--secondary-foreground));
+  border-color: hsl(var(--border));
+}
+
+.post-cta-ghost {
+  color: hsl(var(--foreground));
+  border-color: hsl(var(--border));
+}
+
+.post-cta-arrow {
+  flex: none;
+  transition: transform 0.15s ease;
+}
+
+@media (hover: hover) {
+  .post-cta-primary:hover { background: hsl(var(--primary) / 0.86); }
+  .post-cta-secondary:hover { background: hsl(var(--secondary) / 0.8); }
+  .post-cta-ghost:hover { background: hsl(var(--accent)); }
+  .post-cta:hover .post-cta-arrow { transform: translateX(3px); }
+  .post-cta-external:hover .post-cta-arrow { transform: translate(2px, -2px); }
+}
+
+.post-cta:active {
+  transform: translateY(1px);
+}
+
+.post-cta:focus-visible {
+  outline: 2px solid hsl(var(--ring));
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .post-cta,
+  .post-cta-arrow {
+    transition: none;
+  }
+
+  .post-cta:active,
+  .post-cta:hover .post-cta-arrow {
+    transform: none;
+  }
+}
+
+@media (forced-colors: active) {
+  .post-cta {
+    border-color: LinkText;
+  }
+}
