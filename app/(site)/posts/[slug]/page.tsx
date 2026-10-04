@@ -15,6 +15,9 @@ import { FaGithub, FaGlobe, FaLinkedin, FaTwitter, FaYoutube, FaCodepen, FaExter
 import ViewCounter from './ViewCounter';
 import { Post, InteractiveComponentValue } from '@/app/types/sanity';
 import InteractiveBlock from '@/app/components/blog-components/InteractiveBlock';
+import PostCallToAction from '@/app/components/blog-components/PostCallToAction';
+import TransitionLink from '@/app/components/TransitionLink';
+import { sitePath } from '@/app/lib/site-path';
 import { Button } from '@/app/components/ui/button';
 import React from 'react';
 import nextDynamic from 'next/dynamic';
@@ -248,26 +251,9 @@ const components: Partial<PortableTextReactComponents> = {
         </div>
       );
     },
-    callToAction: ({ value }: { value: CallToActionValue }) => {
-      const styles = {
-        primary: 'bg-primary text-primary-foreground hover:bg-primary/90',
-        secondary: 'bg-secondary text-secondary-foreground hover:bg-secondary/90',
-        ghost: 'hover:bg-accent hover:text-accent-foreground'
-      };
-
-      return (
-        <div className="my-8 flex justify-center">
-          <a
-            href={value.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className={`px-4 py-2 rounded-md font-medium ${styles[value.style as keyof typeof styles]}`}
-          >
-            {value.text}
-          </a>
-        </div>
-      );
-    },
+    callToAction: ({ value }: { value: CallToActionValue }) => (
+      <PostCallToAction text={value.text} url={value.url} style={value.style} />
+    ),
     quoteBlock: ({ value }: { value: QuoteBlockValue }) => {
       return (
         <blockquote className="my-8 border-l-4 border-primary pl-4 italic">
@@ -312,6 +298,11 @@ const components: Partial<PortableTextReactComponents> = {
   marks: {
     link: ({value, children}) => {
       const href = value?.href || '';
+      // A page on this site opens in place, unless the link asks for a new tab.
+      const path = sitePath(href);
+      if (path && !value?.blank) {
+        return <TransitionLink href={path} scroll={true} className="portable-text-link">{children}</TransitionLink>;
+      }
       const isExternal = value?.blank || href.startsWith('http');
       return (
         <a
@@ -572,22 +563,18 @@ export default async function PostPage({ params }: PageParams) {
                 {post.externalLinks.map((link, index) => {
                   const Icon = iconMap[link.icon] || FaExternalLinkAlt;
                   return (
-                    <Button
+                    // The outline button's look on a plain anchor. Button is a client component: as its asChild
+                    // child, an anchor can reach the client as a lazy reference, which the Slot drops.
+                    <a
                       key={index}
-                      variant="outline"
-                      size="sm"
-                      asChild
+                      href={link.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex min-h-9 max-w-full items-center gap-2 rounded-md border border-input px-3 py-2 text-left text-sm font-medium ring-offset-background transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 [&>svg]:shrink-0"
                     >
-                      <a
-                        href={link.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-2"
-                      >
-                        <Icon />
-                        <span>{link.title}</span>
-                      </a>
-                    </Button>
+                      <Icon />
+                      <span>{link.title}</span>
+                    </a>
                   );
                 })}
               </div>
