@@ -7,5 +7,5 @@
     "Reading a 32K-token prompt: ≈2,149 tok/s",
     "Four at once, end to end (RigMark): 113.4 tok/s"
   ],
-  "figures_sha256": "3aa22c7337a51b6c2e0e16ecb4dda20ba817cdcd7b551473ccf6319e31a33b7d"
+  "image_sha256": "2859a550de42ce1b25923e466a3cf4f3e4e5fea9ddfe863882d5ef467563ce21"
 }

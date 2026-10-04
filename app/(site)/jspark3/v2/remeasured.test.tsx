@@ -102,6 +102,9 @@ test('the round-once audit: withdrawn figures stay off, timings say fresh or cac
   // Row 6's reading rates are estimates: never shown without the sign, and the hero's names its estimator.
   for (const match of copy.matchAll(/(.)2,1(?:49|02)/g)) assert.equal(match[1], '≈', `${match[0]} shows without ≈`);
   assert.match(HERO_SUMMARY ?? '', /≈2,149 tok\/s/);
+  // Row 4 was measured only with the prompt already cached: its label says so wherever it shows.
+  const cached = 'Replies forced to 2,000 tokens, thinking requested off, prompt already cached';
+  for (const match of copy.matchAll(/Replies forced to 2,000 tokens, thinking requested off/g)) assert.equal(copy.slice(match.index, match.index + cached.length), cached);
   // Row 5's cached-prompt rates show only beside the fresh ones, saying so.
   for (const match of copy.matchAll(/108\.5/g)) assert.match(copy.slice(match.index - 40, match.index), /already cached: code $/, 'a cached rate shows alone');
   // The cached-prompt time never shows alone, and the short replies' first token always says it is a fresh prompt.
@@ -176,7 +179,7 @@ test('the hub card and the share card show the GLM page\'s hero: the same figure
   const { HERO_FIGURES, HERO_LINE, HERO_SIGNATURE, HERO_TILES, REMEASURED_ON, SHARE_IMAGE, resolve } = await import('./remeasured-figures');
   const { HERO, HERO_RELEASE_TILES } = await import('./remeasured-data');
   const { SOCIAL_IMAGE, TILE_FIGURES } = await import('../glm-facts');
-  const share = (await import('../glm-share.json')).default as { figures?: string[]; figures_sha256?: string };
+  const share = (await import('../glm-share.json')).default as { image: string; figures?: string[]; image_sha256?: string };
   if (!REMEASURED_ON) return;
   // The hero leads with the re-measured figures, each from its group, then keeps only the RigMark tiles named.
   assert.deepEqual(HERO_FIGURES.map(figure => figure.value), resolve(HERO).map(item => item.figure.value));
@@ -203,10 +206,10 @@ test('the hub card and the share card show the GLM page\'s hero: the same figure
   if (prefill) for (const html of [hero, card]) for (const column of ['V-D', 'O-D', 'v1_8_4']) if (prefill[column]) assert.ok(!html.includes(`>${prefill[column]}<`), `${prefill[column]} still shows`);
   // The share card was rendered with these figures, so the page uses it; a card with other figures falls back.
   assert.deepEqual(share.figures, HERO_SIGNATURE, 'the share card shows other figures than the hero; rerun scripts/render-glm-share.mjs');
-  // Its address carries the figures' hash, so a link preview cached with other figures fetches the new card.
-  const figures = createHash('sha256').update(JSON.stringify(HERO_SIGNATURE)).digest('hex');
-  assert.equal(share.figures_sha256, figures, 'the share card records other figures; rerun scripts/render-glm-share.mjs');
-  assert.ok(SOCIAL_IMAGE && SHARE_IMAGE === `${SOCIAL_IMAGE}?v=${figures.slice(0, 12)}`, 'the page does not use the share card at its versioned address');
+  // Its address carries the image's hash, so a link preview cached with an earlier card fetches this one.
+  const image = createHash('sha256').update(readFileSync(join(__dirname, '../../../../public', share.image))).digest('hex');
+  assert.equal(share.image_sha256, image, 'glm-share.json records another image; rerun scripts/render-glm-share.mjs');
+  assert.ok(SOCIAL_IMAGE && SHARE_IMAGE === `${SOCIAL_IMAGE}?v=${image.slice(0, 12)}`, 'the page does not use the share card at its versioned address');
 });
 
 test('known issues carry the numbers the copy cites: each is numbered and anchored, and every citation names one', async () => {

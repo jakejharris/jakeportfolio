@@ -13,7 +13,7 @@
  * release's partner rule).
  *
  * Each figure is rounded once, from the receipt's unrounded value (the round-once audit), and every timing and
- * short-reply rate says whether its prompt was fresh or already cached. Row 5 leads with its fresh-prompt figures;
+ * rate says whether its prompt was fresh or already cached; row 4 has only cached-prompt runs, so it says so. Row 5 leads with its fresh-prompt figures;
  * the cached ones show only beside them, and the earlier means, which averaged a fresh run with cached ones, are
  * withdrawn. Row 6's reading rates are estimates (prompt tokens ÷ client first-token time) and say so. A per-request
  * figure is the mean of each request's own rate, not the total's share. The cached-prompt range takes a
@@ -109,7 +109,7 @@ export const CHARTS: RemeasuredChart[] = [
       {
         key: 'long-prose',
         label: 'Long prose',
-        smallPrint: 'Replies forced to 2,000 tokens, thinking requested off',
+        smallPrint: 'Replies forced to 2,000 tokens, thinking requested off, prompt already cached',
         bars: [{ name: 'Prose', tone: 'default', value: '73.5', screen: 'PUBLISHABLE', source: 'row 4' }],
       },
     ],
@@ -179,7 +179,7 @@ export const CHARTS: RemeasuredChart[] = [
         key: 'long-prose',
         label: 'Prose, 2,000 tokens each',
         condition: '17.5 tok/s mean per-request rate (total ÷ 8 = 16.7)',
-        smallPrint: 'Replies forced to 2,000 tokens, thinking requested off',
+        smallPrint: 'Replies forced to 2,000 tokens, thinking requested off, prompt already cached',
         bars: [{ name: 'Combined', tone: 'default', value: '133.3', screen: 'HOLD', source: 'row 4' }],
       },
     ],
