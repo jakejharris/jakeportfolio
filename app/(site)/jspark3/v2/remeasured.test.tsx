@@ -3,6 +3,8 @@ import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import test from 'node:test';
+import marketingTable from './fixtures/marketing-table-20261004.json';
+import type { RemeasuredChart } from './remeasured-data';
 
 // The page renders server-side; its stylesheets mean nothing here.
 require.extensions['.css'] = (module: NodeModule) => { module.exports = {}; };
@@ -112,7 +114,7 @@ test('the round-once audit: withdrawn figures stay off, timings say fresh or cac
   const hero = renderToStaticMarkup(React.createElement(GlmFactsPage)).match(/<div class="glm-tiles">[\s\S]*?<p class="glm-tiles-line">[\s\S]*?<\/p><\/div>/)?.[0] ?? '';
   const card = renderToStaticMarkup(React.createElement(HubPage)).match(/<span class="spark-hub-figures" data-figure="facts">[\s\S]*?<span class="spark-hub-release-action">/)?.[0] ?? '';
   const rates = `${copy} ${text(hero)} ${text(card)}`;
-  for (const [figure, status] of [['92.5', /fresh prompt/], ['73.5', /cached/]] as const) {
+  for (const [figure, status] of [['92.5', /fresh prompt/i], ['73.5', /cached/]] as const) {
     const near = [...rates.matchAll(new RegExp(figure.replace('.', '\\.'), 'g'))].map(match => rates.slice(Math.max(0, match.index - 120), match.index + 200));
     assert.ok(near.length >= 4, `${figure} shows ${near.length} times`);
     for (const line of near) assert.match(line, status, line);
@@ -139,6 +141,8 @@ test('the round-once audit: withdrawn figures stay off, timings say fresh or cac
   const pair = [...copy.matchAll(/(?:49\.1|67\.9) tok\/s/g)];
   assert.ok(pair.length >= 2, 'the one-stream pair is not shown');
   for (const match of pair) assert.ok(copy.slice(match.index, match.index + 400).includes(ladder), `${match[0]} shows without its prompt cache`);
+  // Each side's figure is a chosen run, and the pair says how: v1.8.0's the better of 2, v2.0.1's the best of 3.
+  for (const match of pair) for (const chosen of ['better of 2 runs, unscreened for repetition', 'v2.0.1: best of 3 runs.']) assert.ok(copy.slice(match.index, match.index + 700).includes(chosen), `${match[0]} shows without "${chosen}"`);
   for (const figure of ['138.0', '87.4', '147.9', '102.5', '156.3', '113.1', '205.0', '142.4']) assert.ok(!copy.includes(figure), `row 8's ${figure} renders`);
 });
 
@@ -179,15 +183,19 @@ test('tonight\'s rows in every measured set: base + draft from the band, other s
   }
 });
 
-test('the GLM page leads with the natural figures: hero, the re-measured band, every set, RigMark against v1.8.4, then the rest in order', async () => {
+test('the GLM page leads with the natural figures: hero, the re-measured band, every set, its re-measured rows apart, RigMark against v1.8.4, then the rest in order', async () => {
   const React = await import('react');
   Object.assign(globalThis, { React });
   const { renderToStaticMarkup } = await import('react-dom/server');
   const { default: GlmFactsPage } = await import('./GlmFactsPage');
   const { RIGMARK_SHOWN } = await import('../glm-facts');
   const { ANCHOR } = await import('./remeasured-data');
+  const { REMEASURED_DATE, REMEASURED_ON } = await import('./remeasured-figures');
   const html = renderToStaticMarkup(React.createElement(GlmFactsPage));
-  const order = ['class="glm-tiles"', 'id="results"', `id="${ANCHOR}"`, 'id="results-title"', 'id="sets"', ...(RIGMARK_SHOWN ? ['id="against-v184"'] : []), 'id="weights"', 'id="draft-model"', 'id="compatibility"', 'id="install"', 'id="known-issues"', 'id="built-on"', 'id="why-glm"', 'id="history"'];
+  // The re-measured rows of every set follow the release's charts and methods, under a heading of their own.
+  const remeasured = REMEASURED_ON ? ['id="sets-remeasured"', `${ANCHOR}-sets-reply`, `${ANCHOR}-sets-long-prompt`] : [];
+  if (REMEASURED_ON) assert.ok(html.includes(`id="sets-remeasured">Re-measured ${REMEASURED_DATE}: its own runs</h3>`), 'the re-measured rows have no heading of their own');
+  const order = ['class="glm-tiles"', 'id="results"', `id="${ANCHOR}"`, 'id="results-title"', 'id="sets"', 'glm2-decode-title', 'glm2-method-all', ...remeasured, ...(RIGMARK_SHOWN ? ['id="against-v184"'] : []), 'id="weights"', 'id="draft-model"', 'id="compatibility"', 'id="install"', 'id="known-issues"', 'id="built-on"', 'id="why-glm"', 'id="history"'];
   const at = order.map(marker => html.indexOf(marker));
   order.forEach((marker, index) => assert.ok(at[index] > (index ? at[index - 1] : -1), `${marker} is out of order`));
   // The hero is user-visible figures: no server prefill, no first streamed reasoning.
@@ -204,7 +212,7 @@ test('the hub card and the share card show the GLM page\'s hero: the same figure
   const { HERO_FIGURES, HERO_LINE, HERO_SIGNATURE, HERO_TILES, REMEASURED_ON, SHARE_IMAGE, resolve } = await import('./remeasured-figures');
   const { HERO, HERO_RELEASE_TILES } = await import('./remeasured-data');
   const { SOCIAL_IMAGE, TILE_FIGURES } = await import('../glm-facts');
-  const share = (await import('../glm-share.json')).default as { image: string; figures?: string[]; image_sha256?: string };
+  const share = (await import('../glm-share.json')).default as { image: string; hero?: unknown; image_sha256?: string };
   if (!REMEASURED_ON) return;
   // The hero leads with the re-measured figures, each from its group, then keeps only the RigMark tiles named.
   assert.deepEqual(HERO_FIGURES.map(figure => figure.value), resolve(HERO).map(item => item.figure.value));
@@ -219,6 +227,8 @@ test('the hub card and the share card show the GLM page\'s hero: the same figure
   const want = [...HERO_FIGURES.map(figure => [figure.key, figure.label]), ...HERO_TILES.map(tile => [tile.key, tile.label])];
   assert.deepEqual(shown(hero, 'dt'), want, 'the hero shows other tiles');
   assert.deepEqual(shown(card, 'span'), want, 'the hub card shows other tiles than the hero');
+  // Each caption reads as a sentence, here and on the share card.
+  for (const figure of HERO_FIGURES) assert.match(figure.caption, /^[A-Z]/, `the ${figure.label} caption starts in lower case`);
   for (const figure of HERO_FIGURES) {
     assert.ok(hero.includes(`<dd class="glm-tile-value">${figure.value}<small>${figure.unit}</small></dd>`) && hero.includes(escape(figure.caption)), `the hero's ${figure.label} tile is shown without its value or label`);
     assert.ok(card.includes(`<span class="spark-hub-figure-value">${figure.value}<small>${figure.unit}</small></span>`) && card.includes(escape(figure.caption)), `the hub's ${figure.label} tile is shown without its value or label`);
@@ -236,7 +246,7 @@ test('the hub card and the share card show the GLM page\'s hero: the same figure
   const prefill = synced.facts.rigmark_rows?.find(row => row.id === 'prefill_64k');
   if (prefill) for (const html of [hero, card]) for (const column of ['V-D', 'O-D', 'v1_8_4']) if (prefill[column]) assert.ok(!html.includes(`>${prefill[column]}<`), `${prefill[column]} still shows`);
   // The share card was rendered with these figures, so the page uses it; a card with other figures falls back.
-  assert.deepEqual(share.figures, HERO_SIGNATURE, 'the share card shows other figures than the hero; rerun scripts/render-glm-share.mjs');
+  assert.equal(JSON.stringify(share.hero), HERO_SIGNATURE, 'the share card shows other figures or qualifications than the hero; rerun scripts/render-glm-share.mjs');
   // Its address carries the image's hash, so a link preview cached with an earlier card fetches this one.
   const image = createHash('sha256').update(readFileSync(join(__dirname, '../../../../public', share.image))).digest('hex');
   assert.equal(share.image_sha256, image, 'glm-share.json records another image; rerun scripts/render-glm-share.mjs');
@@ -292,8 +302,83 @@ test('the GLM page\'s description and link previews give the hero\'s figures wit
   assert.ok(!description.includes(String.fromCodePoint(0x2014)), 'em dash in the description');
 });
 
-test('the share card names the product in its title and keeps the wordmark', () => {
+test('the share card names the product in its title and keeps the wordmark', async () => {
+  const { HERO_CARD } = await import('./remeasured-figures');
+  assert.match(HERO_CARD.title, /^JSpark3 v[\d.]+: GLM-5\.3 Flash on three DGX Sparks\.$/);
   const script = readFileSync(join(__dirname, '../../../../scripts/render-glm-share.mjs'), 'utf8');
-  assert.match(script, /<div class="tagline">JSpark3 \$\{escape\(VERSION\.text\)\}/);
+  assert.match(script, /<div class="tagline">\$\{escape\(title\)\}/);
   assert.match(script, /\.replace\('<span class="word">JSpark3<\/span>', '<span class="word">JSPARK3<\/span>'\)/);
+});
+
+test('RigMark\'s four at once against v1.8.4 carries the audit\'s caption: v2.0.1 on fresh prompts, v1.8.4 not recorded', async () => {
+  const React = await import('react');
+  Object.assign(globalThis, { React });
+  const { renderToStaticMarkup } = await import('react-dom/server');
+  const { CompareFigure } = await import('./FactsCharts');
+  const { COMPARE, RIGMARK_BLOCKS } = await import('../glm-facts');
+  const { COMPARE_NOTES } = await import('./remeasured-data');
+  // The audit's words (R0/lanes/rigmark-v184-cache): v1.8.4's prompts are never called fresh.
+  const caption = 'RigMark 1.1.0, same harness on both. C4: four short-code requests, 256-token cap each, median of three end-to-end waves including prompt reading. v2.0.1 measured on fresh prompts; v1.8.4 cache status was not recorded.';
+  assert.deepEqual(COMPARE_NOTES, { c4: caption });
+  if (!COMPARE.some(row => row.id === 'c4')) return;
+  const html = renderToStaticMarkup(React.createElement(CompareFigure));
+  const start = html.indexOf('data-metric-id="c4"');
+  const next = html.indexOf('data-metric-id="', start + 1);
+  assert.ok(start >= 0 && text(next > 0 ? html.slice(start, next) : html.slice(start)).includes(caption), 'four at once shows without its caption');
+  assert.equal(text(html).split(caption).length, 2, 'the caption shows under another row too');
+  // RigMark's own output stays as it printed it.
+  for (const block of RIGMARK_BLOCKS) assert.ok(!block.text.text.includes('v1.8.4 cache status'), `${block.id} is reworded`);
+});
+
+// These expectations are transcribed from the reviewed source, never from the rendering arrays.
+function assertReviewedMeasurements(charts: RemeasuredChart[]) {
+  const groups = charts.flatMap(chart => chart.groups.flatMap(group => {
+    const bars = group.bars.filter(bar => bar.screen === 'PUBLISHABLE');
+    return bars.length ? [{
+      id: `${chart.id}.${group.key}`, ruler: chart.ruler, unit: chart.unit,
+      chartSmallPrint: chart.smallPrint ?? null, label: group.label, condition: group.condition ?? null,
+      smallPrint: group.smallPrint ?? null, notes: group.notes ?? [],
+      bars: bars.map(({ name, value, source }) => ({ name, value, source })),
+    }] : [];
+  }));
+  assert.deepEqual(groups, marketingTable.groups, `figures or conditions differ from MARKETING-TABLE ${marketingTable.sha256}`);
+}
+
+test('all published re-measurements and their conditions match the independently pinned marketing table', async () => {
+  const { CHARTS, HERO, LEAD } = await import('./remeasured-data');
+  const { HERO_TILES } = await import('./remeasured-figures');
+  assertReviewedMeasurements(CHARTS);
+  assert.deepEqual(HERO, marketingTable.hero);
+  assert.deepEqual(LEAD, marketingTable.lead);
+  assert.deepEqual(HERO_TILES.map(tile => ({ key: tile.key, value: tile.value.slot.text, unit: tile.unit, prompt: tile.prompt, caption: tile.caption?.text })), marketingTable.releaseTiles);
+});
+
+test('the independent gate rejects 91.2 for row 5 fresh code and a cached/fresh condition swap', async () => {
+  const { CHARTS } = await import('./remeasured-data');
+  const wrongRate = structuredClone(CHARTS);
+  wrongRate.find(chart => chart.id === 'reply-one')!.groups.find(group => group.key === 'short')!.bars[0].value = '91.2';
+  assert.throws(() => assertReviewedMeasurements(wrongRate), /figures or conditions differ from MARKETING-TABLE/);
+  const wrongCondition = structuredClone(CHARTS);
+  wrongCondition.find(chart => chart.id === 'reply-one')!.groups.find(group => group.key === 'short')!.label = 'Short replies, prompt cached';
+  assert.throws(() => assertReviewedMeasurements(wrongCondition), /figures or conditions differ from MARKETING-TABLE/);
+});
+
+test('a caption-only edit on any hero cell rejects the old share raster', async () => {
+  const { HERO_CARD, HERO_FIGURES, HERO_TILES, SHARE_IMAGE, heroCard, shareImage } = await import('./remeasured-figures');
+  assert.ok(SHARE_IMAGE, 'the unmodified card must be current');
+  for (let i = 0; i < HERO_FIGURES.length; i++) {
+    const figures = structuredClone(HERO_FIGURES);
+    figures[i].caption += ' Changed qualification.';
+    assert.equal(shareImage(JSON.stringify(heroCard(figures, HERO_TILES, HERO_CARD.measured))), null);
+  }
+  const tiles = structuredClone(HERO_TILES);
+  tiles.find(tile => tile.key === 'rigmark.c4')!.caption!.text = tiles.find(tile => tile.key === 'rigmark.c4')!.caption!.text.replace('256-token', '128-token');
+  assert.equal(shareImage(JSON.stringify(heroCard(HERO_FIGURES, tiles, HERO_CARD.measured))), null);
+});
+
+test('a measured-line-only edit rejects the old share raster', async () => {
+  const { HERO_CARD, HERO_FIGURES, HERO_TILES, heroCard, shareImage } = await import('./remeasured-figures');
+  const changed = heroCard(HERO_FIGURES, HERO_TILES, HERO_CARD.measured.replace('October 3', 'October 4'));
+  assert.notEqual(changed.measured, HERO_CARD.measured);
+  assert.equal(shareImage(JSON.stringify(changed)), null);
 });

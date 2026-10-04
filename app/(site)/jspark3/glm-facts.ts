@@ -460,7 +460,7 @@ export function metricInfo(key: string): MetricInfo {
     c8_ttft_p50_s: { label: 'First token with 8 requests at once, median', short: 'First token, 8 at once', unit: 's', better: 'lower' },
     'c8_stall_s.median': { label: 'Pause in 8 running replies as a long prompt arrives', short: 'Stall, 8 at once', unit: 's', better: 'lower' },
     'c8_stall_s.max': { label: 'Longest such pause in any run', short: 'Stall, 8 at once, worst', unit: 's', better: 'lower' },
-    max_context_tokens: { label: 'Longest context', short: 'Longest context', unit: 'tokens', better: null },
+    max_context_tokens: { label: 'Configured context limit', short: 'Context limit', unit: 'tokens', better: null },
     'draft_acceptance.accepted_per_verify_step': { label: 'Draft tokens accepted per verify step', short: 'Accepted per step', unit: 'tokens', better: 'higher' },
     'draft_acceptance.accepted_over_proposed': { label: 'Drafted tokens accepted', short: 'Accepted of drafted', unit: '', better: 'higher' },
   };
@@ -621,6 +621,26 @@ export const DECODE_CELLS = [
   'decode_long_tok_s',
 ];
 export const STREAMS = cellsOf('concurrency_aggregate_tok_s', ['c1', 'c2', 'c4', 'c8', 'c16']);
+
+/**
+ * Jake's rule: the site publishes no figure measured at eight requests at once. The synced facts keep them, and
+ * the page leaves them out: the c8 point of the concurrency ladder, the 8-at-once first token and pause, draft
+ * acceptance (measured at 8 at once), and the methods paragraph's words about them (METHODS_HELD). Known issue 10
+ * is the release's own disclosure and stays as written.
+ */
+export const EIGHT_AT_ONCE = (key: string) => /(?:^|\.)c8(?:[_.]|$)|^draft_acceptance(?:\.|$)/.test(key);
+export const SHOWN_STREAMS = STREAMS.filter(streams => !EIGHT_AT_ONCE(`concurrency_aggregate_tok_s.${streams}`));
+/** The methods paragraph's sentences that open with these words, and the clause, describe figures held at eight at once. */
+export const METHODS_HELD = {
+  sentences: ['Draft acceptance ', 'The 8-request ', 'The 8-stream ', 'In the eight-client '],
+  clauses: ['; the token gap is given as both a median and a maximum'],
+};
+export function withoutEightAtOnce(text: string) {
+  const kept = METHODS_HELD.clauses.reduce((rest, clause) => rest.replace(clause, ''), text);
+  return kept.split(/(?<=\.)\s+(?=[A-Z])/).filter(sentence => !METHODS_HELD.sentences.some(opening => sentence.startsWith(opening))).join(' ');
+}
+/** How every figure was measured, as the page shows it. */
+export const METHODS: Slot | null = CONDITIONS.all && !CONDITIONS.all.pending ? { ...CONDITIONS.all, text: withoutEightAtOnce(CONDITIONS.all.text) } : CONDITIONS.all;
 
 
 /**

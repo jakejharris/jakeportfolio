@@ -202,7 +202,7 @@ export const CHARTS: RemeasuredChart[] = [
         key: 'prose-c1',
         label: 'Prose, one stream',
         smallPrint: 'Prompt cache: v1.8 fresh, v2.0.1 cached. At one stream the rate is timed from the first token, so the cache doesn\'t enter it (v2.0.1 one-stream code measured 107.7 fresh vs 107.8 cached).',
-        notes: ['Grey figure is v1.8.0\'s published ladder, better of 2 runs, unscreened for repetition.'],
+        notes: ['Grey figure is v1.8.0\'s published ladder, better of 2 runs, unscreened for repetition.', 'v2.0.1: best of 3 runs.'],
         bars: [
           { name: 'v1.8.0', tone: 'before', value: prose180.hi_text, screen: 'PUBLISHABLE', source: 'glm-v180.json headline.prose_c1.hi_text (v1.8.0 results release_m0.decode_prose_c1.hi)' },
           { name: 'v2.0.1', tone: 'default', value: '67.9', screen: 'PUBLISHABLE', source: 'row 8' },
@@ -236,6 +236,17 @@ export type ReleaseTile = { key: string; prompt: string; smallPrint: string };
 export const HERO_RELEASE_TILES: ReleaseTile[] = [
   { key: 'rigmark.c4', prompt: 'fresh prompts', smallPrint: 'Fresh prompts; four short-code requests at once, 256-token cap each; median of three waves, end-to-end including prompt reading' },
 ];
+
+/**
+ * The audit's captions for rows of RigMark's comparison with v1.8.4, keyed by row: the chart prints one under its
+ * row in place of the release's note, and says what each side's prompts were. The synced facts keep the release's
+ * words, and RigMark's own output stays as it printed it.
+ */
+/** Every RigMark row's prompts on each side (rigmark/CACHED-TOKENS.json; v1.8.4 recorded none): once, in the chart's scope line. */
+export const COMPARE_CACHE = 'v2.0.1 measured on fresh prompts; v1.8.4 cache status was not recorded.';
+export const COMPARE_NOTES: Record<string, string> = {
+  c4: `RigMark 1.1.0, same harness on both. C4: four short-code requests, 256-token cap each, median of three end-to-end waves including prompt reading. ${COMPARE_CACHE}`,
+};
 
 /**
  * Tonight's figures as rows of "Every measured v2.0.1 set", one chart per measurement. The table measured base

@@ -1,0 +1,78 @@
+{
+  "source": "MARKETING-TABLE.md, JSpark3 v2.0.1, reviewed 2026-10-04; rows 2, 4–9. Independently transcribed expectations; never generate from remeasured-data.ts.",
+  "sha256": "f2498623f7c35fd1b055cb19013749abf159995c59e0523f0da754daff3a7275",
+  "groups": [
+    {
+      "id": "reply-one.natural-code", "ruler": "user-visible", "unit": "tok/s",
+      "chartSmallPrint": null,
+      "label": "A complete program",
+      "condition": "fresh prompt: first streamed reasoning 0.26 s; first answer text by 0.62 s",
+      "smallPrint": "One request asked for a complete program, natural length (5,543 tokens), user-visible rate including first token",
+      "notes": ["Answer-text time is a collector upper bound."],
+      "bars": [{ "name": "Code", "value": "92.5", "source": "row 2" }]
+    },
+    {
+      "id": "reply-one.short", "ruler": "user-visible", "unit": "tok/s",
+      "chartSmallPrint": null,
+      "label": "Short replies, fresh prompt",
+      "condition": "first token 0.31 s (code) / 0.25 s (prose) on a fresh prompt; 0.07‑0.08 s when the prompt is already cached",
+      "smallPrint": "Replies forced to 128 tokens (the llama-bench tg128 length)",
+      "notes": ["With the prompt already cached: code 108.5 tok/s, prose 73.5 tok/s.", "One fresh-prompt and two cached-prompt requests each, for code and for prose."],
+      "bars": [{ "name": "Code", "value": "91.1", "source": "row 5" }, { "name": "Prose", "value": "66.2", "source": "row 5" }]
+    },
+    {
+      "id": "reply-one.long-prose", "ruler": "user-visible", "unit": "tok/s",
+      "chartSmallPrint": null,
+      "label": "Long prose", "condition": null,
+      "smallPrint": "Replies forced to 2,000 tokens, thinking requested off, prompt already cached",
+      "notes": [],
+      "bars": [{ "name": "Prose", "value": "73.5", "source": "row 4" }]
+    },
+    {
+      "id": "long-prompt.32k", "ruler": "first-token", "unit": "s",
+      "chartSmallPrint": "One request, unique prompt (no cache), 400-token reply",
+      "label": "32K-token prompt",
+      "condition": "read at ≈2,149 tok/s (estimated as prompt tokens ÷ client first-token time); the reply then streamed at 63 tok/s (after the first token)",
+      "smallPrint": null,
+      "notes": ["End to end, counting the 15.3 s before the first token: 18.5 tok/s."],
+      "bars": [{ "name": "First token", "value": "15.3", "source": "row 6" }]
+    },
+    {
+      "id": "long-prompt.64k", "ruler": "first-token", "unit": "s",
+      "chartSmallPrint": "One request, unique prompt (no cache), 400-token reply",
+      "label": "64K-token prompt",
+      "condition": "read at ≈2,102 tok/s (the same estimate); the reply then streamed at 71 tok/s (after the first token)",
+      "smallPrint": null,
+      "notes": ["End to end, counting the 31.2 s before the first token: 10.9 tok/s."],
+      "bars": [{ "name": "First token", "value": "31.2", "source": "row 6" }]
+    },
+    {
+      "id": "resume.112k", "ruler": "resume", "unit": "s",
+      "chartSmallPrint": "Separate requests in one session chain: 112,728 / 112,743 prompt tokens; the disk request reused 112,156 tokens. Different system prefix and output limit, so an illustrative disk-hit vs fresh-prefill observation, not an identical-request A/B. Disk save needs idle time; back-to-back large-session traffic can prevent it (known issue 17)",
+      "label": "Server prefill", "condition": null, "smallPrint": null,
+      "notes": ["Seen from the client, the first reasoning arrived at 2.5 s with the disk cache and at 56.9 s fresh."],
+      "bars": [{ "name": "Disk cache", "value": "2.3", "source": "row 7" }, { "name": "Fresh", "value": "56.7", "source": "row 7" }]
+    },
+    {
+      "id": "prose-v180.prose-c1", "ruler": "v1.8-ladder", "unit": "tok/s",
+      "chartSmallPrint": "Replies of 400 tokens started together, thinking requested off, temperature 0. Combined rate = tokens after each first token ÷ time from the earliest first token to the latest last token, the same formula as v1.8's ladder, which used 512-token replies. Measured 2026-10-03",
+      "label": "Prose, one stream", "condition": null,
+      "smallPrint": "Prompt cache: v1.8 fresh, v2.0.1 cached. At one stream the rate is timed from the first token, so the cache doesn't enter it (v2.0.1 one-stream code measured 107.7 fresh vs 107.8 cached).",
+      "notes": ["Grey figure is v1.8.0's published ladder, better of 2 runs, unscreened for repetition.", "v2.0.1: best of 3 runs."],
+      "bars": [{ "name": "v1.8.0", "value": "49.1", "source": "glm-v180.json headline.prose_c1.hi_text (v1.8.0 results release_m0.decode_prose_c1.hi)" }, { "name": "v2.0.1", "value": "67.9", "source": "row 8" }]
+    }
+  ],
+  "hero": [
+    { "chart": "reply-one", "group": "natural-code", "label": "Code, one request", "value": "92.5", "unit": "tok/s", "line": "fresh prompt", "prompt": "fresh prompt" },
+    { "chart": "reply-one", "group": "long-prose", "label": "Prose, one request", "value": "73.5", "unit": "tok/s", "prompt": "prompt cached" },
+    { "chart": "long-prompt", "group": "32k", "label": "Reading a 32K-token prompt", "value": "≈2,149", "unit": "tok/s", "line": "estimated as prompt tokens ÷ client first-token time (15.3 s)", "prompt": "fresh" }
+  ],
+  "lead": [
+    { "chart": "reply-one", "group": "natural-code", "label": "A complete program, one request", "value": "92.5", "unit": "tok/s", "line": "user-visible, from send to the last token, fresh prompt" },
+    { "chart": "reply-one", "group": "short", "label": "First token on a short reply", "value": "0.31", "unit": "s", "line": "code, on a fresh prompt; 0.25 s for prose; 0.07‑0.08 s when the prompt is already cached" },
+    { "chart": "long-prompt", "group": "32k", "label": "First token after a 32K-token prompt", "value": "15.3", "unit": "s" }
+  ],
+  "releaseTiles": [
+    { "key": "rigmark.c4", "value": "113.4", "unit": "tok/s", "prompt": "fresh prompts", "caption": "Fresh prompts; four short-code requests at once, 256-token cap each; median of three waves, end-to-end including prompt reading" }
+  ]
+}
