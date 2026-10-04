@@ -1,4 +1,4 @@
-import { COMPARE, SOCIAL_IMAGE, TILE_FIGURES, type CompareRow, type TileFigure } from '../glm-facts';
+import { COMPARE, RELBENCH_LABEL, SOCIAL_IMAGE, TILE_FIGURES, TILES_LINE, VERSION, type CompareRow, type TileFigure } from '../glm-facts';
 import share from '../glm-share.json';
 import { CHARTS, COMPARE_NOTES, DATE, HERO, HERO_RELEASE_TILES, PLACEHOLDER, type LeadFigure, type RemeasuredChart } from './remeasured-data';
 
@@ -65,17 +65,23 @@ export const HERO_LINE = HERO_FIGURES.length
 const named = (figure: Pick<HeroFigure, 'label' | 'value' | 'unit' | 'prompt'>) => `${[figure.label, figure.prompt].filter(Boolean).join(', ')}: ${figure.value} ${figure.unit}`;
 const tileNamed = (tile: HeroTile) => named({ ...tile, value: tile.value.slot.text });
 
-/**
- * The hero's figures as a share card records them, each with its prompt's cache status where it has one: a card is
- * current only while they match.
- */
-export const HERO_SIGNATURE: string[] = [
-  ...HERO_FIGURES.map(named),
-  ...HERO_TILES.map(tileNamed),
-];
-
 /** What the re-measured hero was measured with, as a sentence: the share card's line and the page's description end with it. */
 export const HERO_MEASURED: string | null = HERO_LINE ? `Measured with ${HERO_LINE.lead}${HERO_LINE.measured}.` : null;
+
+/** All dynamic copy rendered on the share card, also used to reject a raster with stale qualifications. */
+export function heroCard(figures: HeroFigure[], tiles: HeroTile[], measured: string) {
+  return {
+    title: `JSpark3 ${VERSION.text}: GLM-5.3 Flash on three DGX Sparks.`,
+    measured,
+    cells: [
+      ...figures.map(({ key, label, unit, value, caption }) => ({ key, label, unit, value, weights: null, caption })),
+      ...tiles.map(({ key, label, unit, value, weights, caption }) => ({ key, label, unit, value: value.slot.text, weights: weights?.text ?? null, caption: caption?.text ?? null })),
+    ],
+  };
+}
+
+export const HERO_CARD = heroCard(HERO_FIGURES, HERO_TILES, HERO_MEASURED ?? `Measured with ${TILES_LINE?.text}${RELBENCH_LABEL ? `, ${RELBENCH_LABEL.short.text}` : ''}.`);
+export const HERO_SIGNATURE = JSON.stringify(HERO_CARD);
 
 /**
  * The hero's figures the GLM page's description gives: only those whose prompt's cache status is known, each with
@@ -101,7 +107,10 @@ export const COMPARE_ROWS: CompareRow[] = COMPARE.map(row => (COMPARE_NOTES[row.
  * figures: a card from an earlier hero never stands in for the page's numbers. Its address carries the image's
  * hash, so a link preview cached with an earlier card fetches this one.
  */
-const card = share as { figures?: string[]; image_sha256?: string };
-export const SHARE_IMAGE: string | null = SOCIAL_IMAGE && card.image_sha256 && JSON.stringify(card.figures ?? null) === JSON.stringify(HERO_SIGNATURE)
-  ? `${SOCIAL_IMAGE}?v=${card.image_sha256.slice(0, 12)}`
-  : null;
+const card = share as { hero?: ReturnType<typeof heroCard>; image_sha256?: string };
+export function shareImage(signature: string): string | null {
+  return SOCIAL_IMAGE && card.image_sha256 && JSON.stringify(card.hero ?? null) === signature
+    ? `${SOCIAL_IMAGE}?v=${card.image_sha256.slice(0, 12)}`
+    : null;
+}
+export const SHARE_IMAGE = shareImage(HERO_SIGNATURE);
