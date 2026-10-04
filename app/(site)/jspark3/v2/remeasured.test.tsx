@@ -8,7 +8,7 @@ const text = (html: string) => html.replace(/<[^>]+>/g, ' ').replace(/&#x27;/g, 
 
 test('only cells the table marks PUBLISHABLE are drawn; a group or chart left empty is dropped', async () => {
   const { publishable } = await import('./Remeasured');
-  const bar = (name: string, screen: 'PUBLISHABLE' | 'DIAGNOSTIC' | 'HOLD') => ({ name, tone: 'default' as const, value: '1.0', screen, row: '1' });
+  const bar = (name: string, screen: 'PUBLISHABLE' | 'DIAGNOSTIC' | 'HOLD') => ({ name, tone: 'default' as const, value: '1.0', screen, source: 'row 1' });
   const charts = publishable([
     { id: 'a', ruler: 'user-visible', title: 'A', unit: 'tok/s', better: 'higher', methods: 'm', groups: [
       { key: 'kept', label: 'Kept', bars: [bar('ok', 'PUBLISHABLE'), bar('looped', 'DIAGNOSTIC')] },
@@ -34,7 +34,9 @@ test('every figure has a table row, a label and a methods line; every lead comes
     assert.ok(chart.methods.trim(), `${chart.id} has no methods line`);
     for (const group of chart.groups) {
       assert.ok(group.smallPrint ?? chart.smallPrint, `${chart.id}.${group.key} has no label`);
-      for (const bar of group.bars) assert.match(bar.row, /^\d+[a-z]?$/, `${chart.id}.${group.key} ${bar.name} has no table row`);
+      for (const bar of group.bars) assert.match(bar.source, /^row \d+[a-z]?$|^glm-v180\.json /, `${chart.id}.${group.key} ${bar.name} has no source`);
+      // A figure beside v1.8.0's always says how the two runs differ.
+      if (group.bars.some(bar => bar.tone === 'before') && group.bars.some(bar => bar.screen === 'PUBLISHABLE')) assert.ok(group.notes?.length && (group.smallPrint ?? chart.smallPrint), `${chart.id}.${group.key} compares without its notes`);
     }
   }
   for (const lead of LEAD) {
@@ -66,7 +68,8 @@ test('the rendered section keeps its rules: speeds after the first token say so,
     if (group.bars.some(bar => bar.screen === 'PUBLISHABLE') || !group.condition) continue;
     assert.ok(!copy.includes(group.condition), `${chart.id}.${group.key} condition renders without its figures`);
   }
-  // No figure for several requests at once, anywhere in the section.
+  // No speedup is computed, and no figure for several requests at once appears anywhere in the section.
+  assert.ok(!copy.includes('%'), 'a percentage renders');
   assert.ok(!/\b(?:eight|8)\b[^.]*\b(?:requests|users|agents|streams)\b|per request|at once/i.test(copy), 'a several-at-once figure renders');
   // A reply rate measured after the first token never shows without saying so (table row 6).
   for (const match of copy.matchAll(/streamed at [\d.,]+ tok\/s[^.;]*/g)) assert.match(match[0], /\(after the first token\)/, match[0]);

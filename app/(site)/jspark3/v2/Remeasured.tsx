@@ -22,11 +22,14 @@ function SmallPrint({ text }: { text: string }) {
   return <>{text.split(/(known issue \d+)/).map((part, index) => (index % 2 ? <a key={index} href="#known-issues">{part}</a> : part))}</>;
 }
 
-/** One chart: one measurement, its groups on one scale from zero, each figure with its label, then how it was measured. */
+/**
+ * One chart: one measurement, its groups on one scale from zero, each figure with its label, then how it was
+ * measured. A chart that stands apart from the ones before it comes under its own subhead.
+ */
 function RemeasuredFigure({ chart }: { chart: RemeasuredChart }) {
   const id = `${ANCHOR}-${chart.id}`;
   const end = axisEnd(chart.groups.flatMap(group => group.bars.map(bar => amount(bar.value))));
-  return <figure className="glm-chart glm2-chart" id={id} aria-labelledby={`${id}-title`} data-ruler={chart.ruler}>
+  return <>{chart.heading ? <h3 className="glm2-subhead" id={`${id}-heading`}>{chart.heading}</h3> : null}<figure className="glm-chart glm2-chart" id={id} aria-labelledby={`${id}-title`} data-ruler={chart.ruler}>
     <p id={`${id}-title`} className="glm-label">{chart.title} · {chart.unit}, {direction(chart.better)}</p>
     {chart.smallPrint ? <p className="glm2-compare-scope"><SmallPrint text={chart.smallPrint} /></p> : null}
     <div className="glm-groups">
@@ -34,11 +37,11 @@ function RemeasuredFigure({ chart }: { chart: RemeasuredChart }) {
         <p className="glm-group-label"><strong>{group.label}</strong>{group.condition ? <span>{group.condition}</span> : null}</p>
         {group.bars.map(bar => <Bar key={bar.name} series={series(bar)} end={end} unit={chart.unit} />)}
         {group.smallPrint ? <p className="glm2-compare-note"><SmallPrint text={group.smallPrint} /></p> : null}
-        {group.note ? <p className="glm2-compare-note">{group.note}</p> : null}
+        {group.notes?.map(note => <p key={note} className="glm2-compare-note">{note}</p>)}
       </div>)}
     </div>
     <p className="glm2-chart-methods">{chart.methods}</p>
-  </figure>;
+  </figure></>;
 }
 
 /**
@@ -61,7 +64,7 @@ function Lead({ charts }: { charts: RemeasuredChart[] }) {
         <p className="glm-big glm-big-band"><span>{PLACEHOLDER ? <span className="jspark-ph">{lead.value}</span> : lead.value}</span> <small>{lead.unit}</small></p>
         {line ? <p className="glm-vs">{line}</p> : null}
         {smallPrint ? <p className="glm2-lead-print"><SmallPrint text={smallPrint} /></p> : null}
-        {group.note ? <p className="glm2-lead-print">{group.note}</p> : null}
+        {group.notes?.map(note => <p key={note} className="glm2-lead-print">{note}</p>)}
       </div>;
     })}
   </div>;
@@ -69,7 +72,7 @@ function Lead({ charts }: { charts: RemeasuredChart[] }) {
 
 /**
  * The re-measurement of 2026-10-03, after the release's results and apart from them: what one user feels,
- * as reply speed and the wait for the first token after a long prompt.
+ * as reply speed and the wait for the first token after a long prompt, then one prose figure beside v1.8.0's.
  */
 export default function Remeasured() {
   const charts = publishable(CHARTS);
