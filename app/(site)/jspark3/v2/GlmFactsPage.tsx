@@ -3,14 +3,15 @@ import ClusterIllustration from './ClusterIllustration';
 import FoldAnchors from './FoldAnchors';
 import LegacyFragments from '../LegacyFragments';
 import ProjectHeader from './ProjectHeader';
-import Remeasured, { REMEASURED_DATE, REMEASURED_ON, RemeasuredSetChart, resolve } from './Remeasured';
-import { ANCHOR as REMEASURED, HERO, HERO_RELEASE_TILES } from './remeasured-data';
+import Remeasured, { RemeasuredSetChart } from './Remeasured';
+import { ANCHOR as REMEASURED } from './remeasured-data';
+import { HERO_FIGURES, HERO_LINE, HERO_TILES, REMEASURED_ON } from './remeasured-figures';
 import { ColdStartChart, CompareFigure, ConcurrencyChart, DecodeChart, Relbench, RelbenchNote, RigmarkBlocks, SetFigure } from './FactsCharts';
 import { Fact, FactLink } from './Fact';
 import {
   ACCEPTANCE_KINDS, COMPATIBILITY, CONDITIONS, COPY, CREDITS, DEFAULT_DECIDED, DEFAULT_PROVISIONAL, DEFAULT_VARIANT, DRAFT, DRAFTER, DRAFTER_LINK, ENGINE, HISTORY,
   DISK_PARTS, ERRATA, ROLLBACK_COMMANDS, INSTALL_COSTS, INSTALL_COSTS_CONDITIONS, INSTALL_TAG, KNOWN_ISSUES, LICENSES, LINKS, PROFILES_LINE, PROMPT_MIX_LINE, RIGMARK, TEMPLATE_SETTINGS, RIGMARK_SHOWN, RUNNABLE, SETS, SETS_CONDITIONS, SWITCH, SOURCE, VARIANTS_ORDERED, VERSION,
-  TILES_LINE, TILE_FIGURES, cell, linkPath, metricInfo, pinned, releaseDate,
+  TILES_LINE, cell, linkPath, metricInfo, pinned, releaseDate,
   type Slot, type Variant,
 } from '../glm-facts';
 import { GLM_COPY, LABELS } from '../release-copy';
@@ -28,30 +29,28 @@ const SINGLE_FIGURES = [
 ];
 
 /**
- * The hero's tiles. They lead with the re-measured figures, each captioned with its own line and its label, never
- * its group's condition, whose timings need their footnotes (remeasured-data.ts HERO), then keep the release tiles HERO_RELEASE_TILES names. Without the re-measurement they are the release's
- * tiles, as the hub and the share card show them (glm-facts.ts TILE_FIGURES), with the release's line. A release
- * figure from other weights names them, keyed in their series color; a concurrency figure carries its condition.
+ * The hero's tiles, as the hub's latest card and the share card show them (remeasured-figures.ts): the re-measured
+ * figures, each captioned with its own line and its label, then the release tiles kept beside them; without the
+ * re-measurement, the release's tiles and line. A release figure from other weights names them, keyed in their
+ * series color; a concurrency figure carries its condition.
  */
 function HeroTiles() {
-  const natural = REMEASURED_ON ? resolve(HERO) : [];
-  const release = natural.length ? TILE_FIGURES.filter(tile => HERO_RELEASE_TILES.includes(tile.key)) : TILE_FIGURES;
   return <div className="glm-tiles">
     <dl className="glm-tiles-grid">
-      {natural.map(({ figure, chart, group, smallPrint }) => <div key={figure.label} className="glm-tile" data-metric-id={`remeasured.${chart.id}.${group.key}`}>
-        <dt>{figure.label}</dt>
-        <dd className="glm-tile-value">{figure.value}<small>{figure.unit}</small></dd>
-        <dd className="glm-tile-condition">{[figure.line, smallPrint].filter(Boolean).join('. ')}</dd>
+      {HERO_FIGURES.map(({ key, label, value, unit, caption }) => <div key={key} className="glm-tile" data-metric-id={key}>
+        <dt>{label}</dt>
+        <dd className="glm-tile-value">{value}<small>{unit}</small></dd>
+        <dd className="glm-tile-condition">{caption}</dd>
       </div>)}
-      {release.map(({ key, label, unit, set, value, weights, caption }) => <div key={key} className="glm-tile" data-metric-id={key} data-tone={weights ? set?.tone : undefined}>
+      {HERO_TILES.map(({ key, label, unit, set, value, weights, caption }) => <div key={key} className="glm-tile" data-metric-id={key} data-tone={weights ? set?.tone : undefined}>
         <dt>{label}</dt>
         <dd className="glm-tile-value"><Fact slot={value.slot} />{unit && value.state !== 'absent' ? <small>{unit}</small> : null}</dd>
         {weights ? <dd className="glm-tile-weights"><Fact slot={weights} /></dd> : null}
         {caption ? <dd className="glm-tile-condition" data-condition-of={key}><Fact slot={caption} /></dd> : null}
       </div>)}
     </dl>
-    {natural.length
-      ? <p className="glm-tiles-line">base weights + draft model · {release.length ? 'RigMark from the release; the rest ' : ''}<a href={`#${REMEASURED}`}>re-measured {REMEASURED_DATE} ↓</a></p>
+    {HERO_LINE
+      ? <p className="glm-tiles-line">{HERO_LINE.lead}<a href={`#${REMEASURED}`}>{HERO_LINE.measured} ↓</a></p>
       : TILES_LINE ? <p className="glm-tiles-line"><Fact slot={TILES_LINE} /><Relbench /></p> : null}
   </div>;
 }
@@ -308,7 +307,8 @@ export default function GlmFactsPage() {
     <section className="glm-shell glm2-section glm2-split" id="known-issues" aria-labelledby="issues-title">
       <h2 id="issues-title">Known issues.</h2>
       <div>
-        <ul className="glm2-list">{KNOWN_ISSUES.map((issue, index) => <li key={index}><Fact slot={issue} /></li>)}</ul>
+        {/* Numbered as the card and the copy cite them ("known issue 17"): the release only appends, so a number never moves. */}
+        <ol className="glm2-list glm2-issues">{KNOWN_ISSUES.map((issue, index) => <li key={index} id={`known-issue-${index + 1}`}><span className="glm2-issue-number">{index + 1}</span><span><Fact slot={issue} /></span></li>)}</ol>
         {LINKS.limitations ? <p className="glm-evidence-link"><FactLink href={LINKS.limitations}>Every known limitation ↗</FactLink></p> : null}
         {ERRATA ? <div className="glm2-errata"><h3 className="glm2-subhead" id="errata">Errata</h3><p><Fact slot={ERRATA} /></p></div> : null}
       </div>

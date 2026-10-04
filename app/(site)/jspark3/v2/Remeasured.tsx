@@ -1,43 +1,14 @@
 import React from 'react';
 import { Bar, Legend, axisEnd, direction, type Series } from './FactsCharts';
 import { SETS, amount, type Cell, type ResultSet } from '../glm-facts';
-import { ANCHOR, CHARTS, DATE, LEAD, MEASURED_SET, PLACEHOLDER, SET_CHARTS, type LeadFigure, type RemeasuredBar, type RemeasuredChart, type SetRow } from './remeasured-data';
-
-/** The section ships once the placeholders are replaced; until then it shows only in a local preview. */
-export const remeasuredShown = (placeholder: boolean, preview: string | undefined) => !placeholder || preview === '1';
-
-/** Each chart with only the bars the table marks PUBLISHABLE; a group or chart left with none is dropped. */
-export function publishable(charts: RemeasuredChart[]): RemeasuredChart[] {
-  return charts
-    .map(chart => ({ ...chart, groups: chart.groups.map(group => ({ ...group, bars: group.bars.filter(bar => bar.screen === 'PUBLISHABLE') })).filter(group => group.bars.length) }))
-    .filter(chart => chart.groups.length);
-}
-
-/** Whether the section, and the hero figures it gives, show on this build. */
-export const REMEASURED_ON = remeasuredShown(PLACEHOLDER, process.env.JSPARK3_REMEASURED_PREVIEW);
-
-export const REMEASURED_DATE = new Date(`${DATE}T12:00:00Z`).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
-
-/**
- * Lead and hero figures with the group they come from, its label, and either the figure's own line or the
- * group's condition. The group's footnotes go with its condition, never without it. A figure shows only while
- * its group is drawn.
- */
-export function resolve(figures: LeadFigure[], charts: RemeasuredChart[] = publishable(CHARTS)) {
-  return figures.flatMap(figure => {
-    const chart = charts.find(item => item.id === figure.chart);
-    const group = chart?.groups.find(item => item.key === figure.group);
-    if (!chart || !group) return [];
-    const own = figure.line !== undefined;
-    return [{ figure, chart, group, line: own ? figure.line : group.condition, notes: own ? undefined : group.notes, smallPrint: group.smallPrint ?? chart.smallPrint }];
-  });
-}
+import { ANCHOR, CHARTS, DATE, LEAD, MEASURED_SET, PLACEHOLDER, SET_CHARTS, type RemeasuredBar, type RemeasuredChart, type SetRow } from './remeasured-data';
+import { REMEASURED_DATE, REMEASURED_ON, publishable, resolve } from './remeasured-figures';
 
 const series = (bar: RemeasuredBar): Series => ({ key: bar.name, name: bar.name, tone: bar.tone, cell: { state: PLACEHOLDER ? 'pending' : 'value', slot: { text: bar.value, pending: PLACEHOLDER } } });
 
-/** A label as the table writes it, with its known-issue reference linked to the page's list. */
+/** A label as the table writes it, with its known-issue reference linked to that issue in the page's list. */
 function SmallPrint({ text }: { text: string }) {
-  return <>{text.split(/(known issue \d+)/).map((part, index) => (index % 2 ? <a key={index} href="#known-issues">{part}</a> : part))}</>;
+  return <>{text.split(/(known issue \d+)/).map((part, index) => (index % 2 ? <a key={index} href={`#known-issue-${part.split(' ').at(-1)}`}>{part}</a> : part))}</>;
 }
 
 /**

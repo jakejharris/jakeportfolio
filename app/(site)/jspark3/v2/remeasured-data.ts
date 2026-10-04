@@ -137,7 +137,7 @@ export const CHARTS: RemeasuredChart[] = [
     title: 'Returning to a ~112K-token session: server prefill 2.3 s with disk cache vs 56.7 s fresh',
     unit: 's',
     better: 'lower',
-    smallPrint: 'Separate requests in one session chain: 112,728 / 112,743 prompt tokens; the disk request reused 112,156 tokens. Different system prefix and output limit, so an illustrative disk-hit vs fresh-prefill observation, not an identical-request A/B. Disk save needs idle time; back-to-back large-session traffic can prevent it (known issue 11)',
+    smallPrint: 'Separate requests in one session chain: 112,728 / 112,743 prompt tokens; the disk request reused 112,156 tokens. Different system prefix and output limit, so an illustrative disk-hit vs fresh-prefill observation, not an identical-request A/B. Disk save needs idle time; back-to-back large-session traffic can prevent it (known issue 17)',
     methods: 'Server prefill is the server\'s own time to process the prompt before it starts the reply.',
     groups: [
       {

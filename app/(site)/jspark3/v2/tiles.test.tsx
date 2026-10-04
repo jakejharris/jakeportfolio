@@ -5,6 +5,9 @@ import test from 'node:test';
 
 // The page renders server-side; its stylesheets mean nothing here.
 require.extensions['.css'] = (module: NodeModule) => { module.exports = {}; };
+// These check the release's own tiles, which the hub and the hero show without the re-measurement
+// (remeasured.test.tsx checks them with it).
+process.env.JSPARK3_REMEASURED_PREVIEW = '0';
 
 const root = join(__dirname, '../../../..');
 
