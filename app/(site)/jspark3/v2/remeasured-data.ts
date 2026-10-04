@@ -228,7 +228,14 @@ export const HERO: LeadFigure[] = [
   { chart: 'reply-one', group: 'long-prose', label: 'Prose, one request', value: '73.5', unit: 'tok/s', prompt: 'prompt cached' },
   { chart: 'long-prompt', group: '32k', label: 'Reading a 32K-token prompt', value: '≈2,149', unit: 'tok/s', line: 'estimated as prompt tokens ÷ client first-token time (15.3 s)', prompt: 'fresh' },
 ];
-export const HERO_RELEASE_TILES = ['rigmark.c4'];
+/**
+ * The release tiles the re-measured hero keeps, each with its prompt's cache status and the table's label for it,
+ * which the tile shows in place of the release's caption.
+ */
+export type ReleaseTile = { key: string; prompt: string; smallPrint: string };
+export const HERO_RELEASE_TILES: ReleaseTile[] = [
+  { key: 'rigmark.c4', prompt: 'fresh prompts', smallPrint: 'Fresh prompts; four short-code requests at once, 256-token cap each; median of three waves, end-to-end including prompt reading' },
+];
 
 /**
  * Tonight's figures as rows of "Every measured v2.0.1 set", one chart per measurement. The table measured base

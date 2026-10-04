@@ -5,7 +5,7 @@
     "Code, one request, fresh prompt: 92.5 tok/s",
     "Prose, one request, prompt cached: 73.5 tok/s",
     "Reading a 32K-token prompt, fresh: ≈2,149 tok/s",
-    "Four at once, end to end (RigMark): 113.4 tok/s"
+    "Four at once, end to end (RigMark), fresh prompts: 113.4 tok/s"
   ],
-  "image_sha256": "24a320d33993bdf30575b472014bf20a0a04db10365ef815f23ce753a0af6482"
+  "image_sha256": "3a2049998330d7b989448d8f33b3448b7a4936805bcedc7b20f0acd1f971a5f2"
 }

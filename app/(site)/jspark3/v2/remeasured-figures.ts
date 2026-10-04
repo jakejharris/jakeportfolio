@@ -43,13 +43,16 @@ export type HeroFigure = { key: string; label: string; value: string; unit: stri
 
 /**
  * The GLM page's hero, which the hub's latest card and the share card show too. With the re-measurement it leads
- * with its figures (remeasured-data.ts HERO) and keeps the release tiles HERO_RELEASE_TILES names; without it,
- * it is the release's tiles (glm-facts.ts TILE_FIGURES) and line.
+ * with its figures (remeasured-data.ts HERO) and keeps the release tiles HERO_RELEASE_TILES names, each captioned
+ * with the table's label for it; without it, it is the release's tiles (glm-facts.ts TILE_FIGURES) and line.
  */
 export const HERO_FIGURES: HeroFigure[] = (REMEASURED_ON ? resolve(HERO) : []).map(({ figure, chart, group, smallPrint }) => ({
   key: `remeasured.${chart.id}.${group.key}`, label: figure.label, value: figure.value, unit: figure.unit, caption: [figure.line, smallPrint].filter(Boolean).join('. '), prompt: figure.prompt,
 }));
-export const HERO_TILES: TileFigure[] = HERO_FIGURES.length ? TILE_FIGURES.filter(tile => HERO_RELEASE_TILES.includes(tile.key)) : TILE_FIGURES;
+export type HeroTile = TileFigure & { prompt?: string };
+export const HERO_TILES: HeroTile[] = HERO_FIGURES.length
+  ? TILE_FIGURES.flatMap(tile => HERO_RELEASE_TILES.filter(kept => kept.key === tile.key).map(kept => ({ ...tile, caption: { text: kept.smallPrint, pending: false }, prompt: kept.prompt })))
+  : TILE_FIGURES;
 
 const WEIGHTS = 'base weights + draft model';
 
@@ -58,7 +61,8 @@ export const HERO_LINE = HERO_FIGURES.length
   ? { lead: `${WEIGHTS} · ${HERO_TILES.length ? 'RigMark from the release; the rest ' : ''}`, measured: `re-measured ${REMEASURED_DATE}` }
   : null;
 
-const named = (figure: HeroFigure) => `${[figure.label, figure.prompt].filter(Boolean).join(', ')}: ${figure.value} ${figure.unit}`;
+const named = (figure: Pick<HeroFigure, 'label' | 'value' | 'unit' | 'prompt'>) => `${[figure.label, figure.prompt].filter(Boolean).join(', ')}: ${figure.value} ${figure.unit}`;
+const tileNamed = (tile: HeroTile) => named({ ...tile, value: tile.value.slot.text });
 
 /**
  * The hero's figures as a share card records them, each with its prompt's cache status where it has one: a card is
@@ -66,7 +70,7 @@ const named = (figure: HeroFigure) => `${[figure.label, figure.prompt].filter(Bo
  */
 export const HERO_SIGNATURE: string[] = [
   ...HERO_FIGURES.map(named),
-  ...HERO_TILES.map(tile => `${tile.label}: ${tile.value.slot.text} ${tile.unit}`),
+  ...HERO_TILES.map(tileNamed),
 ];
 
 /** What the re-measured hero was measured with, as a sentence: the share card's line and the page's description end with it. */
@@ -74,12 +78,13 @@ export const HERO_MEASURED: string | null = HERO_LINE ? `Measured with ${HERO_LI
 
 /**
  * The hero's figures the GLM page's description gives: only those whose prompt's cache status is known, each with
- * its label and that status. A figure without one (the release's tiles) is left out, never listed bare.
+ * its label and that status. A figure without one is left out, never listed bare.
  */
-export const DESCRIBED_FIGURES: string[] = HERO_FIGURES.filter(figure => figure.prompt).map(named);
+const DESCRIBED_TILES = HERO_TILES.filter(tile => tile.prompt);
+export const DESCRIBED_FIGURES: string[] = [...HERO_FIGURES.filter(figure => figure.prompt).map(named), ...DESCRIBED_TILES.map(tileNamed)];
 
-/** What the described figures were measured with, as the description's last sentence. */
-export const DESCRIBED_MEASURED: string | null = HERO_LINE ? `Measured with ${WEIGHTS} · ${HERO_LINE.measured}.` : null;
+/** What the described figures were measured with, as the description's last sentence: the release's tiles by name when it gives one. */
+export const DESCRIBED_MEASURED: string | null = HERO_LINE ? `Measured with ${DESCRIBED_TILES.length ? HERO_LINE.lead : `${WEIGHTS} · `}${HERO_LINE.measured}.` : null;
 
 /**
  * The re-measured hero as the GLM page's description says it: each described figure, then what they were measured

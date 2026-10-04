@@ -117,6 +117,10 @@ test('the round-once audit: withdrawn figures stay off, timings say fresh or cac
     assert.ok(near.length >= 4, `${figure} shows ${near.length} times`);
     for (const line of near) assert.match(line, status, line);
   }
+  // RigMark's four at once ran on fresh prompts: never shown without them.
+  const rigmark = [...rates.matchAll(/113\.4/g)].map(match => rates.slice(Math.max(0, match.index - 120), match.index + 200));
+  assert.ok(rigmark.length >= 3, `113.4 shows ${rigmark.length} times`);
+  for (const line of rigmark) assert.match(line, /fresh prompts/i, line);
   assert.ok(HERO_SUMMARY?.includes('Code, one request, fresh prompt: 92.5 tok/s') && HERO_SUMMARY.includes('Prose, one request, prompt cached: 73.5 tok/s') && HERO_SUMMARY.includes('Reading a 32K-token prompt, fresh: ≈2,149 tok/s'), HERO_SUMMARY ?? 'no description');
   // Row 5's cached-prompt rates show only beside the fresh ones, saying so.
   for (const match of copy.matchAll(/108\.5/g)) assert.match(copy.slice(match.index - 40, match.index), /already cached: code $/, 'a cached rate shows alone');
@@ -204,7 +208,7 @@ test('the hub card and the share card show the GLM page\'s hero: the same figure
   if (!REMEASURED_ON) return;
   // The hero leads with the re-measured figures, each from its group, then keeps only the RigMark tiles named.
   assert.deepEqual(HERO_FIGURES.map(figure => figure.value), resolve(HERO).map(item => item.figure.value));
-  assert.deepEqual(HERO_TILES.map(tile => tile.key), TILE_FIGURES.filter(tile => HERO_RELEASE_TILES.includes(tile.key)).map(tile => tile.key));
+  assert.deepEqual(HERO_TILES.map(tile => tile.key), TILE_FIGURES.filter(tile => HERO_RELEASE_TILES.some(kept => kept.key === tile.key)).map(tile => tile.key));
   assert.ok(HERO_TILES.every(tile => tile.key.startsWith('rigmark.') && tile.label.includes('(RigMark)') && !tile.weights), 'a kept tile is not a default-set RigMark tile');
   const escape = (text: string) => text.replace(/&/g, '&amp;').replace(/'/g, '&#x27;');
   const page = renderToStaticMarkup(React.createElement(GlmFactsPage));
@@ -218,6 +222,12 @@ test('the hub card and the share card show the GLM page\'s hero: the same figure
   for (const figure of HERO_FIGURES) {
     assert.ok(hero.includes(`<dd class="glm-tile-value">${figure.value}<small>${figure.unit}</small></dd>`) && hero.includes(escape(figure.caption)), `the hero's ${figure.label} tile is shown without its value or label`);
     assert.ok(card.includes(`<span class="spark-hub-figure-value">${figure.value}<small>${figure.unit}</small></span>`) && card.includes(escape(figure.caption)), `the hub's ${figure.label} tile is shown without its value or label`);
+  }
+  // A kept release tile shows the table's label for it, which names its prompts, never the release's caption.
+  for (const tile of HERO_TILES) {
+    const kept = HERO_RELEASE_TILES.find(item => item.key === tile.key);
+    assert.ok(kept && tile.prompt === kept.prompt && tile.caption?.text === kept.smallPrint, `the ${tile.label} tile is not captioned with its label`);
+    for (const html of [hero, card]) assert.ok(html.includes(escape(kept.smallPrint)), `${tile.label} shows without its label`);
   }
   assert.ok(HERO_LINE && hero.includes(`<p class="glm-tiles-line">${HERO_LINE.lead}`) && card.includes(`<span class="spark-hub-release-detail">${HERO_LINE.lead}${HERO_LINE.measured}</span>`), 'the hub and the hero say different things about their figures');
   assert.ok(HERO_LINE.lead.startsWith('base weights + draft model · '), 'the line does not name the weights');
@@ -270,9 +280,11 @@ test('the GLM page\'s description and link previews give the hero\'s figures wit
   assert.equal(og.description, description);
   assert.equal(twitter.description, description);
   // Every figure it gives names its prompt's cache status; one without a status is left out, never listed bare.
-  assert.equal(DESCRIBED_FIGURES.length, HERO_FIGURES.filter(figure => figure.prompt).length);
-  for (const figure of DESCRIBED_FIGURES) assert.ok(description.includes(figure) && /, (?:fresh|fresh prompt|prompt cached): /.test(figure), `the description does not give "${figure}"`);
-  for (const figure of [...HERO_FIGURES.filter(item => !item.prompt).map(item => item.value), ...HERO_TILES.map(tile => tile.value.slot.text)]) assert.ok(!description.includes(figure), `the description lists ${figure} without its cache status`);
+  assert.equal(DESCRIBED_FIGURES.length, HERO_FIGURES.filter(figure => figure.prompt).length + HERO_TILES.filter(tile => tile.prompt).length);
+  for (const figure of DESCRIBED_FIGURES) assert.ok(description.includes(figure) && /, (?:fresh|fresh prompts?|prompt cached): /.test(figure), `the description does not give "${figure}"`);
+  for (const figure of [...HERO_FIGURES.filter(item => !item.prompt).map(item => item.value), ...HERO_TILES.filter(tile => !tile.prompt).map(tile => tile.value.slot.text)]) assert.ok(!description.includes(figure), `the description lists ${figure} without its cache status`);
+  // RigMark's four at once ran on fresh prompts (table row 9): the description gives it so, from the release.
+  assert.ok(description.includes('Four at once, end to end (RigMark), fresh prompts: 113.4 tok/s') && description.endsWith('Measured with base weights + draft model · RigMark from the release; the rest re-measured October 3, 2026.'), description);
   assert.ok(DESCRIBED_MEASURED && description.endsWith(DESCRIBED_MEASURED), 'the description does not say what its figures were measured with');
   // The release headline's figures are for eight requests at once; previews show none of them.
   for (const cite of synced.facts.headline?.cites ?? []) assert.ok(!description.includes(cite.value), `the description gives the headline's ${cite.value}`);
