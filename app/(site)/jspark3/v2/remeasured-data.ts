@@ -238,6 +238,15 @@ export const HERO_RELEASE_TILES: ReleaseTile[] = [
 ];
 
 /**
+ * The audit's captions for rows of RigMark's comparison with v1.8.4, keyed by row: the chart prints one under its
+ * row in place of the release's note, and says what each side's prompts were. The synced facts keep the release's
+ * words, and RigMark's own output stays as it printed it.
+ */
+export const COMPARE_NOTES: Record<string, string> = {
+  c4: 'RigMark 1.1.0, same harness on both. C4: four short-code requests, 256-token cap each, median of three end-to-end waves including prompt reading. v2.0.1 measured on fresh prompts; v1.8.4 cache status was not recorded.',
+};
+
+/**
  * Tonight's figures as rows of "Every measured v2.0.1 set", one chart per measurement. The table measured base
  * weights + draft model (MEASURED_SET), so each row takes that set's figure from the band chart it names. A
  * figure for another set drops in under `sets`, keyed by its result-set id, with nothing else to change; until

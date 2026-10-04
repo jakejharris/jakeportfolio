@@ -1,6 +1,6 @@
-import { SOCIAL_IMAGE, TILE_FIGURES, type TileFigure } from '../glm-facts';
+import { COMPARE, SOCIAL_IMAGE, TILE_FIGURES, type CompareRow, type TileFigure } from '../glm-facts';
 import share from '../glm-share.json';
-import { CHARTS, DATE, HERO, HERO_RELEASE_TILES, PLACEHOLDER, type LeadFigure, type RemeasuredChart } from './remeasured-data';
+import { CHARTS, COMPARE_NOTES, DATE, HERO, HERO_RELEASE_TILES, PLACEHOLDER, type LeadFigure, type RemeasuredChart } from './remeasured-data';
 
 /**
  * The section ships once the placeholders are replaced; until then it shows only in a local preview ("1").
@@ -91,6 +91,9 @@ export const DESCRIBED_MEASURED: string | null = HERO_LINE ? `Measured with ${DE
  * with. Without the re-measurement, or a figure to describe, there is none.
  */
 export const HERO_SUMMARY: string | null = DESCRIBED_MEASURED && DESCRIBED_FIGURES.length ? `${DESCRIBED_FIGURES.join('. ')}. ${DESCRIBED_MEASURED}` : null;
+
+/** RigMark's comparison with v1.8.4, each row with the audit's caption for it where it has one (COMPARE_NOTES). */
+export const COMPARE_ROWS: CompareRow[] = COMPARE.map(row => (COMPARE_NOTES[row.id] ? { ...row, note: { text: COMPARE_NOTES[row.id], pending: false } } : row));
 
 /**
  * The share card, while it was rendered from these facts (glm-facts.ts SOCIAL_IMAGE) and shows these hero

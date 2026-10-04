@@ -1,6 +1,7 @@
 import React from 'react';
-import { COMPARE, COMPARE_SETS, CONTEXTS, DECODE_CELLS, FIRST_TOKEN_ESTIMATORS, PARTNERS, RELBENCH_LABEL, RIGMARK_BLOCKS, RIGMARK_SCOPE, SETS, STREAMS, VERSION, amount, cell, metricInfo, partner, tileCaption, type Cell, type ResultSet } from '../glm-facts';
+import { COMPARE_SETS, CONTEXTS, DECODE_CELLS, FIRST_TOKEN_ESTIMATORS, PARTNERS, RELBENCH_LABEL, RIGMARK_BLOCKS, RIGMARK_SCOPE, SETS, STREAMS, VERSION, amount, cell, metricInfo, partner, tileCaption, type Cell, type ResultSet } from '../glm-facts';
 import { Fact } from './Fact';
+import { COMPARE_ROWS } from './remeasured-figures';
 
 /** A round axis end at or just above the largest value, so bars are drawn to scale from zero. */
 export function axisEnd(values: Array<number | null>) {
@@ -46,7 +47,8 @@ export function Legend({ sets, before = false }: { sets: ResultSet[]; before?: b
 /**
  * RigMark with the v1.8.4 protocol: each figure with v1.8.4 first, then each set RigMark ran on.
  * Every group is drawn to its own scale from zero. Nothing is derived here: the only percentage is a row
- * note the release wrote. The scope line and the row notes travel with the figure wherever it is shown.
+ * note the release wrote. A row the audit captioned (four at once) carries its caption, which says what each
+ * side's prompts were. The scope line and the row notes travel with the figure wherever it is shown.
  */
 export function CompareFigure() {
   return <figure className="glm-chart glm2-chart glm2-compare" aria-labelledby="glm2-compare-title">
@@ -54,7 +56,7 @@ export function CompareFigure() {
     <p className="glm2-compare-scope"><Fact slot={RIGMARK_SCOPE} /></p>
     <Legend sets={COMPARE_SETS} before />
     <div className="glm2-compare-grid">
-      {COMPARE.map(row => {
+      {COMPARE_ROWS.map(row => {
         const series: Series[] = [
           { key: 'v1_8_4', name: 'v1.8.4', tone: 'before', cell: { state: row.before.pending ? 'pending' : 'value', slot: row.before } },
           ...COMPARE_SETS.map(set => ({ key: set.id, name: `${VERSION.text} ${set.short}`, tone: set.tone, cell: row.values[set.id] })),

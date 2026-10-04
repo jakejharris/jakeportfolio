@@ -297,3 +297,23 @@ test('the share card names the product in its title and keeps the wordmark', () 
   assert.match(script, /<div class="tagline">JSpark3 \$\{escape\(VERSION\.text\)\}/);
   assert.match(script, /\.replace\('<span class="word">JSpark3<\/span>', '<span class="word">JSPARK3<\/span>'\)/);
 });
+
+test('RigMark\'s four at once against v1.8.4 carries the audit\'s caption: v2.0.1 on fresh prompts, v1.8.4 not recorded', async () => {
+  const React = await import('react');
+  Object.assign(globalThis, { React });
+  const { renderToStaticMarkup } = await import('react-dom/server');
+  const { CompareFigure } = await import('./FactsCharts');
+  const { COMPARE, RIGMARK_BLOCKS } = await import('../glm-facts');
+  const { COMPARE_NOTES } = await import('./remeasured-data');
+  // The audit's words (R0/lanes/rigmark-v184-cache): v1.8.4's prompts are never called fresh.
+  const caption = 'RigMark 1.1.0, same harness on both. C4: four short-code requests, 256-token cap each, median of three end-to-end waves including prompt reading. v2.0.1 measured on fresh prompts; v1.8.4 cache status was not recorded.';
+  assert.deepEqual(COMPARE_NOTES, { c4: caption });
+  if (!COMPARE.some(row => row.id === 'c4')) return;
+  const html = renderToStaticMarkup(React.createElement(CompareFigure));
+  const start = html.indexOf('data-metric-id="c4"');
+  const next = html.indexOf('data-metric-id="', start + 1);
+  assert.ok(start >= 0 && text(next > 0 ? html.slice(start, next) : html.slice(start)).includes(caption), 'four at once shows without its caption');
+  assert.equal(text(html).split(caption).length, 2, 'the caption shows under another row too');
+  // RigMark's own output stays as it printed it.
+  for (const block of RIGMARK_BLOCKS) assert.ok(!block.text.text.includes('v1.8.4 cache status'), `${block.id} is reworded`);
+});
