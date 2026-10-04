@@ -1,6 +1,7 @@
 import GlmFactsPage from '../v2/GlmFactsPage';
 import { projectMetadata } from '../v2/metadata';
-import { ENGINE, HEADLINE, SOCIAL_IMAGE, TAG, VERSION } from '../glm-facts';
+import { ENGINE, HEADLINE, TAG, VERSION } from '../glm-facts';
+import { SHARE_IMAGE } from '../v2/remeasured-figures';
 import { SITE_URL, WEBSITE_ID, jsonLd, personRef } from '../../../lib/entity';
 import '../v2/glm.css';
 import '../v2/glm2.css';
@@ -11,8 +12,8 @@ const description = HEADLINE[0].pending
   ? `JSPARK3: GLM-5.3 Flash across three NVIDIA DGX Sparks${ENGINE.provenance.pending ? '' : ` on ${ENGINE.provenance.text}`}, with a pinned recipe and measured results.`
   : `${title}: ${HEADLINE[0].text}`;
 
-/** The share card is the release's numbers card once it is rendered, else the neutral hub card. */
-export const metadata = projectMetadata(title, description, '/jspark3/glm/', SOCIAL_IMAGE ?? '/og/jspark3-hub-v1.png');
+/** The share card is the hero's numbers card while it shows the hero's figures, else the neutral hub card. */
+export const metadata = projectMetadata(title, description, '/jspark3/glm/', SHARE_IMAGE ?? '/og/jspark3-hub-v1.png');
 
 const url = `${SITE_URL}/jspark3/glm/`;
 

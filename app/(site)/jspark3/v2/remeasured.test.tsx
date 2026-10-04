@@ -7,7 +7,7 @@ require.extensions['.css'] = (module: NodeModule) => { module.exports = {}; };
 const text = (html: string) => html.replace(/<[^>]+>/g, ' ').replace(/&#x27;/g, '\'').replace(/&amp;/g, '&').replace(/\s+/g, ' ');
 
 test('only cells the table marks PUBLISHABLE are drawn; a group or chart left empty is dropped', async () => {
-  const { publishable } = await import('./Remeasured');
+  const { publishable } = await import('./remeasured-figures');
   const bar = (name: string, screen: 'PUBLISHABLE' | 'DIAGNOSTIC' | 'HOLD') => ({ name, tone: 'default' as const, value: '1.0', screen, source: 'row 1' });
   const charts = publishable([
     { id: 'a', ruler: 'user-visible', title: 'A', unit: 'tok/s', better: 'higher', methods: 'm', groups: [
@@ -21,11 +21,13 @@ test('only cells the table marks PUBLISHABLE are drawn; a group or chart left em
   assert.deepEqual(charts[0].groups[0].bars.map(item => item.name), ['ok']);
 });
 
-test('placeholder figures stay off in production and show only in a local preview', async () => {
-  const { remeasuredShown } = await import('./Remeasured');
+test('placeholder figures stay off in production and show only in a local preview; "0" leaves the section out', async () => {
+  const { remeasuredShown } = await import('./remeasured-figures');
   assert.equal(remeasuredShown(true, undefined), false);
   assert.equal(remeasuredShown(true, '1'), true);
   assert.equal(remeasuredShown(false, undefined), true);
+  // "0" leaves the re-measurement out: the release's own page, which the tile tests render.
+  assert.equal(remeasuredShown(false, '0'), false);
 });
 
 test('every figure has a table row, a label and a methods line; every lead comes from its group', async () => {
@@ -132,4 +134,67 @@ test('the GLM page leads with the natural figures: hero, the re-measured band, e
   // The hero is user-visible figures: no server prefill, no first streamed reasoning.
   const hero = html.match(/<div class="glm-tiles">[\s\S]*?<\/dl>/)?.[0] ?? '';
   assert.ok(hero && !/prefill|0\.26 s|56\.7/.test(text(hero)), 'the hero shows a server-side or reasoning-first figure');
+});
+
+test('the hub card and the share card show the GLM page\'s hero: the same figures, labels and line', async () => {
+  const React = await import('react');
+  Object.assign(globalThis, { React });
+  const { renderToStaticMarkup } = await import('react-dom/server');
+  const { default: GlmFactsPage } = await import('./GlmFactsPage');
+  const { default: HubPage } = await import('./HubPage');
+  const { HERO_FIGURES, HERO_LINE, HERO_SIGNATURE, HERO_TILES, REMEASURED_ON, SHARE_IMAGE, resolve } = await import('./remeasured-figures');
+  const { HERO, HERO_RELEASE_TILES } = await import('./remeasured-data');
+  const { SOCIAL_IMAGE, TILE_FIGURES } = await import('../glm-facts');
+  const share = (await import('../glm-share.json')).default as { figures?: string[] };
+  if (!REMEASURED_ON) return;
+  // The hero leads with the re-measured figures, each from its group, then keeps only the RigMark tiles named.
+  assert.deepEqual(HERO_FIGURES.map(figure => figure.value), resolve(HERO).map(item => item.figure.value));
+  assert.deepEqual(HERO_TILES.map(tile => tile.key), TILE_FIGURES.filter(tile => HERO_RELEASE_TILES.includes(tile.key)).map(tile => tile.key));
+  assert.ok(HERO_TILES.every(tile => tile.key.startsWith('rigmark.') && tile.label.includes('(RigMark)') && !tile.weights), 'a kept tile is not a default-set RigMark tile');
+  const escape = (text: string) => text.replace(/&/g, '&amp;').replace(/'/g, '&#x27;');
+  const page = renderToStaticMarkup(React.createElement(GlmFactsPage));
+  const hub = renderToStaticMarkup(React.createElement(HubPage));
+  const hero = page.match(/<div class="glm-tiles">[\s\S]*?<p class="glm-tiles-line">[\s\S]*?<\/p><\/div>/)?.[0] ?? '';
+  const card = hub.match(/<span class="spark-hub-figures" data-figure="facts">[\s\S]*?<span class="spark-hub-release-action">/)?.[0] ?? '';
+  const shown = (html: string, tag: string) => [...html.matchAll(new RegExp(`data-metric-id="([^"]+)"[^>]*><${tag}[^>]*>([^<]*)<`, 'g'))].map(match => [match[1], match[2]]);
+  const want = [...HERO_FIGURES.map(figure => [figure.key, figure.label]), ...HERO_TILES.map(tile => [tile.key, tile.label])];
+  assert.deepEqual(shown(hero, 'dt'), want, 'the hero shows other tiles');
+  assert.deepEqual(shown(card, 'span'), want, 'the hub card shows other tiles than the hero');
+  for (const figure of HERO_FIGURES) {
+    assert.ok(hero.includes(`<dd class="glm-tile-value">${figure.value}<small>${figure.unit}</small></dd>`) && hero.includes(escape(figure.caption)), `the hero's ${figure.label} tile is shown without its value or label`);
+    assert.ok(card.includes(`<span class="spark-hub-figure-value">${figure.value}<small>${figure.unit}</small></span>`) && card.includes(escape(figure.caption)), `the hub's ${figure.label} tile is shown without its value or label`);
+  }
+  assert.ok(HERO_LINE && hero.includes(`<p class="glm-tiles-line">${HERO_LINE.lead}`) && card.includes(`<span class="spark-hub-release-detail">${HERO_LINE.lead}${HERO_LINE.measured}</span>`), 'the hub and the hero say different things about their figures');
+  assert.ok(HERO_LINE.lead.startsWith('base weights + draft model · '), 'the line does not name the weights');
+  // No RigMark prefill tile, from any column, stands in the hero or the hub card.
+  const synced = (await import('../glm-facts.json')).default as { facts: { rigmark_rows?: Record<string, string>[] } };
+  const prefill = synced.facts.rigmark_rows?.find(row => row.id === 'prefill_64k');
+  if (prefill) for (const html of [hero, card]) for (const column of ['V-D', 'O-D', 'v1_8_4']) if (prefill[column]) assert.ok(!html.includes(`>${prefill[column]}<`), `${prefill[column]} still shows`);
+  // The share card was rendered with these figures, so the page uses it; a card with other figures falls back.
+  assert.deepEqual(share.figures, HERO_SIGNATURE, 'the share card shows other figures than the hero; rerun scripts/render-glm-share.mjs');
+  assert.ok(SOCIAL_IMAGE && SHARE_IMAGE === SOCIAL_IMAGE, 'the page does not use the share card');
+});
+
+test('known issues carry the numbers the copy cites: each is numbered and anchored, and every citation names one', async () => {
+  const React = await import('react');
+  Object.assign(globalThis, { React });
+  const { renderToStaticMarkup } = await import('react-dom/server');
+  const { default: GlmFactsPage } = await import('./GlmFactsPage');
+  const { KNOWN_ISSUES } = await import('../glm-facts');
+  const { ANCHOR } = await import('./remeasured-data');
+  const html = renderToStaticMarkup(React.createElement(GlmFactsPage));
+  const list = html.match(/<ol class="glm2-list glm2-issues">([\s\S]*?)<\/ol>/)?.[1] ?? '';
+  const items = [...list.matchAll(/<li id="known-issue-(\d+)"><span class="glm2-issue-number">(\d+)<\/span><span>([\s\S]*?)<\/span><\/li>/g)];
+  assert.equal(items.length, KNOWN_ISSUES.length, 'an issue is not numbered');
+  items.forEach((match, index) => assert.deepEqual([match[1], match[2]], [`${index + 1}`, `${index + 1}`], `issue ${index + 1} carries another number`));
+  // The release appends issues and never renumbers them: the copy's citations keep their place.
+  assert.match(text(items[1][3]).trim(), /^`?response_format`? is ignored\./);
+  assert.match(text(items[16][3]).trim(), /^Saving a conversation to the disk session store is best-effort\./);
+  // Every "known issue N" the page cites is on the list, and every link to one lands on it.
+  for (const match of text(html).matchAll(/known issue (\d+)/g)) assert.ok(Number(match[1]) >= 1 && Number(match[1]) <= items.length, `known issue ${match[1]} is cited but not listed`);
+  for (const match of html.matchAll(/href="#(known-issue-\d+)"/g)) assert.ok(html.includes(`id="${match[1]}"`), `#${match[1]} leads nowhere`);
+  // The session resume's disk save is known issue 17 (table row 7), linked to it.
+  const resume = html.match(new RegExp(`<figure[^>]* id="${ANCHOR}-resume"[\\s\\S]*?</figure>`))?.[0] ?? '';
+  assert.ok(resume.includes('<a href="#known-issue-17">known issue 17</a>'), 'the resume chart does not cite known issue 17');
+  assert.ok(!/known issue 11/.test(resume), 'the resume chart still cites known issue 11');
 });
