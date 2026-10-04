@@ -133,7 +133,7 @@ export default function Remeasured() {
   return <section className="glm-results glm2-remeasured" id={ANCHOR} aria-labelledby={`${ANCHOR}-title`}>
     <div className="glm-shell">
       <div className="glm-section-heading">
-        <h2 id={`${ANCHOR}-title`}>Re-measured on {REMEASURED_DATE}.</h2>
+        <h2 id={`${ANCHOR}-title`}>v2.0.1 measured on {REMEASURED_DATE}.</h2>
         <p className="glm-band-line">One request at a time: how fast a reply streams, how soon a long prompt gets an answer, and what the disk cache saves on a long session.</p>
         <p>Every figure is JSPARK3 v2.0.1 with base weights and the <a href="#draft-model">draft model</a>, on three DGX Sparks. Without the draft model, which is licensed for non-commercial use, these figures do not apply. These runs use their own measurements, so they sit apart from the release&apos;s figures below, which are unchanged. Each chart is drawn to its own scale from zero.</p>
       </div>
