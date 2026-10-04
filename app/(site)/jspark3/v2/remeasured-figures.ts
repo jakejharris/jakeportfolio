@@ -39,7 +39,7 @@ export function resolve(figures: LeadFigure[], charts: RemeasuredChart[] = publi
  * A re-measured hero figure: its label, value and unit, captioned with its own line and the table's label, never
  * its group's condition, whose timings need their footnotes.
  */
-export type HeroFigure = { key: string; label: string; value: string; unit: string; caption: string };
+export type HeroFigure = { key: string; label: string; value: string; unit: string; caption: string; prompt?: string };
 
 /**
  * The GLM page's hero, which the hub's latest card and the share card show too. With the re-measurement it leads
@@ -47,18 +47,25 @@ export type HeroFigure = { key: string; label: string; value: string; unit: stri
  * it is the release's tiles (glm-facts.ts TILE_FIGURES) and line.
  */
 export const HERO_FIGURES: HeroFigure[] = (REMEASURED_ON ? resolve(HERO) : []).map(({ figure, chart, group, smallPrint }) => ({
-  key: `remeasured.${chart.id}.${group.key}`, label: figure.label, value: figure.value, unit: figure.unit, caption: [figure.line, smallPrint].filter(Boolean).join('. '),
+  key: `remeasured.${chart.id}.${group.key}`, label: figure.label, value: figure.value, unit: figure.unit, caption: [figure.line, smallPrint].filter(Boolean).join('. '), prompt: figure.prompt,
 }));
 export const HERO_TILES: TileFigure[] = HERO_FIGURES.length ? TILE_FIGURES.filter(tile => HERO_RELEASE_TILES.includes(tile.key)) : TILE_FIGURES;
 
+const WEIGHTS = 'base weights + draft model';
+
 /** What the re-measured hero was measured with, then when; the GLM page links the date to the section. */
 export const HERO_LINE = HERO_FIGURES.length
-  ? { lead: `base weights + draft model · ${HERO_TILES.length ? 'RigMark from the release; the rest ' : ''}`, measured: `re-measured ${REMEASURED_DATE}` }
+  ? { lead: `${WEIGHTS} · ${HERO_TILES.length ? 'RigMark from the release; the rest ' : ''}`, measured: `re-measured ${REMEASURED_DATE}` }
   : null;
 
-/** The hero's figures as a share card records them: a card is current only while they match. */
+const named = (figure: HeroFigure) => `${[figure.label, figure.prompt].filter(Boolean).join(', ')}: ${figure.value} ${figure.unit}`;
+
+/**
+ * The hero's figures as a share card records them, each with its prompt's cache status where it has one: a card is
+ * current only while they match.
+ */
 export const HERO_SIGNATURE: string[] = [
-  ...HERO_FIGURES.map(figure => `${figure.label}: ${figure.value} ${figure.unit}`),
+  ...HERO_FIGURES.map(named),
   ...HERO_TILES.map(tile => `${tile.label}: ${tile.value.slot.text} ${tile.unit}`),
 ];
 
@@ -66,10 +73,19 @@ export const HERO_SIGNATURE: string[] = [
 export const HERO_MEASURED: string | null = HERO_LINE ? `Measured with ${HERO_LINE.lead}${HERO_LINE.measured}.` : null;
 
 /**
- * The re-measured hero as the GLM page's description says it: each figure with its label, then what they were
- * measured with. Without the re-measurement there is none.
+ * The hero's figures the GLM page's description gives: only those whose prompt's cache status is known, each with
+ * its label and that status. A figure without one (the release's tiles) is left out, never listed bare.
  */
-export const HERO_SUMMARY: string | null = HERO_MEASURED ? `${HERO_SIGNATURE.join('. ')}. ${HERO_MEASURED}` : null;
+export const DESCRIBED_FIGURES: string[] = HERO_FIGURES.filter(figure => figure.prompt).map(named);
+
+/** What the described figures were measured with, as the description's last sentence. */
+export const DESCRIBED_MEASURED: string | null = HERO_LINE ? `Measured with ${WEIGHTS} · ${HERO_LINE.measured}.` : null;
+
+/**
+ * The re-measured hero as the GLM page's description says it: each described figure, then what they were measured
+ * with. Without the re-measurement, or a figure to describe, there is none.
+ */
+export const HERO_SUMMARY: string | null = DESCRIBED_MEASURED && DESCRIBED_FIGURES.length ? `${DESCRIBED_FIGURES.join('. ')}. ${DESCRIBED_MEASURED}` : null;
 
 /**
  * The share card, while it was rendered from these facts (glm-facts.ts SOCIAL_IMAGE) and shows these hero

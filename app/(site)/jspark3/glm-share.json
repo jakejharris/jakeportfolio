@@ -2,10 +2,10 @@
   "image": "/og/jspark3-glm-v2.0.1.png",
   "facts_sha256": "70490d33185ec2a084a709127f31417b0ea7ce83a1db5949cd070428118c3167",
   "figures": [
-    "Code, one request: 92.5 tok/s",
-    "Prose, one request: 73.5 tok/s",
-    "Reading a 32K-token prompt: ≈2,149 tok/s",
+    "Code, one request, fresh prompt: 92.5 tok/s",
+    "Prose, one request, prompt cached: 73.5 tok/s",
+    "Reading a 32K-token prompt, fresh: ≈2,149 tok/s",
     "Four at once, end to end (RigMark): 113.4 tok/s"
   ],
-  "image_sha256": "2859a550de42ce1b25923e466a3cf4f3e4e5fea9ddfe863882d5ef467563ce21"
+  "image_sha256": "24a320d33993bdf30575b472014bf20a0a04db10365ef815f23ce753a0af6482"
 }

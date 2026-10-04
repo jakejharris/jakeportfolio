@@ -105,6 +105,19 @@ test('the round-once audit: withdrawn figures stay off, timings say fresh or cac
   // Row 4 was measured only with the prompt already cached: its label says so wherever it shows.
   const cached = 'Replies forced to 2,000 tokens, thinking requested off, prompt already cached';
   for (const match of copy.matchAll(/Replies forced to 2,000 tokens, thinking requested off/g)) assert.equal(copy.slice(match.index, match.index + cached.length), cached);
+  // Every rate names its prompt: 92.5 (row 2) was a fresh prompt, 73.5 (rows 4 and 5) a cached one, here, in the
+  // hero and the hub card, and in the page's description.
+  const { default: GlmFactsPage } = await import('./GlmFactsPage');
+  const { default: HubPage } = await import('./HubPage');
+  const hero = renderToStaticMarkup(React.createElement(GlmFactsPage)).match(/<div class="glm-tiles">[\s\S]*?<p class="glm-tiles-line">[\s\S]*?<\/p><\/div>/)?.[0] ?? '';
+  const card = renderToStaticMarkup(React.createElement(HubPage)).match(/<span class="spark-hub-figures" data-figure="facts">[\s\S]*?<span class="spark-hub-release-action">/)?.[0] ?? '';
+  const rates = `${copy} ${text(hero)} ${text(card)}`;
+  for (const [figure, status] of [['92.5', /fresh prompt/], ['73.5', /cached/]] as const) {
+    const near = [...rates.matchAll(new RegExp(figure.replace('.', '\\.'), 'g'))].map(match => rates.slice(Math.max(0, match.index - 120), match.index + 200));
+    assert.ok(near.length >= 4, `${figure} shows ${near.length} times`);
+    for (const line of near) assert.match(line, status, line);
+  }
+  assert.ok(HERO_SUMMARY?.includes('Code, one request, fresh prompt: 92.5 tok/s') && HERO_SUMMARY.includes('Prose, one request, prompt cached: 73.5 tok/s') && HERO_SUMMARY.includes('Reading a 32K-token prompt, fresh: ≈2,149 tok/s'), HERO_SUMMARY ?? 'no description');
   // Row 5's cached-prompt rates show only beside the fresh ones, saying so.
   for (const match of copy.matchAll(/108\.5/g)) assert.match(copy.slice(match.index - 40, match.index), /already cached: code $/, 'a cached rate shows alone');
   // The cached-prompt time never shows alone, and the short replies' first token always says it is a fresh prompt.
@@ -240,7 +253,7 @@ test('the GLM page\'s description and link previews give the hero\'s figures wit
   const React = await import('react');
   Object.assign(globalThis, { React });
   const { metadata } = await import('../glm/page');
-  const { HERO_MEASURED, HERO_SIGNATURE, REMEASURED_ON } = await import('./remeasured-figures');
+  const { DESCRIBED_FIGURES, DESCRIBED_MEASURED, HERO_FIGURES, HERO_TILES, REMEASURED_ON } = await import('./remeasured-figures');
   const synced = (await import('../glm-facts.json')).default as { facts: { headline?: { cites?: { value: string }[] } } };
   if (!REMEASURED_ON) return;
   const og = metadata.openGraph as { description?: string };
@@ -248,8 +261,11 @@ test('the GLM page\'s description and link previews give the hero\'s figures wit
   const description = String(metadata.description);
   assert.equal(og.description, description);
   assert.equal(twitter.description, description);
-  for (const figure of HERO_SIGNATURE) assert.ok(description.includes(figure), `the description does not give "${figure}"`);
-  assert.ok(HERO_MEASURED && description.endsWith(HERO_MEASURED), 'the description does not say what its figures were measured with');
+  // Every figure it gives names its prompt's cache status; one without a status is left out, never listed bare.
+  assert.equal(DESCRIBED_FIGURES.length, HERO_FIGURES.filter(figure => figure.prompt).length);
+  for (const figure of DESCRIBED_FIGURES) assert.ok(description.includes(figure) && /, (?:fresh|fresh prompt|prompt cached): /.test(figure), `the description does not give "${figure}"`);
+  for (const figure of [...HERO_FIGURES.filter(item => !item.prompt).map(item => item.value), ...HERO_TILES.map(tile => tile.value.slot.text)]) assert.ok(!description.includes(figure), `the description lists ${figure} without its cache status`);
+  assert.ok(DESCRIBED_MEASURED && description.endsWith(DESCRIBED_MEASURED), 'the description does not say what its figures were measured with');
   // The release headline's figures are for eight requests at once; previews show none of them.
   for (const cite of synced.facts.headline?.cites ?? []) assert.ok(!description.includes(cite.value), `the description gives the headline's ${cite.value}`);
   assert.ok(!/\b(?:eight|8)\b[^.]*\b(?:concurrent|requests|users|agents|streams)\b|\bc8\b/i.test(description), 'the description gives a figure for eight at once');

@@ -69,7 +69,11 @@ export type RemeasuredChart = {
  * A large figure above the charts, from one group of one chart: a bar's value or a figure its condition gives.
  * It carries that group's condition (or its own line), label and footnote.
  */
-export type LeadFigure = { chart: string; group: string; label: string; value: string; unit: string; line?: string };
+export type LeadFigure = {
+  chart: string; group: string; label: string; value: string; unit: string; line?: string;
+  /** The prompt's cache status, as the page's description names it beside the figure. */
+  prompt?: 'fresh' | 'fresh prompt' | 'prompt cached';
+};
 
 export const PLACEHOLDER = false;
 export const DATE = '2026-10-03';
@@ -209,7 +213,7 @@ export const CHARTS: RemeasuredChart[] = [
 
 /** Above the charts: what one user feels first. */
 export const LEAD: LeadFigure[] = [
-  { chart: 'reply-one', group: 'natural-code', label: 'A complete program, one request', value: '92.5', unit: 'tok/s', line: 'user-visible, from send to the last token' },
+  { chart: 'reply-one', group: 'natural-code', label: 'A complete program, one request', value: '92.5', unit: 'tok/s', line: 'user-visible, from send to the last token, fresh prompt' },
   { chart: 'reply-one', group: 'short', label: 'First token on a short reply', value: '0.31', unit: 's', line: 'code, on a fresh prompt; 0.25 s for prose; 0.07\u20110.08 s when the prompt is already cached' },
   { chart: 'long-prompt', group: '32k', label: 'First token after a 32K-token prompt', value: '15.3', unit: 's' },
 ];
@@ -219,9 +223,9 @@ export const LEAD: LeadFigure[] = [
  * release's tiles named in HERO_RELEASE_TILES follow, until a re-measured figure replaces them.
  */
 export const HERO: LeadFigure[] = [
-  { chart: 'reply-one', group: 'natural-code', label: 'Code, one request', value: '92.5', unit: 'tok/s' },
-  { chart: 'reply-one', group: 'long-prose', label: 'Prose, one request', value: '73.5', unit: 'tok/s' },
-  { chart: 'long-prompt', group: '32k', label: 'Reading a 32K-token prompt', value: '≈2,149', unit: 'tok/s', line: 'estimated as prompt tokens ÷ client first-token time (15.3 s)' },
+  { chart: 'reply-one', group: 'natural-code', label: 'Code, one request', value: '92.5', unit: 'tok/s', line: 'fresh prompt', prompt: 'fresh prompt' },
+  { chart: 'reply-one', group: 'long-prose', label: 'Prose, one request', value: '73.5', unit: 'tok/s', prompt: 'prompt cached' },
+  { chart: 'long-prompt', group: '32k', label: 'Reading a 32K-token prompt', value: '≈2,149', unit: 'tok/s', line: 'estimated as prompt tokens ÷ client first-token time (15.3 s)', prompt: 'fresh' },
 ];
 export const HERO_RELEASE_TILES = ['rigmark.c4'];
 
@@ -244,7 +248,7 @@ export const SET_CHARTS: RemeasuredSetChart[] = [
     better: 'higher',
     methods: 'User-visible rate: reply tokens over the time from sending the request to its last token, so the wait for the first token counts.',
     rows: [
-      { key: 'natural-code', label: 'A complete program, natural length', from: { chart: 'reply-one', group: 'natural-code', bar: 'Code' } },
+      { key: 'natural-code', label: 'A complete program, natural length, fresh prompt', from: { chart: 'reply-one', group: 'natural-code', bar: 'Code' } },
       { key: 'short-code', label: 'Code, forced to 128 tokens, fresh prompt', from: { chart: 'reply-one', group: 'short', bar: 'Code' } },
       { key: 'short-prose', label: 'Prose, forced to 128 tokens, fresh prompt', from: { chart: 'reply-one', group: 'short', bar: 'Prose' } },
       { key: 'long-prose', label: 'Prose, forced to 2,000 tokens', from: { chart: 'reply-one', group: 'long-prose', bar: 'Prose' } },
