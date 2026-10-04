@@ -183,7 +183,7 @@ export default function GlmFactsPage() {
         <div><dt>Engine</dt><dd><Fact slot={ENGINE.provenanceStart} /> · replaces <Fact slot={ENGINE.previous} /></dd></div>
         <div><dt>Weights</dt><dd>{VARIANTS_ORDERED.map((item, index) => <React.Fragment key={item.id}>{index ? ' or ' : ''}<Fact slot={variantName(item.label, index)} /></React.Fragment>)}, chosen at install</dd></div>
         <div><dt>Hardware</dt><dd>Three DGX Sparks · one endpoint</dd></div>
-        <div><dt>Longest context</dt><dd><Fact slot={context.slot} />{context.state === 'value' ? ' tokens' : null}</dd></div>
+        <div><dt>Configured context limit</dt><dd><Fact slot={context.slot} />{context.state === 'value' ? ' tokens' : null}</dd></div>
       </dl>
     </div>
 

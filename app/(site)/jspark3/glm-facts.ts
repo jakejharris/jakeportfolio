@@ -460,7 +460,7 @@ export function metricInfo(key: string): MetricInfo {
     c8_ttft_p50_s: { label: 'First token with 8 requests at once, median', short: 'First token, 8 at once', unit: 's', better: 'lower' },
     'c8_stall_s.median': { label: 'Pause in 8 running replies as a long prompt arrives', short: 'Stall, 8 at once', unit: 's', better: 'lower' },
     'c8_stall_s.max': { label: 'Longest such pause in any run', short: 'Stall, 8 at once, worst', unit: 's', better: 'lower' },
-    max_context_tokens: { label: 'Longest context', short: 'Longest context', unit: 'tokens', better: null },
+    max_context_tokens: { label: 'Configured context limit', short: 'Context limit', unit: 'tokens', better: null },
     'draft_acceptance.accepted_per_verify_step': { label: 'Draft tokens accepted per verify step', short: 'Accepted per step', unit: 'tokens', better: 'higher' },
     'draft_acceptance.accepted_over_proposed': { label: 'Drafted tokens accepted', short: 'Accepted of drafted', unit: '', better: 'higher' },
   };

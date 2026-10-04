@@ -127,6 +127,18 @@ test('every release decode and concurrency row on /jspark3/glm/ says whether its
   assert.ok(scope.endsWith(` ${COMPARE_CACHE}`), `the RigMark scope line does not say what each side's prompts were: ${scope}`);
 });
 
+test('the context length reads as the setting it is, never as a measured longest context', async () => {
+  const React = await import('react');
+  Object.assign(globalThis, { React });
+  const { renderToStaticMarkup } = await import('react-dom/server');
+  const { default: GlmFactsPage } = await import('./GlmFactsPage');
+  const { metricInfo } = await import('../glm-facts');
+  const html = renderToStaticMarkup(React.createElement(GlmFactsPage));
+  assert.match(html, /<dt>Configured context limit<\/dt><dd>262,144 tokens<\/dd>/);
+  assert.doesNotMatch(html, /Longest context/);
+  assert.equal(metricInfo('max_context_tokens').label, 'Configured context limit');
+});
+
 test('the gate asks for the same templates the page uses', async () => {
   const { captionTemplate } = await import('../glm-facts');
   const gate = readFileSync(join(root, 'scripts/check-glm-facts.mjs'), 'utf8');
