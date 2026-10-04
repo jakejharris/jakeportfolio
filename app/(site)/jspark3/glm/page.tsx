@@ -1,16 +1,19 @@
 import GlmFactsPage from '../v2/GlmFactsPage';
 import { projectMetadata } from '../v2/metadata';
-import { ENGINE, HEADLINE, TAG, VERSION } from '../glm-facts';
-import { SHARE_IMAGE } from '../v2/remeasured-figures';
+import { ENGINE, TAG, VERSION } from '../glm-facts';
+import { HERO_SUMMARY, SHARE_IMAGE } from '../v2/remeasured-figures';
 import { SITE_URL, WEBSITE_ID, jsonLd, personRef } from '../../../lib/entity';
 import '../v2/glm.css';
 import '../v2/glm2.css';
 
 const title = `JSPARK3 ${VERSION.text}`;
-/** The headline sentence once the release has written it; until then, the page's own plain description. */
-const description = HEADLINE[0].pending
-  ? `JSPARK3: GLM-5.3 Flash across three NVIDIA DGX Sparks${ENGINE.provenance.pending ? '' : ` on ${ENGINE.provenance.text}`}, with a pinned recipe and measured results.`
-  : `${title}: ${HEADLINE[0].text}`;
+/**
+ * The hero's figures, each with its label, as the share card shows them; otherwise the page's own plain description.
+ * Never the release's headline: its figures are for requests running at once, which link previews do not show.
+ */
+const description = HERO_SUMMARY
+  ? `GLM-5.3 Flash on three NVIDIA DGX Sparks. ${HERO_SUMMARY}`
+  : `JSPARK3: GLM-5.3 Flash across three NVIDIA DGX Sparks${ENGINE.provenance.pending ? '' : ` on ${ENGINE.provenance.text}`}, with a pinned recipe and measured results.`;
 
 /** The share card is the hero's numbers card while it shows the hero's figures, else the neutral hub card. */
 export const metadata = projectMetadata(title, description, '/jspark3/glm/', SHARE_IMAGE ?? '/og/jspark3-hub-v1.png');
