@@ -1,4 +1,6 @@
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import test from 'node:test';
 
 // The page renders server-side; its stylesheets mean nothing here.
@@ -197,4 +199,30 @@ test('known issues carry the numbers the copy cites: each is numbered and anchor
   const resume = html.match(new RegExp(`<figure[^>]* id="${ANCHOR}-resume"[\\s\\S]*?</figure>`))?.[0] ?? '';
   assert.ok(resume.includes('<a href="#known-issue-17">known issue 17</a>'), 'the resume chart does not cite known issue 17');
   assert.ok(!/known issue 11/.test(resume), 'the resume chart still cites known issue 11');
+});
+
+test('the GLM page\'s description and link previews give the hero\'s figures with their labels, and no figure for requests at once', async () => {
+  const React = await import('react');
+  Object.assign(globalThis, { React });
+  const { metadata } = await import('../glm/page');
+  const { HERO_MEASURED, HERO_SIGNATURE, REMEASURED_ON } = await import('./remeasured-figures');
+  const synced = (await import('../glm-facts.json')).default as { facts: { headline?: { cites?: { value: string }[] } } };
+  if (!REMEASURED_ON) return;
+  const og = metadata.openGraph as { description?: string };
+  const twitter = metadata.twitter as { description?: string };
+  const description = String(metadata.description);
+  assert.equal(og.description, description);
+  assert.equal(twitter.description, description);
+  for (const figure of HERO_SIGNATURE) assert.ok(description.includes(figure), `the description does not give "${figure}"`);
+  assert.ok(HERO_MEASURED && description.endsWith(HERO_MEASURED), 'the description does not say what its figures were measured with');
+  // The release headline's figures are for eight requests at once; previews show none of them.
+  for (const cite of synced.facts.headline?.cites ?? []) assert.ok(!description.includes(cite.value), `the description gives the headline's ${cite.value}`);
+  assert.ok(!/\b(?:eight|8)\b[^.]*\b(?:concurrent|requests|users|agents|streams)\b|\bc8\b/i.test(description), 'the description gives a figure for eight at once');
+  assert.ok(!description.includes(String.fromCodePoint(0x2014)), 'em dash in the description');
+});
+
+test('the share card names the product in its title and keeps the wordmark', () => {
+  const script = readFileSync(join(__dirname, '../../../../scripts/render-glm-share.mjs'), 'utf8');
+  assert.match(script, /<div class="tagline">JSpark3 \$\{escape\(VERSION\.text\)\}/);
+  assert.match(script, /\.replace\('<span class="word">JSpark3<\/span>', '<span class="word">JSPARK3<\/span>'\)/);
 });

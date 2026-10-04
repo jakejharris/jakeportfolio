@@ -13,7 +13,7 @@ import { join, resolve } from 'node:path';
 import { chromePath, loadPlaywright } from './social/browser.mjs';
 import { shell } from './social/theme.mjs';
 import { FINAL, RELBENCH_LABEL, SOURCE, TILES_LINE, VERSION, captionTemplate } from '../app/(site)/jspark3/glm-facts.ts';
-import { HERO_FIGURES, HERO_LINE, HERO_SIGNATURE, HERO_TILES } from '../app/(site)/jspark3/v2/remeasured-figures.ts';
+import { HERO_FIGURES, HERO_LINE, HERO_MEASURED, HERO_SIGNATURE, HERO_TILES } from '../app/(site)/jspark3/v2/remeasured-figures.ts';
 
 if (!FINAL) throw new Error('the synced release facts are not final; the page keeps the hub card');
 const root = resolve(new URL('..', import.meta.url).pathname);
@@ -34,8 +34,9 @@ const scale = longest > 9 ? 0.5 : longest > 6 ? 0.68 : cells.some(item => item.w
 const size = step => (scale * step < 1 ? ` style="font-size:calc(var(--grid-num) * ${scale * step})"` : '');
 const tile = step => item => `<div class="cell"><div class="eyebrow">${escape(item.label)}</div><div class="num"${size(step)}>${escape(item.value)}<span class="unit">${escape(item.unit)}</span></div>${item.weights ? `<div class="label">${escape(item.weights)}</div>` : ''}${item.caption ? `<div class="caption"${step < 1 ? ` style="font-size:calc(var(--caption) * ${Math.max(step, 0.85)})"` : ''}>${escape(item.caption)}</div>` : ''}</div>`;
 const line = text => `<div style="margin-top:10px;font-size:18px;font-weight:400;color:var(--muted)">${escape(text)}</div>`;
-const measured = HERO_LINE ? `${HERO_LINE.lead}${HERO_LINE.measured}` : `${TILES_LINE.text}${RELBENCH_LABEL ? `, ${RELBENCH_LABEL.short.text}` : ''}`;
-const body = step => `<div class="tagline">JSPARK3 ${escape(VERSION.text)}: GLM-5.3 Flash on three DGX Sparks.${line(`Measured with ${measured}.`)}</div><div class="grid">${cells.map(tile(step)).join('')}</div>`;
+const measured = HERO_MEASURED ?? `Measured with ${TILES_LINE.text}${RELBENCH_LABEL ? `, ${RELBENCH_LABEL.short.text}` : ''}.`;
+// The wordmark row reads JSPARK3; the title names the product as its prose does.
+const body = step => `<div class="tagline">JSpark3 ${escape(VERSION.text)}: GLM-5.3 Flash on three DGX Sparks.${line(measured)}</div><div class="grid">${cells.map(tile(step)).join('')}</div>`;
 if (body(1).includes(String.fromCodePoint(0x2014))) throw new Error('em dash in card copy');
 const html = step => shell({ cardId: '07-hero-card', orient: 'og', body: body(step), receipt: '' }).replace('<span class="word">JSpark3</span>', '<span class="word">JSPARK3</span>');
 

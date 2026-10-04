@@ -62,6 +62,15 @@ export const HERO_SIGNATURE: string[] = [
   ...HERO_TILES.map(tile => `${tile.label}: ${tile.value.slot.text} ${tile.unit}`),
 ];
 
+/** What the re-measured hero was measured with, as a sentence: the share card's line and the page's description end with it. */
+export const HERO_MEASURED: string | null = HERO_LINE ? `Measured with ${HERO_LINE.lead}${HERO_LINE.measured}.` : null;
+
+/**
+ * The re-measured hero as the GLM page's description says it: each figure with its label, then what they were
+ * measured with. Without the re-measurement there is none.
+ */
+export const HERO_SUMMARY: string | null = HERO_MEASURED ? `${HERO_SIGNATURE.join('. ')}. ${HERO_MEASURED}` : null;
+
 /**
  * The share card, while it was rendered from these facts (glm-facts.ts SOCIAL_IMAGE) and shows these hero
  * figures: a card from an earlier hero never stands in for the page's numbers.
