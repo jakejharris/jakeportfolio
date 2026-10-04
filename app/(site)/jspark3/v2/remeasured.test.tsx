@@ -99,6 +99,8 @@ test('the round-once audit: withdrawn figures stay off, timings say fresh or cac
   // Rounded twice (73.6, decode 92.9, the re-run's 96.1, 158.3), or a mean of a fresh run with cached ones
   // (0.15 / 0.13 s, 102.7 / 71.1, decode 115.3 / 75.8, 175.8).
   for (const figure of ['73.6', '92.9', '96.1', '158.3', '0.15 s', '0.13 s', '102.7', '71.1', '115.3', '75.8', '175.8']) assert.ok(!copy.includes(figure), `${figure} renders`);
+  // Row 6's end-to-end rates are not in the table, so they stay off until it has them.
+  for (const figure of ['18.5 tok/s', '10.9 tok/s']) assert.ok(!copy.includes(figure), `${figure} renders`);
   // Row 6's reading rates are estimates: never shown without the sign, and the hero's names its estimator.
   for (const match of copy.matchAll(/(.)2,1(?:49|02)/g)) assert.equal(match[1], '≈', `${match[0]} shows without ≈`);
   assert.match(HERO_SUMMARY ?? '', /≈2,149 tok\/s/);
