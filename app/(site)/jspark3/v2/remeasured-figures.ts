@@ -36,8 +36,8 @@ export function resolve(figures: LeadFigure[], charts: RemeasuredChart[] = publi
 }
 
 /**
- * A re-measured hero figure: its label, value and unit, captioned with its own line and the table's label, never
- * its group's condition, whose timings need their footnotes.
+ * A re-measured hero figure: its label, value and unit, captioned with its own line and the table's label as one
+ * sentence, never its group's condition, whose timings need their footnotes.
  */
 export type HeroFigure = { key: string; label: string; value: string; unit: string; caption: string; prompt?: string };
 
@@ -46,8 +46,9 @@ export type HeroFigure = { key: string; label: string; value: string; unit: stri
  * with its figures (remeasured-data.ts HERO) and keeps the release tiles HERO_RELEASE_TILES names, each captioned
  * with the table's label for it; without it, it is the release's tiles (glm-facts.ts TILE_FIGURES) and line.
  */
+const sentence = (text: string) => text.charAt(0).toUpperCase() + text.slice(1);
 export const HERO_FIGURES: HeroFigure[] = (REMEASURED_ON ? resolve(HERO) : []).map(({ figure, chart, group, smallPrint }) => ({
-  key: `remeasured.${chart.id}.${group.key}`, label: figure.label, value: figure.value, unit: figure.unit, caption: [figure.line, smallPrint].filter(Boolean).join('. '), prompt: figure.prompt,
+  key: `remeasured.${chart.id}.${group.key}`, label: figure.label, value: figure.value, unit: figure.unit, caption: sentence([figure.line, smallPrint].filter(Boolean).join('. ')), prompt: figure.prompt,
 }));
 export type HeroTile = TileFigure & { prompt?: string };
 export const HERO_TILES: HeroTile[] = HERO_FIGURES.length

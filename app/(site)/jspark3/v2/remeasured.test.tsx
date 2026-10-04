@@ -112,7 +112,7 @@ test('the round-once audit: withdrawn figures stay off, timings say fresh or cac
   const hero = renderToStaticMarkup(React.createElement(GlmFactsPage)).match(/<div class="glm-tiles">[\s\S]*?<p class="glm-tiles-line">[\s\S]*?<\/p><\/div>/)?.[0] ?? '';
   const card = renderToStaticMarkup(React.createElement(HubPage)).match(/<span class="spark-hub-figures" data-figure="facts">[\s\S]*?<span class="spark-hub-release-action">/)?.[0] ?? '';
   const rates = `${copy} ${text(hero)} ${text(card)}`;
-  for (const [figure, status] of [['92.5', /fresh prompt/], ['73.5', /cached/]] as const) {
+  for (const [figure, status] of [['92.5', /fresh prompt/i], ['73.5', /cached/]] as const) {
     const near = [...rates.matchAll(new RegExp(figure.replace('.', '\\.'), 'g'))].map(match => rates.slice(Math.max(0, match.index - 120), match.index + 200));
     assert.ok(near.length >= 4, `${figure} shows ${near.length} times`);
     for (const line of near) assert.match(line, status, line);
@@ -219,6 +219,8 @@ test('the hub card and the share card show the GLM page\'s hero: the same figure
   const want = [...HERO_FIGURES.map(figure => [figure.key, figure.label]), ...HERO_TILES.map(tile => [tile.key, tile.label])];
   assert.deepEqual(shown(hero, 'dt'), want, 'the hero shows other tiles');
   assert.deepEqual(shown(card, 'span'), want, 'the hub card shows other tiles than the hero');
+  // Each caption reads as a sentence, here and on the share card.
+  for (const figure of HERO_FIGURES) assert.match(figure.caption, /^[A-Z]/, `the ${figure.label} caption starts in lower case`);
   for (const figure of HERO_FIGURES) {
     assert.ok(hero.includes(`<dd class="glm-tile-value">${figure.value}<small>${figure.unit}</small></dd>`) && hero.includes(escape(figure.caption)), `the hero's ${figure.label} tile is shown without its value or label`);
     assert.ok(card.includes(`<span class="spark-hub-figure-value">${figure.value}<small>${figure.unit}</small></span>`) && card.includes(escape(figure.caption)), `the hub's ${figure.label} tile is shown without its value or label`);
