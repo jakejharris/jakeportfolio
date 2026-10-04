@@ -61,16 +61,36 @@ test('a tile from another set shows that set\'s figure and names its weights; a 
 
   assert.ok(html.includes(`<span class="spark-hub-release-detail">${facts.site_card_footer_public}</span>`), 'the line under the tiles is not the release\'s');
 
-  // The release page's hero shows the same tiles and the same line.
+  // The release page's hero leads with the re-measured figures, each captioned with its label, then keeps the
+  // release tiles it names. Without the re-measurement it shows the hub's tiles and line.
   const { default: GlmFactsPage } = await import('./GlmFactsPage');
+  const { REMEASURED_ON, resolve } = await import('./Remeasured');
+  const { HERO, HERO_RELEASE_TILES } = await import('./remeasured-data');
   const page = renderToStaticMarkup(React.createElement(GlmFactsPage));
   const hero = page.match(/<div class="glm-tiles">[\s\S]*?<p class="glm-tiles-line">[\s\S]*?<\/p><\/div>/)?.[0] ?? '';
-  assert.deepEqual([...hero.matchAll(/data-metric-id="([^"]+)"[^>]*><dt>([^<]*)<\/dt>/g)].map(match => [match[1], match[2]]), module.TILE_FIGURES.map(tile => [tile.key, tile.label]));
-  assert.ok(hero.includes(`<dd class="glm-tile-value">${facts.result_sets['O-D'].metrics.decode_short_tok_s.prose}<small>`), 'the hero\'s prose tile does not show the O-D figure');
-  assert.ok(hero.includes(`<dd class="glm-tile-weights">${WEIGHTS}</dd>`), 'the hero\'s prose tile does not name its weights');
-  assert.ok(hero.includes(`<dd class="glm-tile-value">${row['V-D']}<small>${row.unit}</small></dd>`), `the hero's RigMark tile does not show ${row['V-D']}`);
-  assert.ok(!hero.includes(row['O-D']) && !hero.includes(row.v1_8_4), 'a hero tile shows another RigMark column');
-  assert.ok(hero.includes(`<p class="glm-tiles-line">${facts.site_card_footer_public}</p>`), 'the hero\'s line is not the release\'s');
+  const heroTiles = [...hero.matchAll(/data-metric-id="([^"]+)"[^>]*><dt>([^<]*)<\/dt>/g)].map(match => [match[1], match[2]]);
+  const natural = REMEASURED_ON ? resolve(HERO) : [];
+  const escape = (text: string) => text.replace(/&/g, '&amp;').replace(/'/g, '&#x27;');
+  if (natural.length) {
+    const kept = module.TILE_FIGURES.filter(tile => HERO_RELEASE_TILES.includes(tile.key));
+    assert.deepEqual(heroTiles, [...natural.map(item => [`remeasured.${item.chart.id}.${item.group.key}`, item.figure.label]), ...kept.map(tile => [tile.key, tile.label])]);
+    // The line calls the kept tiles RigMark, and every hero tile ran on the default set.
+    assert.ok(kept.every(tile => tile.key.startsWith('rigmark.') && tile.label.includes('(RigMark)') && !tile.weights));
+    assert.ok(!hero.includes('glm-tile-weights'), 'a hero tile names other weights');
+    for (const item of natural) {
+      assert.ok(hero.includes(`<dd class="glm-tile-value">${item.figure.value}<small>${item.figure.unit}</small></dd>`), `the hero does not show ${item.figure.value}`);
+      assert.ok(item.smallPrint && hero.includes(escape(item.smallPrint)), `the hero's ${item.figure.label} tile is shown without its label`);
+    }
+    assert.ok(hero.includes('<p class="glm-tiles-line">base weights + draft model · '), 'the hero\'s line does not name its weights');
+    assert.ok(!hero.includes(row['V-D']) && !hero.includes(row['O-D']) && !hero.includes(row.v1_8_4), 'the hero still shows the RigMark prefill tile');
+  } else {
+    assert.deepEqual(heroTiles, module.TILE_FIGURES.map(tile => [tile.key, tile.label]));
+    assert.ok(hero.includes(`<dd class="glm-tile-value">${facts.result_sets['O-D'].metrics.decode_short_tok_s.prose}<small>`), 'the hero\'s prose tile does not show the O-D figure');
+    assert.ok(hero.includes(`<dd class="glm-tile-weights">${WEIGHTS}</dd>`), 'the hero\'s prose tile does not name its weights');
+    assert.ok(hero.includes(`<dd class="glm-tile-value">${row['V-D']}<small>${row.unit}</small></dd>`), `the hero's RigMark tile does not show ${row['V-D']}`);
+    assert.ok(!hero.includes(row['O-D']) && !hero.includes(row.v1_8_4), 'a hero tile shows another RigMark column');
+    assert.ok(hero.includes(`<p class="glm-tiles-line">${facts.site_card_footer_public}</p>`), 'the hero\'s line is not the release\'s');
+  }
 });
 
 test('a RigMark tile is dropped while RigMark is not published, or when it reads another column than the default set\'s', () => {

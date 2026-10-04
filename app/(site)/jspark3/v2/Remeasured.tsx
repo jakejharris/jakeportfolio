@@ -1,7 +1,7 @@
 import React from 'react';
-import { Bar, axisEnd, direction, type Series } from './FactsCharts';
-import { amount } from '../glm-facts';
-import { ANCHOR, CHARTS, DATE, LEAD, PLACEHOLDER, type RemeasuredBar, type RemeasuredChart } from './remeasured-data';
+import { Bar, Legend, axisEnd, direction, type Series } from './FactsCharts';
+import { SETS, amount, type Cell, type ResultSet } from '../glm-facts';
+import { ANCHOR, CHARTS, DATE, LEAD, MEASURED_SET, PLACEHOLDER, SET_CHARTS, type LeadFigure, type RemeasuredBar, type RemeasuredChart, type SetRow } from './remeasured-data';
 
 /** The section ships once the placeholders are replaced; until then it shows only in a local preview. */
 export const remeasuredShown = (placeholder: boolean, preview: string | undefined) => !placeholder || preview === '1';
@@ -13,7 +13,25 @@ export function publishable(charts: RemeasuredChart[]): RemeasuredChart[] {
     .filter(chart => chart.groups.length);
 }
 
-const date = new Date(`${DATE}T12:00:00Z`).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
+/** Whether the section, and the hero figures it gives, show on this build. */
+export const REMEASURED_ON = remeasuredShown(PLACEHOLDER, process.env.JSPARK3_REMEASURED_PREVIEW);
+
+export const REMEASURED_DATE = new Date(`${DATE}T12:00:00Z`).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
+
+/**
+ * Lead and hero figures with the group they come from, its label, and either the figure's own line or the
+ * group's condition. The group's footnotes go with its condition, never without it. A figure shows only while
+ * its group is drawn.
+ */
+export function resolve(figures: LeadFigure[], charts: RemeasuredChart[] = publishable(CHARTS)) {
+  return figures.flatMap(figure => {
+    const chart = charts.find(item => item.id === figure.chart);
+    const group = chart?.groups.find(item => item.key === figure.group);
+    if (!chart || !group) return [];
+    const own = figure.line !== undefined;
+    return [{ figure, chart, group, line: own ? figure.line : group.condition, notes: own ? undefined : group.notes, smallPrint: group.smallPrint ?? chart.smallPrint }];
+  });
+}
 
 const series = (bar: RemeasuredBar): Series => ({ key: bar.name, name: bar.name, tone: bar.tone, cell: { state: PLACEHOLDER ? 'pending' : 'value', slot: { text: bar.value, pending: PLACEHOLDER } } });
 
@@ -49,40 +67,75 @@ function RemeasuredFigure({ chart }: { chart: RemeasuredChart }) {
  * condition (or its own line), its label and its footnote.
  */
 function Lead({ charts }: { charts: RemeasuredChart[] }) {
-  const figures = LEAD.flatMap(lead => {
-    const chart = charts.find(item => item.id === lead.chart);
-    const group = chart?.groups.find(item => item.key === lead.group);
-    return chart && group ? [{ lead, chart, group }] : [];
-  });
+  const figures = resolve(LEAD, charts);
   if (!figures.length) return null;
   return <div className="glm2-lead">
-    {figures.map(({ lead, chart, group }) => {
-      const line = lead.line ?? group.condition;
-      const smallPrint = group.smallPrint ?? chart.smallPrint;
+    {figures.map(({ figure: lead, chart, group, line, notes, smallPrint }) => {
       return <div key={lead.label} className="glm-figure" data-lead={`${chart.id}.${group.key}`}>
         <p className="glm-label">{lead.label}</p>
         <p className="glm-big glm-big-band"><span>{PLACEHOLDER ? <span className="jspark-ph">{lead.value}</span> : lead.value}</span> <small>{lead.unit}</small></p>
         {line ? <p className="glm-vs">{line}</p> : null}
         {smallPrint ? <p className="glm2-lead-print"><SmallPrint text={smallPrint} /></p> : null}
-        {group.notes?.map(note => <p key={note} className="glm2-lead-print">{note}</p>)}
+        {notes?.map(note => <p key={note} className="glm2-lead-print">{note}</p>)}
       </div>;
     })}
   </div>;
 }
 
+const NOT_YET: Cell = { state: 'absent', slot: { text: 'Not yet re-measured', pending: false } };
+
+/** A row's cell for one result set: the band's figure for the set the table measured, else one dropped in for that set. */
+function setCell(row: SetRow, set: ResultSet, charts: RemeasuredChart[]): Cell {
+  const own = set.id === MEASURED_SET
+    ? charts.find(chart => chart.id === row.from.chart)?.groups.find(group => group.key === row.from.group)?.bars.find(bar => bar.name === row.from.bar)
+    : row.sets?.[set.id];
+  return own?.screen === 'PUBLISHABLE' ? { state: PLACEHOLDER ? 'pending' : 'value', slot: { text: own.value, pending: PLACEHOLDER } } : NOT_YET;
+}
+
 /**
- * The re-measurement of 2026-10-03, after the release's results and apart from them: what one user feels,
- * as reply speed and the wait for the first token after a long prompt, then one prose figure beside v1.8.0's.
+ * Tonight's figures as rows of "Every measured v2.0.1 set": one bar per set, each row dated and carrying the
+ * table's label. A set not yet re-measured says so, and a row with nothing to draw is left out.
+ */
+export function RemeasuredSetChart({ id }: { id: string }) {
+  const data = SET_CHARTS.find(item => item.id === id);
+  const charts = publishable(CHARTS);
+  if (!REMEASURED_ON || !data) return null;
+  const rows = data.rows.map(row => {
+    const chart = charts.find(item => item.id === row.from.chart);
+    const group = chart?.groups.find(item => item.key === row.from.group);
+    return { row, cells: SETS.map(set => ({ set, cell: setCell(row, set, charts) })), smallPrint: group?.smallPrint ?? chart?.smallPrint };
+  }).filter(item => item.cells.some(({ cell }) => cell.state !== 'absent'));
+  if (!rows.length) return null;
+  const figure = `${ANCHOR}-${data.id}`;
+  const end = axisEnd(rows.flatMap(item => item.cells.map(({ cell }) => (cell.state === 'value' ? amount(cell.slot.text) : null))));
+  return <figure className="glm-chart glm2-chart glm2-set-rows" id={figure} aria-labelledby={`${figure}-title`} data-ruler={data.ruler}>
+    <p id={`${figure}-title`} className="glm-label">{data.title} · {data.unit}, {direction(data.better)}</p>
+    <Legend sets={SETS} />
+    <div className="glm-groups">
+      {rows.map(({ row, cells, smallPrint }) => <div className="glm-group" key={row.key} role="group" aria-label={row.label}>
+        <p className="glm-group-label"><strong>{row.label}</strong><span>measured {DATE}</span></p>
+        {cells.map(({ set, cell }) => <Bar key={set.id} series={{ key: set.id, name: set.short, tone: set.tone, cell }} end={end} unit={data.unit} />)}
+        {smallPrint ? <p className="glm2-compare-note"><SmallPrint text={smallPrint} /></p> : null}
+      </div>)}
+    </div>
+    <p className="glm2-chart-methods">{data.methods}</p>
+  </figure>;
+}
+
+/**
+ * The re-measurement of 2026-10-03, right under the hero and apart from the release's results below it: what
+ * one user feels (reply speed, the wait for the first token after a long prompt), what the disk cache saves on
+ * a long session, then one prose figure beside v1.8.0's.
  */
 export default function Remeasured() {
   const charts = publishable(CHARTS);
-  if (!remeasuredShown(PLACEHOLDER, process.env.JSPARK3_REMEASURED_PREVIEW) || !charts.length) return null;
+  if (!REMEASURED_ON || !charts.length) return null;
   return <section className="glm-results glm2-remeasured" id={ANCHOR} aria-labelledby={`${ANCHOR}-title`}>
     <div className="glm-shell">
       <div className="glm-section-heading">
-        <h2 id={`${ANCHOR}-title`}>Re-measured on {date}.</h2>
-        <p className="glm-band-line">One request at a time: how fast a reply streams, and how soon a long prompt gets an answer.</p>
-        <p>Every figure is JSPARK3 v2.0.1 with base weights and the <a href="#draft-model">draft model</a>, on three DGX Sparks. Without the draft model, which is licensed for non-commercial use, these figures do not apply. These runs use their own measurements, so they sit apart from the release&apos;s figures above, which are unchanged. Each chart is drawn to its own scale from zero.</p>
+        <h2 id={`${ANCHOR}-title`}>Re-measured on {REMEASURED_DATE}.</h2>
+        <p className="glm-band-line">One request at a time: how fast a reply streams, how soon a long prompt gets an answer, and what the disk cache saves on a long session.</p>
+        <p>Every figure is JSPARK3 v2.0.1 with base weights and the <a href="#draft-model">draft model</a>, on three DGX Sparks. Without the draft model, which is licensed for non-commercial use, these figures do not apply. These runs use their own measurements, so they sit apart from the release&apos;s figures below, which are unchanged. Each chart is drawn to its own scale from zero.</p>
       </div>
       <Lead charts={charts} />
       {charts.map(chart => <RemeasuredFigure key={chart.id} chart={chart} />)}
