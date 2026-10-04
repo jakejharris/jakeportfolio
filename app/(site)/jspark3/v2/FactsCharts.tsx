@@ -36,7 +36,7 @@ export function Bar({ series, end, unit }: { series: Series; end: number | null;
 }
 
 /** Beside v1.8.4, each set names this release, so no bar reads as the earlier release's. */
-function Legend({ sets, before = false }: { sets: ResultSet[]; before?: boolean }) {
+export function Legend({ sets, before = false }: { sets: ResultSet[]; before?: boolean }) {
   return <ul className="glm-legend">
     {before ? <li className={TONE.before}><i aria-hidden="true" />v1.8.4 on vLLM, the baseline</li> : null}
     {sets.map(set => <li key={set.id} className={TONE[set.tone]}><i aria-hidden="true" />{before ? <><Fact slot={VERSION} />, </> : null}<Fact slot={set.label} /></li>)}

@@ -3,7 +3,8 @@ import ClusterIllustration from './ClusterIllustration';
 import FoldAnchors from './FoldAnchors';
 import LegacyFragments from '../LegacyFragments';
 import ProjectHeader from './ProjectHeader';
-import Remeasured from './Remeasured';
+import Remeasured, { REMEASURED_DATE, REMEASURED_ON, RemeasuredSetChart, resolve } from './Remeasured';
+import { ANCHOR as REMEASURED, HERO, HERO_RELEASE_TILES } from './remeasured-data';
 import { ColdStartChart, CompareFigure, ConcurrencyChart, DecodeChart, Relbench, RelbenchNote, RigmarkBlocks, SetFigure } from './FactsCharts';
 import { Fact, FactLink } from './Fact';
 import {
@@ -27,21 +28,31 @@ const SINGLE_FIGURES = [
 ];
 
 /**
- * The release's tiles, as the hub and the share card show them (glm-facts.ts TILE_FIGURES), and what they were
- * measured with. A figure from other weights names them, keyed in their series color; a concurrency figure carries
- * its condition.
+ * The hero's tiles. They lead with the re-measured figures, each captioned with its own line and its label, never
+ * its group's condition, whose timings need their footnotes (remeasured-data.ts HERO), then keep the release tiles HERO_RELEASE_TILES names. Without the re-measurement they are the release's
+ * tiles, as the hub and the share card show them (glm-facts.ts TILE_FIGURES), with the release's line. A release
+ * figure from other weights names them, keyed in their series color; a concurrency figure carries its condition.
  */
 function HeroTiles() {
+  const natural = REMEASURED_ON ? resolve(HERO) : [];
+  const release = natural.length ? TILE_FIGURES.filter(tile => HERO_RELEASE_TILES.includes(tile.key)) : TILE_FIGURES;
   return <div className="glm-tiles">
     <dl className="glm-tiles-grid">
-      {TILE_FIGURES.map(({ key, label, unit, set, value, weights, caption }) => <div key={key} className="glm-tile" data-metric-id={key} data-tone={weights ? set?.tone : undefined}>
+      {natural.map(({ figure, chart, group, smallPrint }) => <div key={figure.label} className="glm-tile" data-metric-id={`remeasured.${chart.id}.${group.key}`}>
+        <dt>{figure.label}</dt>
+        <dd className="glm-tile-value">{figure.value}<small>{figure.unit}</small></dd>
+        <dd className="glm-tile-condition">{[figure.line, smallPrint].filter(Boolean).join('. ')}</dd>
+      </div>)}
+      {release.map(({ key, label, unit, set, value, weights, caption }) => <div key={key} className="glm-tile" data-metric-id={key} data-tone={weights ? set?.tone : undefined}>
         <dt>{label}</dt>
         <dd className="glm-tile-value"><Fact slot={value.slot} />{unit && value.state !== 'absent' ? <small>{unit}</small> : null}</dd>
         {weights ? <dd className="glm-tile-weights"><Fact slot={weights} /></dd> : null}
         {caption ? <dd className="glm-tile-condition" data-condition-of={key}><Fact slot={caption} /></dd> : null}
       </div>)}
     </dl>
-    {TILES_LINE ? <p className="glm-tiles-line"><Fact slot={TILES_LINE} /><Relbench /></p> : null}
+    {natural.length
+      ? <p className="glm-tiles-line">base weights + draft model · {release.length ? 'RigMark from the release; the rest ' : ''}<a href={`#${REMEASURED}`}>re-measured {REMEASURED_DATE} ↓</a></p>
+      : TILES_LINE ? <p className="glm-tiles-line"><Fact slot={TILES_LINE} /><Relbench /></p> : null}
   </div>;
 }
 
@@ -172,19 +183,17 @@ export default function GlmFactsPage() {
       </dl>
     </div>
 
-    <section className="glm-results" id="results" aria-labelledby="results-title">
+    {/* Tonight's re-measurement leads the results; the release's figures follow, with RigMark against v1.8.4 as the record. */}
+    <div id="results" className="glm-anchor">
+    <Remeasured />
+
+    <section className="glm-results" aria-labelledby="results-title">
       <div className="glm-shell">
         <div className="glm-section-heading">
           <h2 id="results-title"><Fact slot={VERSION} />, measured on our three Sparks.</h2>
           <p className="glm-band-line">Every figure names the weights it was measured with, and whether the draft model was on.</p>
           {CONDITIONS.all ? null : <p><Fact slot={SETS_CONDITIONS} /></p>}
         </div>
-        {RIGMARK_SHOWN ? <>
-          <h3 className="glm2-subhead" id="against-v184"><Fact slot={VERSION} /> against the v1.8.4 baseline</h3>
-          {RIGMARK === 'undecided' ? <p className="glm2-decision"><span className="jspark-ph jspark-tbd">Shown only if RigMark is published with this release</span></p> : null}
-          <CompareFigure />
-          <RigmarkBlocks />
-        </> : null}
         <h3 className="glm2-subhead" id="sets">Every measured <Fact slot={VERSION} /> set</h3>
         <div className="glm2-pair">
           <ColdStartChart />
@@ -194,9 +203,13 @@ export default function GlmFactsPage() {
           <DecodeChart />
           <div className="glm2-figcol">{SINGLE_FIGURES.map(item => <SetFigure key={item.metric} {...item} />)}</div>
         </div>
+        {REMEASURED_ON ? <div className="glm2-pair">
+          <RemeasuredSetChart id="sets-reply" />
+          <RemeasuredSetChart id="sets-long-prompt" />
+        </div> : null}
         <RelbenchNote />
         {CONDITIONS.all
-          ? <div className="glm2-method glm2-method-all"><p className="glm-label">How every figure was measured</p><p><Fact slot={CONDITIONS.all} /></p>{CONDITIONS.results ? <p><Fact slot={CONDITIONS.results} /></p> : null}{PROMPT_MIX_LINE ? <p><Fact slot={PROMPT_MIX_LINE} /></p> : null}</div>
+          ? <div className="glm2-method glm2-method-all"><p className="glm-label">{REMEASURED_ON ? 'How the release-day figures were measured' : 'How every figure was measured'}</p><p><Fact slot={CONDITIONS.all} /></p>{CONDITIONS.results ? <p><Fact slot={CONDITIONS.results} /></p> : null}{PROMPT_MIX_LINE ? <p><Fact slot={PROMPT_MIX_LINE} /></p> : null}</div>
           : <dl className="glm2-method">
             <div><dt>Cold first token</dt><dd><Fact slot={CONDITIONS.cold} /></dd></div>
             <div><dt>Decode</dt><dd><Fact slot={CONDITIONS.decode} /></dd></div>
@@ -204,6 +217,12 @@ export default function GlmFactsPage() {
             <div><dt>Stall</dt><dd><Fact slot={CONDITIONS.stall} /></dd></div>
             <div><dt>Draft acceptance</dt><dd><Fact slot={CONDITIONS.acceptance} /></dd></div>
           </dl>}
+        {RIGMARK_SHOWN ? <>
+          <h3 className="glm2-subhead" id="against-v184"><Fact slot={VERSION} /> against the v1.8.4 baseline</h3>
+          {RIGMARK === 'undecided' ? <p className="glm2-decision"><span className="jspark-ph jspark-tbd">Shown only if RigMark is published with this release</span></p> : null}
+          <CompareFigure />
+          <RigmarkBlocks />
+        </> : null}
         <p className="glm-evidence-link">
           <FactLink href={LINKS.results}>Results file ↗</FactLink>
           {LINKS.measurements ? <FactLink href={LINKS.measurements}>Measurements ↗</FactLink> : null}
@@ -213,8 +232,7 @@ export default function GlmFactsPage() {
         </p>
       </div>
     </section>
-
-    <Remeasured />
+    </div>
 
     <section className="glm-shell glm2-section" id="weights" aria-labelledby="weights-title">
       <h2 id="weights-title">Two sets of weights, chosen at install.</h2>

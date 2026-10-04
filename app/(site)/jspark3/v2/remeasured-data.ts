@@ -9,8 +9,8 @@
  * read from glm-v180.json as its results page shows it. The pair's labels say how the two runs differ, and no
  * speedup is computed.
  *
- * First-token figures for rows 2 and 3 are left off: they were reasoning, and the table gives no visible-text
- * partner for them (the release's partner rule).
+ * Row 2's first streamed token was reasoning, so it never shows without the time its answer text began (the
+ * release's partner rule).
  *
  * While PLACEHOLDER is true the section stays off in production; JSPARK3_REMEASURED_PREVIEW=1 shows it locally.
  */
@@ -20,16 +20,14 @@ import v180 from '../glm-v180.json';
 /** A cell's mark in the table after the repetition screen. */
 export type Screen = 'PUBLISHABLE' | 'DIAGNOSTIC' | 'HOLD';
 
-export type RemeasuredBar = {
+/** A figure as its source prints it, with its screen mark and its receipt (never rendered). */
+export type RemeasuredCell = { value: string; screen: Screen; source: string };
+
+export type RemeasuredBar = RemeasuredCell & {
   /** What the bar measured, beside it. */
   name: string;
   /** The page's series colors: the release gold, or the earlier-release grey for v1.8.0. */
   tone: 'default' | 'before';
-  /** The figure as its source prints it. */
-  value: string;
-  screen: Screen;
-  /** Where the figure comes from, kept as the receipt: the table's row ("row 2"), or the published file and key. Never rendered. */
-  source: string;
 };
 
 export type RemeasuredGroup = {
@@ -85,7 +83,9 @@ export const CHARTS: RemeasuredChart[] = [
       {
         key: 'natural-code',
         label: 'A complete program',
+        condition: 'first streamed reasoning 0.26 s; first answer text by 0.62 s',
         smallPrint: 'One request asked for a complete program, natural length (5,543 tokens), user-visible rate including first token',
+        notes: ['Answer-text time is a collector upper bound.'],
         bars: [{ name: 'Code', tone: 'default', value: '92.5', screen: 'PUBLISHABLE', source: 'row 2' }],
       },
       {
@@ -131,22 +131,22 @@ export const CHARTS: RemeasuredChart[] = [
       },
     ],
   },
-  // Held: which metric 2.3 s and 56.7 s are is still being pinned, and the title waits on it.
   {
     id: 'resume',
     ruler: 'resume',
-    title: 'Returning to a 112K-token session',
+    title: 'Returning to a ~112K-token session: server prefill 2.3 s with disk cache vs 56.7 s fresh',
     unit: 's',
     better: 'lower',
-    smallPrint: 'Returning to a 112K-token session after a few seconds idle between turns; back-to-back traffic from other large sessions can prevent the disk save (known issue 11)',
-    methods: 'The session\'s saved state is read back from each host\'s disk; cold, the whole prompt is read again.',
+    smallPrint: 'Separate requests in one session chain: 112,728 / 112,743 prompt tokens; the disk request reused 112,156 tokens. Different system prefix and output limit, so an illustrative disk-hit vs fresh-prefill observation, not an identical-request A/B. Disk save needs idle time; back-to-back large-session traffic can prevent it (known issue 11)',
+    methods: 'Server prefill is the server\'s own time to process the prompt before it starts the reply.',
     groups: [
       {
         key: '112k',
-        label: '112K-token session',
+        label: 'Server prefill',
+        notes: ['Seen from the client, the first reasoning arrived at 2.5 s with the disk cache and at 56.9 s fresh.'],
         bars: [
-          { name: 'From disk', tone: 'default', value: '2.3', screen: 'HOLD', source: 'row 7' },
-          { name: 'Cold', tone: 'before', value: '56.7', screen: 'HOLD', source: 'row 7' },
+          { name: 'Disk cache', tone: 'default', value: '2.3', screen: 'PUBLISHABLE', source: 'row 7' },
+          { name: 'Fresh', tone: 'default', value: '56.7', screen: 'PUBLISHABLE', source: 'row 7' },
         ],
       },
     ],
@@ -204,4 +204,54 @@ export const LEAD: LeadFigure[] = [
   { chart: 'reply-one', group: 'natural-code', label: 'A complete program, one request', value: '92.5', unit: 'tok/s', line: 'user-visible, from send to the last token' },
   { chart: 'reply-one', group: 'short', label: 'First token on a short reply', value: '0.15', unit: 's', line: 'code; 0.13 s for prose' },
   { chart: 'long-prompt', group: '32k', label: 'First token after a 32K-token prompt', value: '15.3', unit: 's' },
+];
+
+/**
+ * The GLM page's hero tiles: the re-measured figures lead, each with its group's label as its caption. The
+ * release's tiles named in HERO_RELEASE_TILES follow, until a re-measured figure replaces them.
+ */
+export const HERO: LeadFigure[] = [
+  { chart: 'reply-one', group: 'natural-code', label: 'Code, one request', value: '92.5', unit: 'tok/s' },
+  { chart: 'reply-one', group: 'long-prose', label: 'Prose, one request', value: '73.6', unit: 'tok/s' },
+  { chart: 'long-prompt', group: '32k', label: 'Reading a 32K-token prompt', value: '2,149', unit: 'tok/s', line: 'first token at 15.3 s' },
+];
+export const HERO_RELEASE_TILES = ['rigmark.c4'];
+
+/**
+ * Tonight's figures as rows of "Every measured v2.0.1 set", one chart per measurement. The table measured base
+ * weights + draft model (MEASURED_SET), so each row takes that set's figure from the band chart it names. A
+ * figure for another set drops in under `sets`, keyed by its result-set id, with nothing else to change; until
+ * then that set reads "Not yet re-measured". A row with nothing to draw is left out.
+ */
+export type SetRow = { key: string; label: string; from: { chart: string; group: string; bar: string }; sets?: Record<string, RemeasuredCell> };
+export type RemeasuredSetChart = Pick<RemeasuredChart, 'id' | 'ruler' | 'title' | 'unit' | 'better' | 'methods'> & { rows: SetRow[] };
+export const MEASURED_SET = 'V-D';
+
+export const SET_CHARTS: RemeasuredSetChart[] = [
+  {
+    id: 'sets-reply',
+    ruler: 'user-visible',
+    title: 'Reply speed, one request at a time, user-visible',
+    unit: 'tok/s',
+    better: 'higher',
+    methods: 'User-visible rate: reply tokens over the time from sending the request to its last token, so the wait for the first token counts.',
+    rows: [
+      { key: 'natural-code', label: 'A complete program, natural length', from: { chart: 'reply-one', group: 'natural-code', bar: 'Code' } },
+      { key: 'short-code', label: 'Code, forced to 128 tokens', from: { chart: 'reply-one', group: 'short', bar: 'Code' } },
+      { key: 'short-prose', label: 'Prose, forced to 128 tokens', from: { chart: 'reply-one', group: 'short', bar: 'Prose' } },
+      { key: 'long-prose', label: 'Prose, forced to 2,000 tokens', from: { chart: 'reply-one', group: 'long-prose', bar: 'Prose' } },
+    ],
+  },
+  {
+    id: 'sets-long-prompt',
+    ruler: 'first-token',
+    title: 'Time to first token after a long prompt, nothing reused from cache',
+    unit: 's',
+    better: 'lower',
+    methods: 'From sending the request to the first token streamed back, with none of the prompt reused from cache.',
+    rows: [
+      { key: '32k', label: '32K-token prompt', from: { chart: 'long-prompt', group: '32k', bar: 'First token' } },
+      { key: '64k', label: '64K-token prompt', from: { chart: 'long-prompt', group: '64k', bar: 'First token' } },
+    ],
+  },
 ];
