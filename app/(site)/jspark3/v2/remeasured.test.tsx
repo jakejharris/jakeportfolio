@@ -139,6 +139,8 @@ test('the round-once audit: withdrawn figures stay off, timings say fresh or cac
   const pair = [...copy.matchAll(/(?:49\.1|67\.9) tok\/s/g)];
   assert.ok(pair.length >= 2, 'the one-stream pair is not shown');
   for (const match of pair) assert.ok(copy.slice(match.index, match.index + 400).includes(ladder), `${match[0]} shows without its prompt cache`);
+  // Each side's figure is a chosen run, and the pair says how: v1.8.0's the better of 2, v2.0.1's the best of 3.
+  for (const match of pair) for (const chosen of ['better of 2 runs, unscreened for repetition', 'v2.0.1: best of 3 runs.']) assert.ok(copy.slice(match.index, match.index + 700).includes(chosen), `${match[0]} shows without "${chosen}"`);
   for (const figure of ['138.0', '87.4', '147.9', '102.5', '156.3', '113.1', '205.0', '142.4']) assert.ok(!copy.includes(figure), `row 8's ${figure} renders`);
 });
 
