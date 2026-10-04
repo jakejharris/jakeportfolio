@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import test from 'node:test';
@@ -96,7 +97,9 @@ test('withdrawn figures stay off, and the short replies\' first token is the fre
   for (const figure of ['73.6', '92.9', '0.15 s', '0.13 s']) assert.ok(!copy.includes(figure), `${figure} renders`);
   // The cached-prompt time never shows alone, and the short replies' first token always says it is a fresh prompt.
   const after = (pattern: RegExp, length: number) => [...copy.matchAll(pattern)].map(match => copy.slice(match.index, match.index + length));
-  for (const line of after(/0\.07-0\.08 s/g, 45)) assert.match(line, /^0\.07-0\.08 s when the prompt is already cached/, line);
+  // The range keeps its non-breaking hyphen, so it never wraps.
+  assert.ok(!copy.includes('0.07-0.08'), 'the cached-prompt range can wrap at its hyphen');
+  for (const line of after(/0\.07\u20110\.08 s/g, 45)) assert.match(line, /^0\.07\u20110\.08 s when the prompt is already cached/, line);
   const fresh = after(/0\.31 s/g, 65);
   assert.ok(fresh.length, 'the short replies\' first token is not shown');
   for (const line of fresh) assert.match(line, /fresh prompt/, line);
@@ -164,7 +167,7 @@ test('the hub card and the share card show the GLM page\'s hero: the same figure
   const { HERO_FIGURES, HERO_LINE, HERO_SIGNATURE, HERO_TILES, REMEASURED_ON, SHARE_IMAGE, resolve } = await import('./remeasured-figures');
   const { HERO, HERO_RELEASE_TILES } = await import('./remeasured-data');
   const { SOCIAL_IMAGE, TILE_FIGURES } = await import('../glm-facts');
-  const share = (await import('../glm-share.json')).default as { figures?: string[] };
+  const share = (await import('../glm-share.json')).default as { figures?: string[]; figures_sha256?: string };
   if (!REMEASURED_ON) return;
   // The hero leads with the re-measured figures, each from its group, then keeps only the RigMark tiles named.
   assert.deepEqual(HERO_FIGURES.map(figure => figure.value), resolve(HERO).map(item => item.figure.value));
@@ -191,7 +194,10 @@ test('the hub card and the share card show the GLM page\'s hero: the same figure
   if (prefill) for (const html of [hero, card]) for (const column of ['V-D', 'O-D', 'v1_8_4']) if (prefill[column]) assert.ok(!html.includes(`>${prefill[column]}<`), `${prefill[column]} still shows`);
   // The share card was rendered with these figures, so the page uses it; a card with other figures falls back.
   assert.deepEqual(share.figures, HERO_SIGNATURE, 'the share card shows other figures than the hero; rerun scripts/render-glm-share.mjs');
-  assert.ok(SOCIAL_IMAGE && SHARE_IMAGE === SOCIAL_IMAGE, 'the page does not use the share card');
+  // Its address carries the figures' hash, so a link preview cached with other figures fetches the new card.
+  const figures = createHash('sha256').update(JSON.stringify(HERO_SIGNATURE)).digest('hex');
+  assert.equal(share.figures_sha256, figures, 'the share card records other figures; rerun scripts/render-glm-share.mjs');
+  assert.ok(SOCIAL_IMAGE && SHARE_IMAGE === `${SOCIAL_IMAGE}?v=${figures.slice(0, 12)}`, 'the page does not use the share card at its versioned address');
 });
 
 test('known issues carry the numbers the copy cites: each is numbered and anchored, and every citation names one', async () => {

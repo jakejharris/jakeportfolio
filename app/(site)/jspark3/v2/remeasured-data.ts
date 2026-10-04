@@ -14,7 +14,7 @@
  *
  * Each figure is rounded once, from the receipt's unrounded value. Row 5's first token is the fresh-prompt time;
  * the cached-prompt time shows only beside it, and its earlier figure, which averaged a cold run with cached ones,
- * is withdrawn.
+ * is withdrawn. Its range takes a non-breaking hyphen (\u2011), so it never wraps at the hyphen.
  *
  * While PLACEHOLDER is true the section stays off in production; JSPARK3_REMEASURED_PREVIEW=1 shows it locally.
  */
@@ -95,7 +95,7 @@ export const CHARTS: RemeasuredChart[] = [
       {
         key: 'short',
         label: 'Short replies',
-        condition: 'first token 0.31 s (code) / 0.25 s (prose) on a fresh prompt; 0.07-0.08 s when the prompt is already cached',
+        condition: 'first token 0.31 s (code) / 0.25 s (prose) on a fresh prompt; 0.07\u20110.08 s when the prompt is already cached',
         smallPrint: 'Replies forced to 128 tokens (the llama-bench tg128 length)',
         bars: [
           { name: 'Code', tone: 'default', value: '102.7', screen: 'PUBLISHABLE', source: 'row 5' },
@@ -206,7 +206,7 @@ export const CHARTS: RemeasuredChart[] = [
 /** Above the charts: what one user feels first. */
 export const LEAD: LeadFigure[] = [
   { chart: 'reply-one', group: 'natural-code', label: 'A complete program, one request', value: '92.5', unit: 'tok/s', line: 'user-visible, from send to the last token' },
-  { chart: 'reply-one', group: 'short', label: 'First token on a short reply', value: '0.31', unit: 's', line: 'code, on a fresh prompt; 0.25 s for prose; 0.07-0.08 s when the prompt is already cached' },
+  { chart: 'reply-one', group: 'short', label: 'First token on a short reply', value: '0.31', unit: 's', line: 'code, on a fresh prompt; 0.25 s for prose; 0.07\u20110.08 s when the prompt is already cached' },
   { chart: 'long-prompt', group: '32k', label: 'First token after a 32K-token prompt', value: '15.3', unit: 's' },
 ];
 

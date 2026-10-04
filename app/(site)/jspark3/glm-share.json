@@ -6,5 +6,6 @@
     "Prose, one request: 73.5 tok/s",
     "Reading a 32K-token prompt: 2,149 tok/s",
     "Four at once, end to end (RigMark): 113.4 tok/s"
-  ]
+  ],
+  "figures_sha256": "34d285d07e75dd195250d7e0b1ad4b21e5f2f3e52bd05cd249d0328cbececc48"
 }

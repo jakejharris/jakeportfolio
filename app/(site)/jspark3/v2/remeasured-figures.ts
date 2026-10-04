@@ -73,6 +73,10 @@ export const HERO_SUMMARY: string | null = HERO_MEASURED ? `${HERO_SIGNATURE.joi
 
 /**
  * The share card, while it was rendered from these facts (glm-facts.ts SOCIAL_IMAGE) and shows these hero
- * figures: a card from an earlier hero never stands in for the page's numbers.
+ * figures: a card from an earlier hero never stands in for the page's numbers. Its address carries the figures'
+ * hash, so a link preview cached with other figures fetches the new card.
  */
-export const SHARE_IMAGE: string | null = SOCIAL_IMAGE && JSON.stringify((share as { figures?: string[] }).figures ?? null) === JSON.stringify(HERO_SIGNATURE) ? SOCIAL_IMAGE : null;
+const card = share as { figures?: string[]; figures_sha256?: string };
+export const SHARE_IMAGE: string | null = SOCIAL_IMAGE && card.figures_sha256 && JSON.stringify(card.figures ?? null) === JSON.stringify(HERO_SIGNATURE)
+  ? `${SOCIAL_IMAGE}?v=${card.figures_sha256.slice(0, 12)}`
+  : null;

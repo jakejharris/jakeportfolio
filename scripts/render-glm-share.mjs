@@ -7,7 +7,9 @@
 // latest card shows them (remeasured-figures.ts): each with its label, and the line saying what they were
 // measured with. It records the image with the facts' sha256 and the figures in glm-share.json. The page
 // uses the card only while both match, so a later sync or a new hero falls back to the hub card until this
-// reruns. It refuses while the facts are not final or a figure is missing.
+// reruns. The figures' sha256 goes in the image's address, so a link preview cached with other figures is
+// fetched anew. It refuses while the facts are not final or a figure is missing.
+import { createHash } from 'node:crypto';
 import { writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { chromePath, loadPlaywright } from './social/browser.mjs';
@@ -58,5 +60,6 @@ if (fitted === null) { await browser.close(); throw new Error('the card copy doe
 await page.screenshot({ path: join(root, 'public', image), clip: { x: 0, y: 0, width: 1200, height: 630 } });
 await browser.close();
 
-writeFileSync(join(root, 'app/(site)/jspark3/glm-share.json'), `${JSON.stringify({ image, facts_sha256: SOURCE.sha256, figures: HERO_SIGNATURE }, null, 2)}\n`);
+const figures_sha256 = createHash('sha256').update(JSON.stringify(HERO_SIGNATURE)).digest('hex');
+writeFileSync(join(root, 'app/(site)/jspark3/glm-share.json'), `${JSON.stringify({ image, facts_sha256: SOURCE.sha256, figures: HERO_SIGNATURE, figures_sha256 }, null, 2)}\n`);
 console.log(JSON.stringify({ image, facts_sha256: SOURCE.sha256, tiles: cells.map(item => item.key), figure_scale: scale * fitted }));
