@@ -264,9 +264,11 @@ export const HUB_COPY = {
 /**
  * Published releases before the latest one, newest first. The latest GLM release comes from the release
  * facts (glm-facts.ts); the internal builds row follows v1.8.0. v1.8.x ran on vLLM, the engine v2.0.1 replaced.
+ * Every date is Chicago time, from the release's published time (GitHub's published_at; Tempo's first Hugging
+ * Face commit): v1.8.4 went out at 03:47 UTC on Sep 29, which is the evening of Sep 28 in Chicago.
  */
 export const RELEASE_HISTORY = [
-  { version: 'v1.8.4', what: 'GLM-5.3 Flash · vLLM', when: 'Sep 29', href: '/jspark3/glm/v1.8.4' },
+  { version: 'v1.8.4', what: 'GLM-5.3 Flash · vLLM', when: 'Sep 28', href: '/jspark3/glm/v1.8.4' },
   { version: 'v1.8.0', what: 'GLM-5.3 Flash · vLLM', when: 'Sep 27', href: '/jspark3/glm/v1.8.4#v180-results' },
   { version: 'Tempo', what: 'DeepSeek-V4.1 Flash', recipes: true, when: 'Sep 13', href: '/jspark3/deepseek/' },
   { version: 'v1.1 Cadence', what: 'GLM-5.3 Flash', when: 'Sep 7', href: '/jspark3/glm/v1.8.4#releases' },
