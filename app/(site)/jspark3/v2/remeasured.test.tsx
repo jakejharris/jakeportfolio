@@ -61,6 +61,13 @@ test('the rendered section keeps its rules: speeds after the first token say so,
   for (const chart of CHARTS) for (const group of chart.groups) for (const bar of group.bars) {
     if (bar.screen !== 'PUBLISHABLE' && !shown.has(bar.value)) assert.ok(!copy.includes(bar.value), `${chart.id}.${group.key} ${bar.name} (${bar.screen}) renders`);
   }
+  // A group with nothing drawn shows none of its lines either.
+  for (const chart of CHARTS) for (const group of chart.groups) {
+    if (group.bars.some(bar => bar.screen === 'PUBLISHABLE') || !group.condition) continue;
+    assert.ok(!copy.includes(group.condition), `${chart.id}.${group.key} condition renders without its figures`);
+  }
+  // No figure for several requests at once, anywhere in the section.
+  assert.ok(!/\b(?:eight|8)\b[^.]*\b(?:requests|users|agents|streams)\b|per request|at once/i.test(copy), 'a several-at-once figure renders');
   // A reply rate measured after the first token never shows without saying so (table row 6).
   for (const match of copy.matchAll(/streamed at [\d.,]+ tok\/s[^.;]*/g)) assert.match(match[0], /\(after the first token\)/, match[0]);
 });

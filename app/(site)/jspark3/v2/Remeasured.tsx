@@ -1,7 +1,7 @@
 import React from 'react';
 import { Bar, axisEnd, direction, type Series } from './FactsCharts';
 import { amount } from '../glm-facts';
-import { ANCHOR, CHARTS, DATE, LEAD, PLACEHOLDER, UNDER_LOAD, type RemeasuredBar, type RemeasuredChart } from './remeasured-data';
+import { ANCHOR, CHARTS, DATE, LEAD, PLACEHOLDER, type RemeasuredBar, type RemeasuredChart } from './remeasured-data';
 
 /** The section ships once the placeholders are replaced; until then it shows only in a local preview. */
 export const remeasuredShown = (placeholder: boolean, preview: string | undefined) => !placeholder || preview === '1';
@@ -68,28 +68,21 @@ function Lead({ charts }: { charts: RemeasuredChart[] }) {
 }
 
 /**
- * The re-measurement of 2026-10-03, after the release's results and apart from them: one user first (reply
- * speed, long prompts, a long session coming back), then several requests at once under their own heading.
+ * The re-measurement of 2026-10-03, after the release's results and apart from them: what one user feels,
+ * as reply speed and the wait for the first token after a long prompt.
  */
 export default function Remeasured() {
   const charts = publishable(CHARTS);
   if (!remeasuredShown(PLACEHOLDER, process.env.JSPARK3_REMEASURED_PREVIEW) || !charts.length) return null;
-  const one = charts.filter(chart => !UNDER_LOAD.has(chart.id));
-  const load = charts.filter(chart => UNDER_LOAD.has(chart.id));
   return <section className="glm-results glm2-remeasured" id={ANCHOR} aria-labelledby={`${ANCHOR}-title`}>
     <div className="glm-shell">
       <div className="glm-section-heading">
         <h2 id={`${ANCHOR}-title`}>Re-measured on {date}.</h2>
-        <p className="glm-band-line">One request at a time first: how fast a reply streams, and how soon a long prompt gets an answer.</p>
+        <p className="glm-band-line">One request at a time: how fast a reply streams, and how soon a long prompt gets an answer.</p>
         <p>Every figure is JSPARK3 v2.0.1 with base weights and the <a href="#draft-model">draft model</a>, on three DGX Sparks. Without the draft model, which is licensed for non-commercial use, these figures do not apply. These runs use their own measurements, so they sit apart from the release&apos;s figures above, which are unchanged. Each chart is drawn to its own scale from zero.</p>
       </div>
-      <Lead charts={one} />
-      {one.map(chart => <RemeasuredFigure key={chart.id} chart={chart} />)}
-      {load.length ? <>
-        <h3 className="glm2-subhead" id={`${ANCHOR}-load`}>Several requests at once</h3>
-        <p className="glm2-remeasured-note">Requests started together share the Sparks, so each one streams slower than a request on its own. This is not the same test as the release&apos;s eight-at-once figure above.</p>
-        {load.map(chart => <RemeasuredFigure key={chart.id} chart={chart} />)}
-      </> : null}
+      <Lead charts={charts} />
+      {charts.map(chart => <RemeasuredFigure key={chart.id} chart={chart} />)}
     </div>
   </section>;
 }

@@ -61,8 +61,6 @@ export type LeadFigure = { chart: string; group: string; label: string; value: s
 export const PLACEHOLDER = false;
 export const DATE = '2026-10-03';
 export const ANCHOR = 'remeasured-2026-10-03';
-/** What every figure ran on (table header). */
-export const SETUP = 'JSPARK3 v2.0.1, base weights + draft model, three DGX Sparks';
 
 export const CHARTS: RemeasuredChart[] = [
   {
@@ -142,6 +140,7 @@ export const CHARTS: RemeasuredChart[] = [
       },
     ],
   },
+  // Held: the site shows no figures for eight requests at once.
   {
     id: 'eight',
     ruler: 'combined',
@@ -155,14 +154,14 @@ export const CHARTS: RemeasuredChart[] = [
         label: 'Code, natural length',
         condition: '28.1 tok/s per request',
         smallPrint: '8 code requests started together, natural reply length, combined user-visible rate',
-        bars: [{ name: 'Combined', tone: 'default', value: '191.4', screen: 'PUBLISHABLE', row: '3' }],
+        bars: [{ name: 'Combined', tone: 'default', value: '191.4', screen: 'HOLD', row: '3' }],
       },
       {
         key: 'long-prose',
         label: 'Prose, 2,000 tokens each',
         condition: '17.5 tok/s per request',
         smallPrint: 'Replies forced to 2,000 tokens, thinking requested off',
-        bars: [{ name: 'Combined', tone: 'default', value: '133.3', screen: 'PUBLISHABLE', row: '4' }],
+        bars: [{ name: 'Combined', tone: 'default', value: '133.3', screen: 'HOLD', row: '4' }],
       },
     ],
   },
@@ -174,6 +173,3 @@ export const LEAD: LeadFigure[] = [
   { chart: 'reply-one', group: 'short', label: 'First token on a short reply', value: '0.15', unit: 's', line: 'code; 0.13 s for prose' },
   { chart: 'long-prompt', group: '32k', label: 'First token after a 32K-token prompt', value: '15.3', unit: 's' },
 ];
-
-/** Charts for one user lead; the eight-at-once chart follows under its own heading. */
-export const UNDER_LOAD = new Set(['eight']);
