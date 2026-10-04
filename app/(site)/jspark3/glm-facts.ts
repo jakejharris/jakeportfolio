@@ -622,6 +622,26 @@ export const DECODE_CELLS = [
 ];
 export const STREAMS = cellsOf('concurrency_aggregate_tok_s', ['c1', 'c2', 'c4', 'c8', 'c16']);
 
+/**
+ * Jake's rule: the site publishes no figure measured at eight requests at once. The synced facts keep them, and
+ * the page leaves them out: the c8 point of the concurrency ladder, the 8-at-once first token and pause, draft
+ * acceptance (measured at 8 at once), and the methods paragraph's words about them (METHODS_HELD). Known issue 10
+ * is the release's own disclosure and stays as written.
+ */
+export const EIGHT_AT_ONCE = (key: string) => /(?:^|\.)c8(?:[_.]|$)|^draft_acceptance(?:\.|$)/.test(key);
+export const SHOWN_STREAMS = STREAMS.filter(streams => !EIGHT_AT_ONCE(`concurrency_aggregate_tok_s.${streams}`));
+/** The methods paragraph's sentences that open with these words, and the clause, describe figures held at eight at once. */
+export const METHODS_HELD = {
+  sentences: ['Draft acceptance ', 'The 8-request ', 'The 8-stream ', 'In the eight-client '],
+  clauses: ['; the token gap is given as both a median and a maximum'],
+};
+export function withoutEightAtOnce(text: string) {
+  const kept = METHODS_HELD.clauses.reduce((rest, clause) => rest.replace(clause, ''), text);
+  return kept.split(/(?<=\.)\s+(?=[A-Z])/).filter(sentence => !METHODS_HELD.sentences.some(opening => sentence.startsWith(opening))).join(' ');
+}
+/** How every figure was measured, as the page shows it. */
+export const METHODS: Slot | null = CONDITIONS.all && !CONDITIONS.all.pending ? { ...CONDITIONS.all, text: withoutEightAtOnce(CONDITIONS.all.text) } : CONDITIONS.all;
+
 
 /**
  * The condition a concurrency figure never shows without, from the release's own templates: an N-at-once

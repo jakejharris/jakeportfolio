@@ -1,5 +1,5 @@
 import React from 'react';
-import { COMPARE_SETS, CONTEXTS, DECODE_CELLS, FIRST_TOKEN_ESTIMATORS, PARTNERS, RELBENCH_LABEL, RIGMARK_BLOCKS, RIGMARK_SCOPE, SETS, STREAMS, VERSION, amount, cell, metricInfo, partner, tileCaption, type Cell, type ResultSet } from '../glm-facts';
+import { COMPARE_SETS, CONTEXTS, DECODE_CELLS, FIRST_TOKEN_ESTIMATORS, PARTNERS, RELBENCH_LABEL, RIGMARK_BLOCKS, RIGMARK_SCOPE, SETS, SHOWN_STREAMS, VERSION, amount, cell, metricInfo, partner, tileCaption, type Cell, type ResultSet } from '../glm-facts';
 import { Fact } from './Fact';
 import { COMPARE_ROWS } from './remeasured-figures';
 
@@ -129,7 +129,7 @@ export function DecodeChart() {
 
 export function ConcurrencyChart() {
   return <SetChart id="glm2-streams" title="Decode with requests running at once, all streams combined" unit="tok/s" better="higher"
-    groups={STREAMS.map(streams => { const count = Number(streams.slice(1)); return { key: streams, label: count === 1 ? 'One request' : `${count} requests`, metric: `concurrency_aggregate_tok_s.${streams}` }; })} />;
+    groups={SHOWN_STREAMS.map(streams => { const count = Number(streams.slice(1)); return { key: streams, label: count === 1 ? 'One request' : `${count} requests`, metric: `concurrency_aggregate_tok_s.${streams}` }; })} />;
 }
 
 /** A cell with its unit, as a line of text. */

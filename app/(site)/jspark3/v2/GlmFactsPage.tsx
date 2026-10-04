@@ -9,8 +9,8 @@ import { HERO_FIGURES, HERO_LINE, HERO_TILES, REMEASURED_ON } from './remeasured
 import { ColdStartChart, CompareFigure, ConcurrencyChart, DecodeChart, Relbench, RelbenchNote, RigmarkBlocks, SetFigure } from './FactsCharts';
 import { Fact, FactLink } from './Fact';
 import {
-  ACCEPTANCE_KINDS, COMPATIBILITY, CONDITIONS, COPY, CREDITS, DEFAULT_DECIDED, DEFAULT_PROVISIONAL, DEFAULT_VARIANT, DRAFT, DRAFTER, DRAFTER_LINK, ENGINE, HISTORY,
-  DISK_PARTS, ERRATA, ROLLBACK_COMMANDS, INSTALL_COSTS, INSTALL_COSTS_CONDITIONS, INSTALL_TAG, KNOWN_ISSUES, LICENSES, LINKS, PROFILES_LINE, PROMPT_MIX_LINE, RIGMARK, TEMPLATE_SETTINGS, RIGMARK_SHOWN, RUNNABLE, SETS, SETS_CONDITIONS, SWITCH, SOURCE, VARIANTS_ORDERED, VERSION,
+  ACCEPTANCE_KINDS, COMPATIBILITY, CONDITIONS, COPY, CREDITS, DEFAULT_DECIDED, DEFAULT_PROVISIONAL, DEFAULT_VARIANT, DRAFT, DRAFTER, DRAFTER_LINK, EIGHT_AT_ONCE, ENGINE, HISTORY,
+  DISK_PARTS, ERRATA, ROLLBACK_COMMANDS, INSTALL_COSTS, INSTALL_COSTS_CONDITIONS, INSTALL_TAG, KNOWN_ISSUES, LICENSES, LINKS, METHODS, PROFILES_LINE, PROMPT_MIX_LINE, RIGMARK, TEMPLATE_SETTINGS, RIGMARK_SHOWN, RUNNABLE, SETS, SETS_CONDITIONS, SWITCH, SOURCE, VARIANTS_ORDERED, VERSION,
   TILES_LINE, cell, linkPath, metricInfo, pinned, releaseDate,
   type Slot, type Variant,
 } from '../glm-facts';
@@ -22,11 +22,14 @@ const NAV = [
   { href: '#history', label: 'History' },
 ] as const;
 
-/** Figures shown on their own, beside the charts: one large for the default set, the others beneath it. */
+/**
+ * Figures shown on their own, beside the charts: one large for the default set, the others beneath it. Both are
+ * measured at eight requests at once, which the site holds (EIGHT_AT_ONCE), so neither shows.
+ */
 const SINGLE_FIGURES = [
   { metric: 'c8_ttft_p50_s' },
   { metric: 'c8_stall_s.median', worst: 'c8_stall_s.max' },
-];
+].filter(item => !EIGHT_AT_ONCE(item.metric));
 
 /**
  * The hero's tiles, as the hub's latest card and the share card show them (remeasured-figures.ts): the re-measured
@@ -62,11 +65,13 @@ function variantName(label: Slot, index: number): Slot {
   return { text: index ? name.charAt(0).toLowerCase() + name.slice(1) : name, pending: false };
 }
 
-/** Draft acceptance for each set that runs the draft model. */
+/** Draft acceptance for each set that runs the draft model, unless it was measured at eight at once (EIGHT_AT_ONCE). */
 function Acceptance() {
+  const kinds = ACCEPTANCE_KINDS.filter(kind => !EIGHT_AT_ONCE(kind.key));
+  if (!kinds.length) return null;
   return <>{SETS.filter(set => set.drafter).map(set => <div key={set.id}>
     <dt>Acceptance, <Fact slot={set.label} /></dt>
-    <dd>{ACCEPTANCE_KINDS.map(kind => {
+    <dd>{kinds.map(kind => {
       const step = cell(set, `${kind.key}.accepted_per_verify_step`);
       const share = cell(set, `${kind.key}.accepted_over_proposed`);
       if (step.state === 'absent') return null;
@@ -200,21 +205,19 @@ export default function GlmFactsPage() {
         </div>
         <div className="glm2-pair">
           <DecodeChart />
-          <div className="glm2-figcol">{SINGLE_FIGURES.map(item => <SetFigure key={item.metric} {...item} />)}</div>
+          {SINGLE_FIGURES.length ? <div className="glm2-figcol">{SINGLE_FIGURES.map(item => <SetFigure key={item.metric} {...item} />)}</div> : null}
         </div>
         {REMEASURED_ON ? <div className="glm2-pair">
           <RemeasuredSetChart id="sets-reply" />
           <RemeasuredSetChart id="sets-long-prompt" />
         </div> : null}
         <RelbenchNote />
-        {CONDITIONS.all
-          ? <div className="glm2-method glm2-method-all"><p className="glm-label">{REMEASURED_ON ? 'How the release-day figures were measured' : 'How every figure was measured'}</p><p><Fact slot={CONDITIONS.all} /></p>{CONDITIONS.results ? <p><Fact slot={CONDITIONS.results} /></p> : null}{PROMPT_MIX_LINE ? <p><Fact slot={PROMPT_MIX_LINE} /></p> : null}</div>
+        {METHODS
+          ? <div className="glm2-method glm2-method-all"><p className="glm-label">{REMEASURED_ON ? 'How the release-day figures were measured' : 'How every figure was measured'}</p><p><Fact slot={METHODS} /></p>{CONDITIONS.results ? <p><Fact slot={CONDITIONS.results} /></p> : null}{PROMPT_MIX_LINE ? <p><Fact slot={PROMPT_MIX_LINE} /></p> : null}</div>
           : <dl className="glm2-method">
             <div><dt>Cold first token</dt><dd><Fact slot={CONDITIONS.cold} /></dd></div>
             <div><dt>Decode</dt><dd><Fact slot={CONDITIONS.decode} /></dd></div>
             <div><dt>Requests at once</dt><dd><Fact slot={CONDITIONS.concurrency} /></dd></div>
-            <div><dt>Stall</dt><dd><Fact slot={CONDITIONS.stall} /></dd></div>
-            <div><dt>Draft acceptance</dt><dd><Fact slot={CONDITIONS.acceptance} /></dd></div>
           </dl>}
         {RIGMARK_SHOWN ? <>
           <h3 className="glm2-subhead" id="against-v184"><Fact slot={VERSION} /> against the v1.8.4 baseline</h3>

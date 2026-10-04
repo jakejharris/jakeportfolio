@@ -43,11 +43,11 @@ test('a concurrency tile on the hub carries its condition from the release templ
   if (TILES.includes('concurrency_aggregate_tok_s.c8') || TILES.some(key => key.startsWith('c8_stall_s.'))) assert.ok(captioned > 0);
 });
 
-test('every c8, c-ladder and stall figure on /jspark3/glm/ names its condition, with its own N, from the release template; a RigMark tile the release\'s own', async () => {
+test('every c-ladder figure on /jspark3/glm/ names its condition, with its own N, from the release template; a RigMark tile the release\'s own', async () => {
   const React = await import('react');
   Object.assign(globalThis, { React });
   const { renderToStaticMarkup } = await import('react-dom/server');
-  const { PARTNER_FLOOR, STREAMS, captionTemplate } = await import('../glm-facts');
+  const { EIGHT_AT_ONCE, PARTNER_FLOOR, SHOWN_STREAMS, STREAMS, captionTemplate } = await import('../glm-facts');
   const { default: GlmFactsPage } = await import('./GlmFactsPage');
   const facts = JSON.parse(readFileSync(join(root, 'app/(site)/jspark3/glm-facts.json'), 'utf8')).facts;
   const html = renderToStaticMarkup(React.createElement(GlmFactsPage));
@@ -57,11 +57,14 @@ test('every c8, c-ladder and stall figure on /jspark3/glm/ names its condition, 
   const inRigmark = (index: number) => !!rigmark && index >= rigmark.index! && index < rigmark.index! + rigmark[0].length;
   const figures = [...html.matchAll(/data-metric-id="([^"]+)"/g)].filter(match => !inRigmark(match.index!));
   const shown = figures.map(match => match[1]);
-  // The closed set: the c8 first-token figure (the partnered floor, named only through PARTNER_FLOOR), the stall
-  // figure and every c-ladder point.
+  // The closed set: every c-ladder point the site shows. The c8 first-token figure (the partnered floor, named only
+  // through PARTNER_FLOOR), the pause and the c8 point are measured at eight at once, which the site holds.
   const firstToken = Object.keys(PARTNER_FLOOR).filter(key => captionTemplate(key));
   assert.equal(firstToken.length, 1, 'the c8 first-token figure is not the partnered floor');
-  for (const key of [...firstToken, 'c8_stall_s.median', ...STREAMS.map(streams => `concurrency_aggregate_tok_s.${streams}`)]) assert.ok(shown.includes(key), `${key} is not on the page`);
+  const held = [...firstToken, 'c8_stall_s.median', ...STREAMS.filter(streams => !SHOWN_STREAMS.includes(streams)).map(streams => `concurrency_aggregate_tok_s.${streams}`)];
+  assert.ok(held.length === 3 && held.every(EIGHT_AT_ONCE), 'the held figures are not the three at eight at once');
+  for (const key of SHOWN_STREAMS.map(streams => `concurrency_aggregate_tok_s.${streams}`)) assert.ok(shown.includes(key), `${key} is not on the page`);
+  for (const key of held) assert.ok(!shown.includes(key), `${key} is measured at eight at once and on the page`);
   let conditioned = 0;
   figures.forEach((match, index) => {
     const key = match[1];
@@ -81,8 +84,28 @@ test('every c8, c-ladder and stall figure on /jspark3/glm/ names its condition, 
     assert.ok(body.includes(`data-condition-of="${key}">${expected.replace(/'/g, '&#x27;')}<`), `${key} is shown without "${expected}"`);
     conditioned += 1;
   });
-  assert.ok(conditioned >= 2 + STREAMS.length);
+  assert.ok(conditioned >= SHOWN_STREAMS.length);
   assert.equal(html.match(/data-condition-of=/g)?.length ?? 0, conditioned, 'a condition stands outside its figure');
+});
+
+test('/jspark3/glm/ shows no figure measured at eight requests at once, outside the release\'s own known issue', async () => {
+  const React = await import('react');
+  Object.assign(globalThis, { React });
+  const { renderToStaticMarkup } = await import('react-dom/server');
+  const { EIGHT_AT_ONCE, METHODS_HELD } = await import('../glm-facts');
+  const { default: GlmFactsPage } = await import('./GlmFactsPage');
+  const facts = JSON.parse(readFileSync(join(root, 'app/(site)/jspark3/glm-facts.json'), 'utf8')).facts;
+  const html = renderToStaticMarkup(React.createElement(GlmFactsPage));
+  for (const [, key] of html.matchAll(/data-metric-id="([^"]+)"/g)) assert.ok(!EIGHT_AT_ONCE(key), `${key} is on the page`);
+  // Known issue 10 is the release's disclosure, kept as written; everything else is held.
+  const issues = html.match(/<section[^>]*id="known-issues"[\s\S]*?<\/section>/);
+  assert.ok(issues, 'no known issues section');
+  const text = html.replace(issues[0], ' ').replace(/<[^>]+>/g, ' ').replace(/&#x27;/g, "'").replace(/\s+/g, ' ');
+  assert.doesNotMatch(text, /\b8(?:-request| requests| concurrent| running|-stream)\b|\beight-client\b|\bAcceptance, |\bthe token gap\b/);
+  // The hold cuts the release's own words: if a sync rewrites them, the cut has to be looked at again.
+  const methods = facts.measurement_conditions ?? facts.metric_conditions.all;
+  for (const opening of METHODS_HELD.sentences) assert.ok(methods.includes(`. ${opening}`), `the methods paragraph has no sentence opening "${opening}"`);
+  for (const clause of METHODS_HELD.clauses) assert.ok(methods.includes(clause), `the methods paragraph no longer says "${clause}"`);
 });
 
 test('the gate asks for the same templates the page uses', async () => {
