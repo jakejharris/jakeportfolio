@@ -3,6 +3,7 @@ import ClusterIllustration from './ClusterIllustration';
 import FoldAnchors from './FoldAnchors';
 import LegacyFragments from '../LegacyFragments';
 import ProjectHeader from './ProjectHeader';
+import Remeasured from './Remeasured';
 import { ColdStartChart, CompareFigure, ConcurrencyChart, DecodeChart, Relbench, RelbenchNote, RigmarkBlocks, SetFigure } from './FactsCharts';
 import { Fact, FactLink } from './Fact';
 import {
@@ -212,6 +213,8 @@ export default function GlmFactsPage() {
         </p>
       </div>
     </section>
+
+    <Remeasured />
 
     <section className="glm-shell glm2-section" id="weights" aria-labelledby="weights-title">
       <h2 id="weights-title">Two sets of weights, chosen at install.</h2>

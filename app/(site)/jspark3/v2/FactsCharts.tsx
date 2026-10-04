@@ -3,7 +3,7 @@ import { COMPARE, COMPARE_SETS, CONTEXTS, DECODE_CELLS, FIRST_TOKEN_ESTIMATORS, 
 import { Fact } from './Fact';
 
 /** A round axis end at or just above the largest value, so bars are drawn to scale from zero. */
-function axisEnd(values: Array<number | null>) {
+export function axisEnd(values: Array<number | null>) {
   const max = Math.max(...values.filter((value): value is number => value !== null), 0);
   if (max <= 0) return null;
   const step = 10 ** Math.floor(Math.log10(max));
@@ -12,9 +12,9 @@ function axisEnd(values: Array<number | null>) {
 
 /** Series colors: the earlier release grey, the default set the release gold, the other weights slate, no draft model green-grey. */
 const TONE = { before: 'glm2-series-before', default: 'glm2-series-default', other: 'glm2-series-other', plain: 'glm2-series-plain' } as const;
-type Series = { key: string; name: string; tone: keyof typeof TONE; cell: Cell };
+export type Series = { key: string; name: string; tone: keyof typeof TONE; cell: Cell };
 
-const direction = (better: 'higher' | 'lower' | null) => (better === 'lower' ? 'lower is better' : better === 'higher' ? 'higher is better' : null);
+export const direction = (better: 'higher' | 'lower' | null) => (better === 'lower' ? 'lower is better' : better === 'higher' ? 'higher is better' : null);
 /** The benchmark's short reasoning label after a caption, when the release labels its figures. */
 export const Relbench = () => (RELBENCH_LABEL ? <> · <Fact slot={RELBENCH_LABEL.short} /></> : null);
 /** The full label, once beneath the release's own figures. */
@@ -24,7 +24,7 @@ export const RelbenchNote = () => (RELBENCH_LABEL ? <p className="glm2-relbench-
  * One bar: a measured value to scale; a hatched stand-in while the value is pending, so it never reads
  * as a small value; and no bar at all for a cell the set did not measure.
  */
-function Bar({ series, end, unit }: { series: Series; end: number | null; unit: string }) {
+export function Bar({ series, end, unit }: { series: Series; end: number | null; unit: string }) {
   const { state, slot } = series.cell;
   const value = state === 'value' ? amount(slot.text) : null;
   const width = value !== null && end ? (value / end) * 100 : null;
