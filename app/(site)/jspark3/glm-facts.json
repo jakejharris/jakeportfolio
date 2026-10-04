@@ -1,7 +1,7 @@
 {
   "source": {
     "file": "RELEASE-FACTS.md",
-    "sha256": "b64268e229d9271c758c34227e7e26e8d3b273930b12f7e59fc3e50251d6f788",
+    "sha256": "70490d33185ec2a084a709127f31417b0ea7ce83a1db5949cd070428118c3167",
     "status": "final",
     "results": {
       "file": "results-v2.0.1.facts-b64268e2.json",
@@ -317,7 +317,7 @@
       "openai_chat_completions": "Works: `/v1/chat/completions` returns the reply with `finish_reason` `stop`.",
       "streaming": "Works: `stream: true` returns server-sent events ending in `[DONE]`, with the same text as the non-streaming reply.",
       "tool_calls": "Works: a request with `tools` returns a `tool_calls` reply with JSON arguments and `finish_reason` `tool_calls`.",
-      "response_format_json_schema": "ignored (known issue)",
+      "response_format_json_schema": "Ignored: `json_schema` and `json_object` requests are accepted without an error and not enforced (known issue 2). Forced `tool_choice` works. A clear HTTP 400 error is planned for v2.0.2.",
       "thinking_on_off": "Always on; the lowest reasoning effort is low. v1.8.4 had it off by default.",
       "bind": "loopback only, no auth, no CORS"
     },
@@ -389,7 +389,7 @@
         "repo": "https://github.com/jakejharris/jspark3-deepseek"
       }
     },
-    "what_changed": "v2.0.1 also saves conversation state to each Spark's disk by default: with base weights and the draft model, a conversation of at least 100,000 tokens that had been pushed out of memory showed its first visible text 1.5 s after it was continued, against 49.9 s to read it from scratch.",
+    "what_changed": "v2.0.1 also saves conversation state to each Spark's disk by default: with base weights and the draft model, a conversation of at least 100,000 tokens that had been pushed out of memory showed its first visible text 1.5 s after it was continued, against 49.9 s to read it from scratch (see known issue 17).",
     "install_claim": "Follow INSTALL.md to install and run it on three DGX Sparks. The download, build and splitting steps were run from public sources on a Spark that had never run this project, and the packaged release was started and checked on three Sparks.",
     "measurement_conditions": "Every set was measured on the same build, each on its weights variant's shipped settings, and no figure is a best run. Rates and times are medians, with the number of runs given below; the token gap is given as both a median and a maximum, and the context window is a setting, not a measurement. Short-reply decode is reported separately for code and for prose: the per-stream rate of replies capped at 256 tokens (median of 3 each). Long decode is one greedy code stream of up to 96 tokens after a 32K-token prompt (median of 3). Aggregate decode is the wall-clock rate of concurrent greedy replies, capped at 96 tokens, to a fixed mix of varied short prompts (41 to 62 tokens each) that is the same for every set (median of 3). Draft acceptance depends on the prompt, so it is also reported for a single repeated prompt. Cold time to first token uses exactly the stated number of prompt tokens with nothing cached (median of 2). The 8-request time to first token is the median wait for the first token when 8 short prompts from the mix (41 to 62 tokens) are sent at once; without the draft model, prompts that arrive together are not read together in one batch, and first tokens arrive later (see known issues). The 8-stream token gap is the longest pause seen by running streams while a prompt of about 8,000 or 36,000 tokens joins, reported as the median and the maximum of that pause across runs. Draft acceptance is the number of draft tokens accepted per verify step, not counting the token the model adds itself, with accepted over proposed tokens alongside, both measured at 8 concurrent requests. The no-draft-model set is a reduced run. The benchmark client runs on a separate machine on the same local network, so client-side times include one network hop. The benchmark figures in the result tables, including the stall bounds, come from chat requests at low reasoning effort. Installation, disk and startup figures are not chat measurements. Low effort still reasons before it answers, and decode and aggregate rates count reasoning tokens. A chat request that sets no reasoning effort runs at high effort, so its replies are longer and its rates can differ from these. Time to first token is measured to the first streamed token, reasoning or text. In the cold-prompt, newcomer and saved-session tests, that first token was visible text in all but two replies: one 64K cold-prompt reply with base weights and the saved-session return with refusal-removed (ablit) weights reached their eight-token limit on reasoning and showed no text. In the eight-client short-prompt test, most replies began with a short reasoning passage, so visible text arrives later than the first token, and some short replies spent their 96-token limit on reasoning and showed no text; each set's first-token figure is shown with its own visible-text note.",
     "switch": {
@@ -398,7 +398,7 @@
     },
     "known_issues_public": [
       "`stop` is ignored. A reply ends at the model's end of turn or at `max_tokens`.",
-      "`response_format` is ignored. JSON mode and `json_schema` are not enforced, so the reply is free text.",
+      "`response_format` is ignored. A request that sets it to `json_schema` or `json_object` (JSON mode) is accepted without an error, and neither JSON nor the schema is enforced, so the reply is free text. Forcing a tool call with `tool_choice` (`required` or a named function) works, but the call's arguments are not held to the tool's schema. A clear HTTP 400 error for `json_schema` and `json_object` requests is planned for v2.0.2.",
       "Identical prompts without a `seed` return identical outputs, even above temperature 0: a chat app's regenerate returns the same reply, and two users who send the same prompt get the same answer. Send a different `seed` with each request when you want a different sample.",
       "`n`, `logprobs`, presence and frequency penalties and `logit_bias` are ignored.",
       "A wrongly typed field, such as a string `temperature`, may return HTTP 500 instead of 400.",
@@ -412,7 +412,8 @@
       "A client that disconnects while its connection's socket number is 1024 or higher is not detected, so its generation runs to completion and holds its slot. Normal connection counts do not reach this; very many idle keep-alive clients could. A fix is planned for v2.0.2.",
       "If `max_tokens` cuts off a tool call, `finish_reason` is `length` (or `tool_calls` if an earlier call in the same reply was complete), the cut-off call is left out of the final `tool_calls`, and its raw text is returned in `content`. When streaming, its name and partial `arguments` (incomplete JSON) have already been sent. Raise `max_tokens` for tool use.",
       "The `usage` block in replies does not include `prompt_tokens_details.cached_tokens`. The number of prompt tokens the server reused from saved state is reported in the reply's `tensorfold.cached` field instead (in the final chunk when streaming). For a request that forces a tool call, this count can be too high, even above the prompt's length. v1.8.4 returned this field, so a client that reads it must switch to `tensorfold.cached` when upgrading. A fix for both is planned for v2.0.2.",
-      "v2.0.1 does not support per-request cache isolation. It ignores the `cache_salt` request field, and all clients of one server share its saved prompt state. A request whose prompt starts with another client's entire earlier prompt reuses that state, which shows in the reply's cached-token count and in a faster first token. v1.8.4's engine honored `cache_salt`, so a deployment that relied on it to keep clients apart is no longer isolated after upgrading. If clients must not learn about each other's prompts, give each one its own server with its own session folder. Per-request isolation is planned for v2.0.2."
+      "v2.0.1 does not support per-request cache isolation. It ignores the `cache_salt` request field, and all clients of one server share its saved prompt state. A request whose prompt starts with another client's entire earlier prompt reuses that state, which shows in the reply's cached-token count and in a faster first token. v1.8.4's engine honored `cache_salt`, so a deployment that relied on it to keep clients apart is no longer isolated after upgrading. If clients must not learn about each other's prompts, give each one its own server with its own session folder. Per-request isolation is planned for v2.0.2.",
+      "Saving a conversation to the disk session store is best-effort. The store saves in the background while the server is idle, so back-to-back requests from other long conversations can keep it from saving a conversation. A later return to that conversation, after it has left the memory cache, then reads its whole prompt again. In testing, returns sent after a pause of several seconds resumed from the disk store."
     ],
     "security_note": "The server listens on loopback (127.0.0.1) only, with no authentication and no CORS. Reach it through an SSH tunnel or a reverse proxy that adds authentication; don't expose the port.",
     "session_cache_note": "Conversation state, including the prompt's token ids, is cached on each host's own disk (up to 64 GiB per host) so returning to a long conversation is fast. It never leaves your machines. OPERATIONS explains where it lives, how to clear it and how to turn it off (SESSION_TIER=off).",
@@ -435,7 +436,7 @@
       "orcarouter (the refusal-removed source weights)",
       "z-lab (DFlash)",
       "MiaAI-Lab (upstream TensorFold: follower doorbell 358875c, DFlash ring 7c088eb, prefill row-blocking b23c10a and typed-parser hunk fe2b514)",
-      "mikolaj92 (visible-pool and radix-selection optimizations, via upstream TensorFold commits b3b8a39 and f119334)",
+      "mikolaj92 (sparse-attention pool optimizations: skipping invisible pool tiles and bounding radix selection to visible pools, via upstream TensorFold commits b3b8a39 and f119334)",
       "Dorian (an upstream TensorFold server fix, ported)",
       "turboderp (ExLlamaV3's EXL3 format, which the engine's own decoders read)",
       "QTIP and QuIP# authors (trellis and incoherence-processing foundations used through ExLlamaV3's EXL3 format)",
@@ -538,7 +539,7 @@
       },
       {
         "name": "mikolaj92",
-        "role": "visible-pool and radix-selection optimizations, via upstream TensorFold commits b3b8a39 and f119334"
+        "role": "sparse-attention pool optimizations: skipping invisible pool tiles and bounding radix selection to visible pools, via upstream TensorFold commits b3b8a39 and f119334"
       },
       {
         "name": "Dorian",
