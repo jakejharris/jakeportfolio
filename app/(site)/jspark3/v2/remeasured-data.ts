@@ -12,9 +12,12 @@
  * Row 2's first streamed token was reasoning, so it never shows without the time its answer text began (the
  * release's partner rule).
  *
- * Each figure is rounded once, from the receipt's unrounded value. Row 5's first token is the fresh-prompt time;
- * the cached-prompt time shows only beside it, and its earlier figure, which averaged a cold run with cached ones,
- * is withdrawn. Its range takes a non-breaking hyphen (\u2011), so it never wraps at the hyphen.
+ * Each figure is rounded once, from the receipt's unrounded value (the round-once audit), and every timing and
+ * short-reply rate says whether its prompt was fresh or already cached. Row 5 leads with its fresh-prompt figures;
+ * the cached ones show only beside them, and the earlier means, which averaged a fresh run with cached ones, are
+ * withdrawn. Row 6's reading rates are estimates (prompt tokens ÷ client first-token time) and say so. A per-request
+ * figure is the mean of each request's own rate, not the total's share. The cached-prompt range takes a
+ * non-breaking hyphen (\u2011), so it never wraps at the hyphen.
  *
  * While PLACEHOLDER is true the section stays off in production; JSPARK3_REMEASURED_PREVIEW=1 shows it locally.
  */
@@ -87,19 +90,20 @@ export const CHARTS: RemeasuredChart[] = [
       {
         key: 'natural-code',
         label: 'A complete program',
-        condition: 'first streamed reasoning 0.26 s; first answer text by 0.62 s',
+        condition: 'fresh prompt: first streamed reasoning 0.26 s; first answer text by 0.62 s',
         smallPrint: 'One request asked for a complete program, natural length (5,543 tokens), user-visible rate including first token',
         notes: ['Answer-text time is a collector upper bound.'],
         bars: [{ name: 'Code', tone: 'default', value: '92.5', screen: 'PUBLISHABLE', source: 'row 2' }],
       },
       {
         key: 'short',
-        label: 'Short replies',
+        label: 'Short replies, fresh prompt',
         condition: 'first token 0.31 s (code) / 0.25 s (prose) on a fresh prompt; 0.07\u20110.08 s when the prompt is already cached',
         smallPrint: 'Replies forced to 128 tokens (the llama-bench tg128 length)',
+        notes: ['With the prompt already cached: code 108.5 tok/s, prose 73.5 tok/s.', 'One fresh-prompt and two cached-prompt requests each, for code and for prose.'],
         bars: [
-          { name: 'Code', tone: 'default', value: '102.7', screen: 'PUBLISHABLE', source: 'row 5' },
-          { name: 'Prose', tone: 'default', value: '71.1', screen: 'PUBLISHABLE', source: 'row 5' },
+          { name: 'Code', tone: 'default', value: '91.1', screen: 'PUBLISHABLE', source: 'row 5' },
+          { name: 'Prose', tone: 'default', value: '66.2', screen: 'PUBLISHABLE', source: 'row 5' },
         ],
       },
       {
@@ -122,14 +126,14 @@ export const CHARTS: RemeasuredChart[] = [
       {
         key: '32k',
         label: '32K-token prompt',
-        condition: 'read at 2,149 tok/s; the reply then streamed at 63 tok/s (after the first token)',
+        condition: 'read at ≈2,149 tok/s (estimated as prompt tokens ÷ client first-token time); the reply then streamed at 63 tok/s (after the first token)',
         notes: ['End to end, counting the 15.3 s before the first token: 18.5 tok/s.'],
         bars: [{ name: 'First token', tone: 'default', value: '15.3', screen: 'PUBLISHABLE', source: 'row 6' }],
       },
       {
         key: '64k',
         label: '64K-token prompt',
-        condition: 'read at 2,102 tok/s; the reply then streamed at 71 tok/s (after the first token)',
+        condition: 'read at ≈2,102 tok/s (the same estimate); the reply then streamed at 71 tok/s (after the first token)',
         notes: ['End to end, counting the 31.2 s before the first token: 10.9 tok/s.'],
         bars: [{ name: 'First token', tone: 'default', value: '31.2', screen: 'PUBLISHABLE', source: 'row 6' }],
       },
@@ -167,14 +171,14 @@ export const CHARTS: RemeasuredChart[] = [
       {
         key: 'natural-code',
         label: 'Code, natural length',
-        condition: '28.1 tok/s per request',
+        condition: '28.1 tok/s mean per-request rate (total ÷ 8 = 23.9)',
         smallPrint: '8 code requests started together, natural reply length, combined user-visible rate',
         bars: [{ name: 'Combined', tone: 'default', value: '191.4', screen: 'HOLD', source: 'row 3' }],
       },
       {
         key: 'long-prose',
         label: 'Prose, 2,000 tokens each',
-        condition: '17.5 tok/s per request',
+        condition: '17.5 tok/s mean per-request rate (total ÷ 8 = 16.7)',
         smallPrint: 'Replies forced to 2,000 tokens, thinking requested off',
         bars: [{ name: 'Combined', tone: 'default', value: '133.3', screen: 'HOLD', source: 'row 4' }],
       },
@@ -217,7 +221,7 @@ export const LEAD: LeadFigure[] = [
 export const HERO: LeadFigure[] = [
   { chart: 'reply-one', group: 'natural-code', label: 'Code, one request', value: '92.5', unit: 'tok/s' },
   { chart: 'reply-one', group: 'long-prose', label: 'Prose, one request', value: '73.5', unit: 'tok/s' },
-  { chart: 'long-prompt', group: '32k', label: 'Reading a 32K-token prompt', value: '2,149', unit: 'tok/s', line: 'first token at 15.3 s' },
+  { chart: 'long-prompt', group: '32k', label: 'Reading a 32K-token prompt', value: '≈2,149', unit: 'tok/s', line: 'estimated as prompt tokens ÷ client first-token time (15.3 s)' },
 ];
 export const HERO_RELEASE_TILES = ['rigmark.c4'];
 
@@ -241,8 +245,8 @@ export const SET_CHARTS: RemeasuredSetChart[] = [
     methods: 'User-visible rate: reply tokens over the time from sending the request to its last token, so the wait for the first token counts.',
     rows: [
       { key: 'natural-code', label: 'A complete program, natural length', from: { chart: 'reply-one', group: 'natural-code', bar: 'Code' } },
-      { key: 'short-code', label: 'Code, forced to 128 tokens', from: { chart: 'reply-one', group: 'short', bar: 'Code' } },
-      { key: 'short-prose', label: 'Prose, forced to 128 tokens', from: { chart: 'reply-one', group: 'short', bar: 'Prose' } },
+      { key: 'short-code', label: 'Code, forced to 128 tokens, fresh prompt', from: { chart: 'reply-one', group: 'short', bar: 'Code' } },
+      { key: 'short-prose', label: 'Prose, forced to 128 tokens, fresh prompt', from: { chart: 'reply-one', group: 'short', bar: 'Prose' } },
       { key: 'long-prose', label: 'Prose, forced to 2,000 tokens', from: { chart: 'reply-one', group: 'long-prose', bar: 'Prose' } },
     ],
   },

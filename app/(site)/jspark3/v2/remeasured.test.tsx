@@ -86,15 +86,24 @@ test('the rendered section keeps its rules: speeds after the first token say so,
   assert.ok(!/time to first token|back in/i.test(text(resume)), 'the resume chart reads as a first-token time');
 });
 
-test('withdrawn figures stay off, and the short replies\' first token is the fresh-prompt time', async () => {
+test('the round-once audit: withdrawn figures stay off, timings say fresh or cached, estimates say so', async () => {
   const React = await import('react');
   Object.assign(globalThis, { React });
   const { renderToStaticMarkup } = await import('react-dom/server');
   const { default: Remeasured } = await import('./Remeasured');
+  const { RemeasuredSetChart } = await import('./Remeasured');
+  const { SET_CHARTS } = await import('./remeasured-data');
   const { HERO_SUMMARY } = await import('./remeasured-figures');
-  const copy = `${text(renderToStaticMarkup(React.createElement(Remeasured)))} ${HERO_SUMMARY ?? ''}`;
-  // Rounded twice (73.6, decode 92.9), or an average of a cold run with cached ones (0.15 / 0.13 s).
-  for (const figure of ['73.6', '92.9', '0.15 s', '0.13 s']) assert.ok(!copy.includes(figure), `${figure} renders`);
+  const sets = SET_CHARTS.map(chart => renderToStaticMarkup(React.createElement(RemeasuredSetChart, { id: chart.id }))).join('');
+  const copy = `${text(renderToStaticMarkup(React.createElement(Remeasured)))} ${text(sets)} ${HERO_SUMMARY ?? ''}`;
+  // Rounded twice (73.6, decode 92.9, the re-run's 96.1, 158.3), or a mean of a fresh run with cached ones
+  // (0.15 / 0.13 s, 102.7 / 71.1, decode 115.3 / 75.8, 175.8).
+  for (const figure of ['73.6', '92.9', '96.1', '158.3', '0.15 s', '0.13 s', '102.7', '71.1', '115.3', '75.8', '175.8']) assert.ok(!copy.includes(figure), `${figure} renders`);
+  // Row 6's reading rates are estimates: never shown without the sign, and the hero's names its estimator.
+  for (const match of copy.matchAll(/(.)2,1(?:49|02)/g)) assert.equal(match[1], '≈', `${match[0]} shows without ≈`);
+  assert.match(HERO_SUMMARY ?? '', /≈2,149 tok\/s/);
+  // Row 5's cached-prompt rates show only beside the fresh ones, saying so.
+  for (const match of copy.matchAll(/108\.5/g)) assert.match(copy.slice(match.index - 40, match.index), /already cached: code $/, 'a cached rate shows alone');
   // The cached-prompt time never shows alone, and the short replies' first token always says it is a fresh prompt.
   const after = (pattern: RegExp, length: number) => [...copy.matchAll(pattern)].map(match => copy.slice(match.index, match.index + length));
   // The range keeps its non-breaking hyphen, so it never wraps.
