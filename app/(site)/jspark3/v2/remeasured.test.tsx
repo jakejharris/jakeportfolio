@@ -215,6 +215,8 @@ test('the hub card and the share card show the GLM page\'s hero: the same figure
   }
   assert.ok(HERO_LINE && hero.includes(`<p class="glm-tiles-line">${HERO_LINE.lead}`) && card.includes(`<span class="spark-hub-release-detail">${HERO_LINE.lead}${HERO_LINE.measured}</span>`), 'the hub and the hero say different things about their figures');
   assert.ok(HERO_LINE.lead.startsWith('base weights + draft model · '), 'the line does not name the weights');
+  // The figures sit under the latest release's label, so the line names the release that was measured.
+  assert.equal(HERO_LINE.measured, 'v2.0.1, measured October 3, 2026');
   // No RigMark prefill tile, from any column, stands in the hero or the hub card.
   const synced = (await import('../glm-facts.json')).default as { facts: { rigmark_rows?: Record<string, string>[] } };
   const prefill = synced.facts.rigmark_rows?.find(row => row.id === 'prefill_64k');
@@ -268,7 +270,7 @@ test('the GLM page\'s description and link previews give the hero\'s figures wit
   for (const figure of DESCRIBED_FIGURES) assert.ok(description.includes(figure) && /, (?:fresh|fresh prompts?|prompt cached): /.test(figure), `the description does not give "${figure}"`);
   for (const figure of [...HERO_FIGURES.filter(item => !item.prompt).map(item => item.value), ...HERO_TILES.filter(tile => !tile.prompt).map(tile => tile.value.slot.text)]) assert.ok(!description.includes(figure), `the description lists ${figure} without its cache status`);
   // RigMark's four at once ran on fresh prompts (table row 9): the description gives it so, from the release.
-  assert.ok(description.includes('Four at once, end to end (RigMark), fresh prompts: 113.4 tok/s') && description.endsWith('Measured with base weights + draft model on October 3, 2026.'), description);
+  assert.ok(description.includes('Four at once, end to end (RigMark), fresh prompts: 113.4 tok/s') && description.endsWith('v2.0.1, measured with base weights + draft model on October 3, 2026.'), description);
   assert.ok(DESCRIBED_MEASURED && description.endsWith(DESCRIBED_MEASURED), 'the description does not say what its figures were measured with');
   // The release headline's figures are for eight requests at once; previews show none of them.
   for (const cite of synced.facts.headline?.cites ?? []) assert.ok(!description.includes(cite.value), `the description gives the headline's ${cite.value}`);

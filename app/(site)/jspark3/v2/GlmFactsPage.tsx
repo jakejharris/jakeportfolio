@@ -283,7 +283,7 @@ export default function GlmFactsPage() {
           </dl>
         </details>
         {INSTALL_COSTS.length ? <details className="glm2-subfold" id="install-costs">
-          <summary><span>What each step takes</span></summary>
+          <summary><span>What each step takes, measured on <Fact slot={RESULTS_VERSION} /></span></summary>
           <dl className="glm2-defs glm2-install-defs glm2-costs">
             {INSTALL_COSTS.map(step => <div key={step.label}><dt>{step.label}</dt><dd>{step.parts.map(part => <span key={part.label}><span className="glm2-cost-label">{part.label}</span> <Fact slot={part.value} /></span>)}</dd></div>)}
           </dl>

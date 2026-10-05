@@ -1,4 +1,4 @@
-import { COMPARE, RELBENCH_LABEL, SOCIAL_IMAGE, TILE_FIGURES, TILES_LINE, VERSION, type CompareRow, type TileFigure } from '../glm-facts';
+import { COMPARE, RELBENCH_LABEL, RESULTS_VERSION, SOCIAL_IMAGE, TILE_FIGURES, TILES_LINE, VERSION, type CompareRow, type TileFigure } from '../glm-facts';
 import share from '../glm-share.json';
 import { CHARTS, COMPARE_NOTES, DATE, HERO, HERO_RELEASE_TILES, PLACEHOLDER, type LeadFigure, type RemeasuredChart } from './remeasured-data';
 
@@ -57,16 +57,19 @@ export const HERO_TILES: HeroTile[] = HERO_FIGURES.length
 
 const WEIGHTS = 'base weights + draft model';
 
-/** What the hero was measured with, then when; the GLM page links the date to its results. */
+/**
+ * What the hero was measured with, then the release that was measured and when: the figures sit under the latest
+ * release's label, so they name their own. The GLM page links this to its results.
+ */
 export const HERO_LINE = HERO_FIGURES.length
-  ? { lead: `${WEIGHTS} · `, measured: `measured ${REMEASURED_DATE}` }
+  ? { lead: `${WEIGHTS} · `, measured: `${RESULTS_VERSION.text}, measured ${REMEASURED_DATE}` }
   : null;
 
 const named = (figure: Pick<HeroFigure, 'label' | 'value' | 'unit' | 'prompt'>) => `${[figure.label, figure.prompt].filter(Boolean).join(', ')}: ${figure.value} ${figure.unit}`;
 const tileNamed = (tile: HeroTile) => named({ ...tile, value: tile.value.slot.text });
 
 /** What the re-measured hero was measured with, as a sentence: the share card's line and the page's description end with it. */
-export const HERO_MEASURED: string | null = HERO_LINE ? `Measured with ${WEIGHTS} on ${REMEASURED_DATE}.` : null;
+export const HERO_MEASURED: string | null = HERO_LINE ? `${RESULTS_VERSION.text}, measured with ${WEIGHTS} on ${REMEASURED_DATE}.` : null;
 
 /** All dynamic copy rendered on the share card, also used to reject a raster with stale qualifications. */
 export function heroCard(figures: HeroFigure[], tiles: HeroTile[], measured: string) {
