@@ -76,7 +76,7 @@ const PUBLIC = {
   errata: { engine_docs_public: true }, upgrade_who_should_stay: true, upgrade_thinking_public: true,
   relbench_reasoning_label_public: true, relbench_reasoning_label_short_public: true,
   rollback_commands: { existing_checkout: true, existing_checkout_where: true, fresh: true },
-  measurement_conditions: true, known_issues_public: true, security_note: true, session_cache_note: true, rollback: true,
+  measurement_conditions: true, known_issues_public: true, known_issues_scope_public: true, install_issues_scope_public: true, security_note: true, session_cache_note: true, rollback: true,
 };
 
 /** value without the release's notes to itself: keys starting with "_", at any depth. */

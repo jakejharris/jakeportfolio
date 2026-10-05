@@ -228,6 +228,8 @@ export const RUNNABLE = record(facts.runnability).level_reached === 'L3';
 
 /** Known issues as the release writes them for readers, API fields in backticks. */
 const issues = list(facts.known_issues_public);
+export const KNOWN_ISSUES_SCOPE = facts.known_issues_scope_public ? slot(facts.known_issues_scope_public, 'known issues scope') : null;
+export const INSTALL_ISSUES_SCOPE = facts.install_issues_scope_public ? slot(facts.install_issues_scope_public, 'installation issues scope') : null;
 export const KNOWN_ISSUES = (issues.length ? issues : [undefined]).map(issue => slot(issue, 'known issues'));
 
 /**

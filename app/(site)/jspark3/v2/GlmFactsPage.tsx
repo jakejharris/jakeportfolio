@@ -10,7 +10,7 @@ import { ColdStartChart, CompareFigure, ConcurrencyChart, DecodeChart, Relbench,
 import { Fact, FactLink } from './Fact';
 import {
   ACCEPTANCE_KINDS, COMPATIBILITY, CONDITIONS, COPY, CREDITS, DEFAULT_DECIDED, DEFAULT_PROVISIONAL, DEFAULT_VARIANT, DRAFT, DRAFTER, DRAFTER_LINK, EIGHT_AT_ONCE, ENGINE, HISTORY,
-  DISK_PARTS, ERRATA, ROLLBACK_COMMANDS, INSTALL_COSTS, INSTALL_COSTS_CONDITIONS, INSTALL_TAG, KNOWN_ISSUES, LICENSES, LINKS, METHODS, PROFILES_LINE, PROMPT_MIX_LINE, RIGMARK, TEMPLATE_SETTINGS, RIGMARK_SHOWN, RUNNABLE, SETS, SETS_CONDITIONS, SWITCH, SOURCE, VARIANTS_ORDERED, VERSION, RESULTS_VERSION, HEADLINE,
+  DISK_PARTS, ERRATA, ROLLBACK_COMMANDS, INSTALL_COSTS, INSTALL_COSTS_CONDITIONS, INSTALL_TAG, KNOWN_ISSUES, KNOWN_ISSUES_SCOPE, INSTALL_ISSUES_SCOPE, LICENSES, LINKS, METHODS, PROFILES_LINE, PROMPT_MIX_LINE, RIGMARK, TEMPLATE_SETTINGS, RIGMARK_SHOWN, RUNNABLE, SETS, SETS_CONDITIONS, SWITCH, SOURCE, VARIANTS_ORDERED, VERSION, RESULTS_VERSION, HEADLINE,
   TILES_LINE, cell, linkPath, metricInfo, pinned, releaseDate,
   type Slot, type Variant,
 } from '../glm-facts';
@@ -316,6 +316,8 @@ export default function GlmFactsPage() {
     <section className="glm-shell glm2-section glm2-split" id="known-issues" aria-labelledby="issues-title">
       <h2 id="issues-title">Known issues.</h2>
       <div>
+        {KNOWN_ISSUES_SCOPE ? <p><Fact slot={KNOWN_ISSUES_SCOPE} /></p> : null}
+        {INSTALL_ISSUES_SCOPE ? <p><Fact slot={INSTALL_ISSUES_SCOPE} /></p> : null}
         {/* Numbered as the card and the copy cite them ("known issue 17"): the release only appends, so a number never moves. */}
         <ol className="glm2-list glm2-issues">{KNOWN_ISSUES.map((issue, index) => <li key={index} id={`known-issue-${index + 1}`}><span className="glm2-issue-number">{index + 1}</span><span><Fact slot={issue} /></span></li>)}</ol>
         {LINKS.limitations ? <p className="glm-evidence-link"><FactLink href={LINKS.limitations}>Every known limitation ↗</FactLink></p> : null}
