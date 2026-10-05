@@ -267,6 +267,17 @@ export const HUB_COPY = {
  * Every date is Chicago time, from the release's published time (GitHub's published_at; Tempo's first Hugging
  * Face commit): v1.8.4 went out at 03:47 UTC on Sep 29, which is the evening of Sep 28 in Chicago.
  */
+/**
+ * The GLM releases on the current engine that came before the latest one, newest first, as the hub's history lists
+ * them. v2.0.1 (Oct 3) is the release the GLM page's figures were measured on.
+ */
+export const CURRENT_LINE_HISTORY = [
+  { version: 'v2.0.1', when: 'Oct 3', href: '/jspark3/glm/' },
+] as const;
+
+/** The latest release's row in the hub's history, when it is a patch on the release before it: a few plain words. */
+export const LATEST_PATCH_NOTE = 'Patch release: image checkpoint reuse and GIF support';
+
 export const RELEASE_HISTORY = [
   { version: 'v1.8.4', what: 'GLM-5.3 Flash · vLLM', when: 'Sep 28', href: '/jspark3/glm/v1.8.4' },
   { version: 'v1.8.0', what: 'GLM-5.3 Flash · vLLM', when: 'Sep 27', href: '/jspark3/glm/v1.8.4#v180-results' },

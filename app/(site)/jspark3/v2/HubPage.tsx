@@ -3,8 +3,8 @@ import PageLayout from '../../../components/PageLayout';
 import TransitionLink from '../../../components/TransitionLink';
 import GlassLight from '../../../components/GlassLight';
 import { release } from './release-data';
-import { HUB_COPY, INTERNAL_BUILDS, LABELS, RELEASE_HISTORY } from '../release-copy';
-import { ENGINE, HISTORY, PUBLISHED, RELBENCH_LABEL, TILES_LINE, VERSION, releaseDate } from '../glm-facts';
+import { CURRENT_LINE_HISTORY, HUB_COPY, INTERNAL_BUILDS, LABELS, LATEST_PATCH_NOTE, RELEASE_HISTORY } from '../release-copy';
+import { ENGINE, HISTORY, LINKS, PUBLISHED, RELBENCH_LABEL, TILES_LINE, VERSION, releaseDate } from '../glm-facts';
 import { HERO_FIGURES, HERO_LINE, HERO_TILES } from './remeasured-figures';
 import { Fact } from './Fact';
 
@@ -72,13 +72,21 @@ export default function HubPage() {
       <section id="history" className="spark-hub-history" aria-labelledby="spark-history-title">
         <h2 id="spark-history-title" className="section-kicker spark-hub-kicker">{HUB_COPY.historyTitle}</h2>
         <ol className="spark-hub-ledger">
+          {/* The latest release links to its release notes; the release before it keeps its row, as published. */}
           <li>
-            <LedgerRow href="/jspark3/glm/">
+            <LedgerRow href={LINKS.release.pending ? '/jspark3/glm/' : LINKS.release.text}>
               <span className="spark-hub-ledger-version"><Fact slot={VERSION} /></span>
-              <span className="spark-hub-ledger-what">GLM-5.3 Flash on <Fact slot={ENGINE.provenance} /><span className="spark-hub-ledger-pill">Latest</span></span>
+              <span className="spark-hub-ledger-what">{LATEST_PATCH_NOTE}<span className="spark-hub-ledger-pill">Latest</span></span>
               <span className="spark-hub-ledger-when">{releaseDate(false) ?? <Fact slot={PUBLISHED} />}</span>
             </LedgerRow>
           </li>
+          {CURRENT_LINE_HISTORY.map(item => <li key={item.version}>
+            <LedgerRow href={item.href}>
+              <span className="spark-hub-ledger-version">{item.version}</span>
+              <span className="spark-hub-ledger-what">GLM-5.3 Flash on <Fact slot={ENGINE.provenance} /></span>
+              <span className="spark-hub-ledger-when">{item.when}</span>
+            </LedgerRow>
+          </li>)}
           {HISTORY.map((item, index) => <li key={`internal-${index}`} className="spark-hub-ledger-internal">
             <span className="spark-hub-ledger-row">
               <span className="spark-hub-ledger-version"><Fact slot={item.version} /></span>
