@@ -3,8 +3,7 @@ import ClusterIllustration from './ClusterIllustration';
 import FoldAnchors from './FoldAnchors';
 import LegacyFragments from '../LegacyFragments';
 import ProjectHeader from './ProjectHeader';
-import Remeasured, { RemeasuredSetChart } from './Remeasured';
-import { ANCHOR as REMEASURED } from './remeasured-data';
+import Remeasured, { COVERED_CONTEXTS } from './Remeasured';
 import { HERO_FIGURES, HERO_LINE, HERO_TILES, REMEASURED_DATE, REMEASURED_ON } from './remeasured-figures';
 import { ColdStartChart, CompareFigure, ConcurrencyChart, DecodeChart, Relbench, RelbenchNote, RigmarkBlocks, SetFigure } from './FactsCharts';
 import { Fact, FactLink } from './Fact';
@@ -53,7 +52,7 @@ function HeroTiles() {
       </div>)}
     </dl>
     {HERO_LINE
-      ? <p className="glm-tiles-line">{HERO_LINE.lead}<a href={`#${REMEASURED}`}>{HERO_LINE.measured} ↓</a></p>
+      ? <p className="glm-tiles-line">{HERO_LINE.lead}<a href="#results">{HERO_LINE.measured} ↓</a></p>
       : TILES_LINE ? <p className="glm-tiles-line"><Fact slot={TILES_LINE} /><Relbench /></p> : null}
   </div>;
 }
@@ -124,23 +123,44 @@ function VariantCard({ item }: { item: Variant }) {
     <h3><Fact slot={item.label} /></h3>
     <p>{[item.description, item.framing].filter((part): part is Slot => part !== null).map((part, index) => <React.Fragment key={index}>{index ? ' ' : ''}<Fact slot={part} />{/[.!?]$/.test(part.text) ? '' : '.'}</React.Fragment>)}</p>
     <dl>
-      {item.status ? <div><dt>Status</dt><dd><Fact slot={item.status} /></dd></div> : null}
       <div><dt>Source</dt><dd><Pinned source={item.source} url={item.url} /></dd></div>
-      {item.access ? <div><dt>Access</dt><dd><Fact slot={item.access} /></dd></div> : null}
-      {item.how ? <div><dt>How you get them</dt><dd><Fact slot={item.how} /></dd></div> : null}
       <div><dt>License</dt><dd><Fact slot={item.license} /></dd></div>
       {item.installSwitch ? <div><dt>Choose it</dt><dd><Code slot={item.installSwitch} /></dd></div> : null}
-      {item.download ? <div><dt>Download</dt><dd><Fact slot={item.download} /></dd></div> : null}
-      {item.otherInputs ? <div><dt>Also built from</dt><dd><Fact slot={item.otherInputs} /></dd></div> : null}
-      {item.conversion ? <div><dt>Conversion</dt><dd><Fact slot={item.conversion} /></dd></div> : null}
-      {item.conversionCost ? <div><dt>It takes</dt><dd><Fact slot={item.conversionCost} /></dd></div> : null}
-      {item.measuredVsFresh ? <div><dt>Your conversion</dt><dd><Fact slot={item.measuredVsFresh} /></dd></div> : null}
-      {item.freshSplit ? <div><dt>Your download</dt><dd><Fact slot={item.freshSplit} /></dd></div> : null}
     </dl>
     {item.responsibility ? <p className="glm2-responsibility"><Fact slot={item.responsibility} /></p> : null}
-    {item.terms ? <SourceTerms terms={item.terms} /> : null}
+    <details className="glm2-subfold">
+      <summary><span>{item.terms ? 'Getting them, and the source\'s terms' : 'Getting them'}</span></summary>
+      <dl>
+        {item.status ? <div><dt>Status</dt><dd><Fact slot={item.status} /></dd></div> : null}
+        {item.access ? <div><dt>Access</dt><dd><Fact slot={item.access} /></dd></div> : null}
+        {item.how ? <div><dt>How you get them</dt><dd><Fact slot={item.how} /></dd></div> : null}
+        {item.download ? <div><dt>Download</dt><dd><Fact slot={item.download} /></dd></div> : null}
+        {item.otherInputs ? <div><dt>Also built from</dt><dd><Fact slot={item.otherInputs} /></dd></div> : null}
+        {item.conversion ? <div><dt>Conversion</dt><dd><Fact slot={item.conversion} /></dd></div> : null}
+        {item.conversionCost ? <div><dt>It takes</dt><dd><Fact slot={item.conversionCost} /></dd></div> : null}
+        {item.measuredVsFresh ? <div><dt>Your conversion</dt><dd><Fact slot={item.measuredVsFresh} /></dd></div> : null}
+        {item.freshSplit ? <div><dt>Your download</dt><dd><Fact slot={item.freshSplit} /></dd></div> : null}
+      </dl>
+      {item.terms ? <SourceTerms terms={item.terms} /> : null}
+    </details>
   </article>;
 }
+
+/**
+ * A secondary section folded to one row: its heading and a line on what it holds. Open, its content takes the
+ * right-hand column, as the page's other sections do. A link to the section or into it opens it (FoldAnchors).
+ */
+function SectionFold({ id, title, hint, children }: { id: string; title: React.ReactNode; hint: React.ReactNode; children: React.ReactNode }) {
+  return <details className="glm-shell glm2-fold" id={id}>
+    <summary>
+      <span><h2 id={`${id}-title`}>{title}</h2><small>{hint}</small></span>
+    </summary>
+    <div className="glm2-fold-body">{children}</div>
+  </details>;
+}
+
+/** The first few names of a list, then how many more. */
+const firstNames = (names: string[], shown = 3) => (names.length > shown ? `${names.slice(0, shown).join(', ')} and ${names.length - shown} more` : names.join(', '));
 
 /**
  * The current GLM release page. It keeps the GLM page's design (graphite and chassis gold, the
@@ -187,48 +207,44 @@ export default function GlmFactsPage() {
       </dl>
     </div>
 
-    {/* Tonight's re-measurement leads the results; the release's figures follow, with RigMark against v1.8.4 as the record. */}
-    <div id="results" className="glm-anchor">
-    <Remeasured />
-
-    <section className="glm-results" aria-labelledby="results-title">
+    {/* One set of results: the figures of the release day for base weights + draft model first, then RigMark against
+        v1.8.4, then every weight set side by side, folded. */}
+    <section id="results" className="glm-results glm-anchor" aria-labelledby="results-title">
       <div className="glm-shell">
         <div className="glm-section-heading">
-          <h2 id="results-title"><Fact slot={RESULTS_VERSION} />, measured on our three Sparks.</h2>
-          <p className="glm-band-line">Every figure names the weights it was measured with, and whether the draft model was on.</p>
-          {CONDITIONS.all ? null : <p><Fact slot={SETS_CONDITIONS} /></p>}
+          <h2 id="results-title"><Fact slot={RESULTS_VERSION} />, measured on our three Sparks{REMEASURED_ON ? `, ${REMEASURED_DATE}` : null}.</h2>
+          {REMEASURED_ON ? <>
+            <p className="glm-band-line">One request at a time: how fast a reply streams, how soon a long prompt gets an answer, and what the disk cache saves on a long session.</p>
+            <p>Unless a chart names other weights, every figure is JSPARK3 v2.0.1 with base weights and the <a href="#draft-model">draft model</a>, on three DGX Sparks. Without the draft model, which is licensed for non-commercial use, these figures do not apply. Each chart is drawn to its own scale from zero.</p>
+          </> : <p className="glm-band-line">Every figure names the weights it was measured with, and whether the draft model was on.</p>}
         </div>
-        <h3 className="glm2-subhead" id="sets">Every measured <Fact slot={RESULTS_VERSION} /> set</h3>
-        <div className="glm2-pair">
-          <ColdStartChart />
-          <ConcurrencyChart />
-        </div>
-        <div className="glm2-pair">
-          <DecodeChart />
-          {SINGLE_FIGURES.length ? <div className="glm2-figcol">{SINGLE_FIGURES.map(item => <SetFigure key={item.metric} {...item} />)}</div> : null}
-        </div>
-        <RelbenchNote />
-        {METHODS
-          ? <div className="glm2-method glm2-method-all"><p className="glm-label">{REMEASURED_ON ? 'How the release-day figures were measured' : 'How every figure was measured'}</p><p><Fact slot={METHODS} /></p>{CONDITIONS.results ? <p><Fact slot={CONDITIONS.results} /></p> : null}{PROMPT_MIX_LINE ? <p><Fact slot={PROMPT_MIX_LINE} /></p> : null}</div>
-          : <dl className="glm2-method">
-            <div><dt>Cold first token</dt><dd><Fact slot={CONDITIONS.cold} /></dd></div>
-            <div><dt>Decode</dt><dd><Fact slot={CONDITIONS.decode} /></dd></div>
-            <div><dt>Requests at once</dt><dd><Fact slot={CONDITIONS.concurrency} /></dd></div>
-          </dl>}
-        {/* The re-measurement's own runs of these rows, under their own heading, apart from the release's figures and methods above. */}
-        {REMEASURED_ON ? <>
-          <h3 className="glm2-subhead" id="sets-remeasured">Re-measured {REMEASURED_DATE}: its own runs</h3>
-          <div className="glm2-pair">
-            <RemeasuredSetChart id="sets-reply" />
-            <RemeasuredSetChart id="sets-long-prompt" />
-          </div>
-        </> : null}
+        <Remeasured />
         {RIGMARK_SHOWN ? <>
           <h3 className="glm2-subhead" id="against-v184"><Fact slot={RESULTS_VERSION} /> against the v1.8.4 baseline</h3>
           {RIGMARK === 'undecided' ? <p className="glm2-decision"><span className="jspark-ph jspark-tbd">Shown only if RigMark is published with this release</span></p> : null}
           <CompareFigure />
           <RigmarkBlocks />
         </> : null}
+        <details className="glm-history-results glm2-sets" id="sets" open={!REMEASURED_ON || undefined}>
+          <summary><span>Every weight set, side by side<small>Every figure names the weights it was measured with, and whether the draft model was on.</small></span></summary>
+          {CONDITIONS.all ? null : <p className="glm2-sets-conditions"><Fact slot={SETS_CONDITIONS} /></p>}
+          <div className="glm2-pair">
+            <ColdStartChart skip={COVERED_CONTEXTS} />
+            <ConcurrencyChart />
+          </div>
+          <div className="glm2-pair">
+            <DecodeChart />
+            {SINGLE_FIGURES.length ? <div className="glm2-figcol">{SINGLE_FIGURES.map(item => <SetFigure key={item.metric} {...item} />)}</div> : null}
+          </div>
+          <RelbenchNote />
+          {METHODS
+            ? <div className="glm2-method glm2-method-all"><p className="glm-label">How these figures were measured</p><p><Fact slot={METHODS} /></p>{CONDITIONS.results ? <p><Fact slot={CONDITIONS.results} /></p> : null}{PROMPT_MIX_LINE ? <p><Fact slot={PROMPT_MIX_LINE} /></p> : null}</div>
+            : <dl className="glm2-method">
+              <div><dt>Cold first token</dt><dd><Fact slot={CONDITIONS.cold} /></dd></div>
+              <div><dt>Decode</dt><dd><Fact slot={CONDITIONS.decode} /></dd></div>
+              <div><dt>Requests at once</dt><dd><Fact slot={CONDITIONS.concurrency} /></dd></div>
+            </dl>}
+        </details>
         <p className="glm-evidence-link">
           <FactLink href={LINKS.results}>Results file ↗</FactLink>
           {LINKS.measurements ? <FactLink href={LINKS.measurements}>Measurements ↗</FactLink> : null}
@@ -238,44 +254,11 @@ export default function GlmFactsPage() {
         </p>
       </div>
     </section>
-    </div>
 
     <section className="glm-shell glm2-section" id="weights" aria-labelledby="weights-title">
       <h2 id="weights-title">Two sets of weights, chosen at install.</h2>
       {VARIANTS_ORDERED.some(item => !item.installSwitch) ? <p className="glm2-switch">Choose with <Code slot={SWITCH.weights} />{PROFILES_LINE ? <>. <Fact slot={PROFILES_LINE} /></> : null}</p> : PROFILES_LINE ? <p className="glm2-switch"><Fact slot={PROFILES_LINE} /></p> : null}
       <div className="glm2-variants">{VARIANTS_ORDERED.map(item => <VariantCard key={item.id} item={item} />)}</div>
-    </section>
-
-    <section className="glm-shell glm2-section glm2-split" id="draft-model" aria-labelledby="draft-title">
-      <h2 id="draft-title">The draft model and the licenses.</h2>
-      <div className="glm2-prose">
-        <dl className="glm2-defs">
-          <div><dt>Draft model</dt><dd><Pinned source={DRAFTER.source} url={DRAFTER_LINK} /></dd></div>
-          <div><dt>Its license</dt><dd><Fact slot={DRAFTER.license} /></dd></div>
-          <div><dt>How you get it</dt><dd><Fact slot={DRAFTER.distribution} /></dd></div>
-          {SWITCH.drafter ? <div><dt>Run without it</dt><dd><Code slot={SWITCH.drafter} /></dd></div> : null}
-          {DRAFTER.commercialPath
-            ? <div><dt>Commercial use</dt><dd className="glm2-paras"><p><Fact slot={DRAFTER.commercialPath} /></p>{DRAFTER.commercialContact ? <p><Fact slot={DRAFTER.commercialContact} /></p> : null}</dd></div>
-            : <div><dt>{SWITCH.drafter ? 'No-draft mode' : 'Run without it'}</dt><dd><Code slot={DRAFTER.commercial} /></dd></div>}
-          <Acceptance />
-        </dl>
-        <dl className="glm2-defs">
-          {LICENSES.map(row => <div key={row.key}><dt>{row.label}</dt><dd><Fact slot={row.value} /></dd></div>)}
-        </dl>
-        <p><Fact slot={COPY.license} /></p>
-        {LINKS.licensing || LINKS.notices ? <p className="glm-evidence-link">
-          {LINKS.licensing ? <FactLink href={LINKS.licensing}>Licensing ↗</FactLink> : null}
-          {LINKS.notices ? <FactLink href={LINKS.notices}>Third-party notices ↗</FactLink> : null}
-        </p> : null}
-      </div>
-    </section>
-
-    <section className="glm-shell glm2-section glm2-split" id="compatibility" aria-labelledby="compat-title">
-      <h2 id="compat-title">What the endpoint supports.</h2>
-      <div className="glm2-prose">
-        <dl className="glm2-defs">{COMPATIBILITY.map(row => <div key={row.key}><dt>{row.label}</dt><dd><Fact slot={row.value} /></dd></div>)}</dl>
-        <p><Fact slot={COPY.security} /></p>
-      </div>
     </section>
 
     <section className="glm-shell glm-install" id="install" aria-labelledby="install-title">
@@ -289,18 +272,23 @@ export default function GlmFactsPage() {
             ? <ul className="glm2-disk">{DISK_PARTS.map(part => <li key={part.key}><span className="glm2-cost-label">{part.label}</span> <Fact slot={part.value} /></li>)}</ul>
             : <Fact slot={COPY.disk} />}</dd></div>
           <div><dt>Session cache</dt><dd><Fact slot={COPY.sessions} /></dd></div>
-          <div><dt>From v1.8</dt><dd><Fact slot={COPY.upgrade} /></dd></div>
-          <div><dt>Reasoning</dt><dd><Fact slot={COPY.upgradeThinking} /></dd></div>
-          {COPY.whoShouldStay ? <div><dt>Who should stay on v1.8.4</dt><dd><Fact slot={COPY.whoShouldStay} /></dd></div> : null}
-          <div><dt>Rolling back</dt><dd><Fact slot={COPY.rollback} />{ROLLBACK_COMMANDS.map(item => <div key={item.key} className="glm2-command"><p>{item.where}:</p>{item.command.pending ? <Fact slot={item.command} /> : <pre><code>{item.command.text}</code></pre>}</div>)}</dd></div>
         </dl>
-        {INSTALL_COSTS.length ? <>
-          <h3 className="glm2-subhead" id="install-costs">What each step takes</h3>
+        <details className="glm2-subfold" id="upgrading">
+          <summary><span>Upgrading from v1.8 and rolling back</span></summary>
+          <dl className="glm2-defs glm2-install-defs">
+            <div><dt>From v1.8</dt><dd><Fact slot={COPY.upgrade} /></dd></div>
+            <div><dt>Reasoning</dt><dd><Fact slot={COPY.upgradeThinking} /></dd></div>
+            {COPY.whoShouldStay ? <div><dt>Who should stay on v1.8.4</dt><dd><Fact slot={COPY.whoShouldStay} /></dd></div> : null}
+            <div><dt>Rolling back</dt><dd><Fact slot={COPY.rollback} />{ROLLBACK_COMMANDS.map(item => <div key={item.key} className="glm2-command"><p>{item.where}:</p>{item.command.pending ? <Fact slot={item.command} /> : <pre><code>{item.command.text}</code></pre>}</div>)}</dd></div>
+          </dl>
+        </details>
+        {INSTALL_COSTS.length ? <details className="glm2-subfold" id="install-costs">
+          <summary><span>What each step takes</span></summary>
           <dl className="glm2-defs glm2-install-defs glm2-costs">
             {INSTALL_COSTS.map(step => <div key={step.label}><dt>{step.label}</dt><dd>{step.parts.map(part => <span key={part.label}><span className="glm2-cost-label">{part.label}</span> <Fact slot={part.value} /></span>)}</dd></div>)}
           </dl>
           {INSTALL_COSTS_CONDITIONS ? <p className="glm2-costs-note"><Fact slot={INSTALL_COSTS_CONDITIONS} /></p> : null}
-        </> : null}
+        </details> : null}
       </div>
       <ul className="glm-runlinks">
         <li><FactLink href={LINKS.install}><span>The full install</span><span>{linkPath(LINKS.install, 'docs/INSTALL.md')}</span></FactLink></li>
@@ -311,22 +299,52 @@ export default function GlmFactsPage() {
       </ul>
     </section>
 
-    <section className="glm-shell glm2-section glm2-split" id="known-issues" aria-labelledby="issues-title">
-      <h2 id="issues-title">Known issues.</h2>
-      <div>
-        {/* Numbered as the card and the copy cite them ("known issue 17"): the release only appends, so a number never moves. */}
-        <ol className="glm2-list glm2-issues">{KNOWN_ISSUES.map((issue, index) => <li key={index} id={`known-issue-${index + 1}`}><span className="glm2-issue-number">{index + 1}</span><span><Fact slot={issue} /></span></li>)}</ol>
-        {LINKS.limitations ? <p className="glm-evidence-link"><FactLink href={LINKS.limitations}>Every known limitation ↗</FactLink></p> : null}
-        {ERRATA ? <div className="glm2-errata"><h3 className="glm2-subhead" id="errata">Errata</h3><p><Fact slot={ERRATA} /></p></div> : null}
-      </div>
-    </section>
+    <div className="glm2-folds">
+      <SectionFold id="draft-model" title="The draft model and the licenses." hint={LICENSES.map(row => row.label).join(' · ')}>
+        <div className="glm2-prose">
+          <dl className="glm2-defs">
+            <div><dt>Draft model</dt><dd><Pinned source={DRAFTER.source} url={DRAFTER_LINK} /></dd></div>
+            <div><dt>Its license</dt><dd><Fact slot={DRAFTER.license} /></dd></div>
+            <div><dt>How you get it</dt><dd><Fact slot={DRAFTER.distribution} /></dd></div>
+            {SWITCH.drafter ? <div><dt>Run without it</dt><dd><Code slot={SWITCH.drafter} /></dd></div> : null}
+            {DRAFTER.commercialPath
+              ? <div><dt>Commercial use</dt><dd className="glm2-paras"><p><Fact slot={DRAFTER.commercialPath} /></p>{DRAFTER.commercialContact ? <p><Fact slot={DRAFTER.commercialContact} /></p> : null}</dd></div>
+              : <div><dt>{SWITCH.drafter ? 'No-draft mode' : 'Run without it'}</dt><dd><Code slot={DRAFTER.commercial} /></dd></div>}
+            <Acceptance />
+          </dl>
+          <dl className="glm2-defs">
+            {LICENSES.map(row => <div key={row.key}><dt>{row.label}</dt><dd><Fact slot={row.value} /></dd></div>)}
+          </dl>
+          <p><Fact slot={COPY.license} /></p>
+          {LINKS.licensing || LINKS.notices ? <p className="glm-evidence-link">
+            {LINKS.licensing ? <FactLink href={LINKS.licensing}>Licensing ↗</FactLink> : null}
+            {LINKS.notices ? <FactLink href={LINKS.notices}>Third-party notices ↗</FactLink> : null}
+          </p> : null}
+        </div>
+      </SectionFold>
 
-    <section className="glm-shell glm2-section glm2-split" id="built-on" aria-labelledby="built-on-title">
-      <h2 id="built-on-title">Built on other people&apos;s work.</h2>
-      <ul className="glm2-list glm2-credits">{CREDITS.map((credit, index) => <li key={index}>
-        {credit.url ? <FactLink href={credit.url}><Fact slot={credit.name} /></FactLink> : <span><Fact slot={credit.name} /></span>}{credit.role.text ? <span><Fact slot={credit.role} /></span> : null}
-      </li>)}</ul>
-    </section>
+      <SectionFold id="compatibility" title="What the endpoint supports." hint={COMPATIBILITY.map(row => row.label).join(' · ')}>
+        <div className="glm2-prose">
+          <dl className="glm2-defs">{COMPATIBILITY.map(row => <div key={row.key}><dt>{row.label}</dt><dd><Fact slot={row.value} /></dd></div>)}</dl>
+          <p><Fact slot={COPY.security} /></p>
+        </div>
+      </SectionFold>
+
+      <SectionFold id="known-issues" title="Known issues." hint={<>{KNOWN_ISSUES.length} issues{ERRATA ? ' · Errata' : null}</>}>
+        <div>
+          {/* Numbered as the card and the copy cite them ("known issue 17"): the release only appends, so a number never moves. */}
+          <ol className="glm2-list glm2-issues">{KNOWN_ISSUES.map((issue, index) => <li key={index} id={`known-issue-${index + 1}`}><span className="glm2-issue-number">{index + 1}</span><span><Fact slot={issue} /></span></li>)}</ol>
+          {LINKS.limitations ? <p className="glm-evidence-link"><FactLink href={LINKS.limitations}>Every known limitation ↗</FactLink></p> : null}
+          {ERRATA ? <div className="glm2-errata"><h3 className="glm2-subhead" id="errata">Errata</h3><p><Fact slot={ERRATA} /></p></div> : null}
+        </div>
+      </SectionFold>
+
+      <SectionFold id="built-on" title="Built on other people's work." hint={firstNames(CREDITS.map(credit => credit.name.text))}>
+        <ul className="glm2-list glm2-credits">{CREDITS.map((credit, index) => <li key={index}>
+          {credit.url ? <FactLink href={credit.url}><Fact slot={credit.name} /></FactLink> : <span><Fact slot={credit.name} /></span>}{credit.role.text ? <span><Fact slot={credit.role} /></span> : null}
+        </li>)}</ul>
+      </SectionFold>
+    </div>
 
     <section className="glm-shell glm-why" id="why-glm" aria-labelledby="why-title">
       <h2 id="why-title">{GLM_COPY.whyGlmTitle}</h2>

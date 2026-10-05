@@ -61,7 +61,7 @@ test('the rendered section keeps its rules: speeds after the first token say so,
   const { ANCHOR, CHARTS, PLACEHOLDER } = await import('./remeasured-data');
   const html = renderToStaticMarkup(React.createElement(Remeasured));
   if (PLACEHOLDER && process.env.JSPARK3_REMEASURED_PREVIEW !== '1') return assert.equal(html, '');
-  assert.match(html, new RegExp(`<section[^>]* id="${ANCHOR}"`));
+  assert.match(html, new RegExp(`<div[^>]* id="${ANCHOR}"`));
   const copy = text(html);
   assert.ok(!copy.includes(String.fromCodePoint(0x2014)), 'em dash in the section');
   assert.ok(!/\bvLLM\b|\babli/i.test(copy), 'names vLLM or the ablit weights');
@@ -93,11 +93,8 @@ test('the round-once audit: withdrawn figures stay off, timings say fresh or cac
   Object.assign(globalThis, { React });
   const { renderToStaticMarkup } = await import('react-dom/server');
   const { default: Remeasured } = await import('./Remeasured');
-  const { RemeasuredSetChart } = await import('./Remeasured');
-  const { SET_CHARTS } = await import('./remeasured-data');
   const { HERO_SUMMARY } = await import('./remeasured-figures');
-  const sets = SET_CHARTS.map(chart => renderToStaticMarkup(React.createElement(RemeasuredSetChart, { id: chart.id }))).join('');
-  const copy = `${text(renderToStaticMarkup(React.createElement(Remeasured)))} ${text(sets)} ${HERO_SUMMARY ?? ''}`;
+  const copy = `${text(renderToStaticMarkup(React.createElement(Remeasured)))} ${HERO_SUMMARY ?? ''}`;
   // Rounded twice (73.6, decode 92.9, the re-run's 96.1, 158.3), or a mean of a fresh run with cached ones
   // (0.15 / 0.13 s, 102.7 / 71.1, decode 115.3 / 75.8, 175.8).
   for (const figure of ['73.6', '92.9', '96.1', '158.3', '0.15 s', '0.13 s', '102.7', '71.1', '115.3', '75.8', '175.8']) assert.ok(!copy.includes(figure), `${figure} renders`);
@@ -146,44 +143,23 @@ test('the round-once audit: withdrawn figures stay off, timings say fresh or cac
   for (const figure of ['138.0', '87.4', '147.9', '102.5', '156.3', '113.1', '205.0', '142.4']) assert.ok(!copy.includes(figure), `row 8's ${figure} renders`);
 });
 
-test('tonight\'s rows in every measured set: base + draft from the band, other sets not yet re-measured until a figure drops in', async () => {
+test('one set of results: each prompt length the long-prompt chart gives is left out of the set charts', async () => {
   const React = await import('react');
   Object.assign(globalThis, { React });
   const { renderToStaticMarkup } = await import('react-dom/server');
-  const { RemeasuredSetChart } = await import('./Remeasured');
-  const { CHARTS, DATE, MEASURED_SET, SET_CHARTS } = await import('./remeasured-data');
-  const { SETS } = await import('../glm-facts');
-  assert.ok(SETS.some(set => set.id === MEASURED_SET), 'the measured set is not a result set');
-  for (const chart of SET_CHARTS) for (const row of chart.rows) {
-    const from = CHARTS.find(item => item.id === row.from.chart);
-    assert.ok(from?.groups.find(group => group.key === row.from.group)?.bars.some(bar => bar.name === row.from.bar), `${chart.id}.${row.key} names no band figure`);
-    assert.equal(from?.ruler, chart.ruler, `${chart.id}.${row.key} mixes two measurements`);
-  }
-  const groups = (id: string) => renderToStaticMarkup(React.createElement(RemeasuredSetChart, { id })).split('<div class="glm-group"').slice(1);
-  const [reply] = SET_CHARTS;
-  const before = groups(reply.id);
-  assert.equal(before.length, reply.rows.length);
-  for (const group of before) {
-    assert.ok(group.includes(`measured ${DATE}`), 'a row is not dated');
-    assert.equal(group.match(/data-state="value"/g)?.length, 1, 'a row draws a set the table did not measure');
-    assert.equal(group.match(/Not yet re-measured/g)?.length, SETS.length - 1);
-  }
-  // An ablit figure drops in as data only; a figure that is not PUBLISHABLE does not.
-  const other = SETS.find(set => set.id !== MEASURED_SET)!;
-  const row = reply.rows[0];
-  try {
-    row.sets = { [other.id]: { value: '12.3', screen: 'PUBLISHABLE', source: 'row 2' } };
-    const dropped = groups(reply.id)[0];
-    assert.equal(dropped.match(/data-state="value"/g)?.length, 2);
-    assert.ok(dropped.includes('12.3'));
-    row.sets = { [other.id]: { value: '12.3', screen: 'DIAGNOSTIC', source: 'row 2' } };
-    assert.ok(!groups(reply.id)[0].includes('12.3'), 'a diagnostic figure drops in');
-  } finally {
-    delete row.sets;
-  }
+  const { default: GlmFactsPage } = await import('./GlmFactsPage');
+  const { COVERED_CONTEXTS } = await import('./Remeasured');
+  const { REMEASURED_ON } = await import('./remeasured-figures');
+  const { CONTEXTS } = await import('../glm-facts');
+  const html = renderToStaticMarkup(React.createElement(GlmFactsPage));
+  if (REMEASURED_ON) assert.deepEqual(COVERED_CONTEXTS, ['32k', '64k']);
+  for (const context of CONTEXTS) assert.equal(html.includes(`data-metric-id="cold_ttft_s.${context}"`), !COVERED_CONTEXTS.includes(context), `${context} cold first token`);
+  // No remeasure story: the page has one results heading and never calls a figure re-measured.
+  assert.ok(!/re-measured|its own runs|release-day/i.test(text(html)), 'the page still tells a remeasure story');
+  assert.equal(html.match(/<h2 [^>]*id="results-title"/g)?.length, 1);
 });
 
-test('the GLM page leads with the natural figures: hero, the re-measured band, every set, its re-measured rows apart, RigMark against v1.8.4, then the rest in order', async () => {
+test('the GLM page leads with the natural figures: hero, one results band, RigMark against v1.8.4, every set folded, then the rest in order', async () => {
   const React = await import('react');
   Object.assign(globalThis, { React });
   const { renderToStaticMarkup } = await import('react-dom/server');
@@ -192,10 +168,8 @@ test('the GLM page leads with the natural figures: hero, the re-measured band, e
   const { ANCHOR } = await import('./remeasured-data');
   const { REMEASURED_DATE, REMEASURED_ON } = await import('./remeasured-figures');
   const html = renderToStaticMarkup(React.createElement(GlmFactsPage));
-  // The re-measured rows of every set follow the release's charts and methods, under a heading of their own.
-  const remeasured = REMEASURED_ON ? ['id="sets-remeasured"', `${ANCHOR}-sets-reply`, `${ANCHOR}-sets-long-prompt`] : [];
-  if (REMEASURED_ON) assert.ok(html.includes(`id="sets-remeasured">Re-measured ${REMEASURED_DATE}: its own runs</h3>`), 'the re-measured rows have no heading of their own');
-  const order = ['class="glm-tiles"', 'id="results"', `id="${ANCHOR}"`, 'id="results-title"', 'id="sets"', 'glm2-decode-title', 'glm2-method-all', ...remeasured, ...(RIGMARK_SHOWN ? ['id="against-v184"'] : []), 'id="weights"', 'id="draft-model"', 'id="compatibility"', 'id="install"', 'id="known-issues"', 'id="built-on"', 'id="why-glm"', 'id="history"'];
+  if (REMEASURED_ON) assert.ok(html.includes(`id="results-title">v2.0.1, measured on our three Sparks, ${REMEASURED_DATE}.</h2>`), 'the results heading does not say when');
+  const order = ['class="glm-tiles"', 'id="results"', 'id="results-title"', ...(REMEASURED_ON ? [`id="${ANCHOR}"`] : []), ...(RIGMARK_SHOWN ? ['id="against-v184"'] : []), 'id="sets"', 'glm2-decode-title', 'glm2-method-all', 'id="weights"', 'id="install"', 'id="draft-model"', 'id="compatibility"', 'id="known-issues"', 'id="built-on"', 'id="why-glm"', 'id="history"'];
   const at = order.map(marker => html.indexOf(marker));
   order.forEach((marker, index) => assert.ok(at[index] > (index ? at[index - 1] : -1), `${marker} is out of order`));
   // The hero is user-visible figures: no server prefill, no first streamed reasoning.
@@ -294,7 +268,7 @@ test('the GLM page\'s description and link previews give the hero\'s figures wit
   for (const figure of DESCRIBED_FIGURES) assert.ok(description.includes(figure) && /, (?:fresh|fresh prompts?|prompt cached): /.test(figure), `the description does not give "${figure}"`);
   for (const figure of [...HERO_FIGURES.filter(item => !item.prompt).map(item => item.value), ...HERO_TILES.filter(tile => !tile.prompt).map(tile => tile.value.slot.text)]) assert.ok(!description.includes(figure), `the description lists ${figure} without its cache status`);
   // RigMark's four at once ran on fresh prompts (table row 9): the description gives it so, from the release.
-  assert.ok(description.includes('Four at once, end to end (RigMark), fresh prompts: 113.4 tok/s') && description.endsWith('Measured with base weights + draft model · RigMark from the release; the rest re-measured October 3, 2026.'), description);
+  assert.ok(description.includes('Four at once, end to end (RigMark), fresh prompts: 113.4 tok/s') && description.endsWith('Measured with base weights + draft model on October 3, 2026.'), description);
   assert.ok(DESCRIBED_MEASURED && description.endsWith(DESCRIBED_MEASURED), 'the description does not say what its figures were measured with');
   // The release headline's figures are for eight requests at once; previews show none of them.
   for (const cite of synced.facts.headline?.cites ?? []) assert.ok(!description.includes(cite.value), `the description gives the headline's ${cite.value}`);

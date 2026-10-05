@@ -120,9 +120,10 @@ function SetChart({ id, title, groups, unit, better, note }: { id: string; title
   </figure>;
 }
 
-export function ColdStartChart() {
+/** Cold first token by prompt length; `skip` leaves out the lengths another chart on the page already gives. */
+export function ColdStartChart({ skip = [] }: { skip?: string[] }) {
   return <SetChart id="glm2-cold" title="Time to first token on a cold prompt, by prompt length" unit="s" better="lower"
-    groups={CONTEXTS.map(context => ({ key: context, label: `${context} tokens`, metric: `cold_ttft_s.${context}` }))} />;
+    groups={CONTEXTS.filter(context => !skip.includes(context)).map(context => ({ key: context, label: `${context} tokens`, metric: `cold_ttft_s.${context}` }))} />;
 }
 
 /** Group names for single-request decode cells. */

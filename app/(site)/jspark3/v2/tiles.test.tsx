@@ -98,7 +98,7 @@ test('/jspark3/glm/ shows no figure measured at eight requests at once, outside 
   const html = renderToStaticMarkup(React.createElement(GlmFactsPage));
   for (const [, key] of html.matchAll(/data-metric-id="([^"]+)"/g)) assert.ok(!EIGHT_AT_ONCE(key), `${key} is on the page`);
   // Known issue 10 is the release's disclosure, kept as written; everything else is held.
-  const issues = html.match(/<section[^>]*id="known-issues"[\s\S]*?<\/section>/);
+  const issues = html.match(/<details[^>]*id="known-issues"[\s\S]*?<\/details>/);
   assert.ok(issues, 'no known issues section');
   const text = html.replace(issues[0], ' ').replace(/<[^>]+>/g, ' ').replace(/&#x27;/g, "'").replace(/\s+/g, ' ');
   assert.doesNotMatch(text, /\b8(?:-request| requests| concurrent| running|-stream)\b|\beight-client\b|\bAcceptance, |\bthe token gap\b/);

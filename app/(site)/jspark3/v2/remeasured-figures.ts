@@ -57,16 +57,16 @@ export const HERO_TILES: HeroTile[] = HERO_FIGURES.length
 
 const WEIGHTS = 'base weights + draft model';
 
-/** What the re-measured hero was measured with, then when; the GLM page links the date to the section. */
+/** What the hero was measured with, then when; the GLM page links the date to its results. */
 export const HERO_LINE = HERO_FIGURES.length
-  ? { lead: `${WEIGHTS} · ${HERO_TILES.length ? 'RigMark from the release; the rest ' : ''}`, measured: `re-measured ${REMEASURED_DATE}` }
+  ? { lead: `${WEIGHTS} · `, measured: `measured ${REMEASURED_DATE}` }
   : null;
 
 const named = (figure: Pick<HeroFigure, 'label' | 'value' | 'unit' | 'prompt'>) => `${[figure.label, figure.prompt].filter(Boolean).join(', ')}: ${figure.value} ${figure.unit}`;
 const tileNamed = (tile: HeroTile) => named({ ...tile, value: tile.value.slot.text });
 
 /** What the re-measured hero was measured with, as a sentence: the share card's line and the page's description end with it. */
-export const HERO_MEASURED: string | null = HERO_LINE ? `Measured with ${HERO_LINE.lead}${HERO_LINE.measured}.` : null;
+export const HERO_MEASURED: string | null = HERO_LINE ? `Measured with ${WEIGHTS} on ${REMEASURED_DATE}.` : null;
 
 /** All dynamic copy rendered on the share card, also used to reject a raster with stale qualifications. */
 export function heroCard(figures: HeroFigure[], tiles: HeroTile[], measured: string) {
@@ -90,8 +90,8 @@ export const HERO_SIGNATURE = JSON.stringify(HERO_CARD);
 const DESCRIBED_TILES = HERO_TILES.filter(tile => tile.prompt);
 export const DESCRIBED_FIGURES: string[] = [...HERO_FIGURES.filter(figure => figure.prompt).map(named), ...DESCRIBED_TILES.map(tileNamed)];
 
-/** What the described figures were measured with, as the description's last sentence: the release's tiles by name when it gives one. */
-export const DESCRIBED_MEASURED: string | null = HERO_LINE ? `Measured with ${DESCRIBED_TILES.length ? HERO_LINE.lead : `${WEIGHTS} · `}${HERO_LINE.measured}.` : null;
+/** What the described figures were measured with, as the description's last sentence. */
+export const DESCRIBED_MEASURED: string | null = HERO_MEASURED;
 
 /**
  * The re-measured hero as the GLM page's description says it: each described figure, then what they were measured
