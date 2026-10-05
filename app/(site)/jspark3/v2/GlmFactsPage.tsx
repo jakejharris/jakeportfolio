@@ -10,7 +10,7 @@ import { ColdStartChart, CompareFigure, ConcurrencyChart, DecodeChart, Relbench,
 import { Fact, FactLink } from './Fact';
 import {
   ACCEPTANCE_KINDS, COMPATIBILITY, CONDITIONS, COPY, CREDITS, DEFAULT_DECIDED, DEFAULT_PROVISIONAL, DEFAULT_VARIANT, DRAFT, DRAFTER, DRAFTER_LINK, EIGHT_AT_ONCE, ENGINE, HISTORY,
-  DISK_PARTS, ERRATA, ROLLBACK_COMMANDS, INSTALL_COSTS, INSTALL_COSTS_CONDITIONS, INSTALL_TAG, KNOWN_ISSUES, LICENSES, LINKS, METHODS, PROFILES_LINE, PROMPT_MIX_LINE, RIGMARK, TEMPLATE_SETTINGS, RIGMARK_SHOWN, RUNNABLE, SETS, SETS_CONDITIONS, SWITCH, SOURCE, VARIANTS_ORDERED, VERSION, RESULTS_VERSION, HEADLINE,
+  DISK_PARTS, ERRATA, ROLLBACK_COMMANDS, INSTALL_COSTS, INSTALL_COSTS_CONDITIONS, INSTALL_TAG, KNOWN_ISSUES, LICENSES, LINKS, METHODS, PROFILES_LINE, PROMPT_MIX_LINE, RIGMARK, TEMPLATE_SETTINGS, RIGMARK_SHOWN, RUNNABLE, SETS, SETS_CONDITIONS, SWITCH, SOURCE, VARIANTS_ORDERED, VERSION, RESULTS_VERSION,
   TILES_LINE, cell, linkPath, metricInfo, pinned, releaseDate,
   type Slot, type Variant,
 } from '../glm-facts';
@@ -169,8 +169,6 @@ export default function GlmFactsPage() {
             <span className="glm-sr-only">: </span>
             <span className="glm-lede">GLM-5.3 Flash <br />on three DGX Sparks.</span>
           </h1>
-          <p className="glm-intro"><Fact slot={HEADLINE[0]} /></p>
-          <p><Fact slot={HEADLINE[1]} /></p>
           <HeroTiles />
           <nav className="glm-actions" aria-label="Release resources">
             <FactLink className="glm-button" href={LINKS.install}>{RUNNABLE ? <>Install <Fact slot={INSTALL_TAG} /></> : 'Install guide'} ↗</FactLink>
