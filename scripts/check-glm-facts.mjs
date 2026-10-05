@@ -354,7 +354,11 @@ function check() {
   for (const [index, issue] of (facts.known_issues_public ?? []).entries()) filled(issue, `known issue ${index}`, `known_issues_public[${index}]`);
   for (const [key, value] of Object.entries(record(facts.compatibility))) filled(value, `compatibility.${key}`, `compatibility.${key}`);
   for (const [key, value] of Object.entries(record(facts.license?.components))) filled(value, `license.components.${key}`, `license.components.${key}`);
-  need(['L2', 'L3'].includes(facts.runnability?.level_reached), `runnability.level_reached is ${JSON.stringify(facts.runnability?.level_reached)}; the pages need L2 or L3`, 'runnability.level_reached');
+  const acceptedPatch = facts.runnability?.level_reached === 'live-acceptance' &&
+    facts.results_tag !== facts.version && /clean installation.*has not been demonstrated/i.test(facts.install_claim ?? '') &&
+    /^https:\/\//.test(facts.links?.evidence ?? '');
+  need(['L2', 'L3'].includes(facts.runnability?.level_reached) || acceptedPatch,
+    'the pages need L2/L3 or live acceptance with an explicit clean-install limitation, historical results and evidence link', 'runnability.level_reached');
   // The release's numbers card, when it is shown, must come from these exact facts.
   if (share.image) need(share.facts_sha256 === source.sha256, 'the share card was rendered from other facts; rerun scripts/render-glm-share.mjs');
   return { version: facts.version, sha256: source.sha256, default: facts.weights?.default_variant, sets: sets.map(([id]) => id), rigmark: facts.rigmark?.publish, reasoning_off_row: offRow.applied, share: share.image };

@@ -678,7 +678,7 @@ export const CITE = {
     "Cite ",
     { text: "this release, v1.8.4", href: "https://github.com/jakejharris/jspark3/releases/tag/v1.8.4" },
     " (superseded by ",
-    { text: "v2.0.1", href: "/jspark3/glm/" },
+    { text: "v2.0.2", href: "/jspark3/glm/" },
     "), together with the upstream work in its ",
     { text: "third-party notices", href: "https://github.com/jakejharris/jspark3/blob/v1.8.4/THIRD_PARTY_NOTICES.md" },
     " and ",
