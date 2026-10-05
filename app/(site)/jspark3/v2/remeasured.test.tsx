@@ -294,7 +294,7 @@ test('the GLM page\'s description and link previews give the hero\'s figures wit
   for (const figure of DESCRIBED_FIGURES) assert.ok(description.includes(figure) && /, (?:fresh|fresh prompts?|prompt cached): /.test(figure), `the description does not give "${figure}"`);
   for (const figure of [...HERO_FIGURES.filter(item => !item.prompt).map(item => item.value), ...HERO_TILES.filter(tile => !tile.prompt).map(tile => tile.value.slot.text)]) assert.ok(!description.includes(figure), `the description lists ${figure} without its cache status`);
   // RigMark's four at once ran on fresh prompts (table row 9): the description gives it so, from the release.
-  assert.ok(description.includes('Four at once, end to end (RigMark), fresh prompts: 113.4 tok/s') && description.endsWith('Measured with base weights + draft model · v2.0.1, RigMark from that release; the rest re-measured October 3, 2026.'), description);
+  assert.ok(description.includes('Four at once, end to end (RigMark), fresh prompts: 113.4 tok/s') && description.endsWith('Measured with base weights + draft model · RigMark from the release; the rest re-measured October 3, 2026.'), description);
   assert.ok(DESCRIBED_MEASURED && description.endsWith(DESCRIBED_MEASURED), 'the description does not say what its figures were measured with');
   // The release headline's figures are for eight requests at once; previews show none of them.
   for (const cite of synced.facts.headline?.cites ?? []) assert.ok(!description.includes(cite.value), `the description gives the headline's ${cite.value}`);

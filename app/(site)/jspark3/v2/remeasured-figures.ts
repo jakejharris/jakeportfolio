@@ -1,4 +1,4 @@
-import { COMPARE, RELBENCH_LABEL, SOCIAL_IMAGE, TILE_FIGURES, TILES_LINE, VERSION, RESULTS_VERSION, type CompareRow, type TileFigure } from '../glm-facts';
+import { COMPARE, RELBENCH_LABEL, SOCIAL_IMAGE, TILE_FIGURES, TILES_LINE, VERSION, type CompareRow, type TileFigure } from '../glm-facts';
 import share from '../glm-share.json';
 import { CHARTS, COMPARE_NOTES, DATE, HERO, HERO_RELEASE_TILES, PLACEHOLDER, type LeadFigure, type RemeasuredChart } from './remeasured-data';
 
@@ -59,7 +59,7 @@ const WEIGHTS = 'base weights + draft model';
 
 /** What the re-measured hero was measured with, then when; the GLM page links the date to the section. */
 export const HERO_LINE = HERO_FIGURES.length
-  ? { lead: `${WEIGHTS} · ${RESULTS_VERSION.text}, ${HERO_TILES.length ? 'RigMark from that release; the rest ' : ''}`, measured: `re-measured ${REMEASURED_DATE}` }
+  ? { lead: `${WEIGHTS} · ${HERO_TILES.length ? 'RigMark from the release; the rest ' : ''}`, measured: `re-measured ${REMEASURED_DATE}` }
   : null;
 
 const named = (figure: Pick<HeroFigure, 'label' | 'value' | 'unit' | 'prompt'>) => `${[figure.label, figure.prompt].filter(Boolean).join(', ')}: ${figure.value} ${figure.unit}`;
