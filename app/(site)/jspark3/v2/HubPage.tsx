@@ -9,12 +9,20 @@ import { HERO_FIGURES, HERO_LINE, HERO_TILES } from './remeasured-figures';
 import { Fact } from './Fact';
 
 /**
- * The latest card's figures are the GLM page's hero (remeasured-figures.ts): the re-measured figures, each with
- * its label, then the release tiles kept beside them; without the re-measurement, the release's chosen metrics
- * as the facts write them (glm-facts.ts TILE_FIGURES). No v1.8.4 figure stands beside them: the release compares
- * the two only in RigMark's comparison with v1.8.4. A figure from other weights names them; a concurrency figure
- * carries its condition as its caption.
+ * The latest card's figures, as a line of subtext under its title: the GLM page's hero (remeasured-figures.ts),
+ * each figure bold with its short label and its prompt's cache status. The long captions stay on the GLM page. A
+ * figure without a cache status keeps its caption (a concurrency figure's condition, without the re-measurement),
+ * and a figure from other weights names them. No v1.8.4 figure stands beside them.
  */
+type CardFigure = { key: string; label: string; value: React.ReactNode; unit: string; weights?: React.ReactNode; note?: React.ReactNode };
+const CARD_FIGURES: CardFigure[] = [
+  ...HERO_FIGURES.map(({ key, label, value, unit, prompt, caption }) => ({ key, label, value, unit, note: prompt ?? caption })),
+  ...HERO_TILES.map(({ key, label, value, unit, weights, prompt, caption }) => ({
+    key, label, unit, value: <Fact slot={value.slot} />,
+    weights: weights ? <Fact slot={weights} /> : undefined,
+    note: prompt ?? (caption ? <Fact slot={caption} /> : undefined),
+  })),
+];
 
 function LedgerRow({ href, children }: { href: string; children: React.ReactNode }) {
   return href.startsWith('/')
@@ -40,23 +48,20 @@ export default function HubPage() {
               <span className="spark-hub-release-meta">{`${LABELS.latest} `}<span><Fact slot={VERSION} />{latestDate ? <> · {latestDate}</> : null}</span></span>
               <span className="spark-hub-release-title">GLM-5.3 Flash <span aria-hidden="true">↗</span></span>
               <span className="spark-hub-figures" data-figure="facts">
-                {HERO_FIGURES.map(({ key, label, value, unit, caption }) => <span key={key} className="spark-hub-figure" data-metric-id={key}>
-                  <span className="spark-hub-figure-label">{label}</span>
+                {CARD_FIGURES.map(({ key, label, value, unit, weights, note }) => <span key={key} className="spark-hub-figure" data-metric-id={key}>
                   <span className="spark-hub-figure-value">{value}<small>{unit}</small></span>
-                  <span className="spark-hub-figure-caption">{caption}</span>
-                </span>)}
-                {HERO_TILES.map(({ key, label, unit, value, weights, caption }) => <span key={key} className="spark-hub-figure" data-metric-id={key}>
                   <span className="spark-hub-figure-label">{label}</span>
-                  <span className="spark-hub-figure-value"><Fact slot={value.slot} /><small>{unit}</small></span>
-                  {weights ? <span className="spark-hub-figure-weights"><Fact slot={weights} /></span> : null}
-                  {caption ? <span className="spark-hub-figure-caption"><Fact slot={caption} /></span> : null}
+                  {weights ? <span className="spark-hub-figure-weights">{weights}</span> : null}
+                  {note ? <span className="spark-hub-figure-caption">{note}</span> : null}
                 </span>)}
               </span>
-              {HERO_LINE
-                ? <span className="spark-hub-release-detail">{HERO_LINE.lead}{HERO_LINE.measured}</span>
-                : <span className="spark-hub-release-detail">{TILES_LINE ? <Fact slot={TILES_LINE} /> : null}{RELBENCH_LABEL ? <>, <Fact slot={RELBENCH_LABEL.short} /></> : null}</span>}
               {RELBENCH_LABEL ? <span className="spark-hub-release-detail spark-hub-relbench" data-relbench-label="full"><Fact slot={RELBENCH_LABEL.full} /></span> : null}
-              <span className="spark-hub-release-action">{HUB_COPY.glmCard.action} <span aria-hidden="true">→</span></span>
+              <span className="spark-hub-release-foot">
+                {HERO_LINE
+                  ? <span className="spark-hub-release-detail">{HERO_LINE.lead}{HERO_LINE.measured}</span>
+                  : <span className="spark-hub-release-detail">{TILES_LINE ? <Fact slot={TILES_LINE} /> : null}{RELBENCH_LABEL ? <>, <Fact slot={RELBENCH_LABEL.short} /></> : null}</span>}
+                <span className="spark-hub-release-action">{HUB_COPY.glmCard.action} <span aria-hidden="true">→</span></span>
+              </span>
             </TransitionLink>
           </li>
           <li>
