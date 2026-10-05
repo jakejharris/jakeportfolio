@@ -1,7 +1,7 @@
 {
   "source": {
     "file": "RELEASE-FACTS.md",
-    "sha256": "504c9eccc1fdf775ff7dd99a312fa3b5bbbaed88c51881c633ab767fb63b147f",
+    "sha256": "f4fff41c799dd7ade1fb223725010a4ec33c7517bb94ef76ff7cdd26bd8d17e1",
     "status": "final"
   },
   "facts": {
@@ -38,7 +38,7 @@
           "stranger_split_matches": "A fresh download and split on a DGX Spark that had never run this project matched the published per-host manifests file for file.",
           "label": "base weights",
           "description": "GLM-5.3 Flash in 4-bit MLX format, with the model's own multi-token prediction head",
-          "how": "The installer downloads them at the pinned revision, verifies every file against a pinned SHA-256 list, and splits them into three per-host parts, checked against a shipped manifest. This project hosts none of the v2.0.1 weights."
+          "how": "The installer downloads them at the pinned revision, verifies every file against a pinned SHA-256 list, and splits them into three per-host parts, checked against a shipped manifest. This project hosts none of the v2.0.2 weights."
         },
         "ablit": {
           "description": "refusal-removed (abliterated) weights",
@@ -353,7 +353,7 @@
       }
     ],
     "release": {
-      "title": "JSpark3 v2.0.1 (GLM-5.3 Flash)"
+      "title": "JSpark3 v2.0.2 (GLM-5.3 Flash)"
     },
     "hardware": {
       "summary": "three NVIDIA DGX Sparks",
