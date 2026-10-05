@@ -177,7 +177,7 @@ test('the GLM page leads with the natural figures: hero, one results band, RigMa
   assert.ok(hero && !/prefill|0\.26 s|56\.7/.test(text(hero)), 'the hero shows a server-side or reasoning-first figure');
 });
 
-test('the hub card and the share card show the GLM page\'s hero: the same figures, labels and line', async () => {
+test('the hub card and the share card show the GLM page\'s hero: the same figures, labels and line; the hub keeps only each figure\'s prompt', async () => {
   const React = await import('react');
   Object.assign(globalThis, { React });
   const { renderToStaticMarkup } = await import('react-dom/server');
@@ -200,18 +200,22 @@ test('the hub card and the share card show the GLM page\'s hero: the same figure
   const shown = (html: string, tag: string) => [...html.matchAll(new RegExp(`data-metric-id="([^"]+)"[^>]*><${tag}[^>]*>([^<]*)<`, 'g'))].map(match => [match[1], match[2]]);
   const want = [...HERO_FIGURES.map(figure => [figure.key, figure.label]), ...HERO_TILES.map(tile => [tile.key, tile.label])];
   assert.deepEqual(shown(hero, 'dt'), want, 'the hero shows other tiles');
-  assert.deepEqual(shown(card, 'span'), want, 'the hub card shows other tiles than the hero');
+  const labels = [...card.matchAll(/data-metric-id="([^"]+)"[\s\S]*?<span class="spark-hub-figure-label">([^<]*)</g)].map(match => [match[1], match[2]]);
+  assert.deepEqual(labels, want, 'the hub card shows other tiles than the hero');
   // Each caption reads as a sentence, here and on the share card.
   for (const figure of HERO_FIGURES) assert.match(figure.caption, /^[A-Z]/, `the ${figure.label} caption starts in lower case`);
   for (const figure of HERO_FIGURES) {
     assert.ok(hero.includes(`<dd class="glm-tile-value">${figure.value}<small>${figure.unit}</small></dd>`) && hero.includes(escape(figure.caption)), `the hero's ${figure.label} tile is shown without its value or label`);
-    assert.ok(card.includes(`<span class="spark-hub-figure-value">${figure.value}<small>${figure.unit}</small></span>`) && card.includes(escape(figure.caption)), `the hub's ${figure.label} tile is shown without its value or label`);
+    // The hub card is compact: each figure with its label and its prompt's cache status, never the long caption.
+    assert.ok(figure.prompt && card.includes(`<span class="spark-hub-figure-value">${figure.value}<small>${figure.unit}</small></span>`) && card.includes(`<span class="spark-hub-figure-caption">${figure.prompt}</span>`), `the hub's ${figure.label} figure is shown without its value or prompt`);
+    assert.ok(!card.includes(escape(figure.caption)), `the hub card still shows the ${figure.label} caption`);
   }
   // A kept release tile shows the table's label for it, which names its prompts, never the release's caption.
   for (const tile of HERO_TILES) {
     const kept = HERO_RELEASE_TILES.find(item => item.key === tile.key);
     assert.ok(kept && tile.prompt === kept.prompt && tile.caption?.text === kept.smallPrint, `the ${tile.label} tile is not captioned with its label`);
-    for (const html of [hero, card]) assert.ok(html.includes(escape(kept.smallPrint)), `${tile.label} shows without its label`);
+    assert.ok(hero.includes(escape(kept.smallPrint)), `${tile.label} shows without its label`);
+    assert.ok(card.includes(`<span class="spark-hub-figure-caption">${kept.prompt}</span>`) && !card.includes(escape(kept.smallPrint)), `the hub's ${tile.label} figure does not name its prompts alone`);
   }
   assert.ok(HERO_LINE && hero.includes(`<p class="glm-tiles-line">${HERO_LINE.lead}`) && card.includes(`<span class="spark-hub-release-detail">${HERO_LINE.lead}${HERO_LINE.measured}</span>`), 'the hub and the hero say different things about their figures');
   assert.ok(HERO_LINE.lead.startsWith('base weights + draft model · '), 'the line does not name the weights');
