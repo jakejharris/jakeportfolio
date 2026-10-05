@@ -53,8 +53,6 @@ export type RemeasuredChart = {
   id: string;
   /** The measurement every bar in the chart shares; one per chart. */
   ruler: 'user-visible' | 'first-token' | 'resume' | 'combined' | 'v1.8-ladder';
-  /** A subhead above the chart, for a chart that stands apart from the ones before it. */
-  heading?: string;
   title: string;
   unit: string;
   better: 'higher' | 'lower';
@@ -191,7 +189,6 @@ export const CHARTS: RemeasuredChart[] = [
   {
     id: 'prose-v180',
     ruler: 'v1.8-ladder',
-    heading: 'One stream of prose, against v1.8.0',
     title: 'Prose decode, one stream, on the v1.8 ladder',
     unit: 'tok/s',
     better: 'higher',
@@ -247,42 +244,3 @@ export const COMPARE_CACHE = 'v2.0.1 measured on fresh prompts; v1.8.4 cache sta
 export const COMPARE_NOTES: Record<string, string> = {
   c4: `RigMark 1.1.0, same harness on both. C4: four short-code requests, 256-token cap each, median of three end-to-end waves including prompt reading. ${COMPARE_CACHE}`,
 };
-
-/**
- * Tonight's figures as rows of "Every measured v2.0.1 set", one chart per measurement. The table measured base
- * weights + draft model (MEASURED_SET), so each row takes that set's figure from the band chart it names. A
- * figure for another set drops in under `sets`, keyed by its result-set id, with nothing else to change; until
- * then that set reads "Not yet re-measured". A row with nothing to draw is left out.
- */
-export type SetRow = { key: string; label: string; from: { chart: string; group: string; bar: string }; sets?: Record<string, RemeasuredCell> };
-export type RemeasuredSetChart = Pick<RemeasuredChart, 'id' | 'ruler' | 'title' | 'unit' | 'better' | 'methods'> & { rows: SetRow[] };
-export const MEASURED_SET = 'V-D';
-
-export const SET_CHARTS: RemeasuredSetChart[] = [
-  {
-    id: 'sets-reply',
-    ruler: 'user-visible',
-    title: 'Reply speed, one request at a time, user-visible',
-    unit: 'tok/s',
-    better: 'higher',
-    methods: 'User-visible rate: reply tokens over the time from sending the request to its last token, so the wait for the first token counts.',
-    rows: [
-      { key: 'natural-code', label: 'A complete program, natural length, fresh prompt', from: { chart: 'reply-one', group: 'natural-code', bar: 'Code' } },
-      { key: 'short-code', label: 'Code, forced to 128 tokens, fresh prompt', from: { chart: 'reply-one', group: 'short', bar: 'Code' } },
-      { key: 'short-prose', label: 'Prose, forced to 128 tokens, fresh prompt', from: { chart: 'reply-one', group: 'short', bar: 'Prose' } },
-      { key: 'long-prose', label: 'Prose, forced to 2,000 tokens', from: { chart: 'reply-one', group: 'long-prose', bar: 'Prose' } },
-    ],
-  },
-  {
-    id: 'sets-long-prompt',
-    ruler: 'first-token',
-    title: 'Time to first token after a long prompt, nothing reused from cache',
-    unit: 's',
-    better: 'lower',
-    methods: 'From sending the request to the first token streamed back, with none of the prompt reused from cache.',
-    rows: [
-      { key: '32k', label: '32K-token prompt', from: { chart: 'long-prompt', group: '32k', bar: 'First token' } },
-      { key: '64k', label: '64K-token prompt', from: { chart: 'long-prompt', group: '64k', bar: 'First token' } },
-    ],
-  },
-];

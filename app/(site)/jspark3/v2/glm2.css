@@ -111,7 +111,7 @@
 .glm2-history { padding-top: 0; border-top: 1px solid var(--glm-line); align-self: start; }
 .glm2-history-internal { cursor: default; color: var(--glm-muted); margin: 0; }
 .glm2-rev { color: var(--glm-muted); font: 12.5px var(--font-geist-mono), monospace; }
-.glm2-prose > * + * { margin-top: 18px; }
+.glm .glm2-prose > * + * { margin-top: 18px; }
 
 /* Known issues and credits. */
 .glm2-list { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--glm-line); align-self: start; }
@@ -154,7 +154,7 @@
 .glm2-method-all p + p { margin-top: 8px; max-width: 72ch; font-size: 14px; line-height: 1.65; }
 
 /* Install facts sit under the install claim. */
-.glm2-install-defs { margin-top: 20px; }
+.glm .glm2-install-defs { margin-top: 20px; }
 .glm2-install-defs dd { container-type: inline-size; }
 @media (min-width: 801px) {
   .glm2-install-defs > div { grid-template-columns: 9rem minmax(0, 1fr); }
@@ -200,20 +200,58 @@
 .glm2-command pre { margin-top: 4px; padding: 8px 10px; overflow-x: auto; border: 1px solid var(--glm-line); background: var(--glm-bg, transparent); color: var(--glm-text); font: 12.5px/1.5 var(--font-geist-mono), monospace; white-space: pre-wrap; overflow-wrap: anywhere; }
 .glm2 .glm2-command pre code { padding: 0; border: 0; background: none; font: inherit; }
 
-/* The re-measurement: the first light band under the hero, one chart to a row. The release's results follow it,
-   ruled off from it. */
-.glm2-remeasured + .glm-results { padding-top: 0; }
-.glm2-remeasured + .glm-results > .glm-shell { padding-top: 44px; border-top: 1px solid var(--glm-paper-line); }
-.glm2-remeasured .glm-section-heading a, .glm2-remeasured .glm2-compare-scope a, .glm2-remeasured .glm2-compare-note a, .glm2-lead-print a { text-decoration: underline; }
-.glm2-remeasured .glm2-chart { margin-top: 24px; }
+/* The figures of the release day, at the head of the results: the lead figures, then the charts two to a row. */
+.glm2-remeasured .glm2-compare-scope a, .glm2-remeasured .glm2-compare-note a, .glm2-lead-print a, .glm-results .glm-section-heading a { text-decoration: underline; }
 .glm2-lead { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 24px; margin-top: 28px; }
 .glm2-lead .glm-vs { margin-top: 8px !important; color: var(--glm-paper-ink); }
 .glm2-lead-print { margin-top: 10px !important; font-size: 13px; line-height: 1.5; color: var(--glm-paper-muted); }
 .glm2-chart-methods { margin-top: 18px !important; padding-top: 12px; border-top: 1px solid var(--glm-paper-line); font-size: 13px; line-height: 1.55; color: var(--glm-paper-muted); }
-/* Tonight's rows among every measured set: "Not yet re-measured" needs a wider value column than "Not measured". */
-@media (min-width: 801px) {
-  .glm2-set-rows .glm-bar { grid-template-columns: 8rem minmax(0, 1fr) 9.5rem; }
-}
+/* The lead figures carry the release gold on their top edge, as the default weights card does. */
+.glm2-lead .glm-figure { border-top: 2px solid var(--glm-gold-deep); }
+.glm2-lead .glm-big { color: var(--glm-gold-deep); }
+.glm2-lead .glm-big small { color: var(--glm-paper-muted); }
 @media (max-width: 800px) {
   .glm2-lead { grid-template-columns: 1fr; gap: 16px; }
+}
+
+/* Folds. Every fold opens on the page's gold plus, turned to a cross while open; the plus is not read aloud. */
+.glm2 .glm-history-results > summary, .glm2-subfold > summary, .glm2-fold > summary { display: flex; align-items: center; justify-content: space-between; gap: 20px; list-style: none; cursor: pointer; }
+.glm2 .glm-history-results > summary::-webkit-details-marker, .glm2-subfold > summary::-webkit-details-marker, .glm2-fold > summary::-webkit-details-marker { display: none; }
+.glm2 .glm-history-results > summary::after, .glm2-subfold > summary::after, .glm2-fold > summary::after { content: '+'; content: '+' / ''; flex-shrink: 0; color: var(--glm-gold); font: 400 28px/1 var(--font-geist-sans), Arial, sans-serif; transition: transform .2s ease; }
+.glm2 .glm-history-results[open] > summary::after, .glm2-subfold[open] > summary::after, .glm2-fold[open] > summary::after { transform: rotate(45deg); }
+
+/* In the results band: RigMark's own output, then every weight set, ruled as one block. */
+.glm2 .glm-results .glm-history-results > summary::after { color: var(--glm-gold-deep); }
+.glm2 .glm-results .glm-history-results > summary:hover { color: var(--glm-gold-deep); }
+.glm2-rigmark + .glm2-sets { margin-top: 0; border-top: 0; }
+.glm2-sets > summary small { display: block; margin-top: 4px; color: var(--glm-paper-muted); font-size: 14px; font-weight: 400; }
+.glm2-sets-conditions { margin-top: 12px; max-width: 74ch; color: var(--glm-paper-muted); font-size: 14px; }
+
+/* Inside a card or the install: a quiet row that opens the rest of the details. */
+.glm2-subfold { margin-top: 18px; border-top: 1px solid var(--glm-line); }
+.glm2-subfold > summary { min-height: 48px; padding-block: 8px; font-size: 14px; }
+.glm2-subfold > summary::after { font-size: 22px; }
+.glm2-subfold > summary:hover > span { color: var(--glm-gold); }
+.glm2-variant .glm2-subfold > dl { margin-top: 4px; padding-top: 0; border-top: 0; }
+.glm .glm2-subfold > .glm2-install-defs { margin-top: 4px; margin-bottom: 18px; }
+.glm-install .glm2-subfold { border-bottom: 1px solid var(--glm-line); }
+.glm-install .glm2-subfold + .glm2-subfold { margin-top: 0; border-top: 0; }
+
+/* Secondary sections, folded to one row each: the heading, then a line on what it holds. Open, the content
+   takes the right-hand column, as in the page's other sections. */
+.glm2-fold { border-bottom: 1px solid var(--glm-line); }
+.glm2-fold > summary { position: relative; padding-block: 28px; padding-right: 44px; }
+.glm2-fold > summary::after { position: absolute; top: 50%; right: 0; margin-top: -14px; }
+.glm2-fold[open] > summary::after { transform: rotate(45deg); }
+.glm2-fold > summary > span { display: grid; flex: 1; grid-template-columns: 1fr 1.25fr; gap: 48px; align-items: baseline; min-width: 0; }
+.glm .glm2-fold h2 { font-size: 24px; letter-spacing: -.5px; }
+.glm2-fold > summary small { color: var(--glm-muted); font-size: 14px; line-height: 1.55; }
+.glm2-fold > summary:hover h2 { color: var(--glm-gold); }
+.glm2-fold-body { display: grid; grid-template-columns: 1fr 1.25fr; gap: 48px; padding: 0 44px 44px 0; }
+.glm2-fold-body > * { grid-column: 2; min-width: 0; }
+@media (max-width: 800px) {
+  .glm2-fold > summary { padding-block: 22px; }
+  .glm2-fold > summary > span { grid-template-columns: minmax(0, 1fr); gap: 4px; }
+  .glm2-fold-body { grid-template-columns: minmax(0, 1fr); gap: 0; padding: 0 0 32px; }
+  .glm2-fold-body > * { grid-column: 1; }
 }

@@ -26,6 +26,8 @@ try {
     });
     await page.goto(new URL('/jspark3/glm/', base).href, { waitUntil: 'networkidle' });
     await page.evaluate(() => document.fonts.ready);
+    // Secondary detail is folded; open every fold so its text is measured too.
+    await page.evaluate(() => document.querySelectorAll('.glm2 details').forEach(fold => { fold.open = true; }));
     const measured = await page.evaluate(() => {
       const main = document.querySelector('.glm2');
       if (!main) throw new Error('GLM facts page did not render');
@@ -80,7 +82,7 @@ try {
         }
       }
       // Border boxes alone cannot catch nowrap text leaking out of its grid cell (the original tablet defect).
-      const absent = [...main.querySelectorAll('.glm2-set-rows .glm-bar[data-state="absent"] .glm-bar-value')].map(element => ({
+      const absent = [...main.querySelectorAll('.glm2-chart .glm-bar[data-state="absent"] .glm-bar-value')].map(element => ({
         text: element.textContent, width: element.clientWidth, scroll: element.scrollWidth,
       }));
       for (const label of absent) if (label.scroll > label.width + 1) failures.push({ kind: 'absent value overflow', ...label });
@@ -94,7 +96,8 @@ try {
     result.widths.push(measured);
     for (const [name, selector] of [
       ['weights', '.glm2-variants'],
-      ['sets-reply', '#remeasured-2026-10-03-sets-reply'],
+      ['reply', '#remeasured-2026-10-03-reply-one'],
+      ['sets', '#sets'],
       ['install', '.glm2-costs'],
       ['issue15', '#known-issue-15'],
     ]) await page.locator(selector).screenshot({ path: join(output, `${name}-${width}.png`) });
