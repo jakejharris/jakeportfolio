@@ -10,7 +10,7 @@ import { ColdStartChart, CompareFigure, ConcurrencyChart, DecodeChart, Relbench,
 import { Fact, FactLink } from './Fact';
 import {
   ACCEPTANCE_KINDS, COMPATIBILITY, CONDITIONS, COPY, CREDITS, DEFAULT_DECIDED, DEFAULT_PROVISIONAL, DEFAULT_VARIANT, DRAFT, DRAFTER, DRAFTER_LINK, EIGHT_AT_ONCE, ENGINE, HISTORY,
-  DISK_PARTS, ERRATA, ROLLBACK_COMMANDS, INSTALL_COSTS, INSTALL_COSTS_CONDITIONS, INSTALL_TAG, KNOWN_ISSUES, LICENSES, LINKS, METHODS, PROFILES_LINE, PROMPT_MIX_LINE, RIGMARK, TEMPLATE_SETTINGS, RIGMARK_SHOWN, RUNNABLE, SETS, SETS_CONDITIONS, SWITCH, SOURCE, VARIANTS_ORDERED, VERSION,
+  DISK_PARTS, ERRATA, ROLLBACK_COMMANDS, INSTALL_COSTS, INSTALL_COSTS_CONDITIONS, INSTALL_TAG, KNOWN_ISSUES, LICENSES, LINKS, METHODS, PROFILES_LINE, PROMPT_MIX_LINE, RIGMARK, TEMPLATE_SETTINGS, RIGMARK_SHOWN, RUNNABLE, SETS, SETS_CONDITIONS, SWITCH, SOURCE, VARIANTS_ORDERED, VERSION, RESULTS_VERSION, HEADLINE,
   TILES_LINE, cell, linkPath, metricInfo, pinned, releaseDate,
   type Slot, type Variant,
 } from '../glm-facts';
@@ -169,6 +169,8 @@ export default function GlmFactsPage() {
             <span className="glm-sr-only">: </span>
             <span className="glm-lede">GLM-5.3 Flash <br />on three DGX Sparks.</span>
           </h1>
+          <p className="glm-intro"><Fact slot={HEADLINE[0]} /></p>
+          <p><Fact slot={HEADLINE[1]} /></p>
           <HeroTiles />
           <nav className="glm-actions" aria-label="Release resources">
             <FactLink className="glm-button" href={LINKS.install}>{RUNNABLE ? <>Install <Fact slot={INSTALL_TAG} /></> : 'Install guide'} ↗</FactLink>
@@ -194,11 +196,11 @@ export default function GlmFactsPage() {
     <section className="glm-results" aria-labelledby="results-title">
       <div className="glm-shell">
         <div className="glm-section-heading">
-          <h2 id="results-title"><Fact slot={VERSION} />, measured on our three Sparks.</h2>
+          <h2 id="results-title"><Fact slot={RESULTS_VERSION} />, measured on our three Sparks.</h2>
           <p className="glm-band-line">Every figure names the weights it was measured with, and whether the draft model was on.</p>
           {CONDITIONS.all ? null : <p><Fact slot={SETS_CONDITIONS} /></p>}
         </div>
-        <h3 className="glm2-subhead" id="sets">Every measured <Fact slot={VERSION} /> set</h3>
+        <h3 className="glm2-subhead" id="sets">Every measured <Fact slot={RESULTS_VERSION} /> set</h3>
         <div className="glm2-pair">
           <ColdStartChart />
           <ConcurrencyChart />
@@ -224,7 +226,7 @@ export default function GlmFactsPage() {
           </div>
         </> : null}
         {RIGMARK_SHOWN ? <>
-          <h3 className="glm2-subhead" id="against-v184"><Fact slot={VERSION} /> against the v1.8.4 baseline</h3>
+          <h3 className="glm2-subhead" id="against-v184"><Fact slot={RESULTS_VERSION} /> against the v1.8.4 baseline</h3>
           {RIGMARK === 'undecided' ? <p className="glm2-decision"><span className="jspark-ph jspark-tbd">Shown only if RigMark is published with this release</span></p> : null}
           <CompareFigure />
           <RigmarkBlocks />

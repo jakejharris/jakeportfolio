@@ -79,6 +79,7 @@ export const FINAL = facts.status === 'final' && HOLDS.length === 0 && !/\{\{HOL
 export const DRAFT = !FINAL;
 
 export const VERSION = slot(facts.version, 'version');
+export const RESULTS_VERSION = slot(facts.results_tag, 'results version');
 export const TAG = slot(facts.tag, 'tag');
 export const INSTALL_TAG = slot(facts.install_tag, 'install tag');
 export const PUBLISHED = slot(facts.published, 'release date');
