@@ -1,9 +1,9 @@
 {
   "image": "/og/jspark3-glm-v2.0.2.png",
-  "facts_sha256": "1ea7fc937177f553471899f3503dd3d28b70fd291b60e6722c89bde30dc27d34",
+  "facts_sha256": "504c9eccc1fdf775ff7dd99a312fa3b5bbbaed88c51881c633ab767fb63b147f",
   "hero": {
     "title": "JSpark3 v2.0.2: GLM-5.3 Flash on three DGX Sparks.",
-    "measured": "Measured with base weights + draft model · v2.0.1, RigMark from that release; the rest re-measured October 3, 2026.",
+    "measured": "Measured with base weights + draft model · RigMark from the release; the rest re-measured October 3, 2026.",
     "cells": [
       {
         "key": "remeasured.reply-one.natural-code",
@@ -39,5 +39,5 @@
       }
     ]
   },
-  "image_sha256": "95e0db5e6a173bc615c1d06fcffa562a4544bd4ae56076f47dde6370d49d58f6"
+  "image_sha256": "de5171aef3dced4d74f0c356e35a3551d84780b9c747640971281e9fb336997f"
 }
