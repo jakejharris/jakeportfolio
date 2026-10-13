@@ -4,12 +4,6 @@ html, body {
   -webkit-overflow-scrolling: touch; /* For smooth scrolling on iOS */
 }
 
-/* iOS-specific styles */
-.ios-device {
-  /* Prevent pull-to-refresh */
-  overscroll-behavior-y: none;
-}
-
 /* Fix for iOS Safari viewport height issues */
 @supports (-webkit-touch-callout: none) {
   .min-h-screen {
