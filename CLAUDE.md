@@ -18,7 +18,7 @@ npm run lint     # Run ESLint
 - Use `git switch -c <branch>` to create new branches (not `git checkout -b`)
 - Use the [Conventional Commits](https://www.conventionalcommits.org/) standard for all commit messages (e.g., `feat:`, `fix:`, `refactor:`, `docs:`, `chore:`)
 
-Note: Use `npm install --legacy-peer-deps` if you encounter peer dependency issues (also enforced on Vercel via `vercel.json` NPM_FLAGS).
+Note: `.npmrc` enables `legacy-peer-deps` and `include=dev`, so build tooling in `devDependencies` is installed even with `NODE_ENV=production`.
 
 ## Architecture
 
@@ -149,8 +149,7 @@ GA_SERVICE_ACCOUNT_JSON          # Service-account JSON with Viewer access to th
 | Framework | Next.js 15, React 18 |
 | CMS | sanity, next-sanity, @sanity/image-url |
 | Content | @portabletext/react, react-syntax-highlighter |
-| UI | 22 @radix-ui packages, lucide-react, react-icons, sonner, vaul, cmdk |
+| UI | 5 @radix-ui packages (accordion, collapsible, hover-card, separator, slot), lucide-react, react-icons, sonner |
 | Styling | Tailwind CSS 3, tailwindcss-animate, class-variance-authority, tailwind-merge |
-| Forms | react-hook-form, zod, @hookform/resolvers |
 | Theme | next-themes |
 | Analytics | @next/third-parties (Google Analytics) |
