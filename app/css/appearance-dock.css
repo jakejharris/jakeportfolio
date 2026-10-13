@@ -1,37 +1,120 @@
-/* Appearance dock: theme and accent controls in the bottom right corner,
-   drawn in the pixel water's 18px cells. Within thumb reach on a phone, in
-   the empty margin on a desktop. No shadow: it is a pane on the page. */
+/* Appearance dock: theme and accent controls in the bottom right corner, a
+   little window from a 16-bit game. It is drawn in 2px pixels around the
+   pixel water's 18px cells: a frame with stepped corners, lit from above,
+   and gems of color with a glint. Within thumb reach on a phone, in the empty
+   margin on a desktop. It is opaque, so nothing behind it has to be blurred
+   again every frame the water moves, and it casts no shadow. */
+
+@property --dock-heat {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 0;
+}
 
 .appearance-dock {
+  /* One pixel of the dock's pixel art. */
+  --u: 2px;
+  /* A cell is a thumb wide; under a mouse it tightens (below). */
+  --cell: 44px;
+  /* The chosen accent, keyed to <html> so the folded window shows the right
+     color before the page hydrates. */
+  --k: 0;
+  /* Set from AppearanceDock while the site footer is near. */
   --dock-lift: 0px;
-  /* A fast burst of presses warms the edge toward the color being played
+  /* A fast burst of presses warms the frame toward the color being played
      (set from AppearanceDock). */
   --dock-heat: 0;
   --dock-ink: var(--accent-color);
+  --dock-edge: hsl(var(--foreground) / 0.2);
+  --dock-frame: color-mix(in srgb, var(--dock-ink) calc(var(--dock-heat) * 100%), var(--dock-edge));
+  --dock-fill: color-mix(in srgb, hsl(var(--foreground)) 3%, hsl(var(--background)));
+  --dock-rim: hsl(0 0% 100%);
+  --dock-shine: hsl(0 0% 100% / 0.55);
+  /* The window moves in whole frames at the menu button's 45ms a frame,
+     quick off the mark and settling into place. */
+  --dock-snap: steps(4, jump-start);
+  --dock-snap-ms: 180ms;
   position: fixed;
   right: max(1rem, env(safe-area-inset-right));
-  bottom: calc(max(1rem, env(safe-area-inset-bottom)) + var(--dock-lift));
+  bottom: max(1rem, env(safe-area-inset-bottom));
   z-index: 40;
   display: flex;
   align-items: center;
-  padding: 3px;
+  padding: calc(var(--u) * 2);
   color: hsl(var(--foreground));
-  background: hsl(var(--background) / 0.72);
-  border: 1px solid hsl(var(--foreground) / 0.14);
-  border-color: color-mix(in srgb, var(--dock-ink) calc(var(--dock-heat) * 100%), hsl(var(--foreground) / 0.14));
-  border-radius: var(--radius);
-  -webkit-backdrop-filter: blur(14px) saturate(120%);
-  backdrop-filter: blur(14px) saturate(120%);
-  transition: transform 0.3s ease, border-color 0.5s steps(5, end);
+  contain: layout style;
+  translate: 0 calc(var(--dock-lift) * -1);
+  transition:
+    translate var(--dock-snap-ms) var(--dock-snap),
+    transform 0.3s ease,
+    --dock-heat 0.5s steps(5, end);
 }
+
+.dark .appearance-dock {
+  --dock-edge: hsl(var(--foreground) / 0.18);
+  --dock-fill: color-mix(in srgb, hsl(var(--foreground)) 5%, hsl(var(--background)));
+  --dock-rim: hsl(var(--foreground) / 0.09);
+}
+
+@supports (transition-timing-function: linear(0, 1)) {
+  .appearance-dock {
+    --dock-snap: linear(0.45 0% 25%, 0.75 25% 50%, 0.93 50% 75%, 1 75% 100%);
+  }
+}
+
+:root[data-accent="1"] .appearance-dock { --k: 1; }
+:root[data-accent="2"] .appearance-dock { --k: 2; }
+:root[data-accent="3"] .appearance-dock { --k: 3; }
+:root[data-accent="4"] .appearance-dock { --k: 4; }
 
 /* While a burst is on, its heat shows at once; only the cooling is eased. */
 .appearance-dock[data-hot] {
-  transition: transform 0.3s ease;
+  transition:
+    translate var(--dock-snap-ms) var(--dock-snap),
+    transform 0.3s ease;
 }
 
-/* Drops of paint flicked out of the dock over the page. They sit under the
-   cells, so they leave from behind the swatch. */
+/* The first lift on a page lands without a hop. */
+.appearance-dock[data-still] {
+  transition: none;
+}
+
+/* The window. A 2px frame whose corners step in two pixels, the surface
+   radius in pixels, with a brighter line under its top edge. It sits behind
+   the cells on a layer of its own, so its clip never reaches the drops. */
+.appearance-dock::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  --s1: var(--u);
+  --s2: calc(var(--u) * 2);
+  border: var(--u) solid var(--dock-frame);
+  /* Corner pixels close the stepped frame inside the clip; the light runs
+     between them. */
+  background:
+    linear-gradient(var(--dock-frame) 0 0) left top / var(--u) var(--u),
+    linear-gradient(var(--dock-frame) 0 0) right top / var(--u) var(--u),
+    linear-gradient(var(--dock-frame) 0 0) left bottom / var(--u) var(--u),
+    linear-gradient(var(--dock-frame) 0 0) right bottom / var(--u) var(--u),
+    linear-gradient(var(--dock-rim) 0 0) var(--u) 0 / calc(100% - var(--u) * 2) var(--u),
+    var(--dock-fill);
+  background-repeat: no-repeat;
+  clip-path: polygon(
+    0 var(--s2), var(--s1) var(--s2), var(--s1) var(--s1), var(--s2) var(--s1), var(--s2) 0,
+    calc(100% - var(--s2)) 0, calc(100% - var(--s2)) var(--s1), calc(100% - var(--s1)) var(--s1),
+    calc(100% - var(--s1)) var(--s2), 100% var(--s2),
+    100% calc(100% - var(--s2)), calc(100% - var(--s1)) calc(100% - var(--s2)),
+    calc(100% - var(--s1)) calc(100% - var(--s1)), calc(100% - var(--s2)) calc(100% - var(--s1)),
+    calc(100% - var(--s2)) 100%,
+    var(--s2) 100%, var(--s2) calc(100% - var(--s1)), var(--s1) calc(100% - var(--s1)),
+    var(--s1) calc(100% - var(--s2)), 0 calc(100% - var(--s2))
+  );
+  pointer-events: none;
+}
+
+/* Drops of paint flicked out of the dock over the page. They sit above the
+   window and under the cells, so they leave from behind the swatch. */
 .appearance-dock-drops {
   position: absolute;
   inset: 0;
@@ -50,11 +133,13 @@
   position: relative;
   display: grid;
   place-items: center;
-  width: 38px;
-  height: 38px;
+  flex: none;
+  width: var(--cell);
+  height: var(--cell);
   border-radius: max(0px, calc(var(--radius) - 2px));
   cursor: pointer;
-  transition: background-color 0.15s ease;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
 
 @media (hover: hover) {
@@ -64,81 +149,128 @@
 }
 
 .appearance-dock-cell:focus-visible {
-  outline: 2px solid hsl(var(--foreground));
-  outline-offset: -2px;
+  outline: var(--u) solid hsl(var(--foreground));
+  outline-offset: calc(var(--u) * -1);
 }
 
-/* Wide screens with a mouse show every swatch. Everywhere else they fold into
-   the current one until it is tapped. */
-.appearance-dock .appearance-dock-palette {
-  display: none;
+/* The palette's window: one cell wide when folded, showing the chosen
+   color, and five when open. It opens to the left, so the theme button
+   never moves. */
+.appearance-dock-reel {
+  position: relative;
+  flex: none;
+  width: var(--cell);
+  height: var(--cell);
+  overflow: hidden;
+  overflow: clip;
+  transition: width var(--dock-snap-ms) var(--dock-snap);
+}
+
+.appearance-dock[data-open] .appearance-dock-reel {
+  width: calc(var(--cell) * 5);
+}
+
+/* The strip of colors under the window. Folded, it is slid along so the
+   chosen color fills the window; opening slides it home while the window
+   widens, so the chosen color travels from the fold to its place. */
+.appearance-dock-palette {
+  position: relative;
+  display: flex;
+  width: calc(var(--cell) * 5);
+  translate: calc(var(--cell) * var(--k) * -1) 0;
+  transition: translate var(--dock-snap-ms) var(--dock-snap);
 }
 
 .appearance-dock[data-open] .appearance-dock-palette {
-  display: flex;
+  translate: 0 0;
+}
+
+/* Folded, the window is one button that opens the palette. */
+.appearance-dock-toggle {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  width: auto;
+  height: auto;
 }
 
 .appearance-dock[data-open] .appearance-dock-toggle {
-  display: none;
+  visibility: hidden;
 }
 
-@media (min-width: 1024px) and (hover: hover) and (pointer: fine) {
-  .appearance-dock .appearance-dock-palette {
-    display: flex;
-  }
-
-  .appearance-dock .appearance-dock-toggle {
-    display: none;
-  }
-}
-
-/* One lattice cell of color. The color is the content, so high contrast
-   modes keep it. A hairline inside outlines a swatch that matches the dock. */
+/* One lattice cell of color, cut as a gem: a glint of light in its top left
+   corner. The color is the content, so high contrast modes keep it. */
 .appearance-dock-swatch {
   display: block;
   width: 18px;
   height: 18px;
-  outline: 1px solid hsl(var(--foreground) / 0.18);
-  outline-offset: -1px;
+  background:
+    linear-gradient(var(--dock-shine) 0 0) var(--u) var(--u) / calc(var(--u) * 2) var(--u),
+    linear-gradient(var(--dock-shine) 0 0) var(--u) calc(var(--u) * 2) / var(--u) var(--u),
+    var(--swatch, var(--accent-color));
+  background-repeat: no-repeat;
   forced-color-adjust: none;
 }
 
-/* The picked swatch wears pixel corner brackets. Keyed to <html> rather than
-   React state, so they are right before the page hydrates. */
-:root:not([data-accent]) .appearance-dock-cell[data-swatch="0"]::before,
-:root[data-accent="1"] .appearance-dock-cell[data-swatch="1"]::before,
-:root[data-accent="2"] .appearance-dock-cell[data-swatch="2"]::before,
-:root[data-accent="3"] .appearance-dock-cell[data-swatch="3"]::before,
-:root[data-accent="4"] .appearance-dock-cell[data-swatch="4"]::before {
-  content: "";
+/* The cursor: pixel corner brackets on the chosen color. It hops to a new
+   pick in three frames and bobs while the palette is open. Keyed to <html>
+   rather than React state, so it is right before the page hydrates. */
+.appearance-dock-cursor {
   position: absolute;
-  inset: 7px;
-  --corner: hsl(var(--foreground));
-  background:
-    linear-gradient(var(--corner), var(--corner)) top left / 5px 2px,
-    linear-gradient(var(--corner), var(--corner)) top left / 2px 5px,
-    linear-gradient(var(--corner), var(--corner)) top right / 5px 2px,
-    linear-gradient(var(--corner), var(--corner)) top right / 2px 5px,
-    linear-gradient(var(--corner), var(--corner)) bottom left / 5px 2px,
-    linear-gradient(var(--corner), var(--corner)) bottom left / 2px 5px,
-    linear-gradient(var(--corner), var(--corner)) bottom right / 5px 2px,
-    linear-gradient(var(--corner), var(--corner)) bottom right / 2px 5px;
-  background-repeat: no-repeat;
+  top: 0;
+  left: 0;
+  z-index: 1;
+  width: var(--cell);
+  height: var(--cell);
+  translate: calc(var(--cell) * var(--k)) 0;
+  transition: translate 135ms steps(3, jump-start);
+  visibility: hidden;
   pointer-events: none;
 }
 
-.appearance-dock-rule {
-  width: 1px;
-  height: 18px;
-  margin: 0 3px;
-  background: hsl(var(--foreground) / 0.16);
+.appearance-dock[data-open] .appearance-dock-cursor {
+  visibility: visible;
 }
 
-/* The theme button shows where it goes: a sun at night, a moon by day. */
+.appearance-dock-cursor::before {
+  content: "";
+  position: absolute;
+  /* Two pixels of air around the gem. */
+  inset: calc((var(--cell) - 26px) / 2);
+  --corner: hsl(var(--foreground));
+  --arm: calc(var(--u) * 3);
+  background:
+    linear-gradient(var(--corner) 0 0) top left / var(--arm) var(--u),
+    linear-gradient(var(--corner) 0 0) top left / var(--u) var(--arm),
+    linear-gradient(var(--corner) 0 0) top right / var(--arm) var(--u),
+    linear-gradient(var(--corner) 0 0) top right / var(--u) var(--arm),
+    linear-gradient(var(--corner) 0 0) bottom left / var(--arm) var(--u),
+    linear-gradient(var(--corner) 0 0) bottom left / var(--u) var(--arm),
+    linear-gradient(var(--corner) 0 0) bottom right / var(--arm) var(--u),
+    linear-gradient(var(--corner) 0 0) bottom right / var(--u) var(--arm);
+  background-repeat: no-repeat;
+}
+
+/* A dotted rule, like the water's contour lines. */
+.appearance-dock-rule {
+  flex: none;
+  width: var(--u);
+  height: 18px;
+  margin: 0 var(--u);
+  background: repeating-linear-gradient(
+    to bottom,
+    var(--dock-edge) 0 var(--u),
+    transparent var(--u) calc(var(--u) * 2)
+  );
+}
+
+/* The theme button shows where it goes: a sun at night, a moon by day. The
+   new one rises into its cell when the theme changes. */
 .appearance-dock-icon {
   display: grid;
   width: 18px;
   height: 18px;
+  overflow: hidden;
 }
 
 .appearance-dock-theme svg {
@@ -156,38 +288,64 @@
   display: block;
 }
 
+/* Under a mouse the cells tighten: there is no thumb to fit. */
+@media (hover: hover) and (pointer: fine) {
+  .appearance-dock {
+    --cell: 36px;
+  }
+}
+
 @media (prefers-reduced-motion: no-preference) {
-  .appearance-dock[data-open] .appearance-dock-palette .appearance-dock-cell {
-    animation: appearance-dock-pop 160ms steps(3, end) both;
-    animation-delay: calc(var(--swatch-index, 0) * 30ms);
+  .appearance-dock[data-open] .appearance-dock-cursor::before {
+    animation: appearance-dock-bob 600ms steps(1, end) infinite;
   }
 
-  @keyframes appearance-dock-pop {
-    from {
-      opacity: 0;
-      transform: scale(0.34);
+  @keyframes appearance-dock-bob {
+    50% {
+      inset: calc((var(--cell) - 30px) / 2);
     }
   }
 }
 
 /* Where the dock could sit over the reading column, it tucks away while the
    reader scrolls down and returns on the way back up, like the mobile
-   navbar. The shared page edge space keeps the last lines clear of it when
-   it rides above the footer. */
+   navbar. Near the footer it stays: the page is ending, and the shared page
+   edge space keeps the last lines clear of it. */
 @media (max-width: 1023px) {
-  .appearance-dock[data-tucked] {
-    transform: translateY(calc(100% + max(1rem, env(safe-area-inset-bottom)) + var(--dock-lift) + 8px));
+  .appearance-dock[data-tucked]:not([data-ashore]) {
+    transform: translateY(calc(100% + max(1rem, env(safe-area-inset-bottom)) + 8px));
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .appearance-dock,
-  .appearance-dock-cell {
+  .appearance-dock-reel,
+  .appearance-dock-palette,
+  .appearance-dock-cursor {
     transition: none;
   }
 
   .appearance-dock-drops {
     display: none;
+  }
+}
+
+/* Forced colors: a plain outlined pane and a cursor in the system's
+   highlight color. */
+@media (forced-colors: active) {
+  .appearance-dock::before {
+    clip-path: none;
+    background: Canvas;
+    border: 1px solid CanvasText;
+  }
+
+  .appearance-dock-cursor::before {
+    --corner: Highlight;
+    forced-color-adjust: none;
+  }
+
+  .appearance-dock-rule {
+    background: CanvasText;
   }
 }
 

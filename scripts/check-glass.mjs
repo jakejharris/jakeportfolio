@@ -77,7 +77,9 @@ try {
       await check(`${device} ${theme}: the water shows through one clean shape of glass`, { device, theme }, async (page) => {
         for (const path of LISTS) {
           await open(page, path);
-          assert.equal(await page.locator(".appearance-dock").evaluate((el) => getComputedStyle(el).borderTopLeftRadius), "4px", "dock follows the surface radius");
+          // The dock is pixel art: its corner steps across the surface radius
+          // in two 2px pixels instead of curving.
+          assert.match(await page.locator(".appearance-dock").evaluate((el) => getComputedStyle(el, "::before").clipPath), /^polygon\(0px 4px, 2px 4px, 2px 2px, 4px 2px, 4px 0px, /, "dock follows the surface radius");
           assert.equal(await page.locator(".appearance-dock-cell").first().evaluate((el) => getComputedStyle(el).borderTopLeftRadius), "2px", "dock controls step down from the surface");
           const report = await page.evaluate(() => [...document.querySelectorAll(".pageLinkContainer")].map((card) => {
             const blur = /blur\(([\d.]+)px\)/.exec(getComputedStyle(card).backdropFilter);
