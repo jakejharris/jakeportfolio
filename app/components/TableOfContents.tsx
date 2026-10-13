@@ -25,16 +25,11 @@ export default function TableOfContents({ headings }: TableOfContentsProps) {
 
     const element = document.getElementById(id)
     if (element) {
-      // Calculate position with offset
-      const elementPosition = element.getBoundingClientRect().top + window.scrollY
-      const offsetPosition = elementPosition - (window.innerWidth >= 768 ? 150 : 100)
-      
-      // Scroll to the element with offset
-      window.scrollTo({
-        top: offsetPosition,
+      element.scrollIntoView({
+        block: 'start',
         behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth'
       })
-      
+
       // Add a highlight effect
       element.classList.add('bg-primary/10')
       setTimeout(() => {
