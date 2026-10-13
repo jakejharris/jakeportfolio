@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from "react";
-import type { CSSProperties, HTMLAttributes, KeyboardEvent, MouseEvent } from "react";
+import type { CSSProperties, KeyboardEvent, MouseEvent } from "react";
 import { flushSync } from "react-dom";
 import { useTheme } from "next-themes";
 import { useNavbarScroll } from "./NavbarScrollContext";
@@ -75,9 +75,6 @@ const RISE: Keyframe[] = [
 const RISE_MS = 135;
 // A drop in flight trails a fainter dot this many steps behind it.
 const TRAIL_STEPS = 2;
-// React 18 writes `inert` only from a string; its types already expect
-// React 19's boolean.
-const INERT = { inert: "" } as unknown as HTMLAttributes<HTMLDivElement>;
 
 /** One path through the lit pixels of `rows`, a run of a row at a time. */
 function pixelPath(rows: string[]) {
@@ -512,7 +509,7 @@ export default function AppearanceDock() {
           onKeyDown={handlePaletteKeys}
           // Folded, the strip only shows the chosen color through the window;
           // none of it can be reached until it opens.
-          {...(open ? null : INERT)}
+          ref={(element) => { if (element) element.inert = !open; }}
         >
           <span className="appearance-dock-cursor" aria-hidden="true" />
           {ACCENTS.map((name, index) => (

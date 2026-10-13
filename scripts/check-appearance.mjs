@@ -28,6 +28,32 @@ const CALM_MS = 400;
 const SETTLE_MS = 2800;
 
 try {
+  await test("folded palette is inert and cannot take focus", async () => {
+    const context = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+    const page = await context.newPage();
+    try {
+      await page.goto(base, { waitUntil: "networkidle" });
+      await page.waitForSelector('[role="switch"][aria-checked]');
+      const palette = page.locator(".appearance-dock-palette");
+      const selected = page.locator('[role="radio"][aria-checked="true"]');
+      const isolated = async () => {
+        assert.equal(await palette.evaluate((element) => element.inert), true);
+        await selected.evaluate((element) => element.focus());
+        assert.equal(await selected.evaluate((element) => element === document.activeElement), false);
+      };
+      await isolated();
+      await page.locator(".appearance-dock-toggle").focus();
+      await page.keyboard.press("Enter");
+      assert.equal(await palette.evaluate((element) => element.inert), false);
+      assert.equal(await selected.evaluate((element) => element === document.activeElement), true);
+      await page.keyboard.press("Escape");
+      await isolated();
+      assert.equal(await page.locator(".appearance-dock-toggle").evaluate((element) => element === document.activeElement), true);
+    } finally {
+      await context.close();
+    }
+  });
+
   await test("blocked storage keeps the page and appearance controls usable", async () => {
     const context = await browser.newContext({ viewport: { width: 1440, height: 900 } });
     await context.addInitScript(() => {
