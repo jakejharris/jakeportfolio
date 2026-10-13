@@ -23,41 +23,32 @@ A modern, responsive portfolio website and blog built with Next.js, React, TypeS
 
 ### Prerequisites
 
-- Node.js 18.x or higher
-- npm, yarn, or pnpm
+- Node.js 22.x
+- npm
 
 ### Installation
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/your-username/jakeportfolio.git
+   git clone https://github.com/jakejharris/jakeportfolio.git
    cd jakeportfolio
    ```
 
 2. Install dependencies:
    ```bash
    npm install
-   # or
-   yarn install
-   # or
-   pnpm install
    ```
 
 3. Set up environment variables:
-   Create a `.env.local` file in the root of the project with your Sanity credentials:
+   Create a `.env.local` file in the root of the project with the public Sanity configuration:
    ```
    NEXT_PUBLIC_SANITY_PROJECT_ID=your_project_id
    NEXT_PUBLIC_SANITY_DATASET=production
-   SANITY_API_WRITE_TOKEN=your_api_token
    ```
 
 4. Run the development server:
    ```bash
    npm run dev
-   # or
-   yarn dev
-   # or
-   pnpm dev
    ```
 
 5. Open [http://localhost:3000](http://localhost:3000) in your browser to see the site.
@@ -66,10 +57,10 @@ A modern, responsive portfolio website and blog built with Next.js, React, TypeS
 
 - `app/` - Next.js 15 app router components and pages
 - `app/components/` - Reusable UI components
-- `app/posts/` - Blog post pages and components
-- `app/about/` - About page
-- `app/contact/` - Contact page
-- `lib/` - Utility functions and shared code
+- `app/(site)/` - Public pages, posts, tags and projects
+- `app/(studio)/` - Embedded Sanity Studio
+- `app/api/` - Route handlers
+- `app/lib/` - Utility functions and shared code
 - `sanity-schemas/` - Sanity CMS schema definitions
 - `public/` - Static assets
 
