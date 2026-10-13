@@ -1,6 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import type { ReactNode } from 'react';
+import React, { type ReactNode } from 'react';
 import { SITE_URL } from './entity';
 
 // The generated OpenGraph cards (post and tag opengraph-image routes) share this ground, ink and
