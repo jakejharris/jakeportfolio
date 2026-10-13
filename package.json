@@ -3,10 +3,11 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "check": "npm run lint -- --max-warnings=0 && npm run typecheck",
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test": "tsx --test app/lib/remembered-view-count.test.ts app/lib/post-dates.test.ts app/lib/post-headings.test.ts app/lib/site-path.test.ts 'app/components/blog-components/PostCallToAction.test.tsx' app/lib/post-views.test.ts scripts/seed-postviews.test.mjs 'app/(site)/jspark3/v2/decode-race-data.test.ts' app/lib/pixel-tide.test.ts app/lib/dock-play.test.ts app/lib/menu-tide.test.ts app/components/pixel-fluid/islands.test.ts app/components/site-menu/MenuTide.test.ts app/components/pixel-fluid/tide-front.test.ts app/components/pixel-fluid/paint.test.ts app/components/pixel-fluid/land.test.ts app/components/pixel-fluid/shapes.test.ts app/components/navigation/scroll-memory.test.ts 'app/(site)/about/story.test.ts' 'app/(site)/jspark3/v184-archive.test.ts' 'app/(site)/jspark3/v2/partners.test.tsx' scripts/glm-facts-hygiene.test.mjs scripts/glm-thinking-row.test.mjs scripts/glm-partners.test.mjs scripts/sync-glm-facts.test.mjs 'app/(site)/jspark3/v2/partners-declared.test.tsx' 'app/(site)/jspark3/v2/vn-rows.test.tsx' 'app/(site)/jspark3/v2/held.test.tsx' 'app/(site)/jspark3/v2/tiles.test.tsx' 'app/(site)/jspark3/v2/tile-sources.test.tsx' 'app/(site)/jspark3/v2/remeasured.test.tsx' app/components/blog-components/compression-intelligence/figures.test.ts",
     "seed:postviews": "node scripts/seed-postviews.mjs"
@@ -59,15 +60,14 @@
     "@types/react-syntax-highlighter": "^15.5.13",
     "tslib": "^2.6.2",
     "tsx": "^4.23.12",
-    "@typescript-eslint/eslint-plugin": "^7.1.0",
-    "@typescript-eslint/parser": "^7.1.0",
     "autoprefixer": "^10.4.20",
-    "eslint": "8.56.0",
-    "eslint-config-next": "13.5.6",
+    "eslint": "^9",
+    "eslint-config-next": "^15.5.25",
     "postcss": "^8",
     "tailwindcss": "^3.4.1",
     "tailwindcss-animate": "^1.0.7",
     "ts-node": "^10.9.2",
-    "typescript": "^5"
+    "typescript": "^5",
+    "@eslint/eslintrc": "^3"
   }
 }

@@ -8,7 +8,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 npm run dev      # Development server with Turbopack (http://localhost:3000)
 npm run build    # Production build
 npm run start    # Start production server
-npm run lint     # Run ESLint
+npm run lint     # ESLint 9 (eslint.config.mjs)
+npm run check    # Zero-warning lint and TypeScript
+npm test         # Node test runner through tsx
 ```
 
 **Important:** Do NOT run `npm run build`, `npm run dev`, or `npm run start` directly. Always ask the user to run these commands themselves.
@@ -47,7 +49,7 @@ This is a Next.js 15 portfolio and blog site using the App Router with Sanity CM
 
 ### Data Flow
 
-1. **Sanity CMS** stores content (blog posts, tags) in a separate studio project (`jakeportfolio-studio`)
+1. **Sanity CMS** stores content (blog posts, tags); the embedded Studio at `/studio/` uses `sanity.config.ts` and `sanity-schemas/`
 2. **`app/lib/sanity.client.ts`** provides `client` (read, `useCdn: false`, `perspective: 'published'`) and `writeClient` (mutations with `SANITY_API_WRITE_TOKEN`)
 3. **`sanityFetch()`** caches published GROQ queries for 300 seconds with a global `post` tag; the content webhook invalidates them on demand. Published home, post, and tag pages use 60-second ISR. Authenticated draft requests bypass the published route cache.
 4. **Webhook revalidation** via `/api/revalidate` triggers `revalidateTag('post')` and `revalidatePath('/')` when Sanity content changes
@@ -119,20 +121,19 @@ GA_SERVICE_ACCOUNT_JSON          # Service-account JSON with Viewer access to th
 
 ## Sanity Integration Notes
 
-- The Sanity Studio lives in a separate `jakeportfolio-studio` directory
-- Schema changes must be synchronized between both projects
+- The Sanity Studio is embedded at `/studio/`
+- Schema changes belong in `sanity-schemas/` and must match page GROQ projections
 - Frontend queries in page files must match schema structure in `sanity-schemas/`
 - `useCdn: false` and `perspective: 'published'` on the read client — drafts are never exposed
 - `writeClient` is only used server-side in API routes, never in page components
 - `sanityFetch()` adds the global `post` cache tag to every published query, including per-slug queries, so the content webhook expires all dependent pages
 - Public view-count reads use a 60-second cached snapshot tagged `views`; API increments and admin reads remain uncached. Counts in cached pages may lag while background revalidation finishes. Failed or unconfigured view reads return unknown without blocking pages, builds, publishes or drafts; lists hide unknown counts and posts use a remembered count or placeholder. Baselines apply only after successful reads confirm no counter exists. Known server counts render immediately; client navigation restores the reader's maximum before paint, until the 24-hour dedupe window expires. Hard reloads can briefly show the older server count before hydration. The content webhook ignores `postView` documents and ids starting with `views.`.
-- The Sanity Studio is maintained in a separate `jakeportfolio-studio` repository
 
 ## Next.js Config Notes
 
 - `trailingSlash: true` — all URLs end with `/`, important for link construction
 - `images.remotePatterns` — only `cdn.sanity.io/images/**` is allowed
-- `eslint.ignoreDuringBuilds: true` and `typescript.ignoreBuildErrors: true` — errors don't block production builds (ESLint 8.x / eslint-config-next 13.x pinned behind Next.js 15)
+- `eslint.ignoreDuringBuilds: true` and `typescript.ignoreBuildErrors: true` — errors don't block production builds (run `npm run check` separately; ESLint 9 and eslint-config-next 15 use the single flat config)
 
 ## SEO
 

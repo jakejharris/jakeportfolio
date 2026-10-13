@@ -399,7 +399,6 @@ export default function CompressionPyramid() {
     showCaption(target ? (target.layer as Part) : 'rest');
     animator.redraw();
     // showCaption only touches refs.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [animator, target]);
 
   const pointAt = (clientX: number, clientY: number) => {

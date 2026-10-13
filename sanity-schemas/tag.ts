@@ -1,4 +1,4 @@
-export default {
+const tag = {
   name: 'tag',
   title: 'Tag',
   type: 'document',
@@ -33,4 +33,6 @@ export default {
       validation: (Rule: any) => Rule.regex(/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/).warning('Please enter a valid hex color code')
     }
   ]
-} 
+}
+
+export default tag;
