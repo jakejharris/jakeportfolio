@@ -32,6 +32,13 @@ const nextConfig = {
   experimental: {
     scrollRestoration: false,
   },
+  outputFileTracingIncludes: {
+    '**/opengraph-image*': [
+      './public/fonts/Sentient-Bold.woff',
+      './node_modules/geist/dist/fonts/geist-sans/Geist-Medium.ttf',
+      './node_modules/geist/dist/fonts/geist-mono/GeistMono-Regular.ttf',
+    ],
+  },
   eslint: {
     // Disable ESLint during production builds
     ignoreDuringBuilds: true,
