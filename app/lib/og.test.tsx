@@ -7,9 +7,9 @@ import { PostCard, TagCard, OG_SIZE, loadOgFonts } from './og';
 test('social cards render PNGs with packaged fonts and long titles', async () => {
   const fonts = await loadOgFonts();
   const cards = [
-    <PostCard title="Recipe.sh" tags={[]} />,
-    <PostCard title={'A very long post title about language models and practical applications. '.repeat(4)} date="October 13, 2026" tags={['AI', 'Project Showcase']} />,
-    <TagCard title="Project Showcase" />,
+    <PostCard key="short" title="Recipe.sh" tags={[]} />,
+    <PostCard key="long" title={'A very long post title about language models and practical applications. '.repeat(4)} date="October 13, 2026" tags={['AI', 'Project Showcase']} />,
+    <TagCard key="tag" title="Project Showcase" />,
   ];
   for (const card of cards) {
     const response = new ImageResponse(card, { ...OG_SIZE, fonts });
