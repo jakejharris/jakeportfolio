@@ -470,7 +470,6 @@ export default function AgentHierarchy() {
     if (focus) showCaption(focus);
     animator.redraw();
     // showCaption only touches refs.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [animator, focus]);
 
   const tierAt = (clientY: number): Tier | null => {

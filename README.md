@@ -2,15 +2,15 @@
 
 A modern, responsive portfolio website and blog built with Next.js, React, TypeScript, and Sanity CMS.
 
-![Next.js](https://img.shields.io/badge/Next.js-15.1-black)
-![React](https://img.shields.io/badge/React-19.0-blue)
+![Next.js](https://img.shields.io/badge/Next.js-15.5-black)
+![React](https://img.shields.io/badge/React-18.3-blue)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5-blue)
-![Sanity](https://img.shields.io/badge/Sanity-2.36-red)
+![Sanity](https://img.shields.io/badge/Sanity-3-red)
 ![TailwindCSS](https://img.shields.io/badge/TailwindCSS-3.4-cyan)
 
 ## 🚀 Features
 
-- **Modern Tech Stack**: Built with Next.js 15, React 19, and TypeScript
+- **Modern Tech Stack**: Built with Next.js 15, React 18, and TypeScript
 - **Responsive Design**: Optimized for all device sizes
 - **Dark/Light Mode**: Theme toggle with next-themes
 - **Content Management**: Powered by Sanity CMS for easy content updates
@@ -84,3 +84,11 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 ## 👨‍💻 Author
 
 - Jake Harris - [GitHub](https://github.com/jakejharris) | [Website](https://jakejh.com)
+
+## Validation
+
+Use Node.js 22 and npm. `.npmrc` installs build tools even with `NODE_ENV=production`.
+Run `npm test`, `npm run check` (zero-warning ESLint 9 plus TypeScript), and `npm run build`.
+The build skips lint/type validation, so run the checks separately.
+The flat config in `eslint.config.mjs` is the only ESLint configuration.
+Sanity Studio is embedded at `/studio/`, configured by `sanity.config.ts` and `sanity-schemas/`.
