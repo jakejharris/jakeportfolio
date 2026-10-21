@@ -42,6 +42,7 @@ This is a Next.js 15 portfolio and blog site using the App Router with Sanity CM
 | `/` | Server | Homepage with post list (sorted by featured, then publishedAt) over the open pixel sea |
 | `/about` | Server | Bio at three lengths (`about/story.ts`, every sentence tagged with the shortest version that keeps it; `LengthStory` switches in place), JSPARK3 links, ProfilePage data and profile links |
 | `/contact` | Server | Email address as the headline (`CopyEmail` copies it), profile links and Chicago local time (`LocalTime`) |
+| `/prompts` | Server | One-off prompts to copy and send people, from the typed list in `prompts/prompts.ts` (one entry per prompt; its `slug` is the section's anchor). `CopyPrompt` copies the text exactly; not in the navbar |
 | `/posts/[slug]` | Server | Full blog post with PortableText, TableOfContents, ViewCounter, and JSON-LD (BlogPosting) |
 | `/viewadmin` | Client | Internal admin panel for view count adjustments (password-protected, blocked in robots.ts) |
 
