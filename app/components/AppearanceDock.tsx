@@ -91,26 +91,28 @@ function pixelPath(rows: string[]) {
   return path;
 }
 
-function PixelIcon({ rows, className }: { rows: string[]; className: string }) {
-  return (
+// The sun and moon never change, so they are made once and React passes over
+// them whenever the dock renders again.
+const THEME_ICONS = (
+  <span className="appearance-dock-icon">
     <svg
-      className={className}
+      className="appearance-dock-sun"
       viewBox="0 0 9 9"
       shapeRendering="crispEdges"
       aria-hidden="true"
       focusable="false"
     >
-      <path d={pixelPath(rows)} />
+      <path d={pixelPath(SUN)} />
     </svg>
-  );
-}
-
-// The sun and moon never change, so they are made once and React passes over
-// them whenever the dock renders again.
-const THEME_ICONS = (
-  <span className="appearance-dock-icon">
-    <PixelIcon rows={SUN} className="appearance-dock-sun" />
-    <PixelIcon rows={MOON} className="appearance-dock-moon" />
+    <svg
+      className="appearance-dock-moon"
+      viewBox="0 0 9 9"
+      shapeRendering="crispEdges"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <path d={pixelPath(MOON)} />
+    </svg>
   </span>
 );
 
@@ -119,8 +121,9 @@ function center(element: HTMLElement) {
   return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
 }
 
+let reduced: MediaQueryList | undefined;
 function calm() {
-  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  return (reduced ??= window.matchMedia("(prefers-reduced-motion: reduce)")).matches;
 }
 
 function press(target: Element | null | undefined) {
@@ -130,14 +133,11 @@ function press(target: Element | null | undefined) {
 }
 
 /**
- * Flick `count` drops of `color` from `from` out over the page. Each hops
+ * Flick `count` drops of `color` from (x, y) out over the page. Each hops
  * across the lattice's dots with a fainter dot trailing it, and lands in
  * the water: a ripple, wherever there is water.
  */
-function fling(layer: HTMLElement, from: HTMLElement, color: string, count: number) {
-  if (!count || layer.childElementCount >= MAX_DROPS) return;
-  const { x, y } = center(from);
-  const box = layer.getBoundingClientRect();
+function fling(layer: HTMLElement, { x, y }: { x: number; y: number }, box: DOMRect, color: string, count: number) {
   for (let i = 0; i < count && layer.childElementCount + 2 <= MAX_DROPS; i++) {
     const flight = dropFlight(x, y);
     const frames: Keyframe[] = flight.path.map(({ x: dx, y: dy }) => ({
@@ -179,6 +179,8 @@ export default function AppearanceDock() {
   const requestedTheme = useRef(resolvedTheme);
   const burst = useRef(new Burst());
   const cooling = useRef(0);
+  const hotFrame = useRef(0);
+  const hot = useRef<{ heat: number; color: string } | null>(null);
   const [open, setOpen] = useState(false);
   const openRef = useRef(false);
   // Folding by itself: armed by a pick with a pointer, held off while a
@@ -210,6 +212,9 @@ export default function AppearanceDock() {
     const drops = dropsRef.current;
     return () => {
       cancelAnimationFrame(accentFrame.current);
+      cancelAnimationFrame(hotFrame.current);
+      hotFrame.current = 0;
+      hot.current = null;
       window.clearTimeout(cooling.current);
       window.clearTimeout(foldTimer.current);
       drops?.getAnimations({ subtree: true }).forEach((animation) => animation.cancel());
@@ -255,7 +260,7 @@ export default function AppearanceDock() {
         if (button.closest("[inert]") || getComputedStyle(button).visibility === "hidden") continue;
         const rect = button.getBoundingClientRect();
         if (rect.width && rect.height && x >= rect.left && x < rect.right && y >= rect.top && y < rect.bottom) {
-          focusQuietly(button);
+          if (document.activeElement !== button || !button.hasAttribute("data-quiet-focus")) focusQuietly(button);
           // A press like any other, so a pick here can fold the palette.
           button.dispatchEvent(new globalThis.MouseEvent("click", { bubbles: true, cancelable: true, detail: 1 }));
           return;
@@ -313,6 +318,7 @@ export default function AppearanceDock() {
         const lift = entry.isIntersecting ? Math.round(entry.boundingClientRect.height) : 0;
         if (first) {
           first = false;
+          if (lift === 0) return;
           dock.dataset.still = "";
           frame = requestAnimationFrame(() => {
             frame = requestAnimationFrame(() => delete dock.dataset.still);
@@ -349,25 +355,42 @@ export default function AppearanceDock() {
 
   // Every press counts toward the burst and answers in the dock: `dip`, the
   // pressed cell's content, dips; a hot burst flicks drops of `color` and
-  // warms the dock's frame. Returns how hot the burst is.
+  // warms the dock's frame. Read its origin before any animation or write,
+  // then share it with the pour or flood.
   const play = (cell: HTMLElement, color: string, dip = cell.firstElementChild) => {
     window.clearTimeout(foldTimer.current);
     const count = burst.current.press(performance.now());
-    if (calm()) return 0;
+    const origin = center(cell);
+    if (calm()) return { origin, heat: 0 };
     const dock = dockRef.current;
+    const layer = dropsRef.current;
+    const drops = dropsFor(count);
+    const box = layer && drops && layer.childElementCount + 2 <= MAX_DROPS
+      ? layer.getBoundingClientRect()
+      : null;
     press(dip);
-    if (dropsRef.current) fling(dropsRef.current, cell, color, dropsFor(count));
+    if (layer && box) fling(layer, origin, box, color, drops);
     if (dock && count > 2) {
-      dock.dataset.hot = "";
-      dock.style.setProperty("--dock-heat", String(heatOf(count)));
-      dock.style.setProperty("--dock-ink", color);
+      hot.current = { heat: heatOf(count), color };
+      if (!hotFrame.current) hotFrame.current = requestAnimationFrame(() => {
+        hotFrame.current = 0;
+        const next = hot.current;
+        hot.current = null;
+        if (!next) return;
+        dock.dataset.hot = "";
+        dock.style.setProperty("--dock-heat", String(next.heat));
+        dock.style.setProperty("--dock-ink", next.color);
+      });
       window.clearTimeout(cooling.current);
       cooling.current = window.setTimeout(() => {
+        cancelAnimationFrame(hotFrame.current);
+        hotFrame.current = 0;
+        hot.current = null;
         delete dock.dataset.hot;
         dock.style.setProperty("--dock-heat", "0");
       }, BURST_GAP_MS);
     }
-    return heatOf(count);
+    return { origin, heat: heatOf(count) };
   };
 
   const openPalette = (event: MouseEvent<HTMLButtonElement>) => {
@@ -401,12 +424,12 @@ export default function AppearanceDock() {
 
   // `pointer`: picked with a finger or a mouse, rather than with keys.
   const pickAccent = (index: number, from: HTMLElement, pointer: boolean) => {
-    const heat = play(from, `var(--accent-${index})`);
+    const { origin, heat } = play(from, `var(--accent-${index})`);
     // One press on the color already chosen folds the palette; pressed again
     // and again, it pours again.
     const done = index === accentRef.current && burst.current.count < 2;
     accentRef.current = index;
-    pour.current = { ...center(from), heat };
+    pour.current = { ...origin, heat };
     if (!accentFrame.current) accentFrame.current = requestAnimationFrame(applyAccent);
     setAccent(index);
     if (done) {
@@ -447,10 +470,9 @@ export default function AppearanceDock() {
 
   const switchTheme = (event: MouseEvent<HTMLButtonElement>) => {
     const button = event.currentTarget;
-    play(button, "currentColor");
+    const { origin } = play(button, "currentColor");
     foldLater();
     requestedTheme.current = (requestedTheme.current ?? shownTheme()) === "dark" ? "light" : "dark";
-    const origin = center(button);
     disturbWater(origin);
     floodTheme(applyTheme, origin.x, origin.y, () => requestedTheme.current !== shownTheme());
   };

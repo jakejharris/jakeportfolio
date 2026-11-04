@@ -5,12 +5,6 @@
    margin on a desktop. It is opaque, so nothing behind it has to be blurred
    again every frame the water moves, and it casts no shadow. */
 
-@property --dock-heat {
-  syntax: "<number>";
-  inherits: true;
-  initial-value: 0;
-}
-
 .appearance-dock {
   /* One pixel of the dock's pixel art. */
   --u: 2px;
@@ -26,7 +20,6 @@
   --dock-heat: 0;
   --dock-ink: var(--accent-color);
   --dock-edge: hsl(var(--foreground) / 0.2);
-  --dock-frame: color-mix(in srgb, var(--dock-ink) calc(var(--dock-heat) * 100%), var(--dock-edge));
   --dock-fill: color-mix(in srgb, hsl(var(--foreground)) 3%, hsl(var(--background)));
   --dock-rim: hsl(0 0% 100%);
   --dock-shine: hsl(0 0% 100% / 0.55);
@@ -46,8 +39,7 @@
   translate: 0 calc(var(--dock-lift) * -1);
   transition:
     translate var(--dock-snap-ms) var(--dock-snap),
-    transform 0.3s ease,
-    --dock-heat 0.5s steps(5, end);
+    transform 0.3s ease;
 }
 
 .dark .appearance-dock {
@@ -67,13 +59,6 @@
 :root[data-accent="3"] .appearance-dock { --k: 3; }
 :root[data-accent="4"] .appearance-dock { --k: 4; }
 
-/* While a burst is on, its heat shows at once; only the cooling is eased. */
-.appearance-dock[data-hot] {
-  transition:
-    translate var(--dock-snap-ms) var(--dock-snap),
-    transform 0.3s ease;
-}
-
 /* The first lift on a page lands without a hop. */
 .appearance-dock[data-still] {
   transition: none;
@@ -89,14 +74,16 @@
   z-index: -1;
   --s1: var(--u);
   --s2: calc(var(--u) * 2);
-  border: var(--u) solid var(--dock-frame);
+  color: color-mix(in srgb, var(--dock-ink) calc(var(--dock-heat) * 100%), var(--dock-edge));
+  border: var(--u) solid currentColor;
+  transition: color 0.5s steps(5, end);
   /* Corner pixels close the stepped frame inside the clip; the light runs
      between them. */
   background:
-    linear-gradient(var(--dock-frame) 0 0) left top / var(--u) var(--u),
-    linear-gradient(var(--dock-frame) 0 0) right top / var(--u) var(--u),
-    linear-gradient(var(--dock-frame) 0 0) left bottom / var(--u) var(--u),
-    linear-gradient(var(--dock-frame) 0 0) right bottom / var(--u) var(--u),
+    linear-gradient(currentColor 0 0) left top / var(--u) var(--u),
+    linear-gradient(currentColor 0 0) right top / var(--u) var(--u),
+    linear-gradient(currentColor 0 0) left bottom / var(--u) var(--u),
+    linear-gradient(currentColor 0 0) right bottom / var(--u) var(--u),
     linear-gradient(var(--dock-rim) 0 0) var(--u) 0 / calc(100% - var(--u) * 2) var(--u),
     var(--dock-fill);
   background-repeat: no-repeat;
@@ -111,6 +98,12 @@
     var(--s1) calc(100% - var(--s2)), 0 calc(100% - var(--s2))
   );
   pointer-events: none;
+}
+
+/* While a burst is on, its heat shows at once; only the cooling is eased. */
+.appearance-dock[data-hot]::before,
+.appearance-dock[data-still]::before {
+  transition: none;
 }
 
 /* Drops of paint flicked out of the dock over the page. They sit above the
@@ -224,15 +217,16 @@
   height: var(--cell);
   translate: calc(var(--cell) * var(--k)) 0;
   transition: translate 135ms steps(3, jump-start);
-  visibility: hidden;
+  display: none;
   pointer-events: none;
 }
 
 .appearance-dock[data-open] .appearance-dock-cursor {
-  visibility: visible;
+  display: block;
 }
 
-.appearance-dock-cursor::before {
+.appearance-dock-cursor::before,
+.appearance-dock-cursor::after {
   content: "";
   position: absolute;
   /* Two pixels of air around the gem. */
@@ -249,6 +243,11 @@
     linear-gradient(var(--corner) 0 0) bottom right / var(--arm) var(--u),
     linear-gradient(var(--corner) 0 0) bottom right / var(--u) var(--arm);
   background-repeat: no-repeat;
+}
+
+.appearance-dock-cursor::after {
+  inset: calc((var(--cell) - 30px) / 2);
+  opacity: 0;
 }
 
 /* A dotted rule, like the water's contour lines. */
@@ -296,13 +295,21 @@
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  .appearance-dock[data-open] .appearance-dock-cursor::before {
+  .appearance-dock[data-open] .appearance-dock-cursor::before,
+  .appearance-dock[data-open] .appearance-dock-cursor::after {
     animation: appearance-dock-bob 600ms steps(1, end) infinite;
   }
 
+  .appearance-dock[data-open] .appearance-dock-cursor::after {
+    animation-delay: -300ms;
+  }
+
   @keyframes appearance-dock-bob {
-    50% {
-      inset: calc((var(--cell) - 30px) / 2);
+    0% {
+      opacity: 1;
+    }
+    50%, 100% {
+      opacity: 0;
     }
   }
 }
@@ -319,6 +326,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   .appearance-dock,
+  .appearance-dock::before,
   .appearance-dock-reel,
   .appearance-dock-palette,
   .appearance-dock-cursor {
@@ -339,7 +347,8 @@
     border: 1px solid CanvasText;
   }
 
-  .appearance-dock-cursor::before {
+  .appearance-dock-cursor::before,
+  .appearance-dock-cursor::after {
     --corner: Highlight;
     forced-color-adjust: none;
   }
