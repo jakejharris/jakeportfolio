@@ -226,3 +226,13 @@
     display: none;
   }
 }
+
+/* The homepage kicker doubles as the link into the archive. */
+.kicker-link {
+  color: inherit;
+  transition: color 160ms ease;
+}
+
+.kicker-link:hover {
+  color: hsl(var(--foreground));
+}
