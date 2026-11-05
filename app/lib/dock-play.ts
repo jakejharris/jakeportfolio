@@ -7,6 +7,11 @@ import { TIDE_CELL } from './pixel-tide';
 
 /** Presses closer together than this continue a burst. */
 export const BURST_GAP_MS = 450;
+/**
+ * Once a color is picked, the palette folds when presses have stopped for
+ * this long: past the burst gap, so a burst never folds mid-play.
+ */
+export const FOLD_MS = 700;
 /** The lattice's dot, a third of a cell. Drops hop from dot to dot. */
 export const DOT = 6;
 /** Drops in the air at once. */
