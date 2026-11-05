@@ -15,3 +15,18 @@
 .archive-year .pageLinkContainer {
   background: color-mix(in srgb, hsl(var(--background)) 92%, transparent);
 }
+
+/* The feed link, sat under the standfirst in the mono the kickers use. */
+.archive-feed {
+  margin: 0.9rem 0 0;
+  color: hsl(var(--muted-foreground));
+  font-family: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.6875rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.82;
+}
+
+.archive-feed a {
+  color: inherit;
+}

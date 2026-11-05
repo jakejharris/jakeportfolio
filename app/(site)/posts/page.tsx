@@ -105,13 +105,12 @@ export default async function PostsIndexPage() {
               Writing
             </h1>
             <p className="hero-standfirst" data-fluid-island>
-              Notes on agent orchestration, local inference, and the
-              things that broke on the way. Every post, newest first,
-              or take the{' '}
+              Every post, newest first.
+            </p>
+            <p className="archive-feed" data-fluid-island>
               <a href="/feed.xml" className="animated-underline-small-muted">
                 RSS feed
               </a>
-              .
             </p>
           </header>
 
