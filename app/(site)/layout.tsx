@@ -27,6 +27,9 @@ export const metadata: Metadata = {
   creator: "Jake Harris",
   alternates: {
     canonical: '/',
+    types: {
+      'application/rss+xml': 'https://jakejh.com/feed.xml',
+    },
   },
   openGraph: {
     type: "website",
