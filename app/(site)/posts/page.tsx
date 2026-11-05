@@ -1,5 +1,7 @@
 import '@/app/css/page.css';
 import '@/app/css/animations.css';
+import '@/app/css/hero.css';
+import './posts.css';
 import PageLayout from '@/app/components/PageLayout';
 import TransitionLink from '@/app/components/TransitionLink';
 import PixelFluidBackground from '@/app/components/PixelFluidBackground';
@@ -96,21 +98,25 @@ export default async function PostsIndexPage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(blogSchema) }}
       />
       <PixelFluidBackground />
-      <PageLayout>
+      <PageLayout className="posts-page">
         <div className="max-w-none">
-          <div className="page-enter mb-6">
-            <h1 className="text-2xl md:text-3xl font-bold mb-2">Writing</h1>
-            <p className="text-muted-foreground">
-              {posts.length} posts, newest first. Subscribe with the{' '}
+          <header className="hero">
+            <h1 className="hero-wordmark" data-fluid-island>
+              Writing
+            </h1>
+            <p className="hero-standfirst" data-fluid-island>
+              Notes on agent orchestration, local inference, and the
+              things that broke on the way. Every post, newest first,
+              or take the{' '}
               <a href="/feed.xml" className="animated-underline-small-muted">
                 RSS feed
               </a>
               .
             </p>
-          </div>
+          </header>
 
           {years.map((year, index) => (
-            <section key={year} className={`page-enter-${Math.min(index + 2, 4)} mb-8`}>
+            <section key={year} className={`archive-year page-enter-${Math.min(index + 2, 4)}`}>
               <h2 className="section-kicker mb-2">{year}</h2>
               <ul className="space-y-2">
                 {(byYear.get(year) ?? []).map((post) => (
@@ -122,28 +128,28 @@ export default async function PostsIndexPage() {
                       scroll={true}
                       prefetch={false}
                     >
-                      <div className="flex items-baseline justify-between gap-3">
-                        <div className="text-primary text-sm md:text-base font-medium leading-tight">
-                          {post.title}
-                        </div>
-                        <div className="text-xs text-muted-foreground whitespace-nowrap">
+                      <div className="text-primary text-sm md:text-base font-medium mb-1 leading-tight">
+                        {post.title}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="text-sm text-muted-foreground">
                           {new Date(post.publishedAt).toLocaleDateString('en-US', {
+                            year: 'numeric',
                             month: 'short',
-                            day: 'numeric',
                           })}
                         </div>
+                        {post.tags && post.tags.length > 0 && (
+                          <div className="hidden md:flex gap-1">
+                            {post.tags.map((tag) => (
+                              <TagPill linked={false} tag={tag} key={tag.slug.current} />
+                            ))}
+                          </div>
+                        )}
                       </div>
                       {post.excerpt && (
-                        <p className="text-sm text-muted-foreground mt-1 leading-snug">
+                        <p className="text-sm text-muted-foreground mt-2 leading-snug">
                           {post.excerpt}
                         </p>
-                      )}
-                      {post.tags && post.tags.length > 0 && (
-                        <div className="flex gap-1 mt-2">
-                          {post.tags.map((tag) => (
-                            <TagPill linked={false} tag={tag} key={tag.slug.current} />
-                          ))}
-                        </div>
                       )}
                     </TransitionLink>
                   </li>
