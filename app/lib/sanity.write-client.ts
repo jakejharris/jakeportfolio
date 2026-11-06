@@ -1,5 +1,5 @@
 import "server-only";
-import { createClient } from "next-sanity";
+import { createClient } from "@sanity/client";
 import { apiVersion, dataset, projectId } from "./sanity.config";
 
 export const writeClient = createClient({
