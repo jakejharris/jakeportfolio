@@ -1,6 +1,7 @@
 import * as React from 'react';
 import './architecture.css';
 import FabricTriangle from './FabricTriangle';
+import Fold from './Fold';
 import MotionScope from './MotionScope';
 
 /**
@@ -17,6 +18,10 @@ import MotionScope from './MotionScope';
  * comes down the HTTP link, Rank 0 takes it, the ranks exchange on every
  * fabric leg, and the answer goes back up. Nothing in the management path
  * moves, because nothing on it is in the serving path.
+ *
+ * Under the figure sits its key: one row per line style, each drawn with the
+ * stroke the figure itself uses, and the notes that are not about reading the
+ * lines fold away behind a one-line summary.
  */
 
 const MONO = 'font-mono text-[12px] leading-relaxed text-foreground';
@@ -107,6 +112,88 @@ function Link({ label, kind }: { label: string; kind: 'http' | 'management' }) {
   );
 }
 
+type SwatchKind = 'fabric' | 'http' | 'management' | 'packet';
+
+const SWATCH_W = 44;
+const SWATCH_H = 14;
+
+/**
+ * A short run of one of the figure's lines, drawn with the same stroke, width
+ * and dash the figure uses, so the swatch is the thing it names. The packet
+ * swatch rides the figure's clock (architecture.css) and travels with the
+ * request; it is inside the same MotionScope, so it pauses and resumes with
+ * everything else.
+ */
+function Swatch({ kind, className }: { kind: SwatchKind; className?: string }) {
+  const w = SWATCH_W;
+  const y = SWATCH_H / 2;
+  return (
+    <svg
+      width={w}
+      height={SWATCH_H}
+      viewBox={`0 0 ${w} ${SWATCH_H}`}
+      className={`overflow-visible ${className ?? ''}`}
+      aria-hidden="true"
+    >
+      {kind === 'fabric' ? (
+        <line x1="0" y1={y} x2={w} y2={y} className="stroke-amber-600 dark:stroke-amber-400" strokeWidth={3} />
+      ) : kind === 'http' ? (
+        <>
+          <line x1="0" y1={y} x2={w} y2={y} stroke="var(--accent-color)" strokeWidth={2} />
+          <polygon points={`0,${y} 7,${y - 5} 7,${y + 5}`} fill="var(--accent-color)" />
+          <polygon points={`${w},${y} ${w - 7},${y - 5} ${w - 7},${y + 5}`} fill="var(--accent-color)" />
+        </>
+      ) : kind === 'management' ? (
+        <line
+          x1="0"
+          y1={y}
+          x2={w}
+          y2={y}
+          className="stroke-muted-foreground"
+          strokeWidth={1.5}
+          strokeDasharray="4 3"
+        />
+      ) : (
+        <>
+          <line x1="0" y1={y} x2={w} y2={y} stroke="var(--accent-color)" strokeWidth={2} opacity={0.3} />
+          <line
+            className="js3-link-packet js3-link-packet-down"
+            pathLength={100}
+            x1="0"
+            y1={y}
+            x2={w}
+            y2={y}
+            fill="none"
+            strokeWidth={3}
+            strokeLinecap="round"
+          />
+        </>
+      )}
+    </svg>
+  );
+}
+
+/** The key's rows, in the order the eye meets the lines: fabric, HTTP, management, then the motion. */
+const KEY: ReadonlyArray<{ kind: SwatchKind; term: string; note: string; motion?: true }> = [
+  {
+    kind: 'fabric',
+    term: 'Fabric leg',
+    note: 'Three RoCE-v2 legs, each on its own network at MTU 9000; every Spark owns two.',
+  },
+  { kind: 'http', term: 'HTTP serving path', note: 'Rank 0 only.' },
+  {
+    kind: 'management',
+    term: 'Management',
+    note: 'Nothing on it is in the serving path, so nothing on it moves.',
+  },
+  {
+    kind: 'packet',
+    term: 'In motion',
+    note: 'One request. It comes down the HTTP link, Rank 0 takes it, the three ranks exchange on every leg, and the answer goes back up the same link.',
+    motion: true,
+  },
+];
+
 const RANK_LINES = {
   head: [
     'GB10 (SM 12.1), aarch64 · vLLM mp worker',
@@ -184,24 +271,34 @@ export default function ArchitectureDiagram() {
 
       <div className="mt-4 rounded-lg border border-border bg-muted p-3.5 text-[13px] leading-relaxed text-muted-foreground">
         <p className="text-xs font-bold text-foreground">Reading the Diagram</p>
-        <p className="mt-1.5">
-          Orange lines: three RoCE-v2 fabric legs, each on its own network at MTU 9000; every Spark
-          owns two. Solid arrowed line: the HTTP serving path, Rank 0 only. Dashed: management.
-        </p>
-        <p className="js3-motion-note mt-1.5">
-          In motion: one request. It comes down the HTTP link, Rank 0 takes it, the three ranks
-          exchange on every leg, and the answer goes back up the same link.
-        </p>
-        <p className="mt-1.5">
-          Model bytes are never inside the image or the recipe; each rank bind-mounts the pinned
-          checkpoint read-only.
-        </p>
-        <p className="mt-1.5">
-          Every serving byte is validated before start. W8A16 converts the BF16 trunk to INT8 Marlin
-          at load; experts stay EXL3, the 34 KDA f/g modules are excluded. The DFlash2 draft is built
-          over all three ranks (draft TP 1 in the profile is ignored).
-        </p>
+        <dl className="mt-2 space-y-1.5">
+          {KEY.map((row) => (
+            <div key={row.term} className={`relative pl-[54px] ${row.motion ? 'js3-motion-note' : ''}`}>
+              <Swatch kind={row.kind} className="absolute left-0 top-[3.5px]" />
+              <dt className="inline font-semibold text-foreground">{row.term}</dt>{' '}
+              <dd className="inline">{row.note}</dd>
+            </div>
+          ))}
+        </dl>
       </div>
+
+      <Fold
+        className="mt-4 border-t border-border pt-4"
+        title="Notes on the figure"
+        summary="Bind-mounted weights, validation before start, the W8A16 overlay at load, and the draft over all three ranks."
+      >
+        <div className="space-y-2.5 text-[13px] leading-relaxed text-muted-foreground">
+          <p>
+            Model bytes are never inside the image or the recipe; each rank bind-mounts the pinned
+            checkpoint read-only.
+          </p>
+          <p>
+            Every serving byte is validated before start. W8A16 converts the BF16 trunk to INT8 Marlin
+            at load; experts stay EXL3, the 34 KDA f/g modules are excluded. The DFlash2 draft is built
+            over all three ranks (draft TP 1 in the profile is ignored).
+          </p>
+        </div>
+      </Fold>
     </MotionScope>
   );
 }
