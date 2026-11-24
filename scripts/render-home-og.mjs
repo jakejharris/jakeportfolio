@@ -3,14 +3,14 @@
 //
 //   node scripts/render-home-og.mjs
 //
-// Writes public/og/jake-harris-ml-researcher.jpg for Open Graph and Twitter.
+// Writes public/og/jake-harris-ai-researcher.jpg for Open Graph and Twitter.
 // Playwright and Chromium are found by scripts/social/browser.mjs.
 import { join, resolve } from 'node:path';
 import { chromePath, loadPlaywright } from './social/browser.mjs';
 import { INK, fontCss } from './social/theme.mjs';
 
 const root = resolve(new URL('..', import.meta.url).pathname);
-const out = join(root, 'public/og/jake-harris-ml-researcher.jpg');
+const out = join(root, 'public/og/jake-harris-ai-researcher.jpg');
 
 const html = `<!doctype html><html><head><meta charset="utf-8"><style>
 ${fontCss()}
@@ -26,7 +26,7 @@ h1{font-family:"Sentient",Georgia,serif;font-weight:700;font-size:112px;line-hei
 </style></head><body><div class="card">
   <div class="mark"></div>
   <h1>Jake Harris</h1>
-  <p class="role">ML Researcher</p>
+  <p class="role">AI Researcher</p>
   <p class="site">jakejh.com</p>
   <div class="checks"></div>
 </div></body></html>`;

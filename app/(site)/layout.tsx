@@ -13,7 +13,7 @@ import "../css/page-layout.css";
 import type { Metadata } from "next";
 import { ABOUT_URL, PERSON_DESCRIPTION, SHARE_IMAGE, SITE_URL, jsonLd, personNode, websiteNode } from "../lib/entity";
 
-const title = "Jake Harris | ML Researcher";
+const title = "Jake Harris | AI Researcher";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -22,7 +22,7 @@ export const metadata: Metadata = {
     template: "%s | Jake Harris"
   },
   description: PERSON_DESCRIPTION,
-  keywords: ["Jake Harris", "ML Researcher", "Machine learning", "LLM inference", "Agent systems"],
+  keywords: ["Jake Harris", "AI Researcher", "Machine learning", "LLM inference", "Agent systems"],
   authors: [{ name: "Jake Harris", url: ABOUT_URL }],
   creator: "Jake Harris",
   alternates: {
