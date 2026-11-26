@@ -11,7 +11,13 @@ npm run start    # Start production server
 npm run lint     # Run ESLint
 ```
 
-**Important:** Do NOT run `npm run build`, `npm run dev`, or `npm run start` directly. Always ask the user to run these commands themselves.
+**Agents may build and run the site, and must check UI changes in a real browser.** Keep off the owner's setup:
+
+- Work in your own git worktree off `origin/main`, never in the main checkout. Its `.next` folder and dev server belong to the owner.
+- Serve on a free port, not 3000 (the owner's dev server), and check that nothing else is already listening there. For example: `npm run build && npx next start -p 3871`.
+- The build needs `NEXT_PUBLIC_SANITY_PROJECT_ID=q1u033fj` and `NEXT_PUBLIC_SANITY_DATASET=production` (public values, also in `sanity.cli.ts`). Without the server-only secrets, view counts and admin routes degrade quietly; the pages still render.
+- A UI change is not done until every page it touches has been screenshotted at phone (390px) and desktop (1440px) widths in both themes, and the screenshots looked at. The site ignores the system theme, so set `localStorage.theme` to `light` or `dark` before the page loads.
+- Stop your server and remove your worktree when you finish.
 
 ## Git Conventions
 
