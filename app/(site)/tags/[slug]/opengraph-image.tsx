@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation';
 import { sanityFetch } from '@/app/lib/sanity.client';
 import { OG_CONTENT_TYPE, OG_SIZE, TagCard, loadOgFonts } from '@/app/lib/og';
 
-export const alt = 'Posts by Jake Harris, ML Researcher';
+export const alt = 'Posts by Jake Harris, AI Researcher';
 export const size = OG_SIZE;
 export const contentType = OG_CONTENT_TYPE;
 export const revalidate = 300;

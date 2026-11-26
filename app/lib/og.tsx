@@ -1,6 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import React, { type ReactNode } from 'react';
+import { JH_MARK_PATHS, JH_MARK_VIEWBOX } from '../components/JHMark';
 import { SITE_URL } from './entity';
 
 // The generated OpenGraph cards (post and tag opengraph-image routes) share this ground, ink and
@@ -44,29 +45,20 @@ export async function loadOgFonts() {
 function OgMark({ height, color }: { height: number; color: string }) {
   const width = Math.round((height * 194) / 151);
   return (
-    <svg width={width} height={height} viewBox="145 10 194 151" fill={color}>
-      <path d="M253.1,13.1v86.1c0,24.9-5.5,35.6-14.3,44.8-10.1,10.5-21.7,15.8-38.2,15.8s-26.6-1.5-39.4-15.6c-11.3-12.7-13.9-22.9-14.3-39.8,0-1,.8-1.9,1.8-1.9h31.8c1,0,1.8.8,1.8,1.7.2,3.9.8,8.2,2.3,12.1h0s0,0,0,0c2.9,6.5,8,9.8,15.4,9.8s12.8-3,15.2-9c2.3-5.4,2.3-12.4,2.3-18V13.1c0-1,.8-1.8,1.8-1.8h31.8c1,0,1.8.8,1.8,1.9Z" />
-      <path d="M256.5,69.3c0-1,.8-1.7,1.8-1.7s0,0,0,0h41.7c1,0,1.8-.8,1.8-1.9V13.1c0-1,.8-1.9,1.8-1.9h33.5c1,0,1.8.8,1.8,1.9v145.1c0,1-.8,1.9-1.8,1.9h-33.5c-1,0-1.8-.8-1.8-1.9v-54.6c0-1-.8-1.9-1.8-1.9h-41.7s0,0,0,0c-1,0-1.8-.7-1.8-1.7v-30.7Z" />
+    <svg width={width} height={height} viewBox={JH_MARK_VIEWBOX} fill={color}>
+      {JH_MARK_PATHS.map((d) => (
+        <path key={d} d={d} />
+      ))}
     </svg>
   );
 }
 
 /**
- * The card shell, the same skeleton as the JSpark3 cards: corner mark (plus
- * the wordmark on post cards), the main block vertically centred, and a mono
- * receipt line above the site host.
+ * The card shell, the same skeleton as the JSpark3 cards: corner mark and
+ * wordmark, the main block vertically centred, and a mono receipt line above
+ * the site host.
  */
-function OgFrame({
-  children,
-  wordmark = true,
-  receipt,
-  host,
-}: {
-  children: ReactNode;
-  wordmark?: boolean;
-  receipt?: string;
-  host: string;
-}) {
+function OgFrame({ children, receipt }: { children: ReactNode; receipt?: string }) {
   return (
     <div
       style={{
@@ -82,11 +74,9 @@ function OgFrame({
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
         <OgMark height={30} color={OG_INK.fg} />
-        {wordmark && (
-          <span style={{ fontFamily: 'Sentient', fontSize: 28, lineHeight: 1, letterSpacing: '-0.01em' }}>
-            Jake Harris
-          </span>
-        )}
+        <span style={{ fontFamily: 'Sentient', fontSize: 28, lineHeight: 1, letterSpacing: '-0.01em' }}>
+          Jake Harris
+        </span>
       </div>
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', minHeight: 0 }}>
         {children}
@@ -106,7 +96,7 @@ function OgFrame({
         }}
       >
         <span>{receipt ?? ''}</span>
-        <span style={{ color: OG_INK.fg }}>{host}</span>
+        <span style={{ color: OG_INK.fg }}>{OG_HOST}</span>
       </div>
     </div>
   );
@@ -132,7 +122,7 @@ export function PostCard({
   tags: string[];
 }) {
   return (
-    <OgFrame receipt={date} host={OG_HOST}>
+    <OgFrame receipt={date}>
       <div
         style={{
           display: 'block',
@@ -172,5 +162,5 @@ export function PostCard({
 
 /** A tag collection uses the same typography as post cards. */
 export function TagCard({ title }: { title: string }) {
-  return <PostCard title={`Posts tagged “${title}”`} date="Jake Harris · ML Researcher" tags={[]} />;
+  return <PostCard title={`Posts tagged “${title}”`} date="Jake Harris · AI Researcher" tags={[]} />;
 }
