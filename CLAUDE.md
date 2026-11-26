@@ -123,8 +123,7 @@ GA_SERVICE_ACCOUNT_JSON          # Service-account JSON with Viewer access to th
 ## Sanity Integration Notes
 
 - The Sanity Studio is embedded at `/studio/`
-- Schema changes belong in `sanity-schemas/` and must match page GROQ projections
-- Frontend queries in page files must match schema structure in `sanity-schemas/`
+- Schema changes belong in `sanity-schemas/`, and the GROQ projections in page files must match them
 - `useCdn: false` and `perspective: 'published'` on the read client — drafts are never exposed
 - `writeClient` is only used server-side in API routes, never in page components
 - `sanityFetch()` adds the global `post` cache tag to every published query, including per-slug queries, so the content webhook expires all dependent pages

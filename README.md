@@ -82,4 +82,3 @@ Use Node.js 22 and npm. `.npmrc` installs build tools even with `NODE_ENV=produc
 Run `npm test`, `npm run check` (zero-warning ESLint 9 plus TypeScript), and `npm run build`.
 The build skips lint/type validation, so run the checks separately.
 The flat config in `eslint.config.mjs` is the only ESLint configuration.
-Sanity Studio is embedded at `/studio/`, configured by `sanity.config.ts` and `sanity-schemas/`.
