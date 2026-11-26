@@ -91,8 +91,7 @@ export async function generateMetadata({
       ...(imageUrl && { images: [{ url: imageUrl, width: 1200, height: 630 }] }),
     },
     twitter: {
-      // Use summary card when no image, summary_large_image when image exists
-      card: imageUrl ? 'summary_large_image' : 'summary',
+      card: 'summary_large_image',
       title,
       description,
       site: '@jakeharrisdev',
