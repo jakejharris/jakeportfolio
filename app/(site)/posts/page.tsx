@@ -4,14 +4,12 @@ import '@/app/css/hero.css';
 import './posts.css';
 import PageLayout from '@/app/components/PageLayout';
 import TransitionLink from '@/app/components/TransitionLink';
-import PixelFluidBackground from '@/app/components/PixelFluidBackground';
 import TagPill from '@/app/components/TagPill';
+import { SITE_URL, jsonLd, personRef } from '@/app/lib/entity';
 import { sanityFetch } from '@/app/lib/sanity.client';
 import type { Metadata } from 'next';
 
 export const dynamic = 'force-dynamic';
-
-const BASE_URL = 'https://jakejh.com';
 
 type ArchivePost = {
   _id: string;
@@ -19,8 +17,7 @@ type ArchivePost = {
   slug: { current: string };
   publishedAt: string;
   excerpt?: string;
-  featured?: boolean;
-  tags?: { title: string; slug: { current: string }; color?: string }[];
+  tags?: { title: string; slug: { current: string } }[];
 };
 
 const postsQuery = `*[_type == "post"] | order(publishedAt desc) {
@@ -29,8 +26,7 @@ const postsQuery = `*[_type == "post"] | order(publishedAt desc) {
   slug,
   publishedAt,
   excerpt,
-  featured,
-  "tags": tags[]->{title, slug, color}
+  "tags": tags[]->{title, slug}
 }`;
 
 export const metadata: Metadata = {
@@ -38,9 +34,9 @@ export const metadata: Metadata = {
   description:
     'Every post on jakejh.com: AI integration, JSPARK3 and local inference, product engineering, and the things that broke along the way.',
   alternates: {
-    canonical: `${BASE_URL}/posts/`,
+    canonical: `${SITE_URL}/posts/`,
     types: {
-      'application/rss+xml': `${BASE_URL}/feed.xml`,
+      'application/rss+xml': `${SITE_URL}/feed.xml`,
     },
   },
   openGraph: {
@@ -48,7 +44,7 @@ export const metadata: Metadata = {
     description:
       'Every post on jakejh.com: AI integration, JSPARK3 and local inference, product engineering, and the things that broke along the way.',
     type: 'website',
-    url: `${BASE_URL}/posts/`,
+    url: `${SITE_URL}/posts/`,
   },
   twitter: {
     card: 'summary',
@@ -76,17 +72,16 @@ export default async function PostsIndexPage() {
   const years = Array.from(byYear.keys()).sort((a, b) => Number(b) - Number(a));
 
   const blogSchema = {
-    '@context': 'https://schema.org',
     '@type': 'Blog',
-    '@id': `${BASE_URL}/posts/#blog`,
+    '@id': `${SITE_URL}/posts/#blog`,
     name: 'Jake Harris, writing',
-    url: `${BASE_URL}/posts/`,
+    url: `${SITE_URL}/posts/`,
     description: 'Posts about AI integration, local inference, and product engineering.',
-    author: { '@type': 'Person', name: 'Jake Harris', url: BASE_URL },
+    author: personRef,
     blogPost: posts.slice(0, 20).map((post) => ({
       '@type': 'BlogPosting',
       headline: post.title,
-      url: `${BASE_URL}/posts/${post.slug.current}/`,
+      url: `${SITE_URL}/posts/${post.slug.current}/`,
       datePublished: post.publishedAt,
     })),
   };
@@ -95,10 +90,9 @@ export default async function PostsIndexPage() {
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(blogSchema) }}
+        dangerouslySetInnerHTML={{ __html: jsonLd(blogSchema) }}
       />
-      <PixelFluidBackground />
-      <PageLayout className="posts-page">
+      <PageLayout>
         <div className="max-w-none">
           <header className="hero">
             <h1 className="hero-wordmark" data-fluid-island>
@@ -115,14 +109,14 @@ export default async function PostsIndexPage() {
           </header>
 
           {years.map((year, index) => (
-            <section key={year} className={`archive-year page-enter-${Math.min(index + 2, 4)}`}>
+            <section key={year} className={`archive-year page-enter-${Math.min(index + 2, 3)}`}>
               <h2 className="section-kicker mb-2">{year}</h2>
               <ul className="space-y-2">
                 {(byYear.get(year) ?? []).map((post) => (
                   <li key={post._id} className="relative">
                     <TransitionLink
                       href={`/posts/${post.slug.current}#`}
-                      className={`pageLinkContainer block border p-3 group ${post.featured ? 'pinnedLinkBorder' : ''}`}
+                      className="pageLinkContainer block border p-3 group"
                       aria-label={`Read ${post.title}`}
                       scroll={true}
                       prefetch={false}

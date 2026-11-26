@@ -1,14 +1,12 @@
+import { SITE_URL } from '@/app/lib/entity';
 import { sanityFetch } from '@/app/lib/sanity.client';
 
 export const dynamic = 'force-dynamic';
-
-const BASE_URL = 'https://jakejh.com';
 
 type FeedPost = {
   title: string;
   slug: { current: string };
   publishedAt: string;
-  _updatedAt: string;
   excerpt?: string;
 };
 
@@ -26,19 +24,14 @@ export async function GET() {
       title,
       slug,
       publishedAt,
-      _updatedAt,
       excerpt
     }`,
     tags: ['post'],
   });
 
-  const lastBuild = posts[0]
-    ? new Date(posts[0]._updatedAt || posts[0].publishedAt).toUTCString()
-    : new Date().toUTCString();
-
   const items = posts
     .map((post) => {
-      const url = `${BASE_URL}/posts/${post.slug.current}/`;
+      const url = escapeXml(`${SITE_URL}/posts/${encodeURIComponent(post.slug.current)}/`);
       const description = post.excerpt
         ? `\n      <description>${escapeXml(post.excerpt)}</description>`
         : '';
@@ -55,11 +48,10 @@ export async function GET() {
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Jake Harris, writing</title>
-    <link>${BASE_URL}/posts/</link>
-    <atom:link href="${BASE_URL}/feed.xml" rel="self" type="application/rss+xml" />
+    <link>${SITE_URL}/posts/</link>
+    <atom:link href="${SITE_URL}/feed.xml" rel="self" type="application/rss+xml" />
     <description>AI integration, local inference, and product engineering from Jake Harris.</description>
     <language>en-us</language>
-    <lastBuildDate>${lastBuild}</lastBuildDate>
 ${items}
   </channel>
 </rss>

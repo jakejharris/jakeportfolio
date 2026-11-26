@@ -10,8 +10,8 @@
   margin-bottom: 1rem;
 }
 
-/* The entry list stays flat: a hairline per row, the accent only on the
-   featured post, same as the homepage ledger. */
+/* The entry list stays flat: a hairline per row, same as the homepage
+   ledger. */
 .archive-year .pageLinkContainer {
   background: color-mix(in srgb, hsl(var(--background)) 92%, transparent);
 }
