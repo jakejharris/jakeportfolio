@@ -1,5 +1,6 @@
 import { FaGithub } from 'react-icons/fa';
 import { Button } from './ui/button';
+import TransitionLink from './TransitionLink';
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
@@ -9,7 +10,16 @@ export default function Footer() {
         <div className="text-sm">
           © Jake Harris {currentYear}
         </div>
-        <div className="text-sm">
+        <div className="text-sm flex items-center gap-1">
+          <Button
+            variant="ghost"
+            size="sm"
+            asChild
+          >
+            <TransitionLink href="/posts/" scroll={true} prefetch={false}>
+              Writing
+            </TransitionLink>
+          </Button>
           <Button 
             variant="ghost" 
             size="sm" 

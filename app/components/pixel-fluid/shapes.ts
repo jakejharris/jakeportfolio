@@ -15,6 +15,7 @@ export function waterShape(pathname: string): WaterShape {
   if (path === '/jspark3') return 'hub';
   if (path.startsWith('/jspark3/')) return 'none';
   if (path.startsWith('/tags/')) return 'open';
+  if (path === '/posts') return 'open';
   if (path === '/viewadmin' || path === '/drafts' || path.startsWith('/studio')) return 'none';
   return 'shore';
 }

@@ -49,7 +49,17 @@ export default async function HomePage() {
       <PageLayout>
       <Hero />
       <div className="max-w-none">
-        <div className="section-kicker" data-fluid-island>Writing &amp; work</div>
+        <div className="section-kicker" data-fluid-island>
+          <TransitionLink
+            href="/posts/"
+            scroll={true}
+            prefetch={false}
+            className="kicker-link"
+            aria-label="All posts"
+          >
+            Writing &amp; work
+          </TransitionLink>
+        </div>
         <GlassLight />
         <ul className="space-y-2">
           {posts.map((post) => {
