@@ -8,10 +8,10 @@ export const WEBSITE_ID = `${SITE_URL}/#website`;
 export const ABOUT_URL = `${SITE_URL}/about/`;
 
 /** The text-only homepage share card, 1200x630. */
-export const SHARE_IMAGE = { url: '/og/jake-harris-ml-researcher.jpg', width: 1200, height: 630, alt: 'Jake Harris | ML Researcher' };
+export const SHARE_IMAGE = { url: '/og/jake-harris-ai-researcher.jpg', width: 1200, height: 630, alt: 'Jake Harris | AI Researcher' };
 
 export const PERSON_DESCRIPTION =
-  'Jake Harris is an ML Researcher in Chicago focused on inference and agent systems.';
+  'Jake Harris is an AI Researcher in Chicago focused on inference and agent systems.';
 
 /** Profiles that are also Jake, in the order the About page lists them. */
 export const PROFILES = [
@@ -37,7 +37,7 @@ export const personNode = {
   '@id': PERSON_ID,
   name: 'Jake Harris',
   url: ABOUT_URL,
-  jobTitle: 'ML Researcher',
+  jobTitle: 'AI Researcher',
   description: PERSON_DESCRIPTION,
   alumniOf: { '@type': 'CollegeOrUniversity', name: 'George Washington University', url: 'https://www.gwu.edu/' },
   knowsAbout: ['LLM inference', 'NVIDIA DGX Spark', 'Agent orchestration', 'Context engineering'],

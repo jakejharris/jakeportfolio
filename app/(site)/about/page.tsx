@@ -8,7 +8,7 @@ import '../../css/animations.css';
 import '../../css/hero.css';
 import './about.css';
 
-const title = "About Jake Harris | ML Researcher";
+const title = "About Jake Harris | AI Researcher";
 const description = PERSON_DESCRIPTION;
 
 export const metadata: Metadata = {
