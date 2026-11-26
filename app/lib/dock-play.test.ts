@@ -1,6 +1,10 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { BURST_GAP_MS, Burst, DOT, dropFlight, dropsFor, heatOf } from './dock-play';
+import { BURST_GAP_MS, Burst, DOT, dropFlight, dropsFor, FOLD_MS, heatOf } from './dock-play';
+
+test('a burst ends before the palette folds itself', () => {
+  assert.ok(FOLD_MS > BURST_GAP_MS);
+});
 
 test('quick presses make a burst; a pause starts a new one', () => {
   const burst = new Burst();
