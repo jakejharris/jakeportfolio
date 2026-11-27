@@ -1,0 +1,158 @@
+import type { TimelineValue } from '@/app/types/sanity';
+import {
+  clockPercent,
+  formatClockRange,
+  parseClock,
+  timelineOrder,
+  timelineScale,
+} from '@/app/lib/post-figures';
+
+import { FigureFrame } from './Frame';
+
+/**
+ * A proportional time strip: each lane's points and spans on a real clock,
+ * with labelled gaps across all lanes. Below it, the same moments as a list
+ * in time order, which is also the strip's text alternative.
+ */
+export default function Timeline({ value }: { value: TimelineValue }) {
+  const lanes = (value.lanes ?? []).slice(0, 3);
+  const events = (value.events ?? []).filter(
+    (event) => parseClock(event.start) !== null && lanes.includes(event.lane)
+  );
+  const gaps = (value.gaps ?? []).filter(
+    (gap) => parseClock(gap.start) !== null && parseClock(gap.end) !== null
+  );
+  if (lanes.length === 0 || events.length === 0) return null;
+
+  const scale = timelineScale([...events, ...gaps]);
+  const laneOf = (name: string) => lanes.indexOf(name);
+  const spanOf = (start: string, end?: string) => {
+    const from = parseClock(start)!;
+    const to = parseClock(end);
+    return { from, to: to !== null && to > from ? to : undefined };
+  };
+
+  return (
+    <FigureFrame
+      kind="timeline"
+      title={value.title}
+      label={value.label}
+      caption={value.caption}
+      sourceTitle={value.sourceTitle}
+      sourceUrl={value.sourceUrl}
+      sourceDetail={value.sourceDetail}
+    >
+      <div className="pf-timeline-strip" aria-hidden="true">
+        {/* The gap labels get a row of their own above the lanes. */}
+        {gaps.length > 0 && (
+          <>
+            <span />
+            <div className="pf-timeline-lane" style={{ height: 22 }}>
+              {gaps.map((gap) => {
+                const { from, to } = spanOf(gap.start, gap.end);
+                const mid = (clockPercent(from, scale) + clockPercent(to ?? from, scale)) / 2;
+                return (
+                  <span key={gap._key} className="pf-timeline-gap-label" style={{ left: `${mid}%` }}>
+                    <span>{gap.label}</span>
+                  </span>
+                );
+              })}
+            </div>
+          </>
+        )}
+        <div className="flex flex-col">
+          {lanes.map((lane) => (
+            <span key={lane} className="pf-timeline-lane-name flex h-[22px] items-center">
+              {lane}
+            </span>
+          ))}
+        </div>
+        <div className="pf-timeline-track">
+          {gaps.map((gap) => {
+            const { from, to } = spanOf(gap.start, gap.end);
+            const left = clockPercent(from, scale);
+            return (
+              <span
+                key={gap._key}
+                className="pf-timeline-gap"
+                style={{
+                  left: `${left}%`,
+                  width: `${clockPercent(to ?? from, scale) - left}%`,
+                  top: -22,
+                  bottom: '1.7rem',
+                }}
+              />
+            );
+          })}
+          {lanes.map((lane, laneIndex) => (
+            <div key={lane} className="pf-timeline-lane">
+              {events
+                .filter((event) => event.lane === lane)
+                .map((event) => {
+                  const { from, to } = spanOf(event.start, event.end);
+                  const left = clockPercent(from, scale);
+                  return to === undefined ? (
+                    <span
+                      key={event._key}
+                      className={`pf-mark pf-lane-${laneIndex}`}
+                      style={{ left: `${left}%` }}
+                    />
+                  ) : (
+                    <span
+                      key={event._key}
+                      className={`pf-span pf-lane-${laneIndex}`}
+                      style={{ left: `${left}%`, width: `${clockPercent(to, scale) - left}%` }}
+                    />
+                  );
+                })}
+            </div>
+          ))}
+          <div className="pf-timeline-axis tabular">
+            {scale.ticks.map((tick) => (
+              <span
+                key={tick.minutes}
+                data-minor={tick.minor ? '' : undefined}
+                style={{ left: `${clockPercent(tick.minutes, scale)}%` }}
+              >
+                {tick.label}
+              </span>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <ol className="pf-timeline-list">
+        {timelineOrder(events, gaps).map((row) => {
+          const { from, to } = spanOf(row.item.start, row.item.end);
+          const when = row.item.start;
+          if (row.kind === 'gap') {
+            const gap = gaps[row.index];
+            return (
+              <li key={gap._key} className="pf-timeline-row pf-is-gap">
+                <span className="pf-glyph pf-gap" aria-hidden="true" />
+                <time className="tabular" dateTime={when}>
+                  {formatClockRange(from, to)}
+                </time>
+                <span className="pf-text">{gap.label}</span>
+              </li>
+            );
+          }
+          const event = events[row.index];
+          const lane = laneOf(event.lane);
+          return (
+            <li key={event._key} className="pf-timeline-row">
+              <span className={`pf-glyph pf-lane-${lane}`} aria-hidden="true" />
+              <time className="tabular" dateTime={when}>
+                {event.timeLabel || formatClockRange(from, to)}
+              </time>
+              <span className="pf-text">
+                <span className="sr-only">{event.lane}: </span>
+                {event.text}
+              </span>
+            </li>
+          );
+        })}
+      </ol>
+    </FigureFrame>
+  );
+}

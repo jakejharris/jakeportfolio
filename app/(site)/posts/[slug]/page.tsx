@@ -16,6 +16,7 @@ import ViewCounter from './ViewCounter';
 import { Post, InteractiveComponentValue } from '@/app/types/sanity';
 import InteractiveBlock from '@/app/components/blog-components/InteractiveBlock';
 import PostCallToAction from '@/app/components/blog-components/PostCallToAction';
+import { postFigureComponents } from '@/app/components/blog-components/post-figures';
 import TransitionLink from '@/app/components/TransitionLink';
 import { sitePath } from '@/app/lib/site-path';
 import { Button } from '@/app/components/ui/button';
@@ -163,6 +164,7 @@ const components: Partial<PortableTextReactComponents> = {
     }
   },
   types: {
+    ...postFigureComponents,
     image: ({ value }: { value: ImageValue }) => {
       return (
         <div className={`my-8 ${value.fullWidth ? 'w-full' : 'max-w-2xl mx-auto'}`}>
