@@ -9,7 +9,8 @@ import { FigureFrame, SourceLink } from './Frame';
 export default function StatGrid({ value }: { value: StatGridValue }) {
   const stats = (value.stats ?? []).filter((stat) => stat.value && stat.label).slice(0, 6);
   if (stats.length === 0) return null;
-  const { phone, wide } = statColumns(stats.length, Math.max(...stats.map((stat) => stat.label.length)));
+  const longest = Math.max(...stats.map((stat) => stat.label.length + (stat.detail?.length ?? 0)));
+  const { phone, wide } = statColumns(stats.length, longest);
 
   return (
     <FigureFrame
@@ -35,6 +36,7 @@ export default function StatGrid({ value }: { value: StatGridValue }) {
               {stat.unit && <span className="pf-stat-unit">{stat.unit}</span>}
             </p>
             <p className="pf-stat-label">{stat.label}</p>
+            {stat.detail && <p className="pf-stat-detail">{stat.detail}</p>}
             {stat.note && <p className="pf-stat-note">{stat.note}</p>}
             {stat.sourceTitle && (
               <p className="pf-stat-source">

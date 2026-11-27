@@ -120,7 +120,10 @@ export interface StatItem {
   value: string;
   /** Short word after the figure, e.g. "boats". */
   unit?: string;
+  /** Short, in Title Case. */
   label: string;
+  /** A sentence that explains the number. */
+  detail?: string;
   note?: string;
   sourceTitle?: string;
   sourceUrl?: string;

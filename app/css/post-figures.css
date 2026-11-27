@@ -338,6 +338,14 @@
   color: var(--pf-dim);
   text-wrap: pretty;
 }
+.pf-stat-detail {
+  margin-top: 0.35rem !important;
+  font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--pf-faint);
+  text-wrap: pretty;
+}
 .pf-stat-note {
   margin-top: 0.35rem !important;
   font-size: 11px;

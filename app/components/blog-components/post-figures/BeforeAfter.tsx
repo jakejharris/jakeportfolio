@@ -62,7 +62,7 @@ export default function BeforeAfter({ value }: { value: BeforeAfterValue }) {
               <th scope="row">{row.label}</th>
               <td>{show(row.before)}</td>
               <td>{show(row.after)}</td>
-              <td>{formatDelta(row.before, row.after, decimals) ?? 'no change'}</td>
+              <td>{formatDelta(row.before, row.after, decimals) ?? 'No Change'}</td>
             </tr>
           ))}
         </tbody>
@@ -98,7 +98,7 @@ export default function BeforeAfter({ value }: { value: BeforeAfterValue }) {
                       </>
                     ) : (
                       <>
-                        {show(row.after)} <span className="pf-db-delta">(no change)</span>
+                        {show(row.after)} <span className="pf-db-delta">(No Change)</span>
                       </>
                     )}
                   </span>

@@ -126,8 +126,8 @@ export function checkTimelineLanes(lanes: unknown, events: Array<{ lane?: string
 // ------------------------------------------------------------- statGrid
 
 /**
- * Columns for n stats. On a phone, two when n is even and the labels are
- * short, else one; on wider screens, three when n divides by three.
+ * Columns for n stats. On a phone, two when n is even and the text under
+ * each number is short, else one; on wider screens, three when n divides by three.
  */
 export function statColumns(n: number, longestLabel = 0) {
   const phone = n % 2 === 0 && longestLabel <= 60 ? 2 : 1;

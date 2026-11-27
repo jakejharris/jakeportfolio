@@ -47,13 +47,13 @@ export default function OverlapGrid({ value }: { value: OverlapGridValue }) {
   const cells = overlapCells(total, aMisses, bMisses, shared);
   const aName = value.aName || 'A';
   const bName = value.bName || 'B';
-  const bothLabel = value.bothLabel || 'Missed by both';
+  const bothLabel = value.bothLabel || 'Missed by Both';
   const illustration = value.illustration !== false;
   const label = value.label || (illustration ? 'Illustration' : undefined);
 
   const panels = [
-    { name: `${aName} misses`, count: aMisses, shows: (c: OverlapCell) => c === 'a' || c === 'both' },
-    { name: `${bName} misses`, count: bMisses, shows: (c: OverlapCell) => c === 'b' || c === 'both' },
+    { name: `${aName} Misses`, count: aMisses, shows: (c: OverlapCell) => c === 'a' || c === 'both' },
+    { name: `${bName} Misses`, count: bMisses, shows: (c: OverlapCell) => c === 'b' || c === 'both' },
     { name: bothLabel, count: shared, shows: (c: OverlapCell) => c === 'both' },
   ];
 
@@ -94,13 +94,13 @@ export default function OverlapGrid({ value }: { value: OverlapGridValue }) {
           <svg viewBox="0 0 10 10">
             <rect x={INSET} y={INSET} width={CELL} height={CELL} rx={0.8} className="pf-cell" />
           </svg>
-          caught
+          Caught
         </li>
         <li>
           <svg viewBox="0 0 10 10">
             <rect x={INSET} y={INSET} width={CELL} height={CELL} rx={0.8} className="pf-cell-miss" />
           </svg>
-          missed
+          Missed
         </li>
         {shared > 0 && (
           <li>
@@ -108,7 +108,7 @@ export default function OverlapGrid({ value }: { value: OverlapGridValue }) {
               <rect x={INSET} y={INSET} width={CELL} height={CELL} rx={0.8} className="pf-cell-miss" />
               <rect x={0.45} y={0.45} width={9.1} height={9.1} rx={1.4} className="pf-cell-ring" />
             </svg>
-            missed by both
+            Missed by Both
           </li>
         )}
       </ul>

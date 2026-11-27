@@ -22,14 +22,14 @@ const frameFields = (labelHint: string) => [
     name: 'title',
     title: 'Title',
     type: 'string',
-    description: 'Short monospace title, top left of the card.',
+    description: 'Short monospace title, top left of the card, in Title Case.',
     validation: (Rule: Rule) => Rule.max(60),
   },
   {
     name: 'label',
     title: 'Label',
     type: 'string',
-    description: `Unit or context, top right of the card. ${labelHint}`,
+    description: `Unit or context, top right of the card, in Title Case. ${labelHint}`,
     validation: (Rule: Rule) => Rule.max(40),
   },
   {
@@ -85,7 +85,7 @@ export const timeline = {
       title: 'Lanes',
       type: 'array',
       of: [{ type: 'string' }],
-      description: 'One to three rows, in order, e.g. "Kitchen" and "Dining room". The first lane takes the accent color.',
+      description: 'One to three rows, in order, in Title Case, e.g. "Kitchen" and "Dining Room". The first lane takes the accent color.',
       validation: (Rule: Rule) => Rule.required().min(1).max(3).unique(),
     },
     {
@@ -112,6 +112,7 @@ export const timeline = {
               name: 'text',
               title: 'What happened',
               type: 'string',
+              description: 'A short label in Title Case. A quote stays as it was said.',
               validation: (Rule: Rule) => Rule.required().max(120),
             },
             {
@@ -140,7 +141,7 @@ export const timeline = {
       name: 'gaps',
       title: 'Gaps',
       type: 'array',
-      description: 'Stretches to mark across every lane, e.g. "Closed for lunch".',
+      description: 'Stretches to mark across every lane, in Title Case, e.g. "Closed for Lunch".',
       of: [
         {
           type: 'object',
@@ -203,15 +204,23 @@ export const statGrid = {
               name: 'unit',
               title: 'Unit',
               type: 'string',
-              description: 'Optional words after the figure, in the accent color: "boats", "a week", "of 90".',
+              description: 'Optional words after the figure, in the accent color and Title Case: "Boats", "a Week", "of 90".',
               validation: (Rule: Rule) => Rule.max(20),
             },
             {
               name: 'label',
               title: 'Label',
               type: 'string',
-              description: 'What the number counts, in a sentence or two.',
-              validation: (Rule: Rule) => Rule.required().max(240),
+              description: 'What the number counts, short and in Title Case.',
+              validation: (Rule: Rule) => Rule.required().max(80),
+            },
+            {
+              name: 'detail',
+              title: 'Detail',
+              type: 'text',
+              rows: 2,
+              description: 'Optional sentence under the label that explains the number.',
+              validation: (Rule: Rule) => Rule.max(300),
             },
             {
               name: 'note',
@@ -291,7 +300,7 @@ export const studyCards = {
               name: 'stat',
               title: 'Big number',
               type: 'string',
-              description: 'Optional headline figure, e.g. "about a third" or "40% vs 25%".',
+              description: 'Optional headline figure in Title Case, e.g. "About a Third" or "40% vs. 25%".',
               validation: (Rule: Rule) => Rule.max(28),
             },
             {
@@ -378,7 +387,7 @@ export const overlapGrid = {
       name: 'bothLabel',
       title: 'Third grid label',
       type: 'string',
-      description: 'Defaults to "Missed by both".',
+      description: 'Defaults to "Missed by Both".',
       validation: (Rule: Rule) => Rule.max(32),
     },
     ...sourceFields,
@@ -402,8 +411,8 @@ export const beforeAfter = {
   description: 'A dumbbell chart: each row moves from a before value to an after value on one scale.',
   fields: [
     ...frameFields('For example the unit: "score, %".'),
-    { name: 'beforeLabel', title: 'Before label', type: 'string', description: 'Legend for the hollow dot. Defaults to "Before".' },
-    { name: 'afterLabel', title: 'After label', type: 'string', description: 'Legend for the filled dot. Defaults to "After".' },
+    { name: 'beforeLabel', title: 'Before label', type: 'string', description: 'Legend for the hollow dot, in Title Case. Defaults to "Before".' },
+    { name: 'afterLabel', title: 'After label', type: 'string', description: 'Legend for the filled dot, in Title Case. Defaults to "After".' },
     {
       name: 'valueSuffix',
       title: 'Value suffix',
@@ -423,7 +432,7 @@ export const beforeAfter = {
           name: 'beforeAfterRow',
           title: 'Row',
           fields: [
-            { name: 'label', title: 'Label', type: 'string', validation: (Rule: Rule) => Rule.required().max(80) },
+            { name: 'label', title: 'Label', type: 'string', description: 'In Title Case.', validation: (Rule: Rule) => Rule.required().max(80) },
             { name: 'before', title: 'Before', type: 'number', validation: (Rule: Rule) => Rule.required() },
             { name: 'after', title: 'After', type: 'number', validation: (Rule: Rule) => Rule.required() },
           ],

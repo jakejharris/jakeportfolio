@@ -43,10 +43,10 @@ test('a stat grid prints every figure, unit and label', async () => {
     _key: 's',
     stats: [
       { _key: k(1), value: '12', unit: 'boats', label: 'In the harbor' },
-      { _key: k(2), value: '3.5', label: 'Average knots', note: 'Calm day' },
+      { _key: k(2), value: '3.5', label: 'Average Knots', detail: 'Measured at noon.', note: 'Calm day' },
     ],
   });
-  for (const text of ['12', 'boats', 'In the harbor', '3.5', 'Average knots', 'Calm day']) assert.ok(html.includes(text), text);
+  for (const text of ['12', 'boats', 'In the harbor', '3.5', 'Average Knots', 'Measured at noon.', 'Calm day']) assert.ok(html.includes(text), text);
   assert.match(html, /--pf-cols-phone:2/);
 });
 
@@ -91,5 +91,5 @@ test('a before and after chart carries a data table and signed changes', async (
   assert.match(html, /<div class="sr-only"><table><caption>Scores<\/caption>/);
   assert.match(html, /<td>40.0%<\/td><td>55.5%<\/td><td>\+15.5<\/td>/);
   assert.match(html, /<td>60.0%<\/td><td>52.0%<\/td><td>−8.0<\/td>/);
-  assert.match(html, /<td>no change<\/td>/);
+  assert.match(html, /<td>No Change<\/td>/);
 });
