@@ -84,7 +84,13 @@ export const timeline = {
       name: 'lanes',
       title: 'Lanes',
       type: 'array',
-      of: [{ type: 'string' }],
+      of: [
+        {
+          type: 'string',
+          validation: (Rule: Rule) =>
+            Rule.custom((name: unknown) => (typeof name === 'string' && name.trim() ? true : 'Lane names cannot be empty.')),
+        },
+      ],
       description: 'One to three rows, in order, in Title Case, e.g. "Kitchen" and "Dining Room". The first lane takes the accent color.',
       validation: (Rule: Rule) => Rule.required().min(1).max(3).unique(),
     },

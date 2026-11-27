@@ -117,7 +117,8 @@ test('a scale rounds out around the values with an even step', () => {
   assert.equal(niceScale([41, 59]).max, 60, 'an even count of steps stays as it is');
   const fixed = niceScale([12, 30], 5, 0, 100);
   assert.deepEqual([fixed.min, fixed.max], [0, 100]);
-  assert.deepEqual(fixed.ticks, [0, 20, 40, 60, 80, 100]);
+  // Steps of 20 would make five intervals and hide 100 on phones; 25 makes four.
+  assert.deepEqual(fixed.ticks, [0, 25, 50, 75, 100]);
   const flat = niceScale([7, 7]);
   assert.ok(flat.min < 7 && flat.max > 7);
   assert.equal(scalePercent(50, { min: 40, max: 60 }), 50);
@@ -144,4 +145,92 @@ test('only web links render', () => {
 
 test('an automatic scale keeps round ticks', () => {
   assert.deepEqual(niceScale([3, 12, 15, 9]).ticks, [0, 5, 10, 15, 20]);
+});
+
+// ---- boundary cases from review
+
+const ticksOf = (starts: string[]) => timelineScale(starts.map((start) => ({ start }))).ticks;
+
+test('a one-hour timeline keeps both end ticks on phones', () => {
+  const ticks = ticksOf(['09:30']);
+  assert.deepEqual(ticks.map((t) => t.label), ['9 AM', '10 AM']);
+  assert.ok(ticks.every((t) => !t.minor), 'no tick is minor, so a phone hides neither');
+});
+
+test('timeline spans that round to seven steps stay within eight ticks and end on a major tick', () => {
+  for (const [a, b] of [['01:10', '07:50'], ['01:10', '13:50'], ['00:10', '19:50'], ['02:00', '22:30']]) {
+    const ticks = ticksOf([a, b]);
+    assert.ok(ticks.length <= 8, `${a} to ${b}: ${ticks.length} ticks`);
+    assert.equal(ticks.at(-1)!.minor, false, `${a} to ${b}: last tick is shown on phones`);
+  }
+});
+
+test('a late-day timeline never runs past midnight into the next morning', () => {
+  const scale = timelineScale([{ start: '03:00' }, { start: '23:30' }]);
+  assert.ok(scale.to <= 24 * 60, `to = ${scale.to}`);
+  assert.ok(scale.from <= 3 * 60);
+  assert.equal(new Set(scale.ticks.slice(0, -1).map((t) => t.label)).size, scale.ticks.length - 1, 'no hour label repeats');
+});
+
+test('a clock span treats a null end as unset', () => {
+  assert.equal(checkClockSpan({ start: '09:00', end: null as unknown as string }), true);
+  assert.equal(checkClockSpan({ start: '09:00', end: null as unknown as string }, true), 'An end time is required.');
+});
+
+test('blank lane names fail validation', () => {
+  assert.equal(checkTimelineLanes(['', 'Me'], [{ lane: 'Me' }]), 'Lane names cannot be empty.');
+  assert.equal(checkTimelineLanes(['  ', 'A', 'B', 'C'], []), 'Lane names cannot be empty.');
+  assert.equal(checkTimelineLanes(['Me', 7], [{ lane: 'Me' }]), 'Lane names cannot be empty.');
+  assert.equal(checkTimelineLanes('Me', [{ lane: 'Me' }]), 'Give one to three lane names.');
+  assert.equal(checkTimelineLanes(['Me'], [{ lane: 'Me' }]), true);
+});
+
+test('stat columns for one and five stats', () => {
+  assert.deepEqual(statColumns(1), { phone: 1, wide: 1 });
+  assert.deepEqual(statColumns(5), { phone: 1, wide: 3 });
+});
+
+const scaleOf = (values: number[], min?: number | null, max?: number | null) => niceScale(values, 5, min, max);
+const endsOnMajor = (ticks: number[]) => (ticks.length - 1) % 2 === 0;
+
+test('a scale with only a fixed max moves its free end so the max stays a major tick', () => {
+  const scale = scaleOf([76.2, 98.1], undefined, 100);
+  assert.equal(scale.max, 100);
+  assert.equal(scale.ticks.at(-1), 100);
+  assert.ok(endsOnMajor(scale.ticks), scale.ticks.join(','));
+  assert.ok(scale.min <= 76.2);
+});
+
+test('a scale with only a fixed min moves its free end the same way', () => {
+  const scale = scaleOf([12, 31], 10);
+  assert.equal(scale.min, 10);
+  assert.equal(scale.ticks[0], 10);
+  assert.ok(endsOnMajor(scale.ticks), scale.ticks.join(','));
+  assert.ok(scale.max >= 31);
+});
+
+test('a scale with both ends fixed picks a step that lands on both as major ticks', () => {
+  const scale = scaleOf([62, 95], 50, 100);
+  assert.equal(scale.ticks[0], 50);
+  assert.equal(scale.ticks.at(-1), 100);
+  assert.ok(endsOnMajor(scale.ticks), scale.ticks.join(','));
+});
+
+test('inverted, equal or missing fixed ends fall back to a scale around the data', () => {
+  for (const [min, max] of [[100, 60], [50, 50], [null, null]] as const) {
+    const scale = scaleOf([70, 90], min, max);
+    assert.ok(scale.max > scale.min, `${min}..${max}`);
+    assert.ok(scale.ticks.length >= 2 && scale.ticks.every(Number.isFinite), `${min}..${max}: ${scale.ticks}`);
+    assert.ok(scale.min <= 70 && scale.max >= 90);
+  }
+  assert.equal(scalePercent(50, { min: 50, max: 50 }), 0, 'a zero-width scale never gives NaN');
+  assert.equal(scalePercent(70, { min: 100, max: 60 }), 0);
+});
+
+test('checkScale treats null bounds as unset and refuses inverted ones', () => {
+  assert.equal(checkScale({ scaleMin: null, scaleMax: null, rows: [{ before: 70, after: 90 }] }), true);
+  assert.equal(checkScale({ scaleMin: 100, scaleMax: 60, rows: [] }), 'Scale max must be above scale min.');
+  assert.equal(checkScale({ scaleMin: 50, scaleMax: 50, rows: [] }), 'Scale max must be above scale min.');
+  assert.equal(checkScale({ scaleMin: 80, scaleMax: 100, rows: [{ before: 60, after: 90 }] }), 'A value (60) is below the scale min.');
+  assert.equal(checkScale({ rows: [null, { before: 1, after: 2 }] }), true);
 });

@@ -48,6 +48,13 @@ export interface TimelineScale {
 }
 
 const TICK_STEPS = [1, 2, 3, 4, 6];
+const DAY = 24 * 60;
+
+/** Steps of `step` hours to cover `hours`, rounded up to an even count past one. */
+function evenSteps(hours: number, step: number) {
+  const n = Math.max(1, Math.ceil(hours / step));
+  return n > 1 && n % 2 === 1 ? n + 1 : n;
+}
 
 /**
  * The axis for a set of clock times: whole hours around them, with a tick
@@ -59,20 +66,26 @@ export function timelineScale(items: ClockItem[], maxTicks = 8): TimelineScale {
     (value): value is number => value !== null
   );
   if (minutes.length === 0) return { from: 0, to: 60, step: 1, ticks: [] };
-  const from = Math.floor(Math.min(...minutes) / 60) * 60;
+  let from = Math.floor(Math.min(...minutes) / 60) * 60;
   let to = Math.ceil(Math.max(...minutes) / 60) * 60;
   if (to <= from) to = from + 60;
   const hours = (to - from) / 60;
-  const step = TICK_STEPS.find((s) => Math.ceil(hours / s) + 1 <= maxTicks) ?? 12;
+  // The step is chosen after the even rounding, so the axis keeps to maxTicks.
+  const step = TICK_STEPS.find((s) => evenSteps(hours, s) + 1 <= maxTicks) ?? 12;
 
   // Ticks run from the first whole hour, and an even number of steps puts
   // the last tick on a major one, so a phone's half set stays evenly spaced.
-  let steps = Math.ceil((to - from) / 60 / step);
-  if (steps % 2 === 1 && steps > 1) steps += 1;
+  // A strip of one step has no minor tick, so a phone keeps both ends.
+  const steps = evenSteps(hours, step);
   to = from + steps * step * 60;
+  // One day only: an axis that would run past midnight starts earlier instead.
+  if (to > DAY) {
+    from = Math.max(0, from - (to - DAY));
+    to = Math.min(DAY, from + steps * step * 60);
+  }
   const ticks = [];
   for (let t = from, i = 0; t <= to; t += step * 60, i++) {
-    ticks.push({ minutes: t, label: formatClock(t, { short: true }), minor: i % 2 === 1 });
+    ticks.push({ minutes: t, label: formatClock(t, { short: true }), minor: steps > 1 && i % 2 === 1 });
   }
   return { from, to, step, ticks };
 }
@@ -104,7 +117,7 @@ export function checkClockSpan(item: Partial<ClockItem> | undefined, needsEnd = 
   if (!item) return true;
   const start = parseClock(item.start);
   if (start === null) return 'Start must be a 24-hour time like 07:30 or 13:05.';
-  if (item.end === undefined || item.end === '') return needsEnd ? 'An end time is required.' : true;
+  if (item.end == null || item.end === '') return needsEnd ? 'An end time is required.' : true;
   const end = parseClock(item.end);
   if (end === null) return 'End must be a 24-hour time like 18:45.';
   if (end <= start) return 'End must be later than start on the same day.';
@@ -113,12 +126,14 @@ export function checkClockSpan(item: Partial<ClockItem> | undefined, needsEnd = 
 
 /** Every event names one of the lanes. */
 export function checkTimelineLanes(lanes: unknown, events: Array<{ lane?: string }> | undefined): Check {
-  const names = Array.isArray(lanes) ? lanes.filter((name) => typeof name === 'string' && name.trim()) : [];
+  if (!Array.isArray(lanes)) return 'Give one to three lane names.';
+  if (lanes.some((name) => typeof name !== 'string' || !name.trim())) return 'Lane names cannot be empty.';
+  const names = lanes as string[];
   if (names.length < 1 || names.length > 3) return 'Give one to three lane names.';
   if (new Set(names).size !== names.length) return 'Lane names must differ.';
-  const unknown = (events ?? []).filter((event) => !names.includes(event.lane ?? ''));
+  const unknown = (Array.isArray(events) ? events : []).filter((event) => !names.includes(event?.lane ?? ''));
   if (unknown.length) {
-    return `Each event's lane must be one of: ${names.join(', ')}. Not found: ${[...new Set(unknown.map((e) => e.lane || '(empty)'))].join(', ')}.`;
+    return `Each event's lane must be one of: ${names.join(', ')}. Not found: ${[...new Set(unknown.map((e) => e?.lane || '(empty)'))].join(', ')}.`;
   }
   return true;
 }
@@ -127,7 +142,9 @@ export function checkTimelineLanes(lanes: unknown, events: Array<{ lane?: string
 
 /**
  * Columns for n stats. On a phone, two when n is even and the text under
- * each number is short, else one; on wider screens, three when n divides by three.
+ * each number is short, else one. On wider screens, three when n divides by
+ * three or is five (the grid then fills its sixth cell so the row rule runs
+ * across), one for a single stat, else two.
  */
 export function statColumns(n: number, longestLabel = 0) {
   const phone = n % 2 === 0 && longestLabel <= 60 ? 2 : 1;
@@ -190,33 +207,81 @@ export interface Scale {
 
 const NICE = [1, 2, 5, 10];
 
-/** Round ends and an even step around the values, about `target` intervals; given ends win. */
-export function niceScale(values: number[], target = 5, fixedMin?: number, fixedMax?: number): Scale {
-  const finite = values.filter(Number.isFinite);
-  let lo = fixedMin ?? Math.min(...finite);
-  let hi = fixedMax ?? Math.max(...finite);
-  if (!Number.isFinite(lo) || !Number.isFinite(hi)) {
-    lo = 0;
-    hi = 1;
-  }
-  if (hi === lo) {
-    lo -= 1;
-    hi += 1;
-  }
-  const raw = (hi - lo) / target;
-  const power = 10 ** Math.floor(Math.log10(raw));
-  const step = (NICE.find((n) => n * power >= raw) ?? 10) * power;
-  const min = fixedMin ?? Math.floor(lo / step + 1e-9) * step;
-  let max = fixedMax ?? Math.ceil(hi / step - 1e-9) * step;
-  // An even number of steps ends the axis on a tick a phone still shows.
-  if (fixedMax === undefined && fixedMin === undefined && Math.round((max - min) / step) % 2 === 1) max += step;
+const isNumber = (x: unknown): x is number => typeof x === 'number' && Number.isFinite(x);
+
+function ticksBetween(min: number, max: number, step: number) {
   const ticks: number[] = [];
   const first = Math.ceil(min / step - 1e-9) * step;
   for (let t = first; t <= max + step * 1e-9; t += step) ticks.push(round(t, 6) || 0);
-  return { min, max, step, ticks };
+  return ticks;
+}
+
+/**
+ * Round ends and an even step around the values, about `target` intervals;
+ * given ends win. An even number of intervals ends the axis on a tick a
+ * phone still shows (it shows every other one). Ends that are not numbers,
+ * or a max not above the min, count as not given.
+ */
+export function niceScale(values: number[], target = 5, fixedMin?: number | null, fixedMax?: number | null): Scale {
+  let fMin = isNumber(fixedMin) ? fixedMin : undefined;
+  let fMax = isNumber(fixedMax) ? fixedMax : undefined;
+  if (fMin !== undefined && fMax !== undefined && fMax <= fMin) fMin = fMax = undefined;
+  const finite = values.filter(Number.isFinite);
+  let lo = fMin ?? Math.min(...finite);
+  let hi = fMax ?? Math.max(...finite);
+  if (!Number.isFinite(lo) || !Number.isFinite(hi)) {
+    lo = fMin ?? (fMax !== undefined ? fMax - 1 : 0);
+    hi = fMax ?? lo + 1;
+  }
+  if (hi <= lo) {
+    if (fMin === undefined && fMax === undefined) {
+      lo -= 1;
+      hi += 1;
+    } else if (fMax === undefined) hi = lo + 1;
+    else lo = hi - 1;
+  }
+  const raw = (hi - lo) / target;
+  const power = 10 ** Math.floor(Math.log10(raw));
+  const nice = (NICE.find((n) => n * power >= raw) ?? 10) * power;
+
+  if (fMin === undefined && fMax === undefined) {
+    const min = Math.floor(lo / nice + 1e-9) * nice;
+    let max = Math.ceil(hi / nice - 1e-9) * nice;
+    if (Math.round((max - min) / nice) % 2 === 1) max += nice;
+    return { min, max, step: nice, ticks: ticksBetween(min, max, nice) };
+  }
+
+  // A given end: try nearby steps and keep the one that ends on even ticks,
+  // landing on the given ends, closest to the target count. A free end moves
+  // out one step when that makes the count even.
+  let best: (Scale & { score: number }) | undefined;
+  for (const p of [power / 10, power, power * 10]) {
+    for (const m of [1, 2, 2.5, 5]) {
+      const step = round(m * p, 9);
+      let min = fMin ?? Math.floor(lo / step + 1e-9) * step;
+      let max = fMax ?? Math.ceil(hi / step - 1e-9) * step;
+      let ticks = ticksBetween(min, max, step);
+      if ((ticks.length - 1) % 2 === 1) {
+        if (fMax === undefined) max += step;
+        else if (fMin === undefined) min -= step;
+        ticks = ticksBetween(min, max, step);
+      }
+      const n = ticks.length - 1;
+      if (n < 2 || n > 10) continue;
+      const onEnds = Math.abs(ticks[0] - min) < step * 1e-6 && Math.abs(ticks[n] - max) < step * 1e-6;
+      const score =
+        (n % 2 === 1 ? 100 : 0) + (onEnds ? 0 : 10) + Math.abs(n - target) + (m === 2.5 ? 0.5 : 0) + (step === nice ? 0 : 0.25);
+      if (!best || score < best.score) best = { min, max, step, ticks, score };
+    }
+  }
+  if (best) return { min: best.min, max: best.max, step: best.step, ticks: best.ticks };
+  const min = fMin ?? Math.floor(lo / nice + 1e-9) * nice;
+  const max = fMax ?? Math.ceil(hi / nice - 1e-9) * nice;
+  return { min, max, step: nice, ticks: ticksBetween(min, max, nice) };
 }
 
 export function scalePercent(value: number, scale: Pick<Scale, 'min' | 'max'>) {
+  if (!(scale.max > scale.min) || !Number.isFinite(value)) return 0;
   const ratio = (value - scale.min) / (scale.max - scale.min);
   return Math.round(Math.min(1, Math.max(0, ratio)) * 10000) / 100;
 }
@@ -243,14 +308,21 @@ export function formatDelta(before: number, after: number, decimals: number) {
   return delta > 0 ? `+${text}` : `−${text}`;
 }
 
-export function checkScale(v: { scaleMin?: number; scaleMax?: number; rows?: Array<{ before?: number; after?: number }> }): Check {
-  const { scaleMin, scaleMax, rows = [] } = v;
-  if (scaleMin !== undefined && scaleMax !== undefined && scaleMax <= scaleMin) return 'Scale max must be above scale min.';
+export function checkScale(v: {
+  scaleMin?: number | null;
+  scaleMax?: number | null;
+  rows?: Array<{ before?: number; after?: number } | null>;
+}): Check {
+  const { scaleMin, scaleMax } = v;
+  const rows = Array.isArray(v.rows) ? v.rows : [];
+  const hasMin = isNumber(scaleMin);
+  const hasMax = isNumber(scaleMax);
+  if (hasMin && hasMax && scaleMax <= scaleMin) return 'Scale max must be above scale min.';
   for (const row of rows) {
-    for (const value of [row.before, row.after]) {
+    for (const value of [row?.before, row?.after]) {
       if (typeof value !== 'number') continue;
-      if (scaleMin !== undefined && value < scaleMin) return `A value (${value}) is below the scale min.`;
-      if (scaleMax !== undefined && value > scaleMax) return `A value (${value}) is above the scale max.`;
+      if (hasMin && value < scaleMin) return `A value (${value}) is below the scale min.`;
+      if (hasMax && value > scaleMax) return `A value (${value}) is above the scale max.`;
     }
   }
   return true;

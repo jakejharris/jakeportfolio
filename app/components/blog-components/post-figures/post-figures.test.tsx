@@ -93,3 +93,104 @@ test('a before and after chart carries a data table and signed changes', async (
   assert.match(html, /<td>60.0%<\/td><td>52.0%<\/td><td>−8.0<\/td>/);
   assert.match(html, /<td>No Change<\/td>/);
 });
+
+// ---- boundary cases from review
+
+test('the overlap summary does not repeat the default third label, and keeps a custom one as written', async () => {
+  const base = { _key: 'o', total: 100, aName: 'Left', aMisses: 5, bName: 'Right', bMisses: 5, shared: 2 };
+  const plain = await render('OverlapGrid', base);
+  assert.match(plain, /2 questions are missed by both\.<\/p>/);
+  assert.doesNotMatch(plain, /missed by both: missed by both/i);
+  const custom = await render('OverlapGrid', { ...base, bothLabel: 'Missed by GPT Checks' });
+  assert.match(custom, /missed by both, shown as Missed by GPT Checks\./);
+  const none = await render('OverlapGrid', { ...base, shared: 0 });
+  assert.match(none, /None of their misses are the same, so 0 questions are missed by both\./);
+  assert.doesNotMatch(none, /Missed by Both<\/li>/, 'no legend entry when nothing is shared');
+});
+
+test('equal checker names still render three panels without a key clash', async () => {
+  const errors: unknown[] = [];
+  const original = console.error;
+  console.error = (...args: unknown[]) => { errors.push(args); };
+  try {
+    const html = await render('OverlapGrid', { _key: 'o', total: 100, aName: 'Same', aMisses: 5, bName: 'Same', bMisses: 4, shared: 2 });
+    assert.equal(html.match(/class="pf-panel"/g)?.length, 3);
+  } finally {
+    console.error = original;
+  }
+  assert.equal(errors.length, 0, 'no React key warning');
+});
+
+test('before and after draws nothing for bounds Studio refuses', async () => {
+  const row = (before: number, after: number) => [{ _key: 'r', label: 'Row', before, after }];
+  assert.equal(await render('BeforeAfter', { _key: 'b', scaleMin: 100, scaleMax: 60, rows: row(70, 90) }), '');
+  assert.equal(await render('BeforeAfter', { _key: 'b', scaleMin: 50, scaleMax: 50, rows: row(50, 50) }), '');
+  assert.equal(await render('BeforeAfter', { _key: 'b', scaleMin: 80, scaleMax: 100, rows: row(60, 90) }), '');
+  const ok = await render('BeforeAfter', { _key: 'b', scaleMin: null, scaleMax: null, rows: row(70, 90) });
+  assert.match(ok, /data-post-figure="beforeAfter"/);
+  assert.doesNotMatch(ok, /NaN/);
+});
+
+test('before and after always shows its last tick on phones', async () => {
+  // 63 to 100 has no step that lands evenly on both ends.
+  const html = await render('BeforeAfter', { _key: 'b', scaleMin: 63, scaleMax: 100, rows: [{ _key: 'r', label: 'Row', before: 70, after: 99 }] });
+  const axis = html.slice(html.indexOf('pf-db-axis'));
+  const spans = [...axis.matchAll(/<span([^>]*)>([^<]+)<\/span>/g)];
+  const last = spans.at(-1)!;
+  assert.equal(last[2], '100');
+  assert.doesNotMatch(last[1], /data-minor/);
+});
+
+test('timeline drops blank lanes, inverted gaps and backward ends', async () => {
+  const html = await render('Timeline', {
+    _key: 't',
+    lanes: ['', 'Me'],
+    events: [
+      { _key: k(1), start: '14:00', lane: 'Me', text: 'Started' },
+      { _key: k(2), start: '15:00', end: '13:00', lane: 'Me', text: 'Backward' },
+    ],
+    gaps: [{ _key: k(3), start: '14:00', end: '09:00', label: 'Inverted' }],
+  });
+  assert.match(html, /pf-mark pf-lane-0/, 'Me keeps the first lane');
+  assert.doesNotMatch(html, /Inverted/);
+  assert.doesNotMatch(html, /9 AM/, 'the axis is not stretched back');
+  assert.doesNotMatch(html, /pf-span/, 'a backward end draws a point, not a span');
+});
+
+test('a gap label is kept inside the strip near either end', async () => {
+  const html = await render('Timeline', {
+    _key: 't',
+    lanes: ['Me'],
+    events: [{ _key: k(1), start: '08:00', end: '16:00', lane: 'Me', text: 'Shift' }],
+    gaps: [{ _key: k(2), start: '15:30', end: '16:00', label: 'Closed for Equipment Servicing' }],
+  });
+  const style = /class="pf-timeline-gap-label" style="([^"]+)"/.exec(html)![1];
+  const left = Number(/left:([\d.]+)%/.exec(style)![1]);
+  assert.ok(left > 90);
+  assert.match(style, new RegExp(`translateX\\(-${left}%\\)`), 'shifted by the same share of its width');
+});
+
+test('five stats fill the empty cell so the row rule runs across', async () => {
+  const stats = Array.from({ length: 5 }, (_, i) => ({ _key: k(i), value: String(i), label: `Stat ${i}` }));
+  assert.match(await render('StatGrid', { _key: 's', stats }), /data-fill=""/);
+  assert.doesNotMatch(await render('StatGrid', { _key: 's', stats: stats.slice(0, 3) }), /data-fill/);
+});
+
+test('malformed blocks render nothing or skip the bad items instead of throwing', async () => {
+  assert.equal(await render('StatGrid', { _key: 's', stats: [null] }), '');
+  assert.equal(await render('StatGrid', { _key: 's', stats: 'oops' }), '');
+  assert.equal(await render('StudyCards', { _key: 'c', cards: [null, 5] }), '');
+  assert.equal(await render('BeforeAfter', { _key: 'b', rows: { a: 1 } }), '');
+  assert.equal(await render('BeforeAfter', { _key: 'b', rows: [null] }), '');
+  assert.equal(await render('Timeline', { _key: 't', lanes: 'Me', events: [] }), '');
+  assert.equal(await render('Timeline', { _key: 't', lanes: ['Me'], events: [null], gaps: 'x' }), '');
+  const kept = await render('Timeline', {
+    _key: 't',
+    lanes: ['Me'],
+    events: [null, { _key: k(1), start: '09:00', lane: 'Me', text: 'Kept' }],
+    gaps: [null],
+  });
+  assert.match(kept, /Kept/);
+  const odd = await render('OverlapGrid', { _key: 'o', total: 100, aMisses: 5, bMisses: 5, shared: 2, bothLabel: 123 });
+  assert.match(odd, /missed by both\./);
+});

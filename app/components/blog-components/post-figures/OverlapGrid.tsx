@@ -47,14 +47,19 @@ export default function OverlapGrid({ value }: { value: OverlapGridValue }) {
   const cells = overlapCells(total, aMisses, bMisses, shared);
   const aName = value.aName || 'A';
   const bName = value.bName || 'B';
-  const bothLabel = value.bothLabel || 'Missed by Both';
+  const defaultBoth = 'Missed by Both';
+  const customBoth =
+    typeof value.bothLabel === 'string' && value.bothLabel.trim() && value.bothLabel.trim().toLowerCase() !== defaultBoth.toLowerCase()
+      ? value.bothLabel.trim()
+      : undefined;
+  const bothLabel = customBoth ?? defaultBoth;
   const illustration = value.illustration !== false;
   const label = value.label || (illustration ? 'Illustration' : undefined);
 
   const panels = [
-    { name: `${aName} Misses`, count: aMisses, shows: (c: OverlapCell) => c === 'a' || c === 'both' },
-    { name: `${bName} Misses`, count: bMisses, shows: (c: OverlapCell) => c === 'b' || c === 'both' },
-    { name: bothLabel, count: shared, shows: (c: OverlapCell) => c === 'both' },
+    { id: 'a', name: `${aName} Misses`, count: aMisses, shows: (c: OverlapCell) => c === 'a' || c === 'both' },
+    { id: 'b', name: `${bName} Misses`, count: bMisses, shows: (c: OverlapCell) => c === 'b' || c === 'both' },
+    { id: 'both', name: bothLabel, count: shared, shows: (c: OverlapCell) => c === 'both' },
   ];
 
   return (
@@ -73,11 +78,12 @@ export default function OverlapGrid({ value }: { value: OverlapGridValue }) {
         {' '}
         {shared === 0 ? 'None of their misses are the same' : `${shared} of those misses are the same`}, so
         {' '}
-        {shared} {shared === 1 ? 'question is' : 'questions are'} missed by both: {bothLabel.toLowerCase()}.
+        {shared} {shared === 1 ? 'question is' : 'questions are'} missed by both
+        {customBoth ? `, shown as ${customBoth}` : ''}.
       </p>
       <div className="pf-overlap" aria-hidden="true">
         {panels.map((panel) => (
-          <div key={panel.name} className="pf-panel">
+          <div key={panel.id} className="pf-panel">
             <Grid cells={cells} shows={panel.shows} />
             <div>
               <p className="pf-panel-name">{panel.name}</p>

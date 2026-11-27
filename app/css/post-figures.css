@@ -16,6 +16,16 @@
   font-size: 1rem;
   line-height: 1.5;
 }
+/* Light mode: green and orange are pale on white, so chart marks take a
+   little of the text color to reach 3:1, and caught cells lighten so a
+   missed cell still stands 3:1 apart from them. Dark mode is unchanged. */
+html:not(.dark) .post-figure {
+  --pf-cell: color-mix(in srgb, hsl(var(--foreground)) 8%, transparent);
+}
+html:not(.dark)[data-accent="3"] .post-figure,
+html:not(.dark)[data-accent="4"] .post-figure {
+  --pf-accent: color-mix(in srgb, var(--accent-color) 82%, hsl(var(--foreground)));
+}
 
 /* The prose styles stop at the card. Only what .portable-text sets is undone,
    so the card's own padding and margins still apply. */
@@ -170,6 +180,7 @@
   position: absolute;
   top: 0;
   height: 22px;
+  max-width: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -181,6 +192,9 @@
 .pf-timeline-gap-label span {
   background: hsl(var(--background));
   padding: 0 0.4rem;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .pf-mark {
   position: absolute;
@@ -203,10 +217,10 @@
 .pf-lane-2 { --pf-mark-color: var(--pf-faint); }
 .pf-mark.pf-lane-0 { border-radius: 50%; background: var(--pf-mark-color); }
 .pf-mark.pf-lane-1 { background: var(--pf-mark-color); width: 8px; height: 8px; }
-.pf-mark.pf-lane-2 { border-radius: 50%; border: 2px solid var(--pf-mark-color); }
+.pf-mark.pf-lane-2 { border-radius: 50%; border: 2px solid var(--pf-mark-color); background: hsl(var(--background)); }
 .pf-span.pf-lane-0 { background: var(--pf-mark-color); border-radius: 4px; }
 .pf-span.pf-lane-1 { background: var(--pf-mark-color); }
-.pf-span.pf-lane-2 { border: 2px solid var(--pf-mark-color); }
+.pf-span.pf-lane-2 { border: 2px solid var(--pf-mark-color); background: hsl(var(--background)); }
 
 .pf-timeline-axis {
   position: relative;
@@ -303,6 +317,11 @@
 @media (min-width: 640px) {
   .pf-stats {
     grid-template-columns: repeat(var(--pf-cols-wide, 3), minmax(0, 1fr));
+  }
+  /* An empty last cell keeps the rule above the last row running across. */
+  .pf-stats[data-fill]::after {
+    content: "";
+    border-top: 1px solid var(--pf-line);
   }
 }
 .pf-stat {
@@ -538,6 +557,7 @@
 }
 .pf-db-head {
   display: flex;
+  flex-wrap: wrap;
   align-items: baseline;
   justify-content: space-between;
   gap: 0.25rem 0.75rem;
@@ -552,6 +572,7 @@
 }
 .pf-db-values {
   flex: none;
+  margin-left: auto;
   font-size: 12px;
   color: var(--pf-ink);
   white-space: nowrap;

@@ -150,7 +150,8 @@ export interface StudyCard {
   note?: string;
 }
 
-export interface StudyCardsValue extends PostFigureBase {
+/** Each card carries its own source, so the block has none. */
+export interface StudyCardsValue extends Omit<PostFigureBase, 'sourceTitle' | 'sourceUrl' | 'sourceDetail'> {
   _type: 'studyCards';
   cards: StudyCard[];
 }

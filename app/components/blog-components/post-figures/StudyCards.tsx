@@ -10,7 +10,11 @@ const ERA_LABEL = { then: 'Then', now: 'Now' } as const;
  * early study with recent work.
  */
 export default function StudyCards({ value }: { value: StudyCardsValue }) {
-  const cards = (value.cards ?? []).filter((card) => card.studyTitle && card.finding).slice(0, 4);
+  const cards = (Array.isArray(value.cards) ? value.cards : [])
+    .filter((card): card is StudyCardsValue['cards'][number] =>
+      Boolean(card && typeof card.studyTitle === 'string' && card.studyTitle && typeof card.finding === 'string' && card.finding)
+    )
+    .slice(0, 4);
   if (cards.length === 0) return null;
 
   return (
@@ -19,9 +23,6 @@ export default function StudyCards({ value }: { value: StudyCardsValue }) {
       title={value.title}
       label={value.label}
       caption={value.caption}
-      sourceTitle={value.sourceTitle}
-      sourceUrl={value.sourceUrl}
-      sourceDetail={value.sourceDetail}
       flush
     >
       <ul

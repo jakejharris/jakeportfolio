@@ -1,5 +1,5 @@
 import type { BeforeAfterValue } from '@/app/types/sanity';
-import { decimalsOf, formatDelta, niceScale, scalePercent } from '@/app/lib/post-figures';
+import { checkScale, decimalsOf, formatDelta, niceScale, scalePercent } from '@/app/lib/post-figures';
 
 import { FigureFrame, SourceLink } from './Frame';
 
@@ -9,10 +9,13 @@ import { FigureFrame, SourceLink } from './Frame';
  * row, and a hidden table carries the same data for screen readers.
  */
 export default function BeforeAfter({ value }: { value: BeforeAfterValue }) {
-  const rows = (value.rows ?? []).filter(
-    (row) => row.label && Number.isFinite(row.before) && Number.isFinite(row.after)
+  const rows = (Array.isArray(value.rows) ? value.rows : []).filter(
+    (row): row is BeforeAfterValue['rows'][number] =>
+      Boolean(row && typeof row.label === 'string' && row.label && Number.isFinite(row.before) && Number.isFinite(row.after))
   );
   if (rows.length === 0) return null;
+  // Bounds Studio would refuse (max not above min, a value outside them) draw nothing.
+  if (checkScale({ ...value, rows }) !== true) return null;
   const numbers = rows.flatMap((row) => [row.before, row.after]);
   const scale = niceScale(numbers, 5, value.scaleMin, value.scaleMax);
   const decimals = decimalsOf(numbers);
@@ -127,7 +130,8 @@ export default function BeforeAfter({ value }: { value: BeforeAfterValue }) {
             {scale.ticks.map((tick, index) => (
               <span
                 key={tick}
-                data-minor={index % 2 === 1 ? '' : undefined}
+                // Counted from the right, so a phone always keeps the last tick.
+                data-minor={(scale.ticks.length - 1 - index) % 2 === 1 ? '' : undefined}
                 style={{ left: `${scalePercent(tick, scale)}%` }}
               >
                 {tick}

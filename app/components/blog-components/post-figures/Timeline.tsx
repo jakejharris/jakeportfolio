@@ -14,13 +14,27 @@ import { FigureFrame } from './Frame';
  * with labelled gaps across all lanes. Below it, the same moments as a list
  * in time order, which is also the strip's text alternative.
  */
+const list = <T,>(value: unknown): T[] => (Array.isArray(value) ? value : []);
+const laterThanStart = (item: { start: string; end?: string }) => {
+  const start = parseClock(item.start);
+  const end = parseClock(item.end);
+  return start !== null && end !== null && end > start;
+};
+
 export default function Timeline({ value }: { value: TimelineValue }) {
-  const lanes = (value.lanes ?? []).slice(0, 3);
-  const events = (value.events ?? []).filter(
-    (event) => parseClock(event.start) !== null && lanes.includes(event.lane)
-  );
-  const gaps = (value.gaps ?? []).filter(
-    (gap) => parseClock(gap.start) !== null && parseClock(gap.end) !== null
+  // Blank or non-text lane names are dropped (Studio refuses them), so they
+  // never take a lane's color or push out a real lane.
+  const lanes = list<unknown>(value.lanes)
+    .filter((lane): lane is string => typeof lane === 'string' && lane.trim() !== '')
+    .slice(0, 3);
+  // An end that is not after the start is ignored, so it cannot stretch the axis.
+  const events = list<TimelineValue['events'][number] | null>(value.events)
+    .filter((event): event is TimelineValue['events'][number] =>
+      Boolean(event && parseClock(event.start) !== null && lanes.includes(event.lane))
+    )
+    .map((event) => (event.end == null || laterThanStart(event) ? event : { ...event, end: undefined }));
+  const gaps = list<NonNullable<TimelineValue['gaps']>[number] | null>(value.gaps).filter(
+    (gap): gap is NonNullable<TimelineValue['gaps']>[number] => Boolean(gap && laterThanStart(gap))
   );
   if (lanes.length === 0 || events.length === 0) return null;
 
@@ -51,8 +65,14 @@ export default function Timeline({ value }: { value: TimelineValue }) {
               {gaps.map((gap) => {
                 const { from, to } = spanOf(gap.start, gap.end);
                 const mid = (clockPercent(from, scale) + clockPercent(to ?? from, scale)) / 2;
+                // Shifting the label by the same share of its own width keeps it
+                // inside the strip: centered mid-strip, flush near either end.
                 return (
-                  <span key={gap._key} className="pf-timeline-gap-label" style={{ left: `${mid}%` }}>
+                  <span
+                    key={gap._key}
+                    className="pf-timeline-gap-label"
+                    style={{ left: `${mid}%`, transform: `translateX(-${mid}%)` }}
+                  >
                     <span>{gap.label}</span>
                   </span>
                 );
