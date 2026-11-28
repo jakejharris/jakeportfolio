@@ -333,6 +333,15 @@ const post = {
             },
           },
         },
+        // Figure blocks with their own data (sanity-schemas/post-figures.ts)
+        { type: 'timeline' },
+        { type: 'statGrid' },
+        { type: 'studyCards' },
+        { type: 'overlapGrid' },
+        { type: 'beforeAfter' },
+        // Run chart and looping video (sanity-schemas/run-figures.ts)
+        { type: 'runChart' },
+        { type: 'videoLoop' },
         // Divider
         {
           name: 'divider',

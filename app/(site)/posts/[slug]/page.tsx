@@ -16,6 +16,10 @@ import ViewCounter from './ViewCounter';
 import { Post, InteractiveComponentValue } from '@/app/types/sanity';
 import InteractiveBlock from '@/app/components/blog-components/InteractiveBlock';
 import PostCallToAction from '@/app/components/blog-components/PostCallToAction';
+import { postFigureComponents } from '@/app/components/blog-components/post-figures';
+import { runFigureComponents } from '@/app/components/blog-components/post-figures/run-figures';
+import MotionGate from '@/app/components/blog-components/post-figures/MotionGate';
+import { hasMotionFigure } from '@/app/lib/post-figures';
 import TransitionLink from '@/app/components/TransitionLink';
 import { sitePath } from '@/app/lib/site-path';
 import { Button } from '@/app/components/ui/button';
@@ -163,6 +167,8 @@ const components: Partial<PortableTextReactComponents> = {
     }
   },
   types: {
+    ...postFigureComponents,
+    ...runFigureComponents,
     image: ({ value }: { value: ImageValue }) => {
       return (
         <div className={`my-8 ${value.fullWidth ? 'w-full' : 'max-w-2xl mx-auto'}`}>
@@ -553,6 +559,7 @@ export default async function PostPage({ params }: PageParams) {
             {post.content && (
               <PortableText value={post.content} components={components} />
             )}
+            {hasMotionFigure(post.content) && <MotionGate key={slug} />}
           </div>
 
           {post.externalLinks && post.externalLinks.length > 0 && (
