@@ -1,0 +1,493 @@
+/* Run chart and looping video blocks. They sit in the post figure card
+   (post-figures.css) and use its tokens. No shadows. Motion follows the
+   shared contract: animations run only with JavaScript on ([data-pf-js]),
+   only without a reduced motion preference, and only while the block is in
+   view ([data-pf-inview="true"]); everything else sees the settled chart. */
+
+/* ---- run chart ---- */
+
+.pf-run {
+  /* Maker colors, light theme: each clears 3:1 on the page, and they stay
+     apart for color-blind readers (checked in OKLab, see the block docs). */
+  --pf-run-c0: #c24e14;
+  --pf-run-c1: #2e78c7;
+  --pf-run-c2: #0e8668;
+  --pf-run-c3: #a27a00;
+  --pf-run-c4: #b8327f;
+  --pf-run-c5: #6a4ce2;
+  --pf-run-grid: color-mix(in srgb, hsl(var(--foreground)) 7%, transparent);
+  --pf-run-guide: color-mix(in srgb, hsl(var(--foreground)) 38%, transparent);
+  --pf-run-dim: 0.26;
+  --pf-run-loop: 18s;
+  --pf-run-lh: 16px;
+
+  /* Narrow layout: group names sit in a slot above their rows. */
+  --pf-run-pitch: 6px;
+  --pf-run-bar: 4px;
+  --pf-run-thin: 2px;
+  --pf-run-head: 15px;
+  --pf-run-min: 0px;
+  --pf-run-gap: 0px;
+  --pf-run-label-lh: 15px;
+  --pf-run-side: 0px;
+
+  container-type: inline-size;
+  font-size: 11px;
+  line-height: var(--pf-run-lh);
+  color: var(--pf-dim);
+}
+.dark .pf-run {
+  --pf-run-c0: #e0682f;
+  --pf-run-c1: #4b9deb;
+  --pf-run-c2: #1fa987;
+  --pf-run-c3: #b88d1f;
+  --pf-run-c4: #e065ac;
+  --pf-run-c5: #9887ef;
+  --pf-run-dim: 0.3;
+}
+/* Wide layout: group names in a column of their own, rows a little taller. */
+@container (min-width: 520px) {
+  .pf-run-readout,
+  .pf-run-top,
+  .pf-run-chart,
+  .pf-run-bottom,
+  .pf-run-legend {
+    --pf-run-pitch: 8px;
+    --pf-run-bar: 6px;
+    --pf-run-head: 0px;
+    --pf-run-min: 12px;
+    --pf-run-gap: 6px;
+    --pf-run-label-lh: 8px;
+    --pf-run-side: calc(var(--pf-run-side-ch) * 1ch + 1rem);
+  }
+}
+
+.pf-run .pf-run-faint {
+  color: var(--pf-faint);
+}
+
+/* The running readout: a strip with every hour's value, clipped to one line. */
+.pf-run-readout {
+  margin: 0 0 0.6rem var(--pf-run-side) !important;
+  color: var(--pf-ink);
+}
+.pf-run-odo {
+  display: inline-block;
+  height: var(--pf-run-lh);
+  overflow: hidden;
+  vertical-align: top;
+  text-align: right;
+}
+/* The track is one line shorter than its content, so translateY(-100%)
+   lands exactly on the last value: the settled state. */
+.pf-run-odo-track {
+  display: block;
+  height: calc(var(--pf-run-steps) * var(--pf-run-lh));
+  transform: translateY(-100%);
+}
+.pf-run-odo-track > span {
+  display: block;
+  height: var(--pf-run-lh);
+}
+
+/* Milestones: one per line, each with a guide down into the chart. Labels
+   in the right part of the chart end at their guide. */
+.pf-run-top {
+  position: relative;
+  overflow: hidden;
+  margin-left: var(--pf-run-side);
+}
+.pf-run-mark {
+  position: relative;
+  padding-left: calc(var(--x) + 5px);
+}
+.pf-run-mark[data-anchor="end"] {
+  padding-left: 0;
+  padding-right: calc(100% - var(--x) + 5px);
+  text-align: right;
+}
+.pf-run-mark.is-later {
+  padding-left: 0;
+  text-align: right;
+}
+.pf-run-mark::before {
+  content: "";
+  position: absolute;
+  left: var(--x);
+  top: 4px;
+  height: 40rem;
+  border-left: 1px dashed var(--pf-run-guide);
+}
+.pf-run-mark.is-later::before {
+  display: none;
+}
+.pf-run-mark > span {
+  position: relative;
+  background: hsl(var(--background));
+  padding: 0 2px;
+}
+.pf-run-mark b {
+  font-weight: 600;
+  color: var(--pf-ink);
+}
+
+.pf-run-axis {
+  position: relative;
+  height: var(--pf-run-lh);
+  color: var(--pf-faint);
+}
+.pf-run-axis span {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  background: hsl(var(--background));
+  padding: 0 2px;
+}
+.pf-run-axis span:first-child {
+  transform: none;
+  padding-left: 0;
+}
+.pf-run-axis span:last-child {
+  transform: translateX(-100%);
+  padding-right: 0;
+}
+/* Every other label until there is room for them all (each "10 AM" needs about 45px). */
+@container (max-width: 759.98px) {
+  .pf-run-axis span[data-minor] {
+    display: none;
+  }
+}
+.pf-run-axis i {
+  font-style: normal;
+}
+/* The narrowest charts drop AM and PM between the ends and the noon change. */
+@container (max-width: 299.98px) {
+  .pf-run-axis i:not([data-keep]) {
+    display: none;
+  }
+}
+.pf-run-axis:not(.is-bottom) {
+  margin-top: 0.15rem;
+  margin-bottom: 0.2rem;
+}
+.pf-run-axis.is-bottom {
+  margin-top: 0.25rem;
+}
+
+/* The chart: names and plot side by side when wide, stacked in one cell
+   when narrow (names then sit in the empty slots above their rows). */
+.pf-run-chart {
+  display: grid;
+  grid-template-columns: var(--pf-run-side) minmax(0, 1fr);
+}
+.pf-run-side,
+.pf-run-plot {
+  grid-row: 1;
+  min-width: 0;
+}
+.pf-run-side {
+  grid-column: 1;
+  position: relative;
+  z-index: 1;
+  pointer-events: none;
+}
+.pf-run-plot {
+  grid-column: 2;
+  position: relative;
+}
+@container (max-width: 519.98px) {
+  .pf-run-side,
+  .pf-run-plot {
+    grid-column: 1 / -1;
+  }
+}
+
+.pf-run-g {
+  position: relative;
+  height: calc(var(--pf-run-head) + max(var(--rows) * var(--pf-run-pitch), var(--pf-run-min)));
+  margin-bottom: var(--pf-run-gap);
+}
+.pf-run-heading {
+  height: var(--pf-run-lh);
+  margin-bottom: var(--pf-run-gap);
+  white-space: nowrap;
+  color: var(--pf-faint);
+}
+/* Narrow: a heading longer than the chart is cut with an ellipsis. Wide:
+   it runs from the name column across the empty slot in the plot. */
+@container (max-width: 519.98px) {
+  .pf-run-heading span {
+    display: block;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+.pf-run-heading span,
+.pf-run-g-label {
+  background: hsl(var(--background));
+  padding-right: 4px;
+}
+.pf-run-g-label {
+  position: absolute;
+  top: 0;
+  left: 0;
+  line-height: var(--pf-run-label-lh);
+  white-space: nowrap;
+  color: var(--pf-ink);
+}
+
+/* Hour lines, one gradient for the whole plot. */
+.pf-run-plot::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: repeating-linear-gradient(
+    to right,
+    var(--pf-run-grid) 0 1px,
+    transparent 1px calc(100% / var(--pf-run-hours))
+  );
+  border-right: 1px solid var(--pf-run-grid);
+}
+.pf-run-guide {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border-left: 1px dashed var(--pf-run-guide);
+}
+
+.pf-run-layer {
+  position: relative;
+}
+.pf-run-bar {
+  position: absolute;
+  top: calc(var(--pf-run-head) + var(--r) * var(--pf-run-pitch) + (var(--pf-run-pitch) - var(--pf-run-bar)) / 2);
+  height: var(--pf-run-bar);
+  min-width: 2px;
+  border-radius: 1px;
+  background: var(--pf-run-color);
+}
+.pf-run-bar.is-thin {
+  top: calc(var(--pf-run-head) + var(--r) * var(--pf-run-pitch) + (var(--pf-run-pitch) - var(--pf-run-thin)) / 2);
+  height: var(--pf-run-thin);
+}
+.pf-run-c0 { --pf-run-color: var(--pf-run-c0); }
+.pf-run-c1 { --pf-run-color: var(--pf-run-c1); }
+.pf-run-c2 { --pf-run-color: var(--pf-run-c2); }
+.pf-run-c3 { --pf-run-color: var(--pf-run-c3); }
+.pf-run-c4 { --pf-run-color: var(--pf-run-c4); }
+.pf-run-c5 { --pf-run-color: var(--pf-run-c5); }
+
+.pf-run-dot {
+  position: absolute;
+  top: calc(var(--pf-run-head) + (var(--r) + 0.5) * var(--pf-run-pitch));
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--pf-ink);
+  transform: translate(-50%, -50%);
+}
+/* The accent dot is larger and ringed in the page color, so it reads even
+   when the accent matches the text and a small dot sits right beside it. */
+.pf-run-dot.is-accent {
+  z-index: 1;
+  width: 11px;
+  height: 11px;
+  background: var(--pf-accent);
+  border: 2px solid hsl(var(--background));
+}
+
+.pf-run-reveal,
+.pf-run-playhead {
+  display: none;
+}
+
+.pf-run-bottom {
+  margin-left: var(--pf-run-side);
+}
+.pf-run-zone {
+  margin-top: 0.1rem !important;
+  text-align: right;
+  color: var(--pf-faint);
+}
+
+.pf-run-legend {
+  margin: 0.75rem 0 0 var(--pf-run-side);
+  padding-top: 0.6rem;
+  border-top: 1px solid var(--pf-line);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.35rem 1rem;
+}
+.pf-run-legend ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 1rem;
+}
+.pf-run-legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--pf-ink);
+}
+.pf-run-legend-title {
+  color: var(--pf-faint);
+  flex-basis: 100%;
+}
+.pf-run-key {
+  display: inline-block;
+  width: 14px;
+  height: 6px;
+  border-radius: 1px;
+  background: var(--pf-run-color, var(--pf-dim));
+}
+.pf-run-key.is-thin {
+  height: 2px;
+}
+
+/* The replay. The dimmed chart stays put; a full copy inside a clipping
+   wrapper is uncovered from the left as the wrapper slides right and the
+   copy slides back the same distance, so each bar fills in from its real
+   start to its real finish. A playhead and the readout move with it. One
+   loop: sweep (0 to 72%), rest on the full chart, fade the copy, again. */
+@keyframes pf-run-reveal {
+  0% { transform: translateX(-100%); opacity: 1; }
+  72% { transform: translateX(0); opacity: 1; }
+  94% { transform: translateX(0); opacity: 1; }
+  100% { transform: translateX(0); opacity: 0; }
+}
+@keyframes pf-run-counter {
+  0% { transform: translateX(100%); }
+  72%, 100% { transform: translateX(0); }
+}
+@keyframes pf-run-playhead {
+  0% { transform: translateX(-100%); opacity: 1; }
+  72% { transform: translateX(0); opacity: 1; }
+  76%, 100% { transform: translateX(0); opacity: 0; }
+}
+@keyframes pf-run-odo {
+  0% { transform: translateY(0); opacity: 1; }
+  72% { transform: translateY(-100%); opacity: 1; }
+  94% { transform: translateY(-100%); opacity: 1; }
+  100% { transform: translateY(-100%); opacity: 0; }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  [data-pf-js] [data-pf-motion] .pf-run-plot .pf-run-layer:not(.is-live) {
+    opacity: var(--pf-run-dim);
+  }
+  [data-pf-js] [data-pf-motion] .pf-run-reveal {
+    display: block;
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    animation: pf-run-reveal var(--pf-run-loop) linear infinite;
+  }
+  [data-pf-js] [data-pf-motion] .pf-run-reveal-in {
+    position: absolute;
+    inset: 0;
+    animation: pf-run-counter var(--pf-run-loop) linear infinite;
+  }
+  [data-pf-js] [data-pf-motion] .pf-run-playhead {
+    display: block;
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    border-right: 1px solid var(--pf-accent);
+    pointer-events: none;
+    animation: pf-run-playhead var(--pf-run-loop) linear infinite;
+  }
+  [data-pf-js] [data-pf-motion] .pf-run-odo-track {
+    animation: pf-run-odo var(--pf-run-loop) infinite;
+    animation-timing-function: steps(var(--pf-run-steps), end);
+  }
+  [data-pf-js] [data-pf-motion] :is(.pf-run-reveal, .pf-run-reveal-in, .pf-run-playhead, .pf-run-odo-track) {
+    animation-play-state: paused;
+  }
+  [data-pf-js] [data-pf-motion][data-pf-inview="true"] :is(.pf-run-reveal, .pf-run-reveal-in, .pf-run-playhead, .pf-run-odo-track),
+  [data-pf-js] [data-pf-inview="true"] [data-pf-motion] :is(.pf-run-reveal, .pf-run-reveal-in, .pf-run-playhead, .pf-run-odo-track) {
+    animation-play-state: running;
+  }
+}
+
+@media (forced-colors: active) {
+  .pf-run-bar,
+  .pf-run-dot,
+  .pf-run-key {
+    forced-color-adjust: none;
+  }
+}
+
+/* ---- looping video ---- */
+
+.pf-video {
+  position: relative;
+  width: 100%;
+  background: color-mix(in srgb, hsl(var(--foreground)) 6%, transparent);
+}
+.pf-video video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+/* Top right: the quietest corner of most clips, away from captions and calls to action at the bottom. */
+.pf-video-toggle {
+  position: absolute;
+  top: 0.6rem;
+  right: 0.6rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-height: 32px;
+  padding: 0 0.7rem 0 0.6rem;
+  border: 1px solid var(--pf-line);
+  border-radius: calc(var(--radius) * 1.5);
+  background: color-mix(in srgb, hsl(var(--background)) 88%, transparent);
+  color: var(--pf-ink);
+  font-family: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11px;
+  line-height: 1;
+  cursor: pointer;
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+.pf-video-toggle:hover {
+  border-color: color-mix(in srgb, var(--accent-color) 60%, transparent);
+  background: hsl(var(--background));
+}
+.pf-video-toggle:focus-visible {
+  outline: 1px solid var(--accent-color);
+  outline-offset: 2px;
+}
+/* Both labels take the width of the longer one, so the button never resizes. */
+.pf-video-label {
+  min-width: 5ch;
+  text-align: left;
+}
+.pf-video-icon {
+  position: relative;
+  width: 8px;
+  height: 9px;
+}
+/* Pause: two bars. Play: a triangle drawn with borders. */
+.pf-video-icon.is-pause {
+  border-left: 3px solid currentColor;
+  border-right: 3px solid currentColor;
+}
+.pf-video-icon.is-play {
+  width: 0;
+  height: 0;
+  border-top: 5px solid transparent;
+  border-bottom: 5px solid transparent;
+  border-left: 8px solid var(--pf-accent);
+}
+@media (pointer: coarse) {
+  .pf-video-toggle {
+    min-height: 44px;
+    padding: 0 0.9rem 0 0.8rem;
+  }
+}

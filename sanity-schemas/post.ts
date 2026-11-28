@@ -339,6 +339,9 @@ const post = {
         { type: 'studyCards' },
         { type: 'overlapGrid' },
         { type: 'beforeAfter' },
+        // Run chart and looping video (sanity-schemas/run-figures.ts)
+        { type: 'runChart' },
+        { type: 'videoLoop' },
         // Divider
         {
           name: 'divider',
