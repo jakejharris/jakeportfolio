@@ -281,6 +281,8 @@ test('earlier results hold: the auto scale, a fixed max, and fixed 50 to 100', (
 test('a post needs the motion gate only when it has a moving figure', async () => {
   const { hasMotionFigure } = await import('./post-figures');
   assert.equal(hasMotionFigure([{ _type: 'block' }, { _type: 'timeline' }]), true);
+  assert.equal(hasMotionFigure([{ _type: 'runChart' }]), true);
+  assert.equal(hasMotionFigure([{ _type: 'videoLoop' }]), true);
   assert.equal(hasMotionFigure([{ _type: 'statGrid' }, { _type: 'studyCards' }, null]), false);
   assert.equal(hasMotionFigure(undefined), false);
   assert.equal(hasMotionFigure('timeline'), false);

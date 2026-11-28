@@ -51,8 +51,8 @@ const run = {
 
 test('a run chart draws each bar twice (dim and live) and opts into the motion gate', async () => {
   const html = await render('RunChart', { value: run });
-  assert.match(html, /data-post-figure="runChart"/);
-  assert.match(html, /class="pf-run" data-pf-motion=""/);
+  assert.match(html, /<figure class="post-figure" data-post-figure="runChart" data-pf-motion="">/);
+  assert.equal(html.match(/data-pf-motion/g)?.length, 1, 'one motion root, the figure');
   assert.equal(html.match(/class="pf-run-bar /g)?.length, 4, 'two spans in two layers');
   assert.equal(html.match(/class="pf-run-layer is-live"/g)?.length, 1);
   assert.match(html, /pf-run-bar pf-run-c1 is-thin/);
@@ -113,17 +113,19 @@ test('a looping video renders a native player with a poster and no autoplay unti
     },
     project: { projectId: 'proj1', dataset: 'production' },
   });
-  assert.match(html, /data-post-figure="videoLoop"/);
+  assert.match(html, /<figure class="post-figure" data-post-figure="videoLoop" data-pf-motion="">/);
+  assert.match(html, /<video[^>]* data-pf-autoplay=""/, 'MotionGate plays it in view');
   assert.match(html, /aspect-ratio:1080 \/ 1350/);
   assert.match(html, /<video[^>]* controls=""/);
   assert.match(html, /preload="none"/);
   assert.match(html, /playsinline=""/);
   assert.match(html, /loop=""/);
-  assert.doesNotMatch(html, /autoplay/i);
+  assert.doesNotMatch(html.replace(/data-pf-autoplay/g, ''), /autoplay/i, 'no native autoplay');
   assert.match(html, /poster="https:\/\/cdn\.sanity\.io\/images\/proj1\/production\/f00-1080x1350\.png\?auto=format&amp;q=80"/);
   assert.ok(html.indexOf('def456.webm') < html.indexOf('abc123.mp4'), 'WebM is offered first');
   assert.match(html, /aria-label="A square moves across the frame\."/);
   assert.doesNotMatch(html, /pf-video-toggle/, 'the button arrives with the script');
+  assert.match(html, /<\/video><\/div><div class="pf-video-bar"><\/div>/, 'its row under the clip is reserved on the server');
   assert.match(html, /The clip loops while it is on screen\./);
 });
 
@@ -139,4 +141,50 @@ test('the table of contents ignores both blocks', async () => {
     { _type: 'videoLoop', _key: 'v' },
   ] as never);
   assert.deepEqual(headings.map((h) => h.text), ['A Heading']);
+});
+
+// ---- the stylesheet: the same motion contract as post-figures.css
+
+const css = require('node:fs').readFileSync(require('node:path').join(__dirname, '../../../css/run-figures.css'), 'utf8') as string;
+
+test('run figure labels are not set in capitals by the stylesheet', () => {
+  assert.doesNotMatch(css, /text-transform:\s*uppercase/);
+});
+
+test('run chart animations touch only transform and opacity, and start and end on the settled frame', () => {
+  const blocks = [...css.matchAll(/@keyframes ([\w-]+) \{([\s\S]*?)\n\}/g)];
+  assert.equal(blocks.length, 4);
+  for (const [, name, body] of blocks) {
+    const steps = [...body.matchAll(/([\d.%, ]+)\{([^}]*)\}/g)].map((m) => ({
+      at: m[1].split(',').map((x) => x.trim()),
+      decls: m[2].trim().replace(/\s+/g, ' '),
+    }));
+    for (const step of steps) {
+      for (const property of step.decls.split(';').map((d) => d.split(':')[0].trim()).filter(Boolean)) {
+        assert.ok(['transform', 'opacity'].includes(property), `${name} animates ${property}`);
+      }
+    }
+    const first = steps.find((x) => x.at.includes('0%'));
+    const last = steps.find((x) => x.at.includes('100%'));
+    assert.ok(first && last, `${name} has a first and last frame`);
+    assert.equal(first.decls, last.decls, `${name} loops without a jump`);
+  }
+});
+
+test('the run chart playhead is hidden in its static style, so a cancelled loop shows the settled chart', () => {
+  const rule = css.match(/\.pf-run-playhead \{([^}]*)\}/g)?.find((r) => r.includes('animation:')) ?? '';
+  assert.match(rule, /opacity: 0;/);
+});
+
+test('run chart animations run only without a reduced-motion preference, behind the gate', () => {
+  const open = css.indexOf('@media (prefers-reduced-motion: no-preference) {');
+  const gated = css.slice(open, css.indexOf('@media (forced-colors', open));
+  const outside = css.replace(gated, '');
+  assert.doesNotMatch(outside, /animation(-name)?:/, 'no animation is set outside the media block');
+  const rules = [...gated.replace(/\/\*[\s\S]*?\*\//g, '').matchAll(/([^{}]+)\{([^{}]*animation[^{}]*)\}/g)];
+  assert.equal(rules.length, 4);
+  for (const [, selector, body] of rules) {
+    assert.match(selector.trim(), /^\[data-pf-js\] \[data-pf-motion\]/, selector.trim());
+    assert.match(body, /animation-play-state: var\(--pf-play, paused\)/, selector.trim());
+  }
 });

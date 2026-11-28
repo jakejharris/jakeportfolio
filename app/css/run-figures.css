@@ -1,8 +1,8 @@
 /* Run chart and looping video blocks. They sit in the post figure card
    (post-figures.css) and use its tokens. No shadows. Motion follows the
    shared contract: animations run only with JavaScript on ([data-pf-js]),
-   only without a reduced motion preference, and only while the block is in
-   view ([data-pf-inview="true"]); everything else sees the settled chart. */
+   only without a reduced motion preference, and only while MotionGate marks
+   the figure in view; everything else sees the settled chart. */
 
 /* ---- run chart ---- */
 
@@ -350,30 +350,41 @@
 /* The replay. The dimmed chart stays put; a full copy inside a clipping
    wrapper is uncovered from the left as the wrapper slides right and the
    copy slides back the same distance, so each bar fills in from its real
-   start to its real finish. A playhead and the readout move with it. One
-   loop: sweep (0 to 72%), rest on the full chart, fade the copy, again. */
+   start to its real finish. A playhead and the readout move with it.
+   The first and last frame are the settled chart, so a paused figure shows
+   all of it. One 18 s loop: rest on the full chart (0 to 22%), fade the
+   copy, reset it out of sight (27 to 28%), sweep the clock (28 to 100%). */
 @keyframes pf-run-reveal {
-  0% { transform: translateX(-100%); opacity: 1; }
-  72% { transform: translateX(0); opacity: 1; }
-  94% { transform: translateX(0); opacity: 1; }
-  100% { transform: translateX(0); opacity: 0; }
+  0%, 22% { transform: translateX(0); opacity: 1; }
+  27% { transform: translateX(0); opacity: 0; }
+  27.5% { transform: translateX(-100%); opacity: 0; }
+  28% { transform: translateX(-100%); opacity: 1; }
+  100% { transform: translateX(0); opacity: 1; }
 }
 @keyframes pf-run-counter {
-  0% { transform: translateX(100%); }
-  72%, 100% { transform: translateX(0); }
+  0%, 27% { transform: translateX(0); }
+  27.5%, 28% { transform: translateX(100%); }
+  100% { transform: translateX(0); }
 }
+/* -5.556% is where the linear sweep is at 96%; the playhead fades out over
+   the last stretch of the clock, after the last turn. */
 @keyframes pf-run-playhead {
-  0% { transform: translateX(-100%); opacity: 1; }
-  72% { transform: translateX(0); opacity: 1; }
-  76%, 100% { transform: translateX(0); opacity: 0; }
+  0%, 27% { transform: translateX(0); opacity: 0; }
+  27.5% { transform: translateX(-100%); opacity: 0; }
+  28% { transform: translateX(-100%); opacity: 1; }
+  96% { transform: translateX(-5.556%); opacity: 1; }
+  100% { transform: translateX(0); opacity: 0; }
 }
 @keyframes pf-run-odo {
-  0% { transform: translateY(0); opacity: 1; }
-  72% { transform: translateY(-100%); opacity: 1; }
-  94% { transform: translateY(-100%); opacity: 1; }
-  100% { transform: translateY(-100%); opacity: 0; }
+  0%, 22% { transform: translateY(-100%); opacity: 1; }
+  27% { transform: translateY(-100%); opacity: 0; }
+  27.5% { transform: translateY(0); opacity: 0; }
+  28% { transform: translateY(0); opacity: 1; }
+  100% { transform: translateY(-100%); opacity: 1; }
 }
 
+/* --pf-play comes from post-figures.css: running only while MotionGate marks
+   the figure in view, paused otherwise (paused holds the settled frame). */
 @media (prefers-reduced-motion: no-preference) {
   [data-pf-js] [data-pf-motion] .pf-run-plot .pf-run-layer:not(.is-live) {
     opacity: var(--pf-run-dim);
@@ -384,11 +395,13 @@
     inset: 0;
     overflow: hidden;
     animation: pf-run-reveal var(--pf-run-loop) linear infinite;
+    animation-play-state: var(--pf-play, paused);
   }
   [data-pf-js] [data-pf-motion] .pf-run-reveal-in {
     position: absolute;
     inset: 0;
     animation: pf-run-counter var(--pf-run-loop) linear infinite;
+    animation-play-state: var(--pf-play, paused);
   }
   [data-pf-js] [data-pf-motion] .pf-run-playhead {
     display: block;
@@ -399,18 +412,15 @@
     width: 100%;
     border-right: 1px solid var(--pf-accent);
     pointer-events: none;
+    /* Hidden unless its animation shows it, so a paused or cancelled loop is the settled chart. */
+    opacity: 0;
     animation: pf-run-playhead var(--pf-run-loop) linear infinite;
+    animation-play-state: var(--pf-play, paused);
   }
   [data-pf-js] [data-pf-motion] .pf-run-odo-track {
     animation: pf-run-odo var(--pf-run-loop) infinite;
     animation-timing-function: steps(var(--pf-run-steps), end);
-  }
-  [data-pf-js] [data-pf-motion] :is(.pf-run-reveal, .pf-run-reveal-in, .pf-run-playhead, .pf-run-odo-track) {
-    animation-play-state: paused;
-  }
-  [data-pf-js] [data-pf-motion][data-pf-inview="true"] :is(.pf-run-reveal, .pf-run-reveal-in, .pf-run-playhead, .pf-run-odo-track),
-  [data-pf-js] [data-pf-inview="true"] [data-pf-motion] :is(.pf-run-reveal, .pf-run-reveal-in, .pf-run-playhead, .pf-run-odo-track) {
-    animation-play-state: running;
+    animation-play-state: var(--pf-play, paused);
   }
 }
 
@@ -435,11 +445,18 @@
   height: 100%;
   object-fit: contain;
 }
-/* Top right: the quietest corner of most clips, away from captions and calls to action at the bottom. */
+/* The control row under the clip, styled like a card foot. Its height is set
+   here, not by the button, so the row is the same size before and after the
+   script adds the button (no layout shift). */
+.pf-video-bar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  min-height: calc(32px + 0.9rem);
+  padding: 0.45rem 0.75rem;
+  border-top: 1px solid var(--pf-line);
+}
 .pf-video-toggle {
-  position: absolute;
-  top: 0.6rem;
-  right: 0.6rem;
   display: inline-flex;
   align-items: center;
   gap: 0.45rem;
@@ -447,7 +464,7 @@
   padding: 0 0.7rem 0 0.6rem;
   border: 1px solid var(--pf-line);
   border-radius: calc(var(--radius) * 1.5);
-  background: color-mix(in srgb, hsl(var(--background)) 88%, transparent);
+  background: transparent;
   color: var(--pf-ink);
   font-family: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 11px;
@@ -486,6 +503,9 @@
   border-left: 8px solid var(--pf-accent);
 }
 @media (pointer: coarse) {
+  .pf-video-bar {
+    min-height: calc(44px + 0.9rem);
+  }
   .pf-video-toggle {
     min-height: 44px;
     padding: 0 0.9rem 0 0.8rem;

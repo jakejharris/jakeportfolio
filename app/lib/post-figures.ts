@@ -359,7 +359,13 @@ export function safeHref(url: unknown): string | undefined {
 // ---- motion
 
 /** Figure types that move (they carry `data-pf-motion`); a post with none skips the motion gate. */
-export const MOTION_FIGURE_TYPES: ReadonlySet<string> = new Set(['timeline', 'overlapGrid', 'beforeAfter']);
+export const MOTION_FIGURE_TYPES: ReadonlySet<string> = new Set([
+  'timeline',
+  'overlapGrid',
+  'beforeAfter',
+  'runChart',
+  'videoLoop',
+]);
 
 export function hasMotionFigure(content: unknown) {
   return (

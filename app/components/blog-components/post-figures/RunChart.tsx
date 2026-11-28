@@ -9,8 +9,8 @@ import { FigureFrame } from './Frame';
  * A run on one clock: a row per lane, a bar per span at its real start and
  * finish, colored by category, rows grouped under Title Case names. Server
  * rendered as plain HTML, so it reads in full without JavaScript; the replay
- * is two transform animations (run-figures.css) over a dimmed copy, gated by
- * the shared motion contract (`data-pf-motion`).
+ * is a few transform animations (run-figures.css) over a dimmed copy, run by
+ * MotionGate only while the figure is in view (`data-pf-motion`).
  */
 type Vars = CSSProperties & Record<`--${string}`, string | number>;
 const str = (value: unknown) => (typeof value === 'string' ? value.trim() : '');
@@ -80,10 +80,9 @@ export default function RunChart({ value }: { value: RunChartValue }) {
   const marks = [...model.milestones.map((m) => `${m.time} ${m.label}`), ...model.later.map((m) => `${m.time} ${m.label}`)];
 
   return (
-    <FigureFrame kind="runChart" title={str(value.title)} label={str(value.label)} caption={str(value.caption)}>
+    <FigureFrame kind="runChart" title={str(value.title)} label={str(value.label)} caption={str(value.caption)} motion>
       <div
         className="pf-run"
-        data-pf-motion=""
         style={{ '--pf-run-hours': hours, '--pf-run-steps': readout.length - 1, '--pf-run-side-ch': longest } as Vars}
       >
         {/* The running clock and count: a strip of every hour's value, stepped by transform. */}
