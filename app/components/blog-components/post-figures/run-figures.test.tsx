@@ -1,7 +1,11 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-require.extensions['.css'] = (module: NodeModule) => { module.exports = {}; };
+const cssLoaded: string[] = [];
+require.extensions['.css'] = (module: NodeModule, filename: string) => {
+  cssLoaded.push(filename);
+  module.exports = {};
+};
 
 async function render(name: string, props: object) {
   const React = await import('react');
@@ -176,6 +180,11 @@ test('the run chart legend is drawn for the eye; screen readers get the summary 
   assert.ok(html.indexOf('class="sr-only"') > 0);
 });
 
+test('the figure frame brings its own stylesheet, so a run figure is styled on any page', async () => {
+  await render('RunChart', { value: run });
+  assert.ok(cssLoaded.some((file) => file.endsWith('post-figures.css')), `loaded: ${cssLoaded.join(', ') || 'none'}`);
+});
+
 test('a clip without a poster loads its first frame instead of showing an empty box', async () => {
   const project = { projectId: 'p', dataset: 'd' };
   const mp4 = { asset: { _ref: 'file-abc-mp4' } };
@@ -237,4 +246,14 @@ test('run chart animations run only without a reduced-motion preference, behind 
     assert.match(selector.trim(), /^\[data-pf-js\] \[data-pf-motion\]/, selector.trim());
     assert.match(body, /animation-play-state: var\(--pf-play, paused\)/, selector.trim());
   }
+});
+
+test('the replay layer reaches past the plot, so dots on the edges and the top row are never cut', () => {
+  const gated = css.slice(css.indexOf('@media (prefers-reduced-motion: no-preference) {'));
+  const reveal = gated.match(/\.pf-run-reveal \{([^}]*)\}/)?.[1] ?? '';
+  const inner = gated.match(/\.pf-run-reveal-in \{([^}]*)\}/)?.[1] ?? '';
+  assert.match(reveal, /inset: -(\d+)px;/);
+  const bleed = reveal.match(/inset: -(\d+)px;/)![1];
+  assert.match(inner, new RegExp(`padding: ${bleed}px;`), 'the copy is padded back by the same amount');
+  assert.ok(Number(bleed) >= 6, 'half the 11px accent dot plus a pixel');
 });

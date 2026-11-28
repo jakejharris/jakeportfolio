@@ -337,7 +337,8 @@ export const studyCards = {
           preview: {
             select: { title: 'studyTitle', date: 'date', era: 'era', authors: 'authors' },
             prepare({ title, date, era, authors }: Record<string, string | undefined>) {
-              return { title: title || 'Study', subtitle: [era && era.toUpperCase(), authors, date].filter(Boolean).join(' · ') };
+              const tag = era === 'now' ? 'Now' : era === 'then' ? 'Then' : era;
+              return { title: title || 'Study', subtitle: [tag, authors, date].filter(Boolean).join(' · ') };
             },
           },
         },

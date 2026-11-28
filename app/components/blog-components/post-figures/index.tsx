@@ -1,5 +1,3 @@
-import '@/app/css/post-figures.css';
-
 import type {
   BeforeAfterValue,
   OverlapGridValue,

@@ -1,3 +1,5 @@
+import '@/app/css/post-figures.css';
+
 import type { ReactNode } from 'react';
 
 import { safeHref } from '@/app/lib/post-figures';

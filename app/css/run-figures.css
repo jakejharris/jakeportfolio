@@ -214,17 +214,20 @@
   white-space: nowrap;
   color: var(--pf-faint);
 }
-/* Narrow: a heading longer than the chart is cut with an ellipsis. Wide:
-   it runs from the name column across the empty slot in the plot. */
-@container (max-width: 519.98px) {
-  .pf-run-heading span {
-    display: block;
-    max-width: 100%;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
+/* A heading row is a band across the whole chart in the page color, so the
+   hour lines and milestone guides break for it evenly at every width,
+   not just under the words. Wide, the words run from the name column over
+   the plot; narrow, a heading longer than the chart ends in an ellipsis. */
+.pf-run-side .pf-run-heading {
+  width: 100cqw;
+  background: hsl(var(--background));
 }
-.pf-run-heading span,
+.pf-run-heading span {
+  display: block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 .pf-run-g-label {
   background: hsl(var(--background));
   padding-right: 4px;
@@ -389,10 +392,13 @@
   [data-pf-js] [data-pf-motion] .pf-run-plot .pf-run-layer:not(.is-live) {
     opacity: var(--pf-run-dim);
   }
+  /* The clipping layer reaches 6px past the plot (half the 11px accent dot,
+     plus a pixel), and the copy is padded back the same, so dots on the
+     edges and on the top row are never cut. The playhead rides its edge. */
   [data-pf-js] [data-pf-motion] .pf-run-reveal {
     display: block;
     position: absolute;
-    inset: 0;
+    inset: -6px;
     overflow: hidden;
     animation: pf-run-reveal var(--pf-run-loop) linear infinite;
     animation-play-state: var(--pf-play, paused);
@@ -400,6 +406,7 @@
   [data-pf-js] [data-pf-motion] .pf-run-reveal-in {
     position: absolute;
     inset: 0;
+    padding: 6px;
     animation: pf-run-counter var(--pf-run-loop) linear infinite;
     animation-play-state: var(--pf-play, paused);
   }
@@ -408,8 +415,8 @@
     position: absolute;
     top: 0;
     bottom: 0;
-    left: 0;
-    width: 100%;
+    left: -6px;
+    width: calc(100% + 12px);
     border-right: 1px solid var(--pf-accent);
     pointer-events: none;
     /* Hidden unless its animation shows it, so a paused or cancelled loop is the settled chart. */

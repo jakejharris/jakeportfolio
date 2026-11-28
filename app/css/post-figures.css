@@ -558,7 +558,8 @@ html:not(.dark)[data-accent="4"] .post-figure {
 /* A miss the other checker caught: an outline, strong enough to read on dark. */
 .pf-cell-caught {
   fill: color-mix(in srgb, var(--pf-accent) 12%, transparent);
-  stroke: color-mix(in srgb, var(--pf-accent) 80%, transparent);
+  /* Full strength: at 80% the dashed outline fell under 3:1 on light accents. */
+  stroke: var(--pf-accent);
   stroke-width: 0.8;
   stroke-dasharray: 1.55 1.1;
 }

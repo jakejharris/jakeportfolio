@@ -306,3 +306,18 @@ test('every animation runs only without a reduced-motion preference, behind the 
     if (/animation-duration/.test(body)) assert.match(body, /animation-play-state: var\(--pf-play\)/);
   }
 });
+
+test('the caught cells keep a full-strength accent outline, for 3:1 on every accent', () => {
+  const rule = css.match(/\.pf-cell-caught \{([^}]*)\}/)?.[1] ?? '';
+  assert.match(rule, /stroke: var\(--pf-accent\);/);
+});
+
+test('the Studio preview of a study card writes Then and Now in Title Case', async () => {
+  const { studyCards } = await import('@/sanity-schemas/post-figures');
+  const card = (studyCards.fields as Array<{ of?: Array<{ preview?: { prepare: (v: object) => { subtitle: string } } }> }>)
+    .flatMap((f) => f.of ?? [])
+    .find((o) => o.preview);
+  assert.ok(card?.preview);
+  assert.equal(card.preview.prepare({ title: 'A Study', era: 'now', authors: 'Lee', date: '2026' }).subtitle, 'Now · Lee · 2026');
+  assert.equal(card.preview.prepare({ title: 'A Study', era: 'then' }).subtitle, 'Then');
+});
