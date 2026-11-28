@@ -176,6 +176,23 @@ test('the run chart legend is drawn for the eye; screen readers get the summary 
   assert.ok(html.indexOf('class="sr-only"') > 0);
 });
 
+test('a clip without a poster loads its first frame instead of showing an empty box', async () => {
+  const project = { projectId: 'p', dataset: 'd' };
+  const mp4 = { asset: { _ref: 'file-abc-mp4' } };
+  const bare = await render('VideoLoop', { value: { _key: 'v', alt: 'A clip.', mp4 }, project });
+  assert.match(bare, /preload="metadata"/);
+  const withPoster = await render('VideoLoop', { value: { _key: 'v', alt: 'A clip.', mp4, poster: { asset: { _ref: 'image-f00-640x360-png' } } }, project });
+  assert.match(withPoster, /preload="none"/);
+});
+
+test('a file that is not the announced video type is never offered to the player', async () => {
+  const html = await render('VideoLoop', {
+    value: { _key: 'v', alt: 'Demo clip', mp4: { asset: { _ref: 'file-abc123-pdf' } }, poster: { asset: { _ref: 'image-abc123-1200x900-png' } } },
+    project: { projectId: 'p', dataset: 'd' },
+  });
+  assert.equal(html, '', 'no playable source, no block');
+});
+
 // ---- the stylesheet: the same motion contract as post-figures.css
 
 const css = require('node:fs').readFileSync(require('node:path').join(__dirname, '../../../css/run-figures.css'), 'utf8') as string;

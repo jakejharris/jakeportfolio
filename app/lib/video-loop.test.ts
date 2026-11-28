@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import * as videoLoop from './video-loop';
 import { checkVideoLoop, fileExtension, sanityFileUrl, sanityPoster, videoBox } from './video-loop';
 
 const project = { projectId: 'abc123', dataset: 'production' };
@@ -42,4 +43,50 @@ test('Studio asks for width and height together', () => {
   assert.equal(checkVideoLoop({ width: 1280, height: 720 }), true);
   assert.match(String(checkVideoLoop({ width: 1280 })), /both/);
   assert.match(String(checkVideoLoop({ width: 0, height: 720 })), /whole pixels/);
+});
+
+test('Studio refuses alt text that is only spaces, which the page would drop', () => {
+  assert.equal(checkVideoLoop({ alt: 'A square moves across the frame.' }), true);
+  assert.match(String(checkVideoLoop({ alt: '   ' })), /Alt text/);
+});
+
+test('Studio refuses a file of the wrong type in either video field', () => {
+  const mp4 = { asset: { _ref: 'file-abc123-mp4' } };
+  assert.equal(checkVideoLoop({ mp4 }), true);
+  assert.equal(checkVideoLoop({ mp4, webm: { asset: { _ref: 'file-def456-webm' } } }), true);
+  assert.match(String(checkVideoLoop({ mp4: { asset: { _ref: 'file-abc123-pdf' } } })), /MP4/);
+  assert.match(String(checkVideoLoop({ mp4, webm: { asset: { _ref: 'file-def456-mp4' } } })), /WebM/);
+});
+
+test('a source is offered only when its file is the type the player announces', () => {
+  const { videoSource } = videoLoop as unknown as {
+    videoSource: (field: unknown, type: 'mp4' | 'webm', p: typeof project) => string | undefined;
+  };
+  assert.equal(typeof videoSource, 'function');
+  assert.equal(videoSource({ asset: { _ref: 'file-abc123-mp4' } }, 'mp4', project), 'https://cdn.sanity.io/files/abc123/production/abc123.mp4');
+  assert.equal(videoSource({ asset: { _ref: 'file-abc123-pdf' } }, 'mp4', project), undefined);
+  assert.equal(videoSource({ asset: { _ref: 'file-abc123-mp4' } }, 'webm', project), undefined);
+  assert.equal(videoSource({ asset: { url: 'https://x.test/clip' } }, 'mp4', project), 'https://x.test/clip', 'an unknown type is left to the browser');
+});
+
+test('the Play/Pause press plays a paused clip muted and pauses a playing one', async () => {
+  const { pressPlayPause } = videoLoop as unknown as {
+    pressPlayPause: (video: { paused: boolean; muted: boolean; play(): Promise<void>; pause(): void }, onRefused?: () => void) => boolean;
+  };
+  assert.equal(typeof pressPlayPause, 'function');
+  const clip = {
+    paused: true,
+    muted: false,
+    play() { this.paused = false; return Promise.resolve(); },
+    pause() { this.paused = true; },
+  };
+  assert.equal(pressPlayPause(clip), true, 'playing again puts it back on autoplay');
+  assert.deepEqual([clip.paused, clip.muted], [false, true]);
+  assert.equal(pressPlayPause(clip), false, "a reader's pause takes it off autoplay");
+  assert.equal(clip.paused, true);
+  let refused = false;
+  const blocked = { paused: true, muted: false, play: () => Promise.reject(new Error('blocked')), pause() {} };
+  assert.equal(pressPlayPause(blocked, () => { refused = true; }), true);
+  await new Promise((r) => setTimeout(r, 0));
+  assert.equal(refused, true, 'a refused play is reported, so the button can show the real state');
 });

@@ -10,8 +10,11 @@
  * settled, server-rendered state.
  *
  * A video inside a figure that carries `data-pf-autoplay` plays muted and
- * without controls while its figure is in view, and pauses otherwise. Under
- * reduced motion it is left alone, controls and all.
+ * without controls while its figure is in view, and pauses when the figure
+ * leaves the view or the page is hidden. Under reduced motion the gate never
+ * starts one, and never stops one the reader started while it is in view.
+ * Turning reduced motion on pauses clips at once; turning it off plays the
+ * ones in view again.
  */
 
 export const MOTION_SELECTOR = '[data-pf-motion]';
@@ -27,23 +30,25 @@ type ObserverClass = new (
 
 interface GateDocument {
   hidden: boolean;
-  documentElement: Pick<Element, 'setAttribute'>;
+  documentElement: Pick<Element, 'setAttribute' | 'removeAttribute'>;
   querySelectorAll(selector: string): ArrayLike<Element>;
   addEventListener(type: 'visibilitychange', listener: () => void): void;
   removeEventListener(type: 'visibilitychange', listener: () => void): void;
 }
 
-const reducedMotion = () =>
-  typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
+const REDUCE = '(prefers-reduced-motion: reduce)';
+const motionQuery = () => (typeof matchMedia === 'function' ? matchMedia(REDUCE) : null);
+
+const clips = (root: Element) => Array.from(root.querySelectorAll<HTMLVideoElement>('video[data-pf-autoplay]'));
 
 function driveVideos(root: Element, inView: boolean) {
-  for (const video of Array.from(root.querySelectorAll<HTMLVideoElement>('video[data-pf-autoplay]'))) {
-    if (inView && !reducedMotion()) {
+  for (const video of clips(root)) {
+    if (!inView) {
+      video.pause();
+    } else if (!motionQuery()?.matches) {
       video.muted = true;
       video.controls = false;
       video.play()?.catch(() => {});
-    } else {
-      video.pause();
     }
   }
 }
@@ -66,8 +71,9 @@ export function startMotionGate(
   };
 
   for (const root of roots) write(root);
-  doc.documentElement.setAttribute('data-pf-js', '');
-  if (roots.length === 0) return () => {};
+  const html = doc.documentElement;
+  html.setAttribute('data-pf-js', '');
+  if (roots.length === 0) return () => html.removeAttribute('data-pf-js');
 
   const observer = new IO(
     (entries) => {
@@ -81,8 +87,18 @@ export function startMotionGate(
   for (const root of roots) observer.observe(root);
   const onVisibility = () => roots.forEach(write);
   doc.addEventListener('visibilitychange', onVisibility);
+  const query = motionQuery();
+  const onMotionPreference = () => {
+    for (const root of roots) {
+      if (query?.matches) clips(root).forEach((video) => video.pause());
+      else driveVideos(root, root.getAttribute('data-pf-inview') === 'true');
+    }
+  };
+  query?.addEventListener?.('change', onMotionPreference);
   return () => {
     observer.disconnect();
     doc.removeEventListener('visibilitychange', onVisibility);
+    query?.removeEventListener?.('change', onMotionPreference);
+    html.removeAttribute('data-pf-js');
   };
 }

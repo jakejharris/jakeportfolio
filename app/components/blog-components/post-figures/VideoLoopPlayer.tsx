@@ -2,14 +2,16 @@
 
 import { useEffect, useRef, useState } from 'react';
 
+import { pressPlayPause } from '@/app/lib/video-loop';
+
 /**
  * The clip and its play/pause control. Server rendered with native controls
  * and no autoplay, so without JavaScript the poster shows and the reader can
  * play it. MotionGate plays the clip muted while its figure is in view and
- * the tab is visible, pauses it otherwise, and leaves it alone under reduced
- * motion (`data-pf-autoplay`). This script only swaps the native controls for
- * a small Play/Pause button. A reader's pause also takes the clip off the
- * gate's autoplay, so it stays paused until they press Play.
+ * the tab is visible, and pauses it otherwise (`data-pf-autoplay`). This
+ * script swaps the native controls for a small Play/Pause button. A
+ * reader's pause takes the clip off the gate's autoplay until they press
+ * Play.
  */
 export default function VideoLoopPlayer({
   sources,
@@ -29,6 +31,7 @@ export default function VideoLoopPlayer({
   const ref = useRef<HTMLVideoElement>(null);
   const [ready, setReady] = useState(false);
   const [playing, setPlaying] = useState(false);
+  const [autoplay, setAutoplay] = useState(true);
 
   useEffect(() => {
     const video = ref.current;
@@ -46,12 +49,7 @@ export default function VideoLoopPlayer({
 
   const toggle = () => {
     const video = ref.current;
-    if (!video) return;
-    video.toggleAttribute('data-pf-autoplay', video.paused);
-    if (video.paused) {
-      video.muted = true;
-      video.play().catch(() => setPlaying(!video.paused));
-    } else video.pause();
+    if (video) setAutoplay(pressPlayPause(video, () => setPlaying(!video.paused)));
   };
 
   return (
@@ -67,9 +65,10 @@ export default function VideoLoopPlayer({
           muted
           loop
           playsInline
-          preload="none"
+          // Without a poster, load enough to show the first frame instead of an empty box.
+          preload={poster ? 'none' : 'metadata'}
           aria-label={alt}
-          data-pf-autoplay=""
+          data-pf-autoplay={autoplay ? '' : undefined}
         >
           {sources.map((source) => (
             <source key={source.src} src={source.src} type={source.type} />

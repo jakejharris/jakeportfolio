@@ -42,6 +42,16 @@ export function sanityFileUrl(field: unknown, project: SanityProject): string | 
   return `https://cdn.sanity.io/files/${project.projectId}/${project.dataset}/${match[1]}.${match[2]}`;
 }
 
+/**
+ * The url to offer as a `<source>` of the given type, or nothing when the
+ * file is known to be another type (Studio's file picker filter is easy to
+ * get around). A url without an extension is left to the browser.
+ */
+export function videoSource(field: unknown, type: 'mp4' | 'webm', project: SanityProject): string | undefined {
+  const extension = fileExtension(field);
+  return extension && extension !== type ? undefined : sanityFileUrl(field, project);
+}
+
 export interface PosterInfo {
   url: string;
   /** Pixel size from the reference; zero when only a url is known. */
@@ -78,12 +88,47 @@ export function videoBox(value: { width?: unknown; height?: unknown } | null | u
   return { width: 16, height: 9 };
 }
 
-/** Width and height go together; Studio refuses one without the other. */
-export function checkVideoLoop(value: { width?: unknown; height?: unknown } | null | undefined): Check {
+interface VideoLoopFields {
+  width?: unknown;
+  height?: unknown;
+  alt?: unknown;
+  mp4?: unknown;
+  webm?: unknown;
+}
+
+/**
+ * The block's own checks in Studio: alt text that is more than spaces, each
+ * file of its field's type, and width and height together.
+ */
+export function checkVideoLoop(value: VideoLoopFields | null | undefined): Check {
   if (!value) return true;
+  if (typeof value.alt === 'string' && !value.alt.trim()) return 'Alt text cannot be only spaces. Say what the clip shows.';
+  const mp4 = fileExtension(value.mp4);
+  if (mp4 && mp4 !== 'mp4') return `The MP4 field holds a .${mp4} file. Upload the clip as an .mp4.`;
+  const webm = fileExtension(value.webm);
+  if (webm && webm !== 'webm') return `The WebM field holds a .${webm} file. Upload a .webm, or leave it empty.`;
   const hasW = value.width != null;
   const hasH = value.height != null;
   if (hasW !== hasH) return 'Set both width and height, or leave both empty to use the poster size.';
   if (hasW && (!size(value.width) || !size(value.height))) return 'Width and height are whole pixels from 1 to 8000.';
+  return true;
+}
+
+/**
+ * The player's Play/Pause press. A paused clip plays muted; a playing one
+ * pauses. Returns whether the gate may autoplay the clip afterwards, so a
+ * reader's pause sticks until they press Play. A play the browser refuses is
+ * reported through `onRefused`, so the button can show the real state.
+ */
+export function pressPlayPause(
+  video: Pick<HTMLVideoElement, 'paused' | 'muted' | 'play' | 'pause'>,
+  onRefused?: () => void
+): boolean {
+  if (!video.paused) {
+    video.pause();
+    return false;
+  }
+  video.muted = true;
+  video.play()?.catch(() => onRefused?.());
   return true;
 }

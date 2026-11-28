@@ -1,6 +1,6 @@
 import type { VideoLoopValue } from '@/app/types/run-figures';
 import { dataset, projectId } from '@/app/lib/sanity.config';
-import { sanityFileUrl, sanityPoster, videoBox, type SanityProject } from '@/app/lib/video-loop';
+import { sanityPoster, videoBox, videoSource, type SanityProject } from '@/app/lib/video-loop';
 
 import { FigureFrame } from './Frame';
 import VideoLoopPlayer from './VideoLoopPlayer';
@@ -15,8 +15,8 @@ const str = (value: unknown) => (typeof value === 'string' ? value.trim() : '');
  */
 export default function VideoLoop({ value, project }: { value: VideoLoopValue; project?: SanityProject }) {
   const where = project ?? { projectId, dataset };
-  const mp4 = sanityFileUrl(value?.mp4, where);
-  const webm = sanityFileUrl(value?.webm, where);
+  const mp4 = videoSource(value?.mp4, 'mp4', where);
+  const webm = videoSource(value?.webm, 'webm', where);
   if (!value || (!mp4 && !webm)) return null;
   const poster = sanityPoster(value.poster, where);
   const { width, height } = videoBox(value, poster);

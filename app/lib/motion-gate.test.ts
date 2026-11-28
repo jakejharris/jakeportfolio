@@ -27,6 +27,9 @@ class FakeElement {
   getAttribute(name: string) {
     return this.attrs.get(name) ?? null;
   }
+  removeAttribute(name: string) {
+    this.attrs.delete(name);
+  }
   querySelectorAll() {
     return this.videos;
   }
@@ -126,9 +129,31 @@ test('a marked video plays muted without controls in view and pauses out of view
   assert.equal(video.playing, false);
 });
 
-test('under reduced motion a video keeps its controls and never autoplays', () => {
+/** A stand-in for the reduced-motion media query that can change while the page is open. */
+function motionPreference(reduce: boolean) {
+  const listeners = new Set<() => void>();
+  const query = {
+    matches: reduce,
+    addEventListener: (_: string, fn: () => void) => listeners.add(fn),
+    removeEventListener: (_: string, fn: () => void) => listeners.delete(fn),
+  };
   const original = globalThis.matchMedia;
-  globalThis.matchMedia = ((query: string) => ({ matches: query.includes('reduce') })) as typeof matchMedia;
+  globalThis.matchMedia = ((q: string) =>
+    q.includes('reduce') ? query : { matches: false, addEventListener() {}, removeEventListener() {} }) as unknown as typeof matchMedia;
+  return {
+    listeners,
+    set(value: boolean) {
+      query.matches = value;
+      listeners.forEach((fn) => fn());
+    },
+    restore() {
+      globalThis.matchMedia = original;
+    },
+  };
+}
+
+test('under reduced motion a video keeps its controls and never autoplays', () => {
+  const preference = motionPreference(true);
   try {
     const video = new FakeVideo();
     const root = new FakeElement([video]);
@@ -136,8 +161,54 @@ test('under reduced motion a video keeps its controls and never autoplays', () =
     see(root, true);
     assert.deepEqual([video.playing, video.controls], [false, true]);
   } finally {
-    globalThis.matchMedia = original;
+    preference.restore();
   }
+});
+
+test('under reduced motion a clip the reader started keeps playing as its figure comes into view', () => {
+  const preference = motionPreference(true);
+  try {
+    const video = new FakeVideo();
+    const root = new FakeElement([video]);
+    const { see } = setup([root]);
+    see(root, false);
+    video.play(); // the reader presses Play while the figure sits at the edge of the viewport
+    see(root, true);
+    assert.equal(video.playing, true, 'the gate leaves a clip in view alone');
+    see(root, false);
+    assert.equal(video.playing, false, 'leaving the view still pauses it');
+  } finally {
+    preference.restore();
+  }
+});
+
+test('turning reduced motion on pauses a playing clip, and turning it off plays clips in view again', () => {
+  const preference = motionPreference(false);
+  try {
+    const [video, other] = [new FakeVideo(), new FakeVideo()];
+    const [root, away] = [new FakeElement([video]), new FakeElement([other])];
+    const { see, stop } = setup([root, away]);
+    see(root, true);
+    assert.equal(video.playing, true);
+    preference.set(true);
+    assert.equal(video.playing, false, 'reduced motion stops it at once');
+    preference.set(false);
+    assert.equal(video.playing, true, 'and lifting it plays the clip in view');
+    assert.equal(other.playing, false, 'a clip out of view stays paused');
+    stop();
+    assert.equal(preference.listeners.size, 0, 'cleanup drops the listener');
+  } finally {
+    preference.restore();
+  }
+});
+
+test('cleanup takes the page flag off, so figures rendered later start settled', () => {
+  const { html, stop } = setup([new FakeElement()]);
+  stop();
+  assert.equal(html.getAttribute('data-pf-js'), null);
+  const empty = setup([]);
+  empty.stop();
+  assert.equal(empty.html.getAttribute('data-pf-js'), null);
 });
 
 test('cleanup disconnects the observer and the visibility listener', () => {
