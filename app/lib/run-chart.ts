@@ -4,7 +4,7 @@
 // editor refuses data the page could not draw. Nothing here throws on bad
 // data: the page drops what it cannot place.
 
-import { formatClock, parseClock, type Check } from './post-figures';
+import { clockPercent, evenSteps, formatClock, parseClock, type Check } from './post-figures';
 
 export const RUN_LIMITS = {
   groups: 24,
@@ -79,10 +79,7 @@ export function runWindow(start: number, last: number, end?: number | null, maxT
   let to = Math.ceil(Math.max(last, end ?? 0, start) / 60) * 60;
   if (to <= from) to = from + 60;
   const hours = (to - from) / 60;
-  const even = (step: number) => {
-    const n = Math.max(1, Math.ceil(hours / step));
-    return n > 1 && n % 2 === 1 ? n + 1 : n;
-  };
+  const even = (step: number) => evenSteps(hours, step);
   const step = TICK_STEPS.find((s) => even(s) + 1 <= maxTicks) ?? 24;
   const steps = even(step);
   to = from + steps * step * 60;
@@ -99,11 +96,8 @@ export function runWindow(start: number, last: number, end?: number | null, maxT
   return { from, to, step, ticks };
 }
 
-/** Percent along the axis, clamped, to two decimals. */
-export function runPercent(minutes: number, window: Pick<RunWindow, 'from' | 'to'>) {
-  const ratio = (minutes - window.from) / (window.to - window.from);
-  return Math.round(Math.min(1, Math.max(0, ratio)) * 10000) / 100;
-}
+/** Percent along the axis, clamped, to two decimals (the timeline's own helper). */
+export const runPercent: (minutes: number, window: Pick<RunWindow, 'from' | 'to'>) => number = clockPercent;
 
 // ------------------------------------------------------------ the model
 
@@ -156,8 +150,8 @@ export interface RunChartModel {
   milestones: RunMilestoneModel[];
   /** Milestones after the axis ends, listed rather than drawn. */
   later: Array<{ label: string; time: string }>;
-  /** One step per axis hour: the clock and how many spans had ended by then. */
-  readout: Array<{ label: string; done: number }>;
+  /** One step per axis hour: its minute (unique even when a run passes a day and labels repeat), the clock and how many spans had ended by then. */
+  readout: Array<{ minutes: number; label: string; done: number }>;
   total: number;
   hasThin: boolean;
   /** Run time of the first and last moments, for the summary. */
@@ -305,7 +299,7 @@ export function buildRunChart(value: unknown, maxTicks = 13): RunChartModel | nu
   const ends = spans.filter((s) => shownLanes.has(s.lane)).map((s) => s.end);
   const readout = [];
   for (let m = window.from; m <= window.to; m += 60) {
-    readout.push({ label: runClockLabel(m, true), done: ends.filter((end) => end <= m).length });
+    readout.push({ minutes: m, label: runClockLabel(m, true), done: ends.filter((end) => end <= m).length });
   }
 
   return {
@@ -334,12 +328,14 @@ export function checkRunChart(value: unknown): Check {
   const start = parseClock(v.start);
   if (start === null) return 'Start must be a 24-hour time like 01:49.';
 
+  // Required names can still be only spaces in Studio; the page drops those items, so refuse them here.
   const keys = (name: string, items: Raw[]) => {
     const seen = new Set<string>();
     for (const [i, item] of items.entries()) {
       const key = text(item?.key);
       if (!key) return `${name} ${i + 1} needs a key.`;
       if (seen.has(key)) return `${name} key "${key}" is used twice.`;
+      if (!text(item?.label)) return `${name} "${key}" needs a name.`;
       seen.add(key);
     }
     return seen;
@@ -383,6 +379,7 @@ export function checkRunChart(value: unknown): Check {
     if (problem) return problem;
   }
   for (const [i, milestone] of list<Raw>(v.milestones).entries()) {
+    if (!text(milestone?.label)) return `Milestone ${i + 1} needs a name.`;
     if (runMinutes(milestone?.time, start) === null) return `Milestone ${i + 1}: use a 24-hour time like 07:30.`;
   }
   if (list(v.spans).length === 0 && list(v.markers).length === 0) return 'Add at least one span or marker.';

@@ -143,6 +143,39 @@ test('the table of contents ignores both blocks', async () => {
   assert.deepEqual(headings.map((h) => h.text), ['A Heading']);
 });
 
+const longRun = {
+  _type: 'runChart',
+  _key: 'r24',
+  start: '08:30',
+  groups: [{ _key: 'g1', key: 'g1', label: 'Part 1' }],
+  categories: [{ _key: 'c1', key: 'c1', label: 'Maker A' }],
+  lanes: [{ _key: 'l1', key: 'l1', label: 'Agent 1', group: 'g1' }],
+  spans: [{ _key: 's1', lane: 'l1', start: '09:00', end: '08:15', category: 'c1' }],
+};
+
+test('a run of a day or more renders without React key clashes', async () => {
+  const errors: string[] = [];
+  const original = console.error;
+  console.error = (...args: unknown[]) => {
+    errors.push(args.map(String).join(' '));
+  };
+  try {
+    await render('RunChart', { value: longRun });
+  } finally {
+    console.error = original;
+  }
+  assert.deepEqual(errors.filter((e) => /same key/i.test(e)), []);
+  const html = await render('RunChart', { value: longRun });
+  const track = html.slice(html.indexOf('pf-run-odo-track'), html.indexOf('</span></span>', html.indexOf('pf-run-odo-track')));
+  assert.ok((track.match(/8 AM/g) ?? []).length >= 2, 'the clock strip repeats hours past a day');
+});
+
+test('the run chart legend is drawn for the eye; screen readers get the summary first', async () => {
+  const html = await render('RunChart', { value: run });
+  assert.match(html, /<div class="pf-run-legend" aria-hidden="true">/);
+  assert.ok(html.indexOf('class="sr-only"') > 0);
+});
+
 // ---- the stylesheet: the same motion contract as post-figures.css
 
 const css = require('node:fs').readFileSync(require('node:path').join(__dirname, '../../../css/run-figures.css'), 'utf8') as string;

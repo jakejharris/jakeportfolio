@@ -139,11 +139,11 @@ test('a run chart model groups rows, places bars and dots, and colors by legend 
 test('the readout counts spans that have ended by each hour on the axis', () => {
   const model = buildRunChart(sample())!;
   assert.deepEqual(model.readout, [
-    { label: '8 AM', done: 0 },
-    { label: '9 AM', done: 2 },
-    { label: '10 AM', done: 3 },
-    { label: '11 AM', done: 3 },
-    { label: '12 PM', done: 4 },
+    { minutes: 480, label: '8 AM', done: 0 },
+    { minutes: 540, label: '9 AM', done: 2 },
+    { minutes: 600, label: '10 AM', done: 3 },
+    { minutes: 660, label: '11 AM', done: 3 },
+    { minutes: 720, label: '12 PM', done: 4 },
   ]);
 });
 
@@ -210,4 +210,36 @@ test('the Studio check names the first problem', () => {
   assert.match(String(checkRunChart(sample({ markers: [{ _key: 'm', lane: 'me', time: 'x' }] }))), /Marker 1/);
   assert.match(String(checkRunChart(sample({ milestones: [{ _key: 'm', time: '25:00', label: 'X' }] }))), /Milestone 1/);
   assert.match(String(checkRunChart(sample({ spans: [], markers: [] }))), /at least one/);
+});
+
+test('Studio refuses names that are only spaces, which the page would drop', () => {
+  // The page drops this group, then its row and span, and draws nothing.
+  const blankGroup = {
+    _type: 'runChart', _key: 'r1', start: '09:00',
+    groups: [{ _key: 'g1', key: 'g1', label: '   ' }],
+    categories: [{ _key: 'c1', key: 'c1', label: 'Maker A' }],
+    lanes: [{ _key: 'l1', key: 'l1', label: 'Agent 1', group: 'g1' }],
+    spans: [{ _key: 's1', lane: 'l1', start: '09:10', end: '09:30', category: 'c1' }],
+  };
+  assert.equal(buildRunChart(blankGroup), null);
+  assert.match(String(checkRunChart(blankGroup)), /Group "g1" needs a name/);
+  const s = sample();
+  assert.match(String(checkRunChart(sample({ categories: [s.categories[0], { ...s.categories[1], label: ' ' }] }))), /Category "b" needs a name/);
+  assert.match(String(checkRunChart(sample({ lanes: [...s.lanes.slice(0, 3), { ...s.lanes[3], label: '' }] }))), /Row "p2-1" needs a name/);
+  assert.match(String(checkRunChart(sample({ milestones: [{ _key: 'm', time: '09:00', label: '  ' }] }))), /Milestone 1 needs a name/);
+});
+
+test('a run of a day or more still gives each readout step its own key', () => {
+  const model = buildRunChart({
+    _type: 'runChart', _key: 'r24', start: '08:30',
+    groups: [{ _key: 'g1', key: 'g1', label: 'Part 1' }],
+    categories: [{ _key: 'c1', key: 'c1', label: 'Maker A' }],
+    lanes: [{ _key: 'l1', key: 'l1', label: 'Agent 1', group: 'g1' }],
+    spans: [{ _key: 's1', lane: 'l1', start: '09:00', end: '08:15', category: 'c1' }],
+  })!;
+  const labels = model.readout.map((step) => step.label);
+  assert.ok(new Set(labels).size < labels.length, 'clock labels repeat past 24 hours');
+  const minutes = model.readout.map((step) => (step as { minutes?: number }).minutes);
+  assert.ok(minutes.every((m) => typeof m === 'number'), 'each step carries its run minute');
+  assert.equal(new Set(minutes).size, minutes.length);
 });

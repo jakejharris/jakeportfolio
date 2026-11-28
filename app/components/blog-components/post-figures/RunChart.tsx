@@ -1,7 +1,7 @@
 import { Fragment, type CSSProperties } from 'react';
 
 import type { RunChartValue } from '@/app/types/run-figures';
-import { buildRunChart, runClockLabel, type RunGroupModel, type RunTick } from '@/app/lib/run-chart';
+import { buildRunChart, runClockLabel, runPercent, type RunGroupModel, type RunTick } from '@/app/lib/run-chart';
 
 import { FigureFrame } from './Frame';
 
@@ -54,7 +54,7 @@ function Axis({ ticks, bottom }: { ticks: RunTick[]; bottom?: boolean }) {
           <span
             key={tick.minutes}
             data-minor={tick.minor ? '' : undefined}
-            style={{ left: `${Math.round(((tick.minutes - from) / span) * 10000) / 100}%` }}
+            style={{ left: `${runPercent(tick.minutes, { from, to: from + span })}%` }}
           >
             {hour}
             <i data-keep={tick.meridiem ? '' : undefined}> {meridiem}</i>
@@ -90,7 +90,7 @@ export default function RunChart({ value }: { value: RunChartValue }) {
           <span className="pf-run-odo">
             <span className="pf-run-odo-track">
               {readout.map((step) => (
-                <span key={step.label}>{step.label}</span>
+                <span key={step.minutes}>{step.label}</span>
               ))}
             </span>
           </span>
@@ -98,7 +98,7 @@ export default function RunChart({ value }: { value: RunChartValue }) {
           <span className="pf-run-odo is-count">
             <span className="pf-run-odo-track">
               {readout.map((step) => (
-                <span key={step.label}>{step.done}</span>
+                <span key={step.minutes}>{step.done}</span>
               ))}
             </span>
           </span>
@@ -165,7 +165,8 @@ export default function RunChart({ value }: { value: RunChartValue }) {
           {timeZone && <p className="pf-run-zone">{timeZone}</p>}
         </div>
 
-        <div className="pf-run-legend">
+        {/* For the eye; the summary below names each row's makers for screen readers. */}
+        <div className="pf-run-legend" aria-hidden="true">
           {legendTitle && <span className="pf-run-legend-title">{legendTitle}</span>}
           <ul>
             {model.categories.map((category) => (

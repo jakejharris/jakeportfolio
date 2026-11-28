@@ -51,7 +51,7 @@ const TICK_STEPS = [1, 2, 3, 4, 6];
 const DAY = 24 * 60;
 
 /** Steps of `step` hours to cover `hours`, rounded up to an even count past one. */
-function evenSteps(hours: number, step: number) {
+export function evenSteps(hours: number, step: number) {
   const n = Math.max(1, Math.ceil(hours / step));
   return n > 1 && n % 2 === 1 ? n + 1 : n;
 }
