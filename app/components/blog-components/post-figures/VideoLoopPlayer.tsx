@@ -4,14 +4,15 @@ import { useEffect, useRef, useState } from 'react';
 
 import { pressPlayPause } from '@/app/lib/video-loop';
 
+import PlayPause from './PlayPause';
+
 /**
- * The clip and its play/pause control. Server rendered with native controls
+ * The clip and its Play/Pause button. Server rendered with native controls
  * and no autoplay, so without JavaScript the poster shows and the reader can
  * play it. MotionGate plays the clip muted while its figure is in view and
  * the tab is visible, and pauses it otherwise (`data-pf-autoplay`). This
- * script swaps the native controls for a small Play/Pause button. A
- * reader's pause takes the clip off the gate's autoplay until they press
- * Play.
+ * script swaps the native controls for the shared button. A reader's pause
+ * takes the clip off the gate's autoplay until they press Play.
  */
 export default function VideoLoopPlayer({
   sources,
@@ -82,14 +83,7 @@ export default function VideoLoopPlayer({
       </div>
       {/* The control sits under the clip, never over it, in a row the server
           already reserves, so nothing moves when the button arrives. */}
-      <div className="pf-video-bar">
-        {ready && (
-          <button type="button" className="pf-video-toggle" onClick={toggle} aria-label={playing ? 'Pause Clip' : 'Play Clip'}>
-            <span className={playing ? 'pf-video-icon is-pause' : 'pf-video-icon is-play'} aria-hidden="true" />
-            <span className="pf-video-label">{playing ? 'Pause' : 'Play'}</span>
-          </button>
-        )}
-      </div>
+      <div className="pf-bar">{ready && <PlayPause playing={playing} name="Clip" onClick={toggle} />}</div>
     </>
   );
 }

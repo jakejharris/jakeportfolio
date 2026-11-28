@@ -748,12 +748,96 @@ html:not(.dark)[data-accent="4"] .post-figure {
   .pf-cell-miss, .pf-cell-caught, .pf-db-bar, .pf-mark, .pf-span, .pf-glyph { forced-color-adjust: none; }
 }
 
+/* ---- Play/Pause row ----
+   The last row of a moving figure's card, and the row under a clip. Its
+   height is set here, not by the button, so it is the same size before and
+   after the script adds the button (no layout shift). Without JavaScript
+   there is no button, so there is no row; a chart's row also goes under
+   reduced motion, when nothing moves. The clip keeps its row, since its
+   button is how a reader plays it then. */
+.pf-bar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  /* The button, the padding and the 1px rule (border-box sizing). */
+  min-height: calc(32px + 0.9rem + 1px);
+  padding: 0.45rem 0.75rem;
+  border-top: 1px solid var(--pf-line);
+}
+@media (scripting: none) {
+  .pf-bar {
+    display: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pf-bar.is-motion {
+    display: none;
+  }
+}
+.pf-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-height: 32px;
+  padding: 0 0.7rem 0 0.6rem;
+  border: 1px solid var(--pf-line);
+  border-radius: calc(var(--radius) * 1.5);
+  background: transparent;
+  color: var(--pf-ink);
+  font-family: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11px;
+  line-height: 1;
+  cursor: pointer;
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+.pf-toggle:hover {
+  border-color: color-mix(in srgb, var(--accent-color) 60%, transparent);
+  background: hsl(var(--background));
+}
+.pf-toggle:focus-visible {
+  outline: 1px solid var(--accent-color);
+  outline-offset: 2px;
+}
+/* Both words take the width of the longer one, so the button never resizes. */
+.pf-toggle-label {
+  min-width: 5ch;
+  text-align: left;
+}
+.pf-toggle-icon {
+  position: relative;
+  width: 8px;
+  height: 9px;
+}
+/* Pause: two bars. Play: a triangle drawn with borders. */
+.pf-toggle-icon.is-pause {
+  border-left: 3px solid currentColor;
+  border-right: 3px solid currentColor;
+}
+.pf-toggle-icon.is-play {
+  width: 0;
+  height: 0;
+  border-top: 5px solid transparent;
+  border-bottom: 5px solid transparent;
+  border-left: 8px solid var(--pf-accent);
+}
+@media (pointer: coarse) {
+  .pf-bar {
+    min-height: calc(44px + 0.9rem + 1px);
+  }
+  .pf-toggle {
+    min-height: 44px;
+    padding: 0 0.9rem 0 0.8rem;
+  }
+}
+
 /* ---- motion ----
    The HTML is the settled state, and so is every animation's first and last
    frame, so a paused figure, a figure without JavaScript and a reader who
    asks for less motion all see the same complete picture. Animations run
    only with no reduced-motion preference, only once MotionGate has set
-   data-pf-js, and only while it marks the figure data-pf-inview="true". */
+   data-pf-js, and only while it marks the figure data-pf-inview="true".
+   A reader's Pause (data-pf-paused, set by the figure's own button) takes
+   the animations off, so the figure shows its settled picture. */
 
 @media (prefers-reduced-motion: no-preference) {
   [data-pf-js] [data-pf-motion] {
@@ -765,51 +849,51 @@ html:not(.dark)[data-accent="4"] .post-figure {
 
   /* timeline: a 12 s loop. Rest, the lit copy fades, a playhead sweeps the
      clock in 6 s and lights each mark as it passes, then a long rest. */
-  [data-pf-js] [data-pf-motion] .pf-timeline-lanes > .pf-timeline-lane > * {
+  [data-pf-js] [data-pf-motion]:not([data-pf-paused]) .pf-timeline-lanes > .pf-timeline-lane > * {
     opacity: 0.3;
   }
-  [data-pf-js] [data-pf-motion] .pf-timeline-reveal {
+  [data-pf-js] [data-pf-motion]:not([data-pf-paused]) .pf-timeline-reveal {
     display: block;
   }
-  [data-pf-js] [data-pf-motion] :is(.pf-timeline-reveal, .pf-timeline-reveal-copy, .pf-timeline-playhead) {
+  [data-pf-js] [data-pf-motion]:not([data-pf-paused]) :is(.pf-timeline-reveal, .pf-timeline-reveal-copy, .pf-timeline-playhead) {
     animation-duration: 12s;
     animation-timing-function: linear;
     animation-iteration-count: infinite;
     animation-play-state: var(--pf-play);
   }
-  [data-pf-js] [data-pf-motion] .pf-timeline-reveal { animation-name: pf-timeline-window; }
-  [data-pf-js] [data-pf-motion] .pf-timeline-reveal-copy { animation-name: pf-timeline-counter; }
-  [data-pf-js] [data-pf-motion] .pf-timeline-playhead { animation-name: pf-timeline-playhead; }
+  [data-pf-js] [data-pf-motion]:not([data-pf-paused]) .pf-timeline-reveal { animation-name: pf-timeline-window; }
+  [data-pf-js] [data-pf-motion]:not([data-pf-paused]) .pf-timeline-reveal-copy { animation-name: pf-timeline-counter; }
+  [data-pf-js] [data-pf-motion]:not([data-pf-paused]) .pf-timeline-playhead { animation-name: pf-timeline-playhead; }
 
   /* overlapGrid: a 12 s loop. The marks clear, the first checker's misses
      appear, then the second's, then the caught ones in the last grid, and
      the shared misses pulse once in all three grids. */
-  [data-pf-js] [data-pf-motion] .pf-hit {
+  [data-pf-js] [data-pf-motion]:not([data-pf-paused]) .pf-hit {
     transform-origin: center;
     animation-duration: 12s;
     animation-timing-function: ease-in-out;
     animation-iteration-count: infinite;
     animation-play-state: var(--pf-play);
   }
-  [data-pf-js] [data-pf-motion] [data-panel="a"] .pf-hit { animation-name: pf-overlap-a; }
-  [data-pf-js] [data-pf-motion] [data-panel="a"] .pf-hit[data-mark="both"] { animation-name: pf-overlap-a-shared; }
-  [data-pf-js] [data-pf-motion] [data-panel="b"] .pf-hit { animation-name: pf-overlap-b; }
-  [data-pf-js] [data-pf-motion] [data-panel="b"] .pf-hit[data-mark="both"] { animation-name: pf-overlap-b-shared; }
-  [data-pf-js] [data-pf-motion] [data-panel="both"] .pf-hit { animation-name: pf-overlap-caught; }
-  [data-pf-js] [data-pf-motion] [data-panel="both"] .pf-hit[data-mark="both"] { animation-name: pf-overlap-shared; }
+  [data-pf-js] [data-pf-motion]:not([data-pf-paused]) [data-panel="a"] .pf-hit { animation-name: pf-overlap-a; }
+  [data-pf-js] [data-pf-motion]:not([data-pf-paused]) [data-panel="a"] .pf-hit[data-mark="both"] { animation-name: pf-overlap-a-shared; }
+  [data-pf-js] [data-pf-motion]:not([data-pf-paused]) [data-panel="b"] .pf-hit { animation-name: pf-overlap-b; }
+  [data-pf-js] [data-pf-motion]:not([data-pf-paused]) [data-panel="b"] .pf-hit[data-mark="both"] { animation-name: pf-overlap-b-shared; }
+  [data-pf-js] [data-pf-motion]:not([data-pf-paused]) [data-panel="both"] .pf-hit { animation-name: pf-overlap-caught; }
+  [data-pf-js] [data-pf-motion]:not([data-pf-paused]) [data-panel="both"] .pf-hit[data-mark="both"] { animation-name: pf-overlap-shared; }
 
   /* beforeAfter: a 12 s loop. Each after dot and its bar fade, the dot comes
      out from under its before value and travels to its after value,
      uncovering the bar behind it, rows a beat apart. */
-  [data-pf-js] [data-pf-motion] :is(.pf-db-travel, .pf-db-reach-copy) {
+  [data-pf-js] [data-pf-motion]:not([data-pf-paused]) :is(.pf-db-travel, .pf-db-reach-copy) {
     animation-duration: 12s;
     animation-timing-function: cubic-bezier(0.45, 0, 0.25, 1);
     animation-iteration-count: infinite;
     animation-delay: calc(var(--pf-row, 0) * 0.3s);
     animation-play-state: var(--pf-play);
   }
-  [data-pf-js] [data-pf-motion] .pf-db-travel { animation-name: pf-db-travel; }
-  [data-pf-js] [data-pf-motion] .pf-db-reach-copy { animation-name: pf-db-counter; }
+  [data-pf-js] [data-pf-motion]:not([data-pf-paused]) .pf-db-travel { animation-name: pf-db-travel; }
+  [data-pf-js] [data-pf-motion]:not([data-pf-paused]) .pf-db-reach-copy { animation-name: pf-db-counter; }
 }
 
 @keyframes pf-timeline-window {

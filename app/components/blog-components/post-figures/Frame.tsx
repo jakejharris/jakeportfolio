@@ -4,6 +4,8 @@ import type { ReactNode } from 'react';
 
 import { safeHref } from '@/app/lib/post-figures';
 
+import MotionToggle from './MotionToggle';
+
 /**
  * The card every post figure shares: monospace title top left, unit or
  * context top right, an optional source line, and the caption below.
@@ -20,6 +22,7 @@ export function FigureFrame({
   note,
   flush = false,
   motion = false,
+  motionToggle = motion,
   children,
 }: {
   kind: string;
@@ -35,6 +38,8 @@ export function FigureFrame({
   flush?: boolean;
   /** The figure moves while in view (see MotionGate); its HTML is still the settled state. */
   motion?: boolean;
+  /** A Play/Pause row for the motion; off for a figure with its own control. */
+  motionToggle?: boolean;
   children: ReactNode;
 }) {
   const hasHead = Boolean(title || label);
@@ -54,6 +59,12 @@ export function FigureFrame({
           </div>
         )}
         <div className={flush ? 'post-figure-body is-flush' : 'post-figure-body'}>{children}</div>
+        {/* Reserved here so nothing shifts; the button arrives with the script. */}
+        {motion && motionToggle && (
+          <div className="pf-bar is-motion">
+            <MotionToggle />
+          </div>
+        )}
         {hasFoot && (
           <div className="post-figure-foot">
             {(sourceTitle || sourceDetail) && (

@@ -307,6 +307,33 @@ test('every animation runs only without a reduced-motion preference, behind the 
   }
 });
 
+test('each moving chart reserves one Play/Pause row between its drawing and its source line', async () => {
+  const timeline = await render('Timeline', { _key: 't', lanes: ['Me'], events: [{ _key: k(1), start: '09:00', lane: 'Me', text: 'One' }] });
+  const overlap = await render('OverlapGrid', { _key: 'o', total: 100, aMisses: 5, bMisses: 5, shared: 2 });
+  const dumbbell = await render('BeforeAfter', { _key: 'b', sourceTitle: 'A Paper', rows: [{ _key: 'r', label: 'Row', before: 40, after: 60 }] });
+  const stats = await render('StatGrid', { _key: 's', stats: [{ _key: k(1), value: '1', label: 'One' }, { _key: k(2), value: '2', label: 'Two' }] });
+  for (const html of [timeline, overlap, dumbbell]) {
+    assert.equal(html.match(/<div class="pf-bar is-motion"><\/div>/g)?.length, 1);
+    assert.doesNotMatch(html, /<button/, 'the button arrives with the script');
+  }
+  assert.match(dumbbell, /<div class="pf-bar is-motion"><\/div><div class="post-figure-foot">/);
+  assert.doesNotMatch(stats, /pf-bar/);
+});
+
+test("a reader's pause stops a figure on its settled picture, and the row shows only when there is motion to stop", () => {
+  const plain = css.replace(/\/\*[\s\S]*?\*\//g, '');
+  const gated = plain.slice(plain.indexOf('@media (prefers-reduced-motion: no-preference) {'), plain.indexOf('@keyframes'));
+  const rules = [...gated.matchAll(/([^{}]+)\{([^{}]*)\}/g)].filter(([, , body]) => /animation|opacity|display: block/.test(body));
+  assert.ok(rules.length > 0);
+  for (const [, selector] of rules) {
+    assert.match(selector.trim(), /^\[data-pf-js\] \[data-pf-motion\]:not\(\[data-pf-paused\]\)/, selector.trim());
+  }
+  assert.match(plain, /@media \(scripting: none\) \{\s*\.pf-bar \{\s*display: none;/);
+  assert.match(plain, /@media \(prefers-reduced-motion: reduce\) \{\s*\.pf-bar\.is-motion \{\s*display: none;/);
+  const bar = plain.match(/\.pf-bar \{([^}]*)\}/)?.[1] ?? '';
+  assert.match(bar, /min-height: calc\(32px \+ 0\.9rem \+ 1px\)/, 'the reserved height counts the button, the padding and the rule');
+});
+
 test('the caught cells keep a full-strength accent outline, for 3:1 on every accent', () => {
   const rule = css.match(/\.pf-cell-caught \{([^}]*)\}/)?.[1] ?? '';
   assert.match(rule, /stroke: var\(--pf-accent\);/);

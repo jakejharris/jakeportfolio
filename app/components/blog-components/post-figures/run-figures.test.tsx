@@ -128,8 +128,8 @@ test('a looping video renders a native player with a poster and no autoplay unti
   assert.match(html, /poster="https:\/\/cdn\.sanity\.io\/images\/proj1\/production\/f00-1080x1350\.png\?auto=format&amp;q=80"/);
   assert.ok(html.indexOf('def456.webm') < html.indexOf('abc123.mp4'), 'WebM is offered first');
   assert.match(html, /aria-label="A square moves across the frame\."/);
-  assert.doesNotMatch(html, /pf-video-toggle/, 'the button arrives with the script');
-  assert.match(html, /<\/video><\/div><div class="pf-video-bar"><\/div>/, 'its row under the clip is reserved on the server');
+  assert.doesNotMatch(html, /pf-toggle/, 'the button arrives with the script');
+  assert.match(html, /<\/video><\/div><div class="pf-bar"><\/div>/, 'its row under the clip is reserved on the server');
   assert.match(html, /The clip loops while it is on screen\./);
 });
 
@@ -183,6 +183,18 @@ test('the run chart legend is drawn for the eye; screen readers get the summary 
 test('the figure frame brings its own stylesheet, so a run figure is styled on any page', async () => {
   await render('RunChart', { value: run });
   assert.ok(cssLoaded.some((file) => file.endsWith('post-figures.css')), `loaded: ${cssLoaded.join(', ') || 'none'}`);
+});
+
+test('a moving chart reserves a Play/Pause row on the server; the clip keeps its own single row', async () => {
+  const chart = await render('RunChart', { value: run });
+  assert.equal(chart.match(/<div class="pf-bar is-motion"><\/div>/g)?.length, 1, 'one empty row, filled by the script');
+  assert.doesNotMatch(chart, /<button/, 'no button without the script');
+  const clip = await render('VideoLoop', {
+    value: { _key: 'v', alt: 'A clip.', mp4: { asset: { _ref: 'file-abc-mp4' } }, poster: { asset: { _ref: 'image-f00-640x360-png' } } },
+    project: { projectId: 'p', dataset: 'd' },
+  });
+  assert.equal(clip.match(/class="pf-bar/g)?.length, 1);
+  assert.doesNotMatch(clip, /is-motion/);
 });
 
 test('a clip without a poster loads its first frame instead of showing an empty box', async () => {
