@@ -234,3 +234,46 @@ test('checkScale treats null bounds as unset and refuses inverted ones', () => {
   assert.equal(checkScale({ scaleMin: 80, scaleMax: 100, rows: [{ before: 60, after: 90 }] }), 'A value (60) is below the scale min.');
   assert.equal(checkScale({ rows: [null, { before: 1, after: 2 }] }), true);
 });
+
+// ---- niceScale: given ends and zero (fix round 2)
+
+test('a fixed max of 100 on non-negative data starts at 0, never below', () => {
+  for (const values of [[10, 90], [0, 95]]) {
+    const { ticks } = niceScale(values, 5, undefined, 100);
+    assert.deepEqual(ticks, [0, 25, 50, 75, 100], values.join(','));
+  }
+});
+
+test('a fixed min on non-positive data ends at 0, never above', () => {
+  const { ticks } = niceScale([-95, 0], 5, -100);
+  assert.equal(ticks[0], -100);
+  assert.equal(ticks.at(-1), 0);
+  assert.ok(ticks.every((t) => t <= 0), ticks.join(','));
+});
+
+test('the auto scale does not cross zero to make an even count', () => {
+  const neg = niceScale([-95, -5]);
+  assert.ok(neg.ticks.every((t) => t <= 0) && neg.max === 0, neg.ticks.join(','));
+  assert.ok(neg.ticks.length % 2 === 1, 'still an even number of intervals');
+  const pos = niceScale([5, 95]);
+  assert.ok(pos.ticks.every((t) => t >= 0), pos.ticks.join(','));
+});
+
+test('both given ends are ticks even when that means an odd interval count', () => {
+  assert.deepEqual(niceScale([15, 75], 5, 10, 80).ticks, [10, 20, 30, 40, 50, 60, 70, 80]);
+  assert.deepEqual(niceScale([10, 65], 5, 0, 70).ticks, [0, 10, 20, 30, 40, 50, 60, 70]);
+});
+
+test('given ends no round step reaches are still ticks', () => {
+  const { ticks } = niceScale([63, 99], 5, 63, 100);
+  assert.equal(ticks[0], 63);
+  assert.equal(ticks.at(-1), 100);
+  for (let i = 1; i < ticks.length; i++) assert.ok(ticks[i] - ticks[i - 1] >= 5, `no crowded pair: ${ticks}`);
+});
+
+test('earlier results hold: the auto scale, a fixed max, and fixed 50 to 100', () => {
+  const auto = niceScale([71.6, 91.4]);
+  assert.deepEqual([auto.min, auto.max, auto.step], [70, 100, 5]);
+  assert.deepEqual(niceScale([76.2, 95], 5, undefined, 100).ticks, [70, 75, 80, 85, 90, 95, 100]);
+  assert.deepEqual(niceScale([50, 90], 5, 50, 100).ticks, [50, 75, 100]);
+});

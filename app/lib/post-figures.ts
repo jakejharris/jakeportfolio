@@ -244,16 +244,24 @@ export function niceScale(values: number[], target = 5, fixedMin?: number | null
   const power = 10 ** Math.floor(Math.log10(raw));
   const nice = (NICE.find((n) => n * power >= raw) ?? 10) * power;
 
+  // A free end moves out one step to make the interval count even, but never
+  // across zero: data that stays on one side of zero keeps its axis there.
+  const crosses = (from: number, to: number) => (from >= 0 && to < 0) || (from <= 0 && to > 0);
+
   if (fMin === undefined && fMax === undefined) {
-    const min = Math.floor(lo / nice + 1e-9) * nice;
+    let min = Math.floor(lo / nice + 1e-9) * nice;
     let max = Math.ceil(hi / nice - 1e-9) * nice;
-    if (Math.round((max - min) / nice) % 2 === 1) max += nice;
+    if (Math.round((max - min) / nice) % 2 === 1) {
+      if (!crosses(max, max + nice)) max += nice;
+      else if (!crosses(min, min - nice)) min -= nice;
+    }
     return { min, max, step: nice, ticks: ticksBetween(min, max, nice) };
   }
 
-  // A given end: try nearby steps and keep the one that ends on even ticks,
-  // landing on the given ends, closest to the target count. A free end moves
-  // out one step when that makes the count even.
+  // A given end: try nearby steps. In order, the choice must have the given
+  // ends as ticks, should have an even interval count (BeforeAfter counts minor
+  // ticks from the right, so an odd count costs only phone spacing), and
+  // should land near the target count.
   let best: (Scale & { score: number }) | undefined;
   for (const p of [power / 10, power, power * 10]) {
     for (const m of [1, 2, 2.5, 5]) {
@@ -262,22 +270,29 @@ export function niceScale(values: number[], target = 5, fixedMin?: number | null
       let max = fMax ?? Math.ceil(hi / step - 1e-9) * step;
       let ticks = ticksBetween(min, max, step);
       if ((ticks.length - 1) % 2 === 1) {
-        if (fMax === undefined) max += step;
-        else if (fMin === undefined) min -= step;
+        if (fMax === undefined && !crosses(max, max + step)) max += step;
+        else if (fMin === undefined && !crosses(min, min - step)) min -= step;
         ticks = ticksBetween(min, max, step);
       }
       const n = ticks.length - 1;
       if (n < 2 || n > 10) continue;
       const onEnds = Math.abs(ticks[0] - min) < step * 1e-6 && Math.abs(ticks[n] - max) < step * 1e-6;
       const score =
-        (n % 2 === 1 ? 100 : 0) + (onEnds ? 0 : 10) + Math.abs(n - target) + (m === 2.5 ? 0.5 : 0) + (step === nice ? 0 : 0.25);
+        (onEnds ? 0 : 1000) + (n % 2 === 1 ? 5 : 0) + Math.abs(n - target) + (m === 2.5 ? 0.5 : 0) + (step === nice ? 0 : 0.25);
       if (!best || score < best.score) best = { min, max, step, ticks, score };
     }
   }
-  if (best) return { min: best.min, max: best.max, step: best.step, ticks: best.ticks };
-  const min = fMin ?? Math.floor(lo / nice + 1e-9) * nice;
-  const max = fMax ?? Math.ceil(hi / nice - 1e-9) * nice;
-  return { min, max, step: nice, ticks: ticksBetween(min, max, nice) };
+  const fallbackMin = fMin ?? Math.floor(lo / nice + 1e-9) * nice;
+  const fallbackMax = fMax ?? Math.ceil(hi / nice - 1e-9) * nice;
+  const chosen = best ?? { min: fallbackMin, max: fallbackMax, step: nice, ticks: ticksBetween(fallbackMin, fallbackMax, nice) };
+  // Ends no round step reaches (63 to 100) are still labelled: the given end
+  // becomes a tick, and a round tick too close to it gives way.
+  let ticks = chosen.ticks;
+  for (const end of [fMin, fMax]) {
+    if (end === undefined || ticks.some((t) => Math.abs(t - end) < chosen.step * 1e-6)) continue;
+    ticks = [...ticks.filter((t) => Math.abs(t - end) >= chosen.step * 0.5), end].sort((a, b) => a - b);
+  }
+  return { min: chosen.min, max: chosen.max, step: chosen.step, ticks };
 }
 
 export function scalePercent(value: number, scale: Pick<Scale, 'min' | 'max'>) {
