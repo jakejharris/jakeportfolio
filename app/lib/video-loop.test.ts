@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import * as videoLoop from './video-loop';
-import { checkVideoLoop, fileExtension, sanityFileUrl, sanityPoster, videoBox } from './video-loop';
+import { pressPlayPause } from './play-pause';
+import { checkVideoLoop, fileExtension, sanityFileUrl, sanityPoster, videoBox, videoSource } from './video-loop';
 
 const project = { projectId: 'abc123', dataset: 'production' };
 
@@ -59,10 +59,6 @@ test('Studio refuses a file of the wrong type in either video field', () => {
 });
 
 test('a source is offered only when its file is the type the player announces', () => {
-  const { videoSource } = videoLoop as unknown as {
-    videoSource: (field: unknown, type: 'mp4' | 'webm', p: typeof project) => string | undefined;
-  };
-  assert.equal(typeof videoSource, 'function');
   assert.equal(videoSource({ asset: { _ref: 'file-abc123-mp4' } }, 'mp4', project), 'https://cdn.sanity.io/files/abc123/production/abc123.mp4');
   assert.equal(videoSource({ asset: { _ref: 'file-abc123-pdf' } }, 'mp4', project), undefined);
   assert.equal(videoSource({ asset: { _ref: 'file-abc123-mp4' } }, 'webm', project), undefined);
@@ -70,10 +66,6 @@ test('a source is offered only when its file is the type the player announces', 
 });
 
 test('the Play/Pause press plays a paused clip muted and pauses a playing one', async () => {
-  const { pressPlayPause } = videoLoop as unknown as {
-    pressPlayPause: (video: { paused: boolean; muted: boolean; play(): Promise<void>; pause(): void }, onRefused?: () => void) => boolean;
-  };
-  assert.equal(typeof pressPlayPause, 'function');
   const clip = {
     paused: true,
     muted: false,

@@ -214,6 +214,19 @@ test('a file that is not the announced video type is never offered to the player
   assert.equal(html, '', 'no playable source, no block');
 });
 
+test('the client components import no Studio checks or layout code, which would ship it to the browser', () => {
+  const fs = require('node:fs');
+  const path = require('node:path');
+  const clients = (fs.readdirSync(__dirname) as string[])
+    .filter((file) => file.endsWith('.tsx') && !file.includes('.test.'))
+    .filter((file) => fs.readFileSync(path.join(__dirname, file), 'utf8').startsWith("'use client';"));
+  assert.ok(clients.includes('VideoLoopPlayer.tsx') && clients.includes('MotionToggle.tsx'), clients.join(', '));
+  for (const file of clients) {
+    const source = fs.readFileSync(path.join(__dirname, file), 'utf8') as string;
+    assert.doesNotMatch(source, /from '@\/app\/lib\/(video-loop|run-chart|post-figures)'/, file);
+  }
+});
+
 // ---- the stylesheet: the same motion contract as post-figures.css
 
 const css = require('node:fs').readFileSync(require('node:path').join(__dirname, '../../../css/run-figures.css'), 'utf8') as string;

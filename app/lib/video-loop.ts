@@ -113,22 +113,3 @@ export function checkVideoLoop(value: VideoLoopFields | null | undefined): Check
   if (hasW && (!size(value.width) || !size(value.height))) return 'Width and height are whole pixels from 1 to 8000.';
   return true;
 }
-
-/**
- * The player's Play/Pause press. A paused clip plays muted; a playing one
- * pauses. Returns whether the gate may autoplay the clip afterwards, so a
- * reader's pause sticks until they press Play. A play the browser refuses is
- * reported through `onRefused`, so the button can show the real state.
- */
-export function pressPlayPause(
-  video: Pick<HTMLVideoElement, 'paused' | 'muted' | 'play' | 'pause'>,
-  onRefused?: () => void
-): boolean {
-  if (!video.paused) {
-    video.pause();
-    return false;
-  }
-  video.muted = true;
-  video.play()?.catch(() => onRefused?.());
-  return true;
-}

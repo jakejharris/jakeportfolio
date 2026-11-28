@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 
-import { pressPlayPause } from '@/app/lib/video-loop';
+import { pressPlayPause } from '@/app/lib/play-pause';
 
 import PlayPause from './PlayPause';
 
