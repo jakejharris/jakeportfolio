@@ -355,3 +355,15 @@ export function safeHref(url: unknown): string | undefined {
     return undefined;
   }
 }
+
+// ---- motion
+
+/** Figure types that move (they carry `data-pf-motion`); a post with none skips the motion gate. */
+export const MOTION_FIGURE_TYPES: ReadonlySet<string> = new Set(['timeline', 'overlapGrid', 'beforeAfter']);
+
+export function hasMotionFigure(content: unknown) {
+  return (
+    Array.isArray(content) &&
+    content.some((block) => Boolean(block) && MOTION_FIGURE_TYPES.has((block as { _type?: unknown })._type as string))
+  );
+}

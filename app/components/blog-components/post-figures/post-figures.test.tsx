@@ -194,3 +194,115 @@ test('malformed blocks render nothing or skip the bad items instead of throwing'
   const odd = await render('OverlapGrid', { _key: 'o', total: 100, aMisses: 5, bMisses: 5, shared: 2, bothLabel: 123 });
   assert.match(odd, /missed by both\./);
 });
+
+// ---- motion
+
+test('only the timeline, overlap grid and before and after charts carry the motion flag', async () => {
+  const timeline = await render('Timeline', { _key: 't', lanes: ['Me'], events: [{ _key: k(1), start: '09:00', lane: 'Me', text: 'One' }] });
+  const overlap = await render('OverlapGrid', { _key: 'o', total: 100, aMisses: 5, bMisses: 5, shared: 2 });
+  const dumbbell = await render('BeforeAfter', { _key: 'b', rows: [{ _key: 'r', label: 'Row', before: 40, after: 60 }] });
+  const stats = await render('StatGrid', { _key: 's', stats: [{ _key: k(1), value: '1', label: 'One' }, { _key: k(2), value: '2', label: 'Two' }] });
+  const cards = await render('StudyCards', { _key: 'c', cards: [{ _key: k(1), studyTitle: 'A Study', finding: 'It held.' }] });
+  for (const html of [timeline, overlap, dumbbell]) assert.match(html, /<figure class="post-figure" data-post-figure="\w+" data-pf-motion=""/);
+  for (const html of [stats, cards]) assert.doesNotMatch(html, /data-pf-motion/);
+});
+
+test('the timeline draws its marks a second time inside the hidden strip, for the sweep', async () => {
+  const html = await render('Timeline', {
+    _key: 't',
+    lanes: ['North', 'South'],
+    events: [
+      { _key: k(1), start: '08:00', end: '09:00', lane: 'North', text: 'Span' },
+      { _key: k(2), start: '10:00', lane: 'South', text: 'Point' },
+    ],
+  });
+  const strip = html.slice(html.indexOf('pf-timeline-strip'), html.indexOf('<ol'));
+  const reveal = strip.slice(strip.indexOf('pf-timeline-reveal'));
+  assert.equal((strip.match(/class="pf-(mark|span) /g) ?? []).length, 4, 'two marks, each drawn twice');
+  assert.equal((reveal.match(/class="pf-(mark|span) /g) ?? []).length, 2, 'the copy sits in the reveal window');
+  assert.match(reveal, /pf-timeline-playhead/);
+  assert.match(html, /<div class="pf-timeline-strip" aria-hidden="true">/, 'the strip and its copy stay hidden from screen readers');
+});
+
+test('the last overlap grid keeps the misses the other checker caught, with no sum signs', async () => {
+  const html = await render('OverlapGrid', { _key: 'o', total: 100, aName: 'Left', aMisses: 6, bName: 'Right', bMisses: 4, shared: 1 });
+  const panel = (id: string) => html.slice(html.indexOf(`data-panel="${id}"`)).split('pf-panel-name')[0];
+  assert.equal((panel('a').match(/data-mark="(miss|both)"/g) ?? []).length, 6);
+  assert.equal((panel('b').match(/data-mark="(miss|both)"/g) ?? []).length, 4);
+  assert.equal((panel('both').match(/data-mark="both"/g) ?? []).length, 1);
+  assert.equal((panel('both').match(/data-mark="caught"/g) ?? []).length, 6 + 4 - 2 * 1);
+  assert.match(html, /Caught by Other<\/li>/);
+  assert.doesNotMatch(html, />\s*[+=]\s*</, 'the third grid is the overlap, not a sum');
+  const none = await render('OverlapGrid', { _key: 'o', total: 100, aMisses: 3, bMisses: 3, shared: 3 });
+  assert.doesNotMatch(none, /Caught by Other/, 'no legend entry when every miss is shared');
+});
+
+test('each after dot rides a layer offset back to its before value; unchanged rows hold still', async () => {
+  const html = await render('BeforeAfter', {
+    _key: 'b',
+    scaleMin: 0,
+    scaleMax: 100,
+    rows: [
+      { _key: k(1), label: 'Up', before: 20, after: 70 },
+      { _key: k(2), label: 'Down', before: 90, after: 60 },
+      { _key: k(3), label: 'Same', before: 50, after: 50 },
+    ],
+  });
+  const offsets = [...html.matchAll(/class="pf-db-travel" style="--pf-from:(-?[\d.]+)%"/g)].map((m) => Number(m[1]));
+  assert.deepEqual(offsets, [-50, 30]);
+  // The bar's window ends at the after dot (left of it going up, right of it going down)
+  // and the copy inside sits back on the track's origin.
+  const windows = [...html.matchAll(/class="pf-db-reach" style="left:(-?[\d.]+)%"><span class="pf-db-reach-copy" style="left:(-?[\d.]+)%"/g)].map((m) => [Number(m[1]), Number(m[2])]);
+  assert.deepEqual(windows, [[-30, 30], [60, -60]]);
+  assert.match(html, /style="--pf-row:2"/);
+  assert.equal((html.match(/pf-db-travel/g) ?? []).length, 2, 'no travel layer for the unchanged row');
+});
+
+// ---- the stylesheet: Title Case labels and the motion contract
+
+const css = require('node:fs').readFileSync(require('node:path').join(__dirname, '../../../css/post-figures.css'), 'utf8') as string;
+
+function keyframes(source: string) {
+  const out: Record<string, Array<{ at: string[]; decls: string }>> = {};
+  for (const block of source.matchAll(/@keyframes ([\w-]+) \{([\s\S]*?)\n\}/g)) {
+    out[block[1]] = [...block[2].matchAll(/([\d%, ]+)\{([^}]*)\}/g)].map((m) => ({
+      at: m[1].split(',').map((s) => s.trim()),
+      decls: m[2].trim().replace(/\s+/g, ' '),
+    }));
+  }
+  return out;
+}
+
+test('no label in the figures is set in capitals by the stylesheet', () => {
+  assert.doesNotMatch(css, /text-transform:\s*uppercase/);
+});
+
+test('figure animations touch only transform and opacity, and start and end on the settled frame', () => {
+  const frames = keyframes(css);
+  assert.ok(Object.keys(frames).length >= 9);
+  for (const [name, steps] of Object.entries(frames)) {
+    for (const step of steps) {
+      for (const property of step.decls.split(';').map((d) => d.split(':')[0].trim()).filter(Boolean)) {
+        assert.ok(['transform', 'opacity'].includes(property), `${name} animates ${property}`);
+      }
+    }
+    const first = steps.find((s) => s.at.includes('0%'));
+    const last = steps.find((s) => s.at.includes('100%'));
+    assert.ok(first && last, `${name} has a first and last frame`);
+    assert.equal(first.decls, last.decls, `${name} loops without a jump`);
+  }
+});
+
+test('every animation runs only without a reduced-motion preference, behind the gate', () => {
+  const gated = css.slice(css.indexOf('@media (prefers-reduced-motion: no-preference) {'), css.indexOf('@keyframes'));
+  const outside = css.replace(gated, '');
+  assert.doesNotMatch(outside, /animation(-name)?:/, 'no animation is set outside the media block');
+  const rules = [...gated.replace(/\/\*[\s\S]*?\*\//g, '').matchAll(/([^{}]+)\{([^{}]*animation[^{}]*)\}/g)];
+  assert.ok(rules.length > 0);
+  for (const [, selector] of rules) assert.match(selector.trim(), /^\[data-pf-js\] \[data-pf-motion\]/, selector.trim());
+  assert.match(gated, /\[data-pf-motion\] \{\s*--pf-play: paused;/);
+  assert.match(gated, /\[data-pf-motion\]\[data-pf-inview="true"\] \{\s*--pf-play: running;/);
+  for (const [, , body] of rules) {
+    if (/animation-duration/.test(body)) assert.match(body, /animation-play-state: var\(--pf-play\)/);
+  }
+});

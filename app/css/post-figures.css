@@ -1,6 +1,8 @@
 /* Post figure blocks (timeline, statGrid, studyCards, overlapGrid,
    beforeAfter): the bordered card of the post figures, drawn in the site's
-   tokens and the reader's accent. No shadows, no motion. */
+   tokens and the reader's accent. No shadows. Motion lives at the end of
+   this file: CSS only, transform and opacity only, and only while
+   MotionGate says the figure is in view. */
 
 .post-figure {
   --pf-line: color-mix(in srgb, hsl(var(--foreground)) 13%, transparent);
@@ -156,6 +158,41 @@ html:not(.dark)[data-accent="4"] .post-figure {
   position: relative;
   height: 22px;
 }
+.pf-timeline-lanes {
+  position: relative;
+}
+/* The motion's full-strength copy of the marks, shown only while moving.
+   It reaches 8px past either end so marks at the ends are not clipped;
+   the copy inside is inset by the same 8px so it sits on the marks. */
+.pf-timeline-reveal {
+  display: none;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -8px;
+  right: -8px;
+  overflow: hidden;
+}
+.pf-timeline-reveal-copy {
+  position: absolute;
+  inset: 0;
+  padding: 0 8px;
+}
+.pf-timeline-reveal-copy > div {
+  position: relative;
+}
+.pf-timeline-reveal .pf-timeline-lane::before {
+  content: none;
+}
+.pf-timeline-playhead {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  width: 1px;
+  background: var(--pf-faint);
+  opacity: 0;
+}
 .pf-timeline-lane::before {
   content: "";
   position: absolute;
@@ -202,6 +239,8 @@ html:not(.dark)[data-accent="4"] .post-figure {
   width: 9px;
   height: 9px;
   transform: translate(-50%, -50%);
+  /* A ring of page color keeps points that nearly touch apart (an outline, not a shadow). */
+  outline: 1.5px solid hsl(var(--background));
 }
 .pf-span {
   position: absolute;
@@ -416,11 +455,10 @@ html:not(.dark)[data-accent="4"] .post-figure {
 }
 .pf-era {
   display: inline-block;
-  padding: 0.1rem 0.4rem;
+  padding: 0.05rem 0.4rem;
   border-radius: var(--radius);
-  font-size: 10px;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  font-size: 11px;
+  line-height: 1.4;
   border: 1px solid var(--pf-line);
   color: var(--pf-dim);
 }
@@ -500,14 +538,30 @@ html:not(.dark)[data-accent="4"] .post-figure {
   row-gap: 0.5rem;
   align-content: start;
 }
-.pf-panel svg {
+.pf-grid {
+  position: relative;
+}
+.pf-grid > svg:first-child {
   display: block;
   width: 100%;
   height: auto;
 }
+/* One marked cell, drawn over its grey cell (left, top and height inline). */
+.pf-hit {
+  position: absolute;
+  width: 10%;
+  overflow: visible;
+}
 .pf-cell { fill: var(--pf-cell); }
 .pf-cell-miss { fill: var(--pf-accent); }
 .pf-cell-ring { fill: none; stroke: var(--pf-ink); stroke-width: 0.9; }
+/* A miss the other checker caught: an outline, strong enough to read on dark. */
+.pf-cell-caught {
+  fill: color-mix(in srgb, var(--pf-accent) 12%, transparent);
+  stroke: color-mix(in srgb, var(--pf-accent) 80%, transparent);
+  stroke-width: 0.8;
+  stroke-dasharray: 1.55 1.1;
+}
 .pf-panel-name {
   font-size: 11px;
   line-height: 1.35;
@@ -604,6 +658,25 @@ html:not(.dark)[data-accent="4"] .post-figure {
 .pf-db-bar[data-down] {
   background: repeating-linear-gradient(90deg, var(--pf-accent) 0 4px, transparent 4px 7px);
 }
+.pf-db-travel {
+  position: absolute;
+  inset: 0;
+}
+/* A track-wide window whose near edge is the after dot (left set inline);
+   the copy inside puts the bar back at the track's own origin. */
+.pf-db-reach {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 100%;
+  overflow: hidden;
+}
+.pf-db-reach-copy {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 100%;
+}
 .pf-db-dot {
   position: absolute;
   top: 50%;
@@ -671,5 +744,145 @@ html:not(.dark)[data-accent="4"] .post-figure {
 }
 
 @media (forced-colors: active) {
-  .pf-cell-miss, .pf-db-bar, .pf-mark, .pf-span, .pf-glyph { forced-color-adjust: none; }
+  .pf-cell-miss, .pf-cell-caught, .pf-db-bar, .pf-mark, .pf-span, .pf-glyph { forced-color-adjust: none; }
+}
+
+/* ---- motion ----
+   The HTML is the settled state, and so is every animation's first and last
+   frame, so a paused figure, a figure without JavaScript and a reader who
+   asks for less motion all see the same complete picture. Animations run
+   only with no reduced-motion preference, only once MotionGate has set
+   data-pf-js, and only while it marks the figure data-pf-inview="true". */
+
+@media (prefers-reduced-motion: no-preference) {
+  [data-pf-js] [data-pf-motion] {
+    --pf-play: paused;
+  }
+  [data-pf-js] [data-pf-motion][data-pf-inview="true"] {
+    --pf-play: running;
+  }
+
+  /* timeline: a 12 s loop. Rest, the lit copy fades, a playhead sweeps the
+     clock in 6 s and lights each mark as it passes, then a long rest. */
+  [data-pf-js] [data-pf-motion] .pf-timeline-lanes > .pf-timeline-lane > * {
+    opacity: 0.3;
+  }
+  [data-pf-js] [data-pf-motion] .pf-timeline-reveal {
+    display: block;
+  }
+  [data-pf-js] [data-pf-motion] :is(.pf-timeline-reveal, .pf-timeline-reveal-copy, .pf-timeline-playhead) {
+    animation-duration: 12s;
+    animation-timing-function: linear;
+    animation-iteration-count: infinite;
+    animation-play-state: var(--pf-play);
+  }
+  [data-pf-js] [data-pf-motion] .pf-timeline-reveal { animation-name: pf-timeline-window; }
+  [data-pf-js] [data-pf-motion] .pf-timeline-reveal-copy { animation-name: pf-timeline-counter; }
+  [data-pf-js] [data-pf-motion] .pf-timeline-playhead { animation-name: pf-timeline-playhead; }
+
+  /* overlapGrid: a 12 s loop. The marks clear, the first checker's misses
+     appear, then the second's, then the caught ones in the last grid, and
+     the shared misses pulse once in all three grids. */
+  [data-pf-js] [data-pf-motion] .pf-hit {
+    transform-origin: center;
+    animation-duration: 12s;
+    animation-timing-function: ease-in-out;
+    animation-iteration-count: infinite;
+    animation-play-state: var(--pf-play);
+  }
+  [data-pf-js] [data-pf-motion] [data-panel="a"] .pf-hit { animation-name: pf-overlap-a; }
+  [data-pf-js] [data-pf-motion] [data-panel="a"] .pf-hit[data-mark="both"] { animation-name: pf-overlap-a-shared; }
+  [data-pf-js] [data-pf-motion] [data-panel="b"] .pf-hit { animation-name: pf-overlap-b; }
+  [data-pf-js] [data-pf-motion] [data-panel="b"] .pf-hit[data-mark="both"] { animation-name: pf-overlap-b-shared; }
+  [data-pf-js] [data-pf-motion] [data-panel="both"] .pf-hit { animation-name: pf-overlap-caught; }
+  [data-pf-js] [data-pf-motion] [data-panel="both"] .pf-hit[data-mark="both"] { animation-name: pf-overlap-shared; }
+
+  /* beforeAfter: a 12 s loop. Each after dot and its bar fade, the dot comes
+     out from under its before value and travels to its after value,
+     uncovering the bar behind it, rows a beat apart. */
+  [data-pf-js] [data-pf-motion] :is(.pf-db-travel, .pf-db-reach-copy) {
+    animation-duration: 12s;
+    animation-timing-function: cubic-bezier(0.45, 0, 0.25, 1);
+    animation-iteration-count: infinite;
+    animation-delay: calc(var(--pf-row, 0) * 0.3s);
+    animation-play-state: var(--pf-play);
+  }
+  [data-pf-js] [data-pf-motion] .pf-db-travel { animation-name: pf-db-travel; }
+  [data-pf-js] [data-pf-motion] .pf-db-reach-copy { animation-name: pf-db-counter; }
+}
+
+@keyframes pf-timeline-window {
+  0%, 14% { transform: translateX(0); opacity: 1; }
+  20% { transform: translateX(0); opacity: 0; }
+  21% { transform: translateX(-100%); opacity: 0; }
+  22%, 24% { transform: translateX(-100%); opacity: 1; }
+  74%, 100% { transform: translateX(0); opacity: 1; }
+}
+@keyframes pf-timeline-counter {
+  0%, 20% { transform: translateX(0); }
+  21%, 24% { transform: translateX(100%); }
+  74%, 100% { transform: translateX(0); }
+}
+/* The window reaches 8px past each end of the clock, so the playhead fades in
+   and out as it crosses them and is only fully drawn over the clock. */
+@keyframes pf-timeline-playhead {
+  0%, 24% { opacity: 0; }
+  27%, 71% { opacity: 1; }
+  74%, 100% { opacity: 0; }
+}
+
+@keyframes pf-overlap-a {
+  0%, 12% { opacity: 1; transform: scale(1); }
+  16% { opacity: 0; transform: scale(1); }
+  17%, 22% { opacity: 0; transform: scale(0.5); }
+  26%, 100% { opacity: 1; transform: scale(1); }
+}
+@keyframes pf-overlap-a-shared {
+  0%, 12% { opacity: 1; transform: scale(1); }
+  16% { opacity: 0; transform: scale(1); }
+  17%, 22% { opacity: 0; transform: scale(0.5); }
+  26%, 62% { opacity: 1; transform: scale(1); }
+  65% { opacity: 1; transform: scale(1.3); }
+  69%, 100% { opacity: 1; transform: scale(1); }
+}
+@keyframes pf-overlap-b {
+  0%, 12% { opacity: 1; transform: scale(1); }
+  16% { opacity: 0; transform: scale(1); }
+  17%, 34% { opacity: 0; transform: scale(0.5); }
+  38%, 100% { opacity: 1; transform: scale(1); }
+}
+@keyframes pf-overlap-b-shared {
+  0%, 12% { opacity: 1; transform: scale(1); }
+  16% { opacity: 0; transform: scale(1); }
+  17%, 34% { opacity: 0; transform: scale(0.5); }
+  38%, 62% { opacity: 1; transform: scale(1); }
+  65% { opacity: 1; transform: scale(1.3); }
+  69%, 100% { opacity: 1; transform: scale(1); }
+}
+@keyframes pf-overlap-caught {
+  0%, 12% { opacity: 1; transform: scale(1); }
+  16% { opacity: 0; transform: scale(1); }
+  17%, 46% { opacity: 0; transform: scale(0.5); }
+  50%, 100% { opacity: 1; transform: scale(1); }
+}
+@keyframes pf-overlap-shared {
+  0%, 12% { opacity: 1; transform: scale(1); }
+  16% { opacity: 0; transform: scale(1); }
+  17%, 55% { opacity: 0; transform: scale(0.5); }
+  59%, 62% { opacity: 1; transform: scale(1); }
+  65% { opacity: 1; transform: scale(1.3); }
+  69%, 100% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes pf-db-travel {
+  0%, 14% { opacity: 1; transform: translateX(0); }
+  18% { opacity: 0; transform: translateX(0); }
+  19% { opacity: 0; transform: translateX(var(--pf-from)); }
+  22%, 25% { opacity: 1; transform: translateX(var(--pf-from)); }
+  42%, 100% { opacity: 1; transform: translateX(0); }
+}
+@keyframes pf-db-counter {
+  0%, 18% { transform: translateX(0); }
+  19%, 25% { transform: translateX(calc(-1 * var(--pf-from))); }
+  42%, 100% { transform: translateX(0); }
 }

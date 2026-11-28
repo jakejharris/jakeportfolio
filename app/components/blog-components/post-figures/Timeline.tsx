@@ -13,6 +13,12 @@ import { FigureFrame } from './Frame';
  * A proportional time strip: each lane's points and spans on a real clock,
  * with labelled gaps across all lanes. Below it, the same moments as a list
  * in time order, which is also the strip's text alternative.
+ *
+ * Motion (CSS only, see MotionGate): a playhead sweeps the clock and the
+ * marks light as it passes. The marks are drawn twice: the strip itself,
+ * dimmed while moving, and a full-strength copy inside a clipping window
+ * whose translateX grows from the left while the copy counter-translates,
+ * so the sweep is two transform animations. The HTML is the settled state.
  */
 const list = <T,>(value: unknown): T[] => (Array.isArray(value) ? value : []);
 const laterThanStart = (item: { start: string; end?: string }) => {
@@ -46,9 +52,30 @@ export default function Timeline({ value }: { value: TimelineValue }) {
     return { from, to: to !== null && to > from ? to : undefined };
   };
 
+  const laneRows = lanes.map((lane, laneIndex) => (
+    <div key={lane} className="pf-timeline-lane">
+      {events
+        .filter((event) => event.lane === lane)
+        .map((event) => {
+          const { from, to } = spanOf(event.start, event.end);
+          const left = clockPercent(from, scale);
+          return to === undefined ? (
+            <span key={event._key} className={`pf-mark pf-lane-${laneIndex}`} style={{ left: `${left}%` }} />
+          ) : (
+            <span
+              key={event._key}
+              className={`pf-span pf-lane-${laneIndex}`}
+              style={{ left: `${left}%`, width: `${clockPercent(to, scale) - left}%` }}
+            />
+          );
+        })}
+    </div>
+  ));
+
   return (
     <FigureFrame
       kind="timeline"
+      motion
       title={value.title}
       label={value.label}
       caption={value.caption}
@@ -104,29 +131,15 @@ export default function Timeline({ value }: { value: TimelineValue }) {
               />
             );
           })}
-          {lanes.map((lane, laneIndex) => (
-            <div key={lane} className="pf-timeline-lane">
-              {events
-                .filter((event) => event.lane === lane)
-                .map((event) => {
-                  const { from, to } = spanOf(event.start, event.end);
-                  const left = clockPercent(from, scale);
-                  return to === undefined ? (
-                    <span
-                      key={event._key}
-                      className={`pf-mark pf-lane-${laneIndex}`}
-                      style={{ left: `${left}%` }}
-                    />
-                  ) : (
-                    <span
-                      key={event._key}
-                      className={`pf-span pf-lane-${laneIndex}`}
-                      style={{ left: `${left}%`, width: `${clockPercent(to, scale) - left}%` }}
-                    />
-                  );
-                })}
+          <div className="pf-timeline-lanes">
+            {laneRows}
+            <div className="pf-timeline-reveal">
+              <div className="pf-timeline-reveal-copy">
+                <div>{laneRows}</div>
+              </div>
+              <span className="pf-timeline-playhead" />
             </div>
-          ))}
+          </div>
           <div className="pf-timeline-axis tabular">
             {scale.ticks.map((tick) => (
               <span

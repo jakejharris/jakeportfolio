@@ -17,6 +17,7 @@ export function FigureFrame({
   sourceDetail,
   note,
   flush = false,
+  motion = false,
   children,
 }: {
   kind: string;
@@ -30,6 +31,8 @@ export function FigureFrame({
   note?: ReactNode;
   /** The body draws its own edge to edge rows. */
   flush?: boolean;
+  /** The figure moves while in view (see MotionGate); its HTML is still the settled state. */
+  motion?: boolean;
   children: ReactNode;
 }) {
   const hasHead = Boolean(title || label);
@@ -38,6 +41,7 @@ export function FigureFrame({
     <figure
       className="post-figure"
       data-post-figure={kind}
+      data-pf-motion={motion ? '' : undefined}
       aria-label={caption ? undefined : title || undefined}
     >
       <div className="post-figure-card">

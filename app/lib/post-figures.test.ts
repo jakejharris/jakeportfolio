@@ -277,3 +277,11 @@ test('earlier results hold: the auto scale, a fixed max, and fixed 50 to 100', (
   assert.deepEqual(niceScale([76.2, 95], 5, undefined, 100).ticks, [70, 75, 80, 85, 90, 95, 100]);
   assert.deepEqual(niceScale([50, 90], 5, 50, 100).ticks, [50, 75, 100]);
 });
+
+test('a post needs the motion gate only when it has a moving figure', async () => {
+  const { hasMotionFigure } = await import('./post-figures');
+  assert.equal(hasMotionFigure([{ _type: 'block' }, { _type: 'timeline' }]), true);
+  assert.equal(hasMotionFigure([{ _type: 'statGrid' }, { _type: 'studyCards' }, null]), false);
+  assert.equal(hasMotionFigure(undefined), false);
+  assert.equal(hasMotionFigure('timeline'), false);
+});

@@ -286,10 +286,10 @@ export const studyCards = {
           fields: [
             {
               name: 'era',
-              title: 'Then or now',
+              title: 'Then or Now',
               type: 'string',
               options: { list: [{ title: 'Then', value: 'then' }, { title: 'Now', value: 'now' }], layout: 'radio', direction: 'horizontal' },
-              description: 'Optional tag. "Now" takes the accent color.',
+              description: 'Optional tag, shown in Title Case as "Then" or "Now". "Now" takes the accent color.',
             },
             {
               name: 'date',
